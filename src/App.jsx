@@ -10,11 +10,7 @@ function App() {
       <TitleBar />
       <div className='flex-1'>
         <h1>{emoji}</h1>
-        <Button
-          onClick={() => setEmoji(emoji === 'desktop' ? '🍐' : 'desktop')}
-        >
-          Toggle
-        </Button>
+        <Button onClick={() => setEmoji(emoji === 'desktop' ? '🍐' : 'desktop')}>Toggle</Button>
       </div>
     </main>
   )

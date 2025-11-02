@@ -1,17 +1,7 @@
 import { cn } from '../utils.js'
 
-export default function Button({
-  variant = 'default',
-  size = 'md',
-  className,
-  ...props
-}) {
-  return (
-    <button
-      className={cn(base, ...variants[variant], ...sizes[size], className)}
-      {...props}
-    />
-  )
+export default function Button({ variant = 'default', size = 'md', className, ...props }) {
+  return <button className={cn(base, ...variants[variant], ...sizes[size], className)} {...props} />
 }
 
 const base = `cursor-default border rounded-lg text-sm shadow-xs font-medium
