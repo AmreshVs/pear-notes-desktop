@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-zinc-700);
+  --color-muted: var(--color-zinc-100);
+  --color-muted-content: var(--color-zinc-500);
+  --color-border: var(--color-zinc-300);
+  --color-primary: var(--color-blue-500);
+
+  --font-system:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--color-zinc-800);
+    --color-foreground: var(--color-zinc-100);
+    --color-muted: var(--color-zinc-700);
+    --color-border: var(--color-zinc-600);
+  }
+}
+
+@layer base {
+  * {
+    @apply min-w-0 box-border border-border select-none;
+  }
+
+  body {
+    @apply bg-background text-foreground font-system;
+  }
+}
+

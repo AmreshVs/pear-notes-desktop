@@ -1,6 +1,6 @@
 {
   "name": "pear-notes",
-  "main": "index.html",
+  "main": "dist/src/index.html",
   "pear": {
     "name": "pear-notes",
     "type": "desktop",
@@ -11,22 +11,27 @@
     }
   },
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "scripts": {
-    "dev": "pear run -d .",
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:vite": "vite build --watch",
+    "dev:pear": "pear run -d .",
+    "build": "vite build",
     "test": "brittle test/*.test.js"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@vitejs/plugin-react": "^5.0.1",
     "brittle": "^3.0.0",
-    "pear-interface": "^1.0.0"
-  },
-  "dependencies": {
-    "autobase": "^7.20.0",
-    "b4a": "^1.7.3",
-    "blind-pairing": "^2.3.1",
-    "corestore": "^7.5.0",
-    "hyperbee": "^2.26.5",
-    "hyperswarm": "^4.14.2",
-    "ready-resource": "^1.2.0"
+    "clsx": "^2.1.1",
+    "concurrently": "^9.2.1",
+    "pear-interface": "^1.0.0",
+    "prettier": "^3.6.2",
+    "prettier-config-standard": "^7.0.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11",
+    "vite": "^7.1.3"
   }
 }
