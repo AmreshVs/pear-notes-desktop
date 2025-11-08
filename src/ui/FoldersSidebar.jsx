@@ -1,4 +1,16 @@
-import { FileText, Briefcase, User, Lightbulb, Trash2, FolderPlus, Plus, Settings, Moon, Sun, Folder } from 'lucide-react'
+import {
+  FileText,
+  Briefcase,
+  User,
+  Lightbulb,
+  Trash2,
+  FolderPlus,
+  Plus,
+  Settings,
+  Moon,
+  Sun,
+  Folder
+} from 'lucide-react'
 
 // Icon mapping for folder icons
 const ICON_MAP = {
@@ -26,7 +38,7 @@ export default function FoldersSidebar({
     if (folderId === 'all') {
       return notes.length
     }
-    return notes.filter(n => n.value?.folder === folderId).length
+    return notes.filter((n) => n.value?.folder === folderId).length
   }
 
   return (
@@ -253,4 +265,3 @@ export default function FoldersSidebar({
     </div>
   )
 }
-

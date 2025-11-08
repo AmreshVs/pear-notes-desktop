@@ -78,14 +78,23 @@ export default function FormattingToolbar({ editor }) {
     }
 
     const updateState = () => {
-      const headingLevel = editor.isActive('heading', { level: 1 }) ? 1 :
-                          editor.isActive('heading', { level: 2 }) ? 2 :
-                          editor.isActive('heading', { level: 3 }) ? 3 : 0
-      
-      const textAlign = editor.isActive({ textAlign: 'left' }) ? 'left' :
-                       editor.isActive({ textAlign: 'center' }) ? 'center' :
-                       editor.isActive({ textAlign: 'right' }) ? 'right' :
-                       editor.isActive({ textAlign: 'justify' }) ? 'justify' : 'left'
+      const headingLevel = editor.isActive('heading', { level: 1 })
+        ? 1
+        : editor.isActive('heading', { level: 2 })
+          ? 2
+          : editor.isActive('heading', { level: 3 })
+            ? 3
+            : 0
+
+      const textAlign = editor.isActive({ textAlign: 'left' })
+        ? 'left'
+        : editor.isActive({ textAlign: 'center' })
+          ? 'center'
+          : editor.isActive({ textAlign: 'right' })
+            ? 'right'
+            : editor.isActive({ textAlign: 'justify' })
+              ? 'justify'
+              : 'left'
 
       setEditorState({
         isBold: editor.isActive('bold'),
@@ -137,12 +146,12 @@ export default function FormattingToolbar({ editor }) {
 
   const handleSetLink = ({ url, text }) => {
     if (!editor) return
-    
+
     if (url) {
       // If there's selected text, wrap it in a link
       const { from, to } = editor.state.selection
       const selectedText = editor.state.doc.textBetween(from, to)
-      
+
       if (selectedText && text) {
         // Replace selected text with link
         editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run()
@@ -223,7 +232,10 @@ export default function FormattingToolbar({ editor }) {
   )
 
   const Divider = () => (
-    <div className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0' style={{ backgroundColor: 'var(--border-primary)' }} />
+    <div
+      className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0'
+      style={{ backgroundColor: 'var(--border-primary)' }}
+    />
   )
 
   return (
@@ -311,10 +323,15 @@ export default function FormattingToolbar({ editor }) {
             title='Heading'
             className='flex items-center gap-1'
           >
-            {editorState.headingLevel === 1 ? <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' /> :
-             editorState.headingLevel === 2 ? <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' /> :
-             editorState.headingLevel === 3 ? <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' /> :
-             <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />}
+            {editorState.headingLevel === 1 ? (
+              <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+            ) : editorState.headingLevel === 2 ? (
+              <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+            ) : editorState.headingLevel === 3 ? (
+              <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+            ) : (
+              <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+            )}
             <ChevronDown className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
           </Button>
           {showHeadingMenu && (
@@ -330,7 +347,10 @@ export default function FormattingToolbar({ editor }) {
                 onClick={() => handleHeadingClick(0)}
                 className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
                 style={{
-                  color: editorState.headingLevel === 0 ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                  color:
+                    editorState.headingLevel === 0
+                      ? 'var(--accent-primary)'
+                      : 'var(--text-secondary)'
                 }}
               >
                 <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
@@ -340,7 +360,10 @@ export default function FormattingToolbar({ editor }) {
                 onClick={() => handleHeadingClick(1)}
                 className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
                 style={{
-                  color: editorState.headingLevel === 1 ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                  color:
+                    editorState.headingLevel === 1
+                      ? 'var(--accent-primary)'
+                      : 'var(--text-secondary)'
                 }}
               >
                 <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
@@ -350,7 +373,10 @@ export default function FormattingToolbar({ editor }) {
                 onClick={() => handleHeadingClick(2)}
                 className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
                 style={{
-                  color: editorState.headingLevel === 2 ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                  color:
+                    editorState.headingLevel === 2
+                      ? 'var(--accent-primary)'
+                      : 'var(--text-secondary)'
                 }}
               >
                 <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
@@ -360,7 +386,10 @@ export default function FormattingToolbar({ editor }) {
                 onClick={() => handleHeadingClick(3)}
                 className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
                 style={{
-                  color: editorState.headingLevel === 3 ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                  color:
+                    editorState.headingLevel === 3
+                      ? 'var(--accent-primary)'
+                      : 'var(--text-secondary)'
                 }}
               >
                 <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
@@ -529,4 +558,3 @@ export default function FormattingToolbar({ editor }) {
     </>
   )
 }
-

@@ -1,11 +1,6 @@
 import { useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from './store/hooks'
-import {
-  createNote,
-  updateNote,
-  deleteNote,
-  setSelectedNote
-} from './store/notesSlice'
+import { createNote, updateNote, deleteNote, setSelectedNote } from './store/notesSlice'
 import {
   setSelectedFolder,
   setSearchQuery,

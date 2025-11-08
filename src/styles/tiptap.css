@@ -130,7 +130,8 @@
   background-color: var(--bg-tertiary);
   padding: 0.125em 0.25em;
   border-radius: var(--radius-sm);
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.9em;
 }
 
@@ -218,4 +219,3 @@
 .ProseMirror:focus {
   outline: none;
 }
-

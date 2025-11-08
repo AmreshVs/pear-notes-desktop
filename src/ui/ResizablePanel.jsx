@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 
-export default function ResizablePanel({ children, defaultWidth = 256, minWidth = 200, maxWidth = 500 }) {
+export default function ResizablePanel({
+  children,
+  defaultWidth = 256,
+  minWidth = 200,
+  maxWidth = 500
+}) {
   const [width, setWidth] = useState(defaultWidth)
   const [isResizing, setIsResizing] = useState(false)
   const panelRef = useRef(null)
@@ -76,4 +81,3 @@ export default function ResizablePanel({ children, defaultWidth = 256, minWidth 
     </div>
   )
 }
-

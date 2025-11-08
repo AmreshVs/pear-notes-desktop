@@ -17,6 +17,8 @@
     "dev:vite": "vite build -w --sourcemap inline",
     "dev:pear": "pear run -d .",
     "build": "vite build",
+    "prettier-fix": "prettier . --write",
+    "schema": "bare ./src/spec/schema.js",
     "test": "brittle test/*.test.js"
   },
   "devDependencies": {

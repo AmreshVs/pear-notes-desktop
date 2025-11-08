@@ -32,7 +32,7 @@ export default function NotesList({
 
   const getPreview = (content, contentHtml) => {
     if (!content && !contentHtml) return 'No additional text'
-    
+
     // Extract plain text from HTML if available
     let text = ''
     if (contentHtml) {
@@ -42,7 +42,7 @@ export default function NotesList({
     } else {
       text = content || ''
     }
-    
+
     text = text.replace(/\n/g, ' ').trim()
     return text.length > 60 ? text.substring(0, 60) + '...' : text
   }
@@ -99,7 +99,10 @@ export default function NotesList({
             Sort by
           </button>
         </div>
-        <p className='text-[13px] font-medium' style={{ color: 'var(--text-tertiary)', opacity: 0.8 }}>
+        <p
+          className='text-[13px] font-medium'
+          style={{ color: 'var(--text-tertiary)', opacity: 0.8 }}
+        >
           {notes.length} {notes.length === 1 ? 'note' : 'notes'}
         </p>
       </div>
@@ -108,7 +111,9 @@ export default function NotesList({
       <div className='flex-1 overflow-y-auto'>
         {notes.length === 0 ? (
           <div className='p-8 text-center'>
-            <p className='text-[15px]' style={{ color: 'var(--text-tertiary)' }}>No notes yet</p>
+            <p className='text-[15px]' style={{ color: 'var(--text-tertiary)' }}>
+              No notes yet
+            </p>
           </div>
         ) : (
           <div>
@@ -192,4 +197,3 @@ export default function NotesList({
     </div>
   )
 }
-

@@ -86,4 +86,3 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
     </div>
   )
 }
-

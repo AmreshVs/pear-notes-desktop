@@ -128,4 +128,3 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
     </div>
   )
 }
-

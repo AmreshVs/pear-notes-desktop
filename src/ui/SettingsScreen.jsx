@@ -245,10 +245,12 @@ export default function SettingsScreen({ onClose }) {
                 {/* Content */}
                 {syncTab === 'invite' ? (
                   <div>
-                    <h3 className='text-primary font-semibold text-lg mb-2'>Share this invite with another device</h3>
+                    <h3 className='text-primary font-semibold text-lg mb-2'>
+                      Share this invite with another device
+                    </h3>
                     <p className='text-sm mb-6 text-tertiary'>
-                      Scan this QR code with another device running the app or copy the link to connect. Your notes are
-                      end-to-end encrypted during sync.
+                      Scan this QR code with another device running the app or copy the link to
+                      connect. Your notes are end-to-end encrypted during sync.
                     </p>
 
                     <div className='flex gap-6'>
@@ -296,7 +298,8 @@ export default function SettingsScreen({ onClose }) {
                     <div className='mt-8 pt-8 border-t border-primary'>
                       <h3 className='text-primary font-semibold text-lg mb-2'>Have an invite?</h3>
                       <p className='text-sm mb-4 text-tertiary'>
-                        Paste an invite link or code from another device to establish a sync connection.
+                        Paste an invite link or code from another device to establish a sync
+                        connection.
                       </p>
                       <div className='flex gap-2'>
                         <input
@@ -324,12 +327,18 @@ export default function SettingsScreen({ onClose }) {
                         <div className='flex items-center justify-between'>
                           <div>
                             <p className='text-primary font-medium'>This Device</p>
-                            <p className='text-sm text-tertiary'>MacBook Pro • Last synced: Just now</p>
+                            <p className='text-sm text-tertiary'>
+                              MacBook Pro • Last synced: Just now
+                            </p>
                           </div>
-                          <span className='px-3 py-1 bg-accent-success/20 text-accent-success text-xs rounded-full'>Active</span>
+                          <span className='px-3 py-1 bg-accent-success/20 text-accent-success text-xs rounded-full'>
+                            Active
+                          </span>
                         </div>
                       </div>
-                      <p className='text-sm text-center py-4 text-tertiary'>No other devices connected</p>
+                      <p className='text-sm text-center py-4 text-tertiary'>
+                        No other devices connected
+                      </p>
                     </div>
                   </div>
                 )}

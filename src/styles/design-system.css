@@ -39,7 +39,7 @@
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  
+
   /* Glows */
   --glow-primary: 0 0 20px rgba(0, 122, 255, 0.3);
   --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.5);
@@ -53,8 +53,9 @@
   --spacing-2xl: 3rem; /* 48px */
 
   /* Typography */
-  --font-family-system: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-system:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-size-xs: 0.6875rem; /* 11px */
   --font-size-sm: 0.8125rem; /* 13px */
   --font-size-base: 0.9375rem; /* 15px */
@@ -86,7 +87,7 @@
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --transition-bounce: 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
+
   /* Backdrop blur */
   --blur-sm: blur(4px);
   --blur-md: blur(8px);
@@ -132,7 +133,7 @@
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
   --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-  
+
   /* Glows - Adjusted for light mode */
   --glow-primary: 0 0 20px rgba(0, 122, 255, 0.25);
   --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.4);
@@ -348,4 +349,3 @@
   background-color: var(--bg-primary);
   border-right: 1px solid var(--border-primary);
 }
-

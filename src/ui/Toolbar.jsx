@@ -1,9 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  Search
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreHorizontal, Search } from 'lucide-react'
 
 export default function Toolbar({ searchQuery, onSearchChange }) {
   return (
@@ -65,7 +60,10 @@ export default function Toolbar({ searchQuery, onSearchChange }) {
       {/* Center: Search */}
       <div className='flex-1 max-w-md mx-auto'>
         <div className='relative'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4' style={{ color: 'var(--text-tertiary)' }} />
+          <Search
+            className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4'
+            style={{ color: 'var(--text-tertiary)' }}
+          />
           <input
             type='text'
             placeholder='Search All Notes'
