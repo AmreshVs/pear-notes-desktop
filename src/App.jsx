@@ -78,6 +78,8 @@ function App() {
     dispatch(createFolder({ name }))
   }
 
+  // Data is loaded automatically by rootSaga on app initialization
+
   // Sort and filter notes - memoized for performance
   const filteredNotes = useMemo(() => {
     // Sort notes by updatedAt descending for display
