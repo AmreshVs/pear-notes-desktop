@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import RichTextEditor from './RichTextEditor'
+import FormattingToolbar from './FormattingToolbar'
 
 export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [contentText, setContentText] = useState('')
+  const [editorInstance, setEditorInstance] = useState(null)
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
 
@@ -91,7 +93,10 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
 
   const getWordCount = (text) => {
     if (!text) return 0
-    return text.trim().split(/\s+/).filter((word) => word.length > 0).length
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length
   }
 
   if (!note) {
@@ -124,13 +129,16 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
 
   const wordCount = getWordCount(getPlainText(content) || contentText)
 
-  // Expose editor to parent via callback
+  // Expose editor to parent via callback and update local state
   useEffect(() => {
     const timer = setTimeout(() => {
       if (richTextEditorRef.current?.editor) {
-        onEditorReady?.(richTextEditorRef.current.editor)
+        const editor = richTextEditorRef.current.editor
+        setEditorInstance(editor)
+        onEditorReady?.(editor)
       } else if (!note) {
         // Clear editor when no note is selected
+        setEditorInstance(null)
         onEditorReady?.(null)
       }
     }, 100)
@@ -156,8 +164,8 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       >
         <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <span>
-            Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} | {wordCount}{' '}
-            words
+            amresh Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} |{' '}
+            {wordCount} words
           </span>
         </div>
       </div>
@@ -165,6 +173,8 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       {/* Editor Content */}
       <div className='flex-1 overflow-y-auto'>
         <div className='max-w-4xl mx-auto px-8 py-8 w-full'>
+          {/* Formatting Toolbar */}
+          <FormattingToolbar editor={editorInstance} />
           <input
             ref={titleRef}
             type='text'
@@ -190,22 +200,17 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
         </div>
       </div>
 
-              {/* Bottom Status - Premium Styling */}
-              <div
-                className='px-6 py-2.5 flex items-center justify-end'
-                style={{
-                  borderTop: '1px solid var(--border-primary)',
-                  background: 'linear-gradient(to top, var(--bg-primary), var(--bg-secondary))'
-                }}
-              >
-                <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
+      {/* Bottom Status - Premium Styling */}
+      <div
+        className='px-6 py-2.5 flex items-center justify-end'
+        style={{
+          borderTop: '1px solid var(--border-primary)',
+          background: 'linear-gradient(to top, var(--bg-primary), var(--bg-secondary))'
+        }}
+      >
+        <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M5 13l4 4L19 7'
-            />
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
           </svg>
           <span>Synced</span>
         </div>

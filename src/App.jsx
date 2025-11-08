@@ -9,10 +9,11 @@ import {
 import {
   setSelectedFolder,
   setSearchQuery,
-  setShowSync,
   setShowSettings,
+  setShowNewFolderModal,
   setEditor,
-  toggleTheme
+  toggleTheme,
+  createFolder
 } from './store/uiSlice'
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
@@ -20,8 +21,8 @@ import NotesList from './ui/NotesList'
 import NoteEditor from './ui/NoteEditor'
 import Toolbar from './ui/Toolbar'
 import ResizablePanel from './ui/ResizablePanel'
-import SyncScreen from './ui/SyncScreen'
 import SettingsScreen from './ui/SettingsScreen'
+import NewFolderModal from './ui/NewFolderModal'
 
 function App() {
   const dispatch = useAppDispatch()
@@ -32,8 +33,9 @@ function App() {
   const isLoading = useAppSelector((state) => state.notes.isLoading)
   const selectedFolder = useAppSelector((state) => state.ui.selectedFolder)
   const searchQuery = useAppSelector((state) => state.ui.searchQuery)
-  const showSync = useAppSelector((state) => state.ui.showSync)
   const showSettings = useAppSelector((state) => state.ui.showSettings)
+  const showNewFolderModal = useAppSelector((state) => state.ui.showNewFolderModal)
+  const folders = useAppSelector((state) => state.ui.folders)
   const editor = useAppSelector((state) => state.ui.editor)
   const theme = useAppSelector((state) => state.ui.theme)
 
@@ -70,6 +72,10 @@ function App() {
 
   const handleEditorReady = (editorInstance) => {
     dispatch(setEditor(editorInstance))
+  }
+
+  const handleCreateFolder = (name) => {
+    dispatch(createFolder({ name }))
   }
 
   // Sort and filter notes - memoized for performance
@@ -124,11 +130,6 @@ function App() {
         <Toolbar
           searchQuery={searchQuery}
           onSearchChange={(value) => dispatch(setSearchQuery(value))}
-          onSettingsClick={() => dispatch(setShowSettings(true))}
-          onSyncClick={() => dispatch(setShowSync(true))}
-          onThemeToggle={() => dispatch(toggleTheme())}
-          theme={theme}
-          editor={editor}
         />
 
         {/* Three Column Layout */}
@@ -139,7 +140,12 @@ function App() {
               selectedFolder={selectedFolder}
               onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
               notes={notes}
+              folders={folders}
               onCreateNote={handleCreateNote}
+              onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+              onSettingsClick={() => dispatch(setShowSettings(true))}
+              onThemeToggle={() => dispatch(toggleTheme())}
+              theme={theme}
             />
           </ResizablePanel>
 
@@ -165,8 +171,13 @@ function App() {
       </div>
 
       {/* Modals */}
-      {showSync && <SyncScreen onClose={() => dispatch(setShowSync(false))} />}
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
+      {showNewFolderModal && (
+        <NewFolderModal
+          onClose={() => dispatch(setShowNewFolderModal(false))}
+          onCreateFolder={handleCreateFolder}
+        />
+      )}
     </main>
   )
 }

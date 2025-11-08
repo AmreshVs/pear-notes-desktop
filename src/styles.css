@@ -78,6 +78,38 @@
     transition-duration: 150ms;
   }
 
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* Styled scrollbar for toolbar */
+  .toolbar-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .toolbar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .toolbar-scroll::-webkit-scrollbar-thumb {
+    background: var(--border-secondary);
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .toolbar-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--border-tertiary);
+    background-clip: padding-box;
+  }
+
   /* Input and textarea focus styles */
   input:focus,
   textarea:focus {

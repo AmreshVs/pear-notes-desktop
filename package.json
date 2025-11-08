@@ -6,8 +6,8 @@
     "type": "desktop",
     "gui": {
       "backgroundColor": "#1F2430",
-      "height": "540",
-      "width": "720"
+      "height": "1280",
+      "width": "1280"
     }
   },
   "type": "module",
@@ -37,9 +37,15 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.10.1",
+    "@tiptap/extension-highlight": "^3.10.4",
+    "@tiptap/extension-link": "^3.10.4",
     "@tiptap/extension-placeholder": "^3.10.4",
+    "@tiptap/extension-strike": "^3.10.4",
+    "@tiptap/extension-subscript": "^3.10.4",
+    "@tiptap/extension-superscript": "^3.10.4",
     "@tiptap/extension-task-item": "^3.10.4",
     "@tiptap/extension-task-list": "^3.10.4",
+    "@tiptap/extension-text-align": "^3.10.4",
     "@tiptap/extension-underline": "^3.10.4",
     "@tiptap/react": "^3.10.4",
     "@tiptap/starter-kit": "^3.10.4",

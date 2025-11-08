@@ -1,21 +1,32 @@
-import { FileText, Briefcase, User, Lightbulb, Trash2, FolderPlus, Plus } from 'lucide-react'
+import { FileText, Briefcase, User, Lightbulb, Trash2, FolderPlus, Plus, Settings, Moon, Sun, Folder } from 'lucide-react'
 
-const FOLDERS = [
-  { id: 'all', name: 'All Notes', icon: FileText, count: null },
-  { id: 'work', name: 'Work', icon: Briefcase, count: null },
-  { id: 'personal', name: 'Personal', icon: User, count: null },
-  { id: 'ideas', name: 'Ideas', icon: Lightbulb, count: null },
-  { id: 'trash', name: 'Recently Deleted', icon: Trash2, count: null }
-]
+// Icon mapping for folder icons
+const ICON_MAP = {
+  FileText,
+  Briefcase,
+  User,
+  Lightbulb,
+  Trash2,
+  Folder
+}
 
-export default function FoldersSidebar({ selectedFolder, onSelectFolder, notes, onCreateNote }) {
+export default function FoldersSidebar({
+  selectedFolder,
+  onSelectFolder,
+  notes,
+  folders,
+  onCreateNote,
+  onCreateFolder,
+  onSettingsClick,
+  onThemeToggle,
+  theme
+}) {
   // Calculate note counts for each folder
-  const folderCounts = {
-    all: notes.length,
-    work: notes.filter(n => n.value?.folder === 'work').length,
-    personal: notes.filter(n => n.value?.folder === 'personal').length,
-    ideas: notes.filter(n => n.value?.folder === 'ideas').length,
-    trash: notes.filter(n => n.value?.folder === 'trash').length
+  const getFolderCount = (folderId) => {
+    if (folderId === 'all') {
+      return notes.length
+    }
+    return notes.filter(n => n.value?.folder === folderId).length
   }
 
   return (
@@ -63,10 +74,10 @@ export default function FoldersSidebar({ selectedFolder, onSelectFolder, notes, 
           >
             FOLDERS
           </p>
-          {FOLDERS.map((folder) => {
-            const Icon = folder.icon
+          {folders.map((folder) => {
+            const Icon = ICON_MAP[folder.icon] || Folder
             const isSelected = selectedFolder === folder.id
-            const count = folderCounts[folder.id] || 0
+            const count = getFolderCount(folder.id)
 
             return (
               <button
@@ -160,6 +171,7 @@ export default function FoldersSidebar({ selectedFolder, onSelectFolder, notes, 
           <span className='text-[14px] font-semibold'>New Note</span>
         </button>
         <button
+          onClick={onCreateFolder}
           className='w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all font-medium'
           style={{
             backgroundColor: 'var(--bg-tertiary)',
@@ -183,6 +195,60 @@ export default function FoldersSidebar({ selectedFolder, onSelectFolder, notes, 
           <FolderPlus className='w-4 h-4' />
           <span className='text-[14px]'>New Folder</span>
         </button>
+
+        {/* Settings and Theme Toggle */}
+        <div className='flex gap-2 pt-2'>
+          <button
+            onClick={onSettingsClick}
+            className='flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all font-medium'
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-primary)',
+              transform: 'scale(1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-quaternary)'
+              e.currentTarget.style.transform = 'scale(1.01)'
+              e.currentTarget.style.borderColor = 'var(--border-secondary)'
+              e.currentTarget.style.boxShadow = 'var(--shadow-xs)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
+              e.currentTarget.style.transform = 'scale(1)'
+              e.currentTarget.style.borderColor = 'var(--border-primary)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            title='Settings'
+          >
+            <Settings className='w-4 h-4' />
+          </button>
+          <button
+            onClick={onThemeToggle}
+            className='flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all font-medium'
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-primary)',
+              transform: 'scale(1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-quaternary)'
+              e.currentTarget.style.transform = 'scale(1.01)'
+              e.currentTarget.style.borderColor = 'var(--border-secondary)'
+              e.currentTarget.style.boxShadow = 'var(--shadow-xs)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
+              e.currentTarget.style.transform = 'scale(1)'
+              e.currentTarget.style.borderColor = 'var(--border-primary)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}
+          </button>
+        </div>
       </div>
     </div>
   )

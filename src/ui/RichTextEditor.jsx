@@ -2,8 +2,14 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
+import Strike from '@tiptap/extension-strike'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import TextAlign from '@tiptap/extension-text-align'
+import Link from '@tiptap/extension-link'
+import Highlight from '@tiptap/extension-highlight'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import '../styles/tiptap.css'
 
@@ -23,13 +29,29 @@ const RichTextEditor = forwardRef(({ content, onChange, placeholder = 'Start wri
         orderedList: {
           keepMarks: true,
           keepAttributes: false
-        }
+        },
+        strike: false // Disable default strike, use extension instead
       }),
       Underline,
+      Strike,
       TaskList,
       TaskItem.configure({
         nested: true
       }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'editor-link'
+        }
+      }),
+      Highlight.configure({
+        multicolor: true
+      }),
+      Subscript,
+      Superscript,
       Placeholder.configure({
         placeholder
       })
