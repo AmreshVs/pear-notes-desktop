@@ -158,6 +158,10 @@
   background-color: rgba(0, 122, 255, 0.3);
 }
 
+[data-theme='light'] .ProseMirror ::selection {
+  background-color: rgba(0, 122, 255, 0.2);
+}
+
 /* Focus */
 .ProseMirror:focus {
   outline: none;

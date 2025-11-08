@@ -9,11 +9,11 @@
   --bg-panel-secondary: #2c2c2e;
   --bg-panel-tertiary: #3a3a3c;
 
-  /* Text Colors */
+  /* Text Colors - Improved contrast for readability */
   --text-primary: #ffffff;
   --text-secondary: #e5e5e7;
-  --text-tertiary: #8e8e93;
-  --text-muted: #86868b;
+  --text-tertiary: #a8a8ad;
+  --text-muted: #9a9a9f;
 
   /* Border Colors */
   --border-primary: #1f1f23;
@@ -32,10 +32,17 @@
   --interactive-active: rgba(255, 255, 255, 0.15);
   --interactive-selected: var(--accent-primary);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  /* Shadows - Premium depth */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  /* Glows */
+  --glow-primary: 0 0 20px rgba(0, 122, 255, 0.3);
+  --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.5);
 
   /* Spacing Scale */
   --spacing-xs: 0.25rem; /* 4px */
@@ -64,42 +71,71 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.6;
 
-  /* Border Radius */
+  /* Border Radius - Premium rounded corners */
+  --radius-xs: 0.25rem; /* 4px */
   --radius-sm: 0.375rem; /* 6px */
   --radius-md: 0.5rem; /* 8px */
   --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.5rem; /* 24px */
   --radius-full: 9999px;
 
-  /* Transitions */
+  /* Transitions - Premium easing */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-bounce: 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Backdrop blur */
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(16px);
 }
 
-/* Light Mode */
+/* Light Mode - Premium Apple Notes inspired */
 [data-theme='light'] {
-  --bg-primary: #f5f5f7;
+  --bg-primary: #fafafa;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #ebebed;
-  --bg-quaternary: #e5e5e7;
+  --bg-tertiary: #f0f0f0;
+  --bg-quaternary: #e8e8e8;
   --bg-panel: #ffffff;
-  --bg-panel-secondary: #f5f5f7;
-  --bg-panel-tertiary: #ebebed;
+  --bg-panel-secondary: #fafafa;
+  --bg-panel-tertiary: #f5f5f5;
 
-  /* Text Colors */
-  --text-primary: #1d1d1f;
-  --text-secondary: #1d1d1f;
-  --text-tertiary: #86868b;
-  --text-muted: #86868b;
+  /* Text Colors - Better contrast for readability */
+  --text-primary: #1a1a1a;
+  --text-secondary: #2c2c2e;
+  --text-tertiary: #5a5a5f;
+  --text-muted: #6e6e73;
 
-  /* Border Colors */
-  --border-primary: #e5e5e7;
-  --border-secondary: #d1d1d6;
-  --border-tertiary: #c7c7cc;
+  /* Border Colors - More defined */
+  --border-primary: #d1d1d6;
+  --border-secondary: #c7c7cc;
+  --border-tertiary: #b8b8bd;
 
-  /* Interactive States */
-  --interactive-hover: rgba(0, 0, 0, 0.05);
-  --interactive-active: rgba(0, 0, 0, 0.1);
+  /* Accent Colors - Adjusted for light mode */
+  --accent-primary: #007aff;
+  --accent-primary-hover: #0056d6;
+  --accent-success: #28a745;
+  --accent-danger: #dc3545;
+  --accent-warning: #ff9500;
+
+  /* Interactive States - Better visibility */
+  --interactive-hover: rgba(0, 0, 0, 0.06);
+  --interactive-active: rgba(0, 0, 0, 0.12);
+
+  /* Shadows - Lighter for light mode */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  
+  /* Glows - Adjusted for light mode */
+  --glow-primary: 0 0 20px rgba(0, 122, 255, 0.25);
+  --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.4);
 }
 
 /* Utility Classes */
@@ -131,12 +167,20 @@
   color: var(--text-tertiary);
 }
 
+.text-muted {
+  color: var(--text-muted);
+}
+
 .border-primary {
   border-color: var(--border-primary);
 }
 
 .border-secondary {
   border-color: var(--border-secondary);
+}
+
+.border-tertiary {
+  border-color: var(--border-tertiary);
 }
 
 .accent-primary {
@@ -149,6 +193,90 @@
 
 .hover-bg-accent-primary:hover {
   background-color: var(--accent-primary-hover);
+}
+
+/* Panel Backgrounds */
+.bg-panel {
+  background-color: var(--bg-panel);
+}
+
+.bg-panel-secondary {
+  background-color: var(--bg-panel-secondary);
+}
+
+.bg-panel-tertiary {
+  background-color: var(--bg-panel-tertiary);
+}
+
+/* Accent Colors */
+.text-accent-primary {
+  color: var(--accent-primary);
+}
+
+.text-accent-success {
+  color: var(--accent-success);
+}
+
+.text-accent-danger {
+  color: var(--accent-danger);
+}
+
+.text-accent-warning {
+  color: var(--accent-warning);
+}
+
+.bg-accent-success {
+  background-color: var(--accent-success);
+}
+
+.bg-accent-danger {
+  background-color: var(--accent-danger);
+}
+
+.bg-accent-warning {
+  background-color: var(--accent-warning);
+}
+
+/* Common UI Component Classes */
+.modal-bg {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-secondary);
+}
+
+.modal-header-bg {
+  background-color: var(--bg-panel-secondary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.sidebar-bg {
+  background-color: var(--bg-panel-secondary);
+  border-right: 1px solid var(--border-primary);
+}
+
+.button-secondary {
+  background-color: var(--bg-panel-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+.button-secondary:hover {
+  background-color: var(--bg-panel-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-xs);
+}
+
+.input-field {
+  background-color: var(--bg-panel-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.input-field:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
 }
 
 /* Interactive Button Base */

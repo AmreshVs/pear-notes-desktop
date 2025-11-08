@@ -139,9 +139,21 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
   }, [onEditorReady, note])
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden' style={{ backgroundColor: 'var(--bg-secondary)' }}>
-      {/* Status Bar */}
-      <div className='px-6 py-2 flex items-center justify-end' style={{ borderBottom: '1px solid var(--border-primary)' }}>
+    <div
+      className='flex-1 flex flex-col overflow-hidden'
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        boxShadow: 'var(--shadow-sm)'
+      }}
+    >
+      {/* Status Bar - Premium Styling */}
+      <div
+        className='px-6 py-2.5 flex items-center justify-end'
+        style={{
+          borderBottom: '1px solid var(--border-primary)',
+          background: 'linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary))'
+        }}
+      >
         <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <span>
             Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} | {wordCount}{' '}
@@ -159,10 +171,12 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-2xl font-bold mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight'
+            className='w-full text-2xl font-bold mb-6 bg-transparent border-none outline-none resize-none select-text leading-tight'
             style={{
               fontFamily: 'var(--font-family-system)',
-              color: 'var(--text-primary)'
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+              fontWeight: '700'
             }}
           />
           <div style={{ minHeight: '500px' }}>
@@ -176,8 +190,14 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
         </div>
       </div>
 
-              {/* Bottom Status */}
-              <div className='px-6 py-2 flex items-center justify-end' style={{ borderTop: '1px solid var(--border-primary)' }}>
+              {/* Bottom Status - Premium Styling */}
+              <div
+                className='px-6 py-2.5 flex items-center justify-end'
+                style={{
+                  borderTop: '1px solid var(--border-primary)',
+                  background: 'linear-gradient(to top, var(--bg-primary), var(--bg-secondary))'
+                }}
+              >
                 <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path

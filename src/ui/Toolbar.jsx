@@ -82,7 +82,15 @@ export default function Toolbar({
     }
   }, [editor])
   return (
-    <div className='h-12 flex items-center px-4 gap-4' style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)' }}>
+    <div
+      className='h-12 flex items-center px-5 gap-4'
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderBottom: '1px solid var(--border-primary)',
+        boxShadow: 'var(--shadow-xs)',
+        backdropFilter: 'var(--blur-sm)'
+      }}
+    >
       {/* Left: Navigation */}
       <div className='flex items-center gap-2'>
         <button
