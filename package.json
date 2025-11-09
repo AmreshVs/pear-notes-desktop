@@ -14,7 +14,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
-    "dev:vite": "vite build -w --sourcemap inline",
+    "dev:vite": "vite build --watch --sourcemap inline",
     "dev:pear": "pear run -d .",
     "build": "vite build",
     "prettier-fix": "prettier . --write",
@@ -53,6 +53,7 @@
     "@tiptap/starter-kit": "^3.10.4",
     "autobase": "^7.21.1",
     "b4a": "^1.7.3",
+    "bare-crypto": "^1.12.0",
     "blind-pairing": "^2.3.1",
     "corestore": "^7.6.0",
     "framed-stream": "^1.0.1",

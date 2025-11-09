@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useAppDispatch, useAppSelector } from './store/hooks'
+import { useEffect, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { createNote, updateNote, deleteNote, setSelectedNote } from './store/notesSlice'
 import {
   setSelectedFolder,
@@ -18,21 +18,34 @@ import Toolbar from './ui/Toolbar'
 import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import NewFolderModal from './ui/NewFolderModal'
+import { backendApi } from './backend/api'
 
 function App() {
-  const dispatch = useAppDispatch()
+  const dispatch = useDispatch()
 
   // Select state from Redux store
-  const notes = useAppSelector((state) => state.notes.notes)
-  const selectedNote = useAppSelector((state) => state.notes.selectedNote)
-  const isLoading = useAppSelector((state) => state.notes.isLoading)
-  const selectedFolder = useAppSelector((state) => state.ui.selectedFolder)
-  const searchQuery = useAppSelector((state) => state.ui.searchQuery)
-  const showSettings = useAppSelector((state) => state.ui.showSettings)
-  const showNewFolderModal = useAppSelector((state) => state.ui.showNewFolderModal)
-  const folders = useAppSelector((state) => state.ui.folders)
-  const editor = useAppSelector((state) => state.ui.editor)
-  const theme = useAppSelector((state) => state.ui.theme)
+  const notes = useSelector((state) => state.notes.notes)
+  const selectedNote = useSelector((state) => state.notes.selectedNote)
+  const isLoading = useSelector((state) => state.notes.isLoading)
+  const selectedFolder = useSelector((state) => state.ui.selectedFolder)
+  const searchQuery = useSelector((state) => state.ui.searchQuery)
+  const showSettings = useSelector((state) => state.ui.showSettings)
+  const showNewFolderModal = useSelector((state) => state.ui.showNewFolderModal)
+  const folders = useSelector((state) => state.ui.folders)
+  const editor = useSelector((state) => state.ui.editor)
+  const theme = useSelector((state) => state.ui.theme)
+
+  useEffect(() => {
+    const load = async () => {
+      const check = await backendApi.ready()
+      console.log('ready done', check)
+
+      const allNotes = await backendApi.getAllNotes()
+      console.log({ allNotes })
+    }
+
+    load()
+  }, [])
 
   // Handlers using Redux actions
   const handleCreateNote = () => {

@@ -164,8 +164,8 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       >
         <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <span>
-            amresh Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} |{' '}
-            {wordCount} words
+            Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} | {wordCount}{' '}
+            words
           </span>
         </div>
       </div>
