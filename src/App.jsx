@@ -8,7 +8,8 @@ import {
   setShowNewFolderModal,
   setEditor,
   toggleTheme,
-  createFolder
+  createFolder,
+  appReady
 } from './store/uiSlice'
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
@@ -37,11 +38,8 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
-      const check = await backendApi.ready()
-      console.log('ready done', check)
-
-      const allNotes = await backendApi.getAllNotes()
-      console.log({ allNotes })
+      await backendApi.ready()
+      dispatch(appReady())
     }
 
     load()
@@ -49,17 +47,9 @@ function App() {
 
   // Handlers using Redux actions
   const handleCreateNote = () => {
-    const newKey = Date.now().toString()
-    const now = Date.now()
     const newNote = {
-      key: newKey,
-      value: {
-        title: '',
-        content: '',
-        folder: selectedFolder === 'all' ? null : selectedFolder,
-        createdAt: now,
-        updatedAt: now
-      }
+      title: '',
+      note: ''
     }
 
     dispatch(createNote(newNote))
@@ -71,7 +61,8 @@ function App() {
   }
 
   const handleUpdateNote = ({ key, title, content, contentHtml }) => {
-    dispatch(updateNote({ key, title, content, contentHtml }))
+    console.log({ title, content, contentHtml })
+    // dispatch(updateNote({ key, title, content, contentHtml }))
   }
 
   const handleDeleteNote = (key) => {
