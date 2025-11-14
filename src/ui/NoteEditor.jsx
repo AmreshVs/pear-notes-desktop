@@ -12,20 +12,20 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
 
   useEffect(() => {
     if (note) {
-      setTitle(note.value?.title || '')
+      setTitle(note?.title || '')
       // Support both HTML (rich text) and plain text (legacy)
-      setContent(note.value?.contentHtml || note.value?.content || '')
-      setContentText(note.value?.content || '')
+      setContent(note?.note || '')
+      // setContentText(note.value?.content || '')
     } else {
       setTitle('')
       setContent('')
       setContentText('')
     }
-  }, [note])
+  }, [])
 
   // Auto-focus title when new note is created
   useEffect(() => {
-    if (note && !note.value?.title && !note.value?.content && !note.value?.contentHtml) {
+    if (note && !note?.title && !note?.note) {
       setTimeout(() => {
         titleRef.current?.focus()
       }, 100)

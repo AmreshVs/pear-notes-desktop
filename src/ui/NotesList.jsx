@@ -122,7 +122,7 @@ export default function NotesList({
               return (
                 <div
                   key={note.key}
-                  onClick={() => onSelectNote(note)}
+                  onClick={() => onSelectNote(note.key)}
                   className='px-5 py-3.5 cursor-pointer transition-all group'
                   style={{
                     borderBottom: '1px solid var(--border-primary)',
@@ -163,7 +163,7 @@ export default function NotesList({
                           opacity: isSelected ? 1 : 1
                         }}
                       >
-                        {getPreview(note.value?.content, note.value?.contentHtml)}
+                        {getPreview(note.value?.note, note.value?.note)}
                       </p>
                       <p
                         className='text-[11px] font-medium'
