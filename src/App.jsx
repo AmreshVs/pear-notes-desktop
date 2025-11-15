@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, fetchNote } from './store/notesSlice'
+import { createNote, updateNote, deleteNote, fetchNote, getNoteKeys } from './store/notesSlice'
 import {
   setSelectedFolder,
   setSearchQuery,
@@ -25,6 +25,7 @@ function App() {
   const dispatch = useDispatch()
 
   // Select state from Redux store
+  const notesData = useSelector((state) => state.notes.notesData)
   const notes = useSelector((state) => state.notes.notes)
   const selectedNote = useSelector((state) => state.notes.selectedNote)
   const isLoading = useSelector((state) => state.notes.isLoading)
@@ -35,6 +36,9 @@ function App() {
   const folders = useSelector((state) => state.ui.folders)
   const editor = useSelector((state) => state.ui.editor)
   const theme = useSelector((state) => state.ui.theme)
+  const notesKeys = useSelector(getNoteKeys)
+
+  console.log({ notesData })
 
   useEffect(() => {
     const load = async () => {
@@ -47,7 +51,6 @@ function App() {
 
   // Handlers using Redux actions
   const handleCreateNote = () => {
-    console.log('handleCreateNote')
     const newNote = {
       title: '',
       note: ''
@@ -62,7 +65,6 @@ function App() {
   }
 
   const handleUpdateNote = ({ key, title, content, contentHtml }) => {
-    console.log({ key, title, contentHtml })
     dispatch(updateNote({ key, title, note: contentHtml }))
   }
 
