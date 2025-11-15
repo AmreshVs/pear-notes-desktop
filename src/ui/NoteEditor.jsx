@@ -21,7 +21,7 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       setContent('')
       setContentText('')
     }
-  }, [])
+  }, [note])
 
   // Auto-focus title when new note is created
   useEffect(() => {
