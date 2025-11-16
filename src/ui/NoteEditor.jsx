@@ -14,26 +14,30 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   const [editorInstance, setEditorInstance] = useState(null)
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
+  const [shouldRerender, setShouldRerender] = useState(true)
 
   useEffect(() => {
-    if (noteData) {
+    if (noteData && shouldRerender) {
       setTitle(noteData?.title || '')
       setContent(noteData?.note || '')
-    } else {
-      setTitle('')
-      setContent('')
-      setContentText('')
+      setShouldRerender(false)
+    }
+  }, [noteData, shouldRerender])
+
+  useEffect(() => {
+    if (selectedNoteKey) {
+      setShouldRerender(true)
     }
   }, [selectedNoteKey])
 
   // Auto-focus title when new note is created
   useEffect(() => {
-    if (noteData && !noteData?.title && !noteData?.note) {
+    if (shouldRerender && noteData && !noteData?.title && !noteData?.note) {
       setTimeout(() => {
         titleRef.current?.focus()
       }, 100)
     }
-  }, [noteData])
+  }, [noteData, shouldRerender])
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value

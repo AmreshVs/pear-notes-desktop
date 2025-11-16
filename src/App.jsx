@@ -55,8 +55,7 @@ function App() {
     dispatch(setSearchQuery(''))
   }
 
-  const handleUpdateNote = ({ key, title, content, contentHtml }) => {
-    console.log({ key, title })
+  const handleUpdateNote = ({ key, title, contentHtml }) => {
     dispatch(updateNote({ key, title, note: contentHtml }))
   }
 
