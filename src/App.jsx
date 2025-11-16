@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, fetchNote, getNoteKeys } from './store/notesSlice'
+import { createNote, updateNote, deleteNote, getNoteKeys } from './store/notesSlice'
 import {
   setSelectedFolder,
   setSearchQuery,
@@ -24,8 +24,6 @@ import { backendApi } from './backend/api'
 function App() {
   const dispatch = useDispatch()
 
-  // Select state from Redux store
-  const notesData = useSelector((state) => state.notes.notesData)
   const notes = useSelector((state) => state.notes.notes)
   const selectedNote = useSelector((state) => state.notes.selectedNote)
   const isLoading = useSelector((state) => state.notes.isLoading)
@@ -38,8 +36,6 @@ function App() {
   const theme = useSelector((state) => state.ui.theme)
   const notesKeys = useSelector(getNoteKeys)
 
-  console.log({ notesData })
-
   useEffect(() => {
     const load = async () => {
       await backendApi.ready()
@@ -49,7 +45,6 @@ function App() {
     load()
   }, [])
 
-  // Handlers using Redux actions
   const handleCreateNote = () => {
     const newNote = {
       title: '',
@@ -58,10 +53,6 @@ function App() {
 
     dispatch(createNote(newNote))
     dispatch(setSearchQuery(''))
-  }
-
-  const handleSelectNote = (key) => {
-    dispatch(fetchNote({ key }))
   }
 
   const handleUpdateNote = ({ key, title, content, contentHtml }) => {
@@ -80,24 +71,18 @@ function App() {
     dispatch(createFolder({ name }))
   }
 
-  // Data is loaded automatically by rootSaga on app initialization
-
-  // Sort and filter notes - memoized for performance
   const filteredNotes = useMemo(() => {
-    // Sort notes by updatedAt descending for display
     const sortedNotes = [...notes].sort((a, b) => {
       const aTime = a.value?.updatedAt || a.value?.createdAt || 0
       const bTime = b.value?.updatedAt || b.value?.createdAt || 0
       return bTime - aTime
     })
 
-    // Filter by folder
     const folderFiltered = sortedNotes.filter((note) => {
       if (selectedFolder === 'all') return true
       return note.value?.folder === selectedFolder
     })
 
-    // Filter by search query
     if (!searchQuery) return folderFiltered
     const query = searchQuery.toLowerCase()
     return folderFiltered.filter((note) => {
@@ -130,15 +115,12 @@ function App() {
     <main className='min-h-screen flex flex-col' style={{ backgroundColor: 'var(--bg-primary)' }}>
       <TitleBar />
       <div className='flex-1 flex flex-col overflow-hidden'>
-        {/* Toolbar */}
         <Toolbar
           searchQuery={searchQuery}
           onSearchChange={(value) => dispatch(setSearchQuery(value))}
         />
 
-        {/* Three Column Layout */}
         <div className='flex-1 flex overflow-hidden'>
-          {/* Left: Folders Sidebar (Resizable) */}
           <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400}>
             <FoldersSidebar
               selectedFolder={selectedFolder}
@@ -153,18 +135,10 @@ function App() {
             />
           </ResizablePanel>
 
-          {/* Middle: Notes List (Resizable) */}
           <ResizablePanel defaultWidth={280} minWidth={200} maxWidth={500}>
-            <NotesList
-              notes={filteredNotes}
-              selectedNote={selectedNote}
-              onSelectNote={handleSelectNote}
-              onDeleteNote={handleDeleteNote}
-              selectedFolder={selectedFolder}
-            />
+            <NotesList selectedFolder={selectedFolder} />
           </ResizablePanel>
 
-          {/* Right: Note Editor */}
           <NoteEditor
             note={selectedNote}
             onUpdate={handleUpdateNote}
@@ -174,7 +148,6 @@ function App() {
         </div>
       </div>
 
-      {/* Modals */}
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
       {showNewFolderModal && (
         <NewFolderModal
