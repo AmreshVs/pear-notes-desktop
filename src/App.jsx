@@ -56,10 +56,11 @@ function App() {
   }
 
   const handleUpdateNote = ({ key, title, content, contentHtml }) => {
+    console.log({ key, title })
     dispatch(updateNote({ key, title, note: contentHtml }))
   }
 
-  const handleDeleteNote = (key) => {
+  const handleDeleteNote = async (key) => {
     dispatch(deleteNote(key))
   }
 
@@ -140,7 +141,6 @@ function App() {
           </ResizablePanel>
 
           <NoteEditor
-            note={selectedNote}
             onUpdate={handleUpdateNote}
             onDelete={handleDeleteNote}
             onEditorReady={handleEditorReady}

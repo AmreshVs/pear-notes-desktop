@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
+import { getNoteData, getSelectedNote } from '../store/notesSlice'
+import { useSelector } from 'react-redux'
 
-export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) {
+export default function NoteEditor({ onUpdate, onEditorReady }) {
+  const selectedNoteKey = useSelector(getSelectedNote)
+  const noteData = useSelector(getNoteData(selectedNoteKey)) || {}
+
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [contentText, setContentText] = useState('')
@@ -11,40 +16,38 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
   const richTextEditorRef = useRef(null)
 
   useEffect(() => {
-    if (note) {
-      setTitle(note?.title || '')
-      // Support both HTML (rich text) and plain text (legacy)
-      setContent(note?.note || '')
-      // setContentText(note.value?.content || '')
+    if (noteData) {
+      setTitle(noteData?.title || '')
+      setContent(noteData?.note || '')
     } else {
       setTitle('')
       setContent('')
       setContentText('')
     }
-  }, [note])
+  }, [selectedNoteKey])
 
   // Auto-focus title when new note is created
   useEffect(() => {
-    if (note && !note?.title && !note?.note) {
+    if (noteData && !noteData?.title && !noteData?.note) {
       setTimeout(() => {
         titleRef.current?.focus()
       }, 100)
     }
-  }, [note])
+  }, [noteData])
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value
     setTitle(newTitle)
-    if (note) {
-      onUpdate({ key: note.key, title: newTitle, contentHtml: content, content: contentText })
+    if (noteData) {
+      onUpdate({ key: selectedNoteKey, title: newTitle, contentHtml: content, content: contentText })
     }
   }
 
   const handleContentChange = ({ html, text }) => {
     setContent(html)
     setContentText(text)
-    if (note) {
-      onUpdate({ key: note.key, title, contentHtml: html, content: text })
+    if (noteData) {
+      onUpdate({ key: selectedNoteKey, title, contentHtml: html, content: text })
     }
   }
 
@@ -99,7 +102,7 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       .filter((word) => word.length > 0).length
   }
 
-  if (!note) {
+  if (!noteData) {
     return (
       <div className='flex-1 flex items-center justify-center bg-secondary'>
         <div className='text-center'>
@@ -136,7 +139,7 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
         const editor = richTextEditorRef.current.editor
         setEditorInstance(editor)
         onEditorReady?.(editor)
-      } else if (!note) {
+      } else if (!noteData) {
         // Clear editor when no note is selected
         setEditorInstance(null)
         onEditorReady?.(null)
@@ -144,7 +147,7 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
     }, 100)
 
     return () => clearTimeout(timer)
-  }, [onEditorReady, note])
+  }, [onEditorReady, noteData])
 
   return (
     <div
@@ -164,7 +167,7 @@ export default function NoteEditor({ note, onUpdate, onDelete, onEditorReady }) 
       >
         <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
           <span>
-            Last edited {formatDate(note.value?.updatedAt || note.value?.createdAt)} | {wordCount}{' '}
+            Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)} | {wordCount}{' '}
             words
           </span>
         </div>

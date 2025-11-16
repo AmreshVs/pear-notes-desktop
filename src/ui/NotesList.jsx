@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteNote, fetchNote, getNoteData, getNoteKeys, getSelectedNote } from '../store/notesSlice'
+import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/notesSlice'
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -54,13 +54,13 @@ const NotesItem = ({ noteKey: key }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
-  const isSelected = selectedNote?.key === key
+  const isSelected = selectedNote === key
 
   const handleSelectNote = useCallback((key) => {
-    dispatch(fetchNote({ key }))
+    dispatch(setSelectedNote(key))
   }, [])
 
-  const handleDeleteNote = useCallback((key) => {
+  const handleDeleteNote = useCallback(async (key) => {
     dispatch(deleteNote(key))
   }, [])
 
@@ -124,7 +124,7 @@ const NotesItem = ({ noteKey: key }) => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              handleDeleteNote(note.key)
+              handleDeleteNote(key)
             }}
             className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 transition-all'
             title='Delete Note'
