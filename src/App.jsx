@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, getNoteKeys } from './store/notesSlice'
+import { createNote, updateNote, deleteNote } from './store/notesSlice'
 import {
   setSelectedFolder,
   setSearchQuery,
@@ -32,9 +32,7 @@ function App() {
   const showSettings = useSelector((state) => state.ui.showSettings)
   const showNewFolderModal = useSelector((state) => state.ui.showNewFolderModal)
   const folders = useSelector((state) => state.ui.folders)
-  const editor = useSelector((state) => state.ui.editor)
   const theme = useSelector((state) => state.ui.theme)
-  const notesKeys = useSelector(getNoteKeys)
 
   useEffect(() => {
     const load = async () => {
@@ -43,7 +41,7 @@ function App() {
     }
 
     load()
-  }, [])
+  }, [dispatch])
 
   const handleCreateNote = () => {
     const newNote = {
@@ -70,27 +68,6 @@ function App() {
   const handleCreateFolder = (name) => {
     dispatch(createFolder({ name }))
   }
-
-  const filteredNotes = useMemo(() => {
-    const sortedNotes = [...notes].sort((a, b) => {
-      const aTime = a.value?.updatedAt || a.value?.createdAt || 0
-      const bTime = b.value?.updatedAt || b.value?.createdAt || 0
-      return bTime - aTime
-    })
-
-    const folderFiltered = sortedNotes.filter((note) => {
-      if (selectedFolder === 'all') return true
-      return note.value?.folder === selectedFolder
-    })
-
-    if (!searchQuery) return folderFiltered
-    const query = searchQuery.toLowerCase()
-    return folderFiltered.filter((note) => {
-      const title = (note.value?.title || '').toLowerCase()
-      const content = (note.value?.content || '').toLowerCase()
-      return title.includes(query) || content.includes(query)
-    })
-  }, [notes, selectedFolder, searchQuery])
 
   if (isLoading) {
     return (
@@ -137,6 +114,7 @@ function App() {
           </ResizablePanel>
 
           <NoteEditor
+            key={selectedNote}
             onUpdate={handleUpdateNote}
             onDelete={handleDeleteNote}
             onEditorReady={handleEditorReady}

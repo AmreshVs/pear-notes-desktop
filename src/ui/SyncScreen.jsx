@@ -1,9 +1,9 @@
-import { X, Copy, Check, Link2 } from 'lucide-react'
+import { X, Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SyncScreen({ onClose }) {
   const [activeTab, setActiveTab] = useState('invite')
-  const [inviteCode, setInviteCode] = useState('abc123xyz789')
+  const [inviteCode] = useState('abc123xyz789')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
 

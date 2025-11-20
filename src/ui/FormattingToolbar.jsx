@@ -55,28 +55,6 @@ export default function FormattingToolbar({ editor }) {
 
   // Update editor state when editor changes
   useEffect(() => {
-    if (!editor) {
-      setEditorState({
-        isBold: false,
-        isItalic: false,
-        isUnderline: false,
-        isStrike: false,
-        isHighlight: false,
-        isBulletList: false,
-        isOrderedList: false,
-        isTaskList: false,
-        isCodeBlock: false,
-        isCode: false,
-        isBlockquote: false,
-        isLink: false,
-        headingLevel: 0,
-        textAlign: 'left',
-        canUndo: false,
-        canRedo: false
-      })
-      return
-    }
-
     const updateState = () => {
       const headingLevel = editor.isActive('heading', { level: 1 })
         ? 1
@@ -199,30 +177,10 @@ export default function FormattingToolbar({ editor }) {
     return null
   }
 
-  const Button = ({ onClick, isActive, disabled, title, children, className = '' }) => (
-    <button
-      onClick={onClick}
-      className={`p-1 sm:p-1.5 rounded transition-colors flex-shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center ${
-        isActive
-          ? 'bg-accent-primary text-text-primary'
-          : disabled
-            ? 'text-text-tertiary opacity-50 cursor-not-allowed'
-            : 'text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'
-      } ${className}`}
-      title={title}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  )
-
-  const Divider = () => (
-    <div className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0 bg-border-primary' />
-  )
-
   return (
     <>
       <div className='flex items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-lg mb-4 overflow-x-auto toolbar-scroll bg-bg-tertiary border border-border-primary shadow-xs min-h-[40px]'>
+
         {/* Undo/Redo */}
         <Button
           onClick={() => editor?.chain().focus().undo().run()}
@@ -490,10 +448,7 @@ export default function FormattingToolbar({ editor }) {
           <Minus className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
         </Button>
         <Button
-          onClick={() => {
-            const link = getCurrentLink()
-            setShowLinkModal(true)
-          }}
+          onClick={() => setShowLinkModal(true)}
           isActive={editorState.isLink}
           disabled={!editor}
           title='Link'
@@ -503,14 +458,34 @@ export default function FormattingToolbar({ editor }) {
       </div>
 
       {/* Link Modal */}
-      {showLinkModal && (
-        <LinkModal
-          onClose={() => setShowLinkModal(false)}
-          onSetLink={handleSetLink}
-          currentUrl={getCurrentLink().url}
-          currentText={getCurrentLink().text}
-        />
-      )}
+      <LinkModal
+        isOpen={showLinkModal}
+        onClose={() => setShowLinkModal(false)}
+        onSubmit={handleSetLink}
+        initialUrl={getCurrentLink().url}
+        initialText={getCurrentLink().text}
+      />
     </>
   )
 }
+
+const Button = ({ onClick, isActive, disabled, title, children, className = '' }) => (
+  <button
+    onClick={onClick}
+    className={`p-1 sm:p-1.5 rounded transition-colors flex-shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center ${
+      isActive
+        ? 'bg-accent-primary text-text-primary'
+        : disabled
+          ? 'text-text-tertiary opacity-50 cursor-not-allowed'
+          : 'text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'
+    } ${className}`}
+    title={title}
+    disabled={disabled}
+  >
+    {children}
+  </button>
+)
+
+const Divider = () => (
+  <div className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0 bg-border-primary' />
+)

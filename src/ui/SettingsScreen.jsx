@@ -7,7 +7,6 @@ import {
   Lock,
   Info,
   LogOut,
-  Copy,
   Check,
   Link2
 } from 'lucide-react'
@@ -18,7 +17,7 @@ export default function SettingsScreen({ onClose }) {
   const [textSize, setTextSize] = useState(50)
   const [activeSection, setActiveSection] = useState('general')
   const [syncTab, setSyncTab] = useState('invite')
-  const [inviteCode, setInviteCode] = useState('abc123xyz789')
+  const [inviteCode] = useState('abc123xyz789')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
 

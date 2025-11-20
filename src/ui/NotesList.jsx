@@ -58,11 +58,11 @@ const NotesItem = ({ noteKey: key }) => {
 
   const handleSelectNote = useCallback((key) => {
     dispatch(setSelectedNote(key))
-  }, [])
+  }, [dispatch])
 
   const handleDeleteNote = useCallback(async (key) => {
     dispatch(deleteNote(key))
-  }, [])
+  }, [dispatch])
 
   return (
     <div

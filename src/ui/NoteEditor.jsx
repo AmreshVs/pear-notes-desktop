@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
 import { getNoteData, getSelectedNote } from '../store/notesSlice'
@@ -6,38 +6,42 @@ import { useSelector } from 'react-redux'
 
 export default function NoteEditor({ onUpdate, onEditorReady }) {
   const selectedNoteKey = useSelector(getSelectedNote)
-  const noteData = useSelector(getNoteData(selectedNoteKey)) || {}
+  const rawNoteData = useSelector(getNoteData(selectedNoteKey))
+  const noteData = useMemo(() => rawNoteData || {}, [rawNoteData])
 
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  // Initialize state from noteData props
+  const [title, setTitle] = useState(noteData?.title || '')
+  const [content, setContent] = useState(noteData?.note || '')
   const [contentText, setContentText] = useState('')
   const [editorInstance, setEditorInstance] = useState(null)
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
-  const [shouldRerender, setShouldRerender] = useState(true)
-
-  useEffect(() => {
-    if (noteData && shouldRerender) {
-      setTitle(noteData?.title || '')
-      setContent(noteData?.note || '')
-      setShouldRerender(false)
-    }
-  }, [noteData, shouldRerender])
-
-  useEffect(() => {
-    if (selectedNoteKey) {
-      setShouldRerender(true)
-    }
-  }, [selectedNoteKey])
 
   // Auto-focus title when new note is created
   useEffect(() => {
-    if (shouldRerender && noteData && !noteData?.title && !noteData?.note) {
+    if (noteData && !noteData?.title && !noteData?.note) {
       setTimeout(() => {
         titleRef.current?.focus()
       }, 100)
     }
-  }, [noteData, shouldRerender])
+  }, [noteData])
+
+    // Expose editor to parent via callback and update local state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (richTextEditorRef.current?.editor) {
+        const editor = richTextEditorRef.current.editor
+        setEditorInstance(editor)
+        onEditorReady?.(editor)
+      } else if (!noteData) {
+        // Clear editor when no note is selected
+        setEditorInstance(null)
+        onEditorReady?.(null)
+      }
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [onEditorReady, noteData])
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value
@@ -63,8 +67,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
     if (days === 0) {
-      const hours = Math.floor(diff / (1000 * 60 * 60))
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const timeStr = date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
@@ -135,23 +137,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   }
 
   const wordCount = getWordCount(getPlainText(content) || contentText)
-
-  // Expose editor to parent via callback and update local state
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (richTextEditorRef.current?.editor) {
-        const editor = richTextEditorRef.current.editor
-        setEditorInstance(editor)
-        onEditorReady?.(editor)
-      } else if (!noteData) {
-        // Clear editor when no note is selected
-        setEditorInstance(null)
-        onEditorReady?.(null)
-      }
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [onEditorReady, noteData])
 
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary shadow-sm'>

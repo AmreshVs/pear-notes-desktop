@@ -32,15 +32,18 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
     }
   }
 
-  // Auto-detect URL if text looks like a URL
-  useEffect(() => {
-    if (!url && text) {
+  const handleTextChange = (e) => {
+    const newText = e.target.value
+    setText(newText)
+    
+    // Auto-detect URL if text looks like a URL and no URL is set yet
+    if (!url && newText) {
       const urlPattern = /^(https?:\/\/|www\.)/i
-      if (urlPattern.test(text)) {
-        setUrl(text.startsWith('http') ? text : `https://${text}`)
+      if (urlPattern.test(newText)) {
+        setUrl(newText.startsWith('http') ? newText : `https://${newText}`)
       }
     }
-  }, [text, url])
+  }
 
   return (
     <div
@@ -74,7 +77,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
               <input
                 type='text'
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={handleTextChange}
                 placeholder='Link text'
                 className='w-full px-4 py-2.5 rounded-lg text-sm bg-bg-tertiary border border-border-tertiary text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary'
                 maxLength={100}
