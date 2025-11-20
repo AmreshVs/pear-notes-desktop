@@ -10,14 +10,14 @@ const base = `cursor-default border rounded-lg text-sm shadow-xs font-medium
 
 const variants = {
   default: [
-    'bg-background text-foreground border border-b-zinc-400/50',
-    'active:not-disabled:bg-muted/50 active:not-disabled:border-b-border active:shadow-none',
-    'dark:bg-muted dark:border-b-border',
+    'bg-bg-primary text-text-primary border-border-primary',
+    'active:not-disabled:bg-bg-secondary active:not-disabled:border-border-secondary active:shadow-none',
+    'dark:bg-bg-secondary dark:border-border-secondary',
     'disabled:opacity-50 disabled:shadow-none'
   ],
   primary: [
-    'text-white bg-gradient-to-b from-[#2890ff] to-[#017bff] border-transparent',
-    'active:bg-[#017bff] active:shadow-none'
+    'text-white bg-accent-primary border-transparent',
+    'active:bg-accent-primary-hover active:shadow-none'
   ]
 }
 

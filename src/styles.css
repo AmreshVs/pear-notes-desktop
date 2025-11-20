@@ -3,25 +3,85 @@
 @import './styles/tiptap.css';
 
 @theme {
-  --color-background: var(--color-white);
-  --color-foreground: var(--color-zinc-700);
-  --color-muted: var(--color-zinc-100);
-  --color-muted-content: var(--color-zinc-500);
-  --color-border: var(--color-zinc-300);
-  --color-primary: var(--color-blue-500);
+  /* Background Colors */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-bg-quaternary: var(--bg-quaternary);
+  --color-bg-panel: var(--bg-panel);
+  --color-bg-panel-secondary: var(--bg-panel-secondary);
+  --color-bg-panel-tertiary: var(--bg-panel-tertiary);
 
-  --font-system:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Text Colors */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+
+  /* Border Colors */
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+  --color-border-tertiary: var(--border-tertiary);
+
+  /* Accent Colors */
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-primary-hover: var(--accent-primary-hover);
+  --color-accent-success: var(--accent-success);
+  --color-accent-danger: var(--accent-danger);
+  --color-accent-warning: var(--accent-warning);
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-inner: var(--shadow-inner);
+
+  /* Glows */
+  --shadow-glow-primary: var(--glow-primary);
+  --shadow-glow-primary-strong: var(--glow-primary-strong);
+
+  /* Font Family */
+  --font-system: var(--font-family-system);
+
+  /* Font Sizes */
+  --text-xs: var(--font-size-xs);
+  --text-sm: var(--font-size-sm);
+  --text-base: var(--font-size-base);
+  --text-lg: var(--font-size-lg);
+  --text-xl: var(--font-size-xl);
+  --text-2xl: var(--font-size-2xl);
+
+  /* Font Weights */
+  --font-weight-normal: var(--font-weight-normal);
+  --font-weight-medium: var(--font-weight-medium);
+  --font-weight-semibold: var(--font-weight-semibold);
+  --font-weight-bold: var(--font-weight-bold);
+
+  /* Border Radius */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+
+  /* Transitions */
+  --ease-fast: var(--transition-fast);
+  --ease-base: var(--transition-base);
+  --ease-slow: var(--transition-slow);
+  --ease-smooth: var(--transition-smooth);
+  --ease-bounce: var(--transition-bounce);
 }
 
 @layer base {
   * {
-    @apply min-w-0 box-border border-border;
+    @apply min-w-0 box-border border-border-primary;
   }
 
   body {
-    @apply bg-background text-foreground font-system;
+    @apply bg-bg-primary text-text-primary font-system;
     @apply antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

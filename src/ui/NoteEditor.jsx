@@ -108,11 +108,11 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
 
   if (!noteData) {
     return (
-      <div className='flex-1 flex items-center justify-center bg-secondary'>
+      <div className='flex-1 flex items-center justify-center bg-bg-secondary'>
         <div className='text-center'>
           <div className='mb-4'>
             <svg
-              className='w-16 h-16 mx-auto text-tertiary'
+              className='w-16 h-16 mx-auto text-text-tertiary'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -125,8 +125,8 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
               />
             </svg>
           </div>
-          <p className='text-lg font-medium text-primary mb-1'>No Note Selected</p>
-          <p className='text-base text-tertiary'>
+          <p className='text-lg font-medium text-text-primary mb-1'>No Note Selected</p>
+          <p className='text-base text-text-tertiary'>
             Select a note from the sidebar or create a new one
           </p>
         </div>
@@ -154,22 +154,10 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   }, [onEditorReady, noteData])
 
   return (
-    <div
-      className='flex-1 flex flex-col overflow-hidden'
-      style={{
-        backgroundColor: 'var(--bg-secondary)',
-        boxShadow: 'var(--shadow-sm)'
-      }}
-    >
+    <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary shadow-sm'>
       {/* Status Bar - Premium Styling */}
-      <div
-        className='px-6 py-2.5 flex items-center justify-end'
-        style={{
-          borderBottom: '1px solid var(--border-primary)',
-          background: 'linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary))'
-        }}
-      >
-        <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
+      <div className='px-6 py-2.5 flex items-center justify-end border-b border-border-primary bg-gradient-to-b from-bg-primary to-bg-secondary'>
+        <div className='flex items-center gap-2 text-xs text-text-tertiary'>
           <span>
             Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)} | {wordCount}{' '}
             words
@@ -188,15 +176,9 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-2xl font-bold mb-6 bg-transparent border-none outline-none resize-none select-text leading-tight'
-            style={{
-              fontFamily: 'var(--font-family-system)',
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.02em',
-              fontWeight: '700'
-            }}
+            className='w-full text-2xl font-bold mb-6 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-[-0.02em]'
           />
-          <div style={{ minHeight: '500px' }}>
+          <div className='min-h-[500px]'>
             <RichTextEditor
               ref={richTextEditorRef}
               content={content}
@@ -208,14 +190,8 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
       </div>
 
       {/* Bottom Status - Premium Styling */}
-      <div
-        className='px-6 py-2.5 flex items-center justify-end'
-        style={{
-          borderTop: '1px solid var(--border-primary)',
-          background: 'linear-gradient(to top, var(--bg-primary), var(--bg-secondary))'
-        }}
-      >
-        <div className='flex items-center gap-2 text-xs' style={{ color: 'var(--text-tertiary)' }}>
+      <div className='px-6 py-2.5 flex items-center justify-end border-t border-border-primary bg-gradient-to-t from-bg-primary to-bg-secondary'>
+        <div className='flex items-center gap-2 text-xs text-text-tertiary'>
           <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
           </svg>

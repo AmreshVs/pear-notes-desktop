@@ -103,13 +103,7 @@ const RichTextEditor = forwardRef(
       <div className='ProseMirror-wrapper'>
         <EditorContent
           editor={editor}
-          className='flex-1'
-          style={{
-            fontFamily: 'var(--font-family-system)',
-            fontSize: 'var(--font-size-lg)',
-            lineHeight: 'var(--line-height-relaxed)',
-            color: 'var(--text-primary)'
-          }}
+          className='flex-1 font-sans text-lg leading-relaxed text-text-primary'
         />
       </div>
     )

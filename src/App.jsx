@@ -94,15 +94,12 @@ function App() {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen flex flex-col' style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <main className='min-h-screen flex flex-col bg-bg-primary'>
         <TitleBar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
-            <div
-              className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3'
-              style={{ borderColor: 'var(--accent-primary)' }}
-            ></div>
-            <p className='text-[15px]' style={{ color: 'var(--text-tertiary)' }}>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
+            <p className='text-[15px] text-text-tertiary'>
               Loading...
             </p>
           </div>
@@ -112,7 +109,7 @@ function App() {
   }
 
   return (
-    <main className='min-h-screen flex flex-col' style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <main className='min-h-screen flex flex-col bg-bg-primary'>
       <TitleBar />
       <div className='flex-1 flex flex-col overflow-hidden'>
         <Toolbar

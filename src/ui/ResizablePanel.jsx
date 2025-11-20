@@ -47,35 +47,16 @@ export default function ResizablePanel({
       {children}
       {/* Wider hover area for better UX */}
       <div
-        className='absolute right-0 top-0 bottom-0 cursor-col-resize'
-        style={{
-          zIndex: 10,
-          width: '8px',
-          marginRight: '-4px'
-        }}
+        className='absolute right-0 top-0 bottom-0 cursor-col-resize z-10 w-2 -mr-1 group'
         onMouseDown={handleMouseDown}
       >
         {/* Visible resize handle */}
         <div
-          className='absolute right-0 top-0 bottom-0 transition-all'
-          style={{
-            width: isResizing ? '2px' : '2px',
-            backgroundColor: isResizing ? 'var(--accent-primary)' : 'transparent',
-            opacity: isResizing ? 1 : 0,
-            transition: 'var(--transition-fast)'
-          }}
-          onMouseEnter={(e) => {
-            if (!isResizing) {
-              e.currentTarget.style.backgroundColor = 'var(--accent-primary)'
-              e.currentTarget.style.opacity = '0.7'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isResizing) {
-              e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.opacity = '0'
-            }
-          }}
+          className={`absolute right-0 top-0 bottom-0 w-0.5 transition-all duration-200 ${
+            isResizing
+              ? 'bg-accent-primary opacity-100'
+              : 'bg-transparent opacity-0 group-hover:bg-accent-primary group-hover:opacity-70'
+          }`}
         />
       </div>
     </div>

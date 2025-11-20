@@ -202,28 +202,13 @@ export default function FormattingToolbar({ editor }) {
   const Button = ({ onClick, isActive, disabled, title, children, className = '' }) => (
     <button
       onClick={onClick}
-      className={`p-1 sm:p-1.5 rounded transition-colors flex-shrink-0 ${className}`}
-      style={{
-        backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
-        color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
-        minWidth: '28px',
-        minHeight: '28px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive && !disabled) {
-          e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
-          e.currentTarget.style.color = 'var(--text-primary)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive && !disabled) {
-          e.currentTarget.style.backgroundColor = 'transparent'
-          e.currentTarget.style.color = 'var(--text-tertiary)'
-        }
-      }}
+      className={`p-1 sm:p-1.5 rounded transition-colors flex-shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center ${
+        isActive
+          ? 'bg-accent-primary text-text-primary'
+          : disabled
+            ? 'text-text-tertiary opacity-50 cursor-not-allowed'
+            : 'text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'
+      } ${className}`}
       title={title}
       disabled={disabled}
     >
@@ -232,26 +217,12 @@ export default function FormattingToolbar({ editor }) {
   )
 
   const Divider = () => (
-    <div
-      className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0'
-      style={{ backgroundColor: 'var(--border-primary)' }}
-    />
+    <div className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0 bg-border-primary' />
   )
 
   return (
     <>
-      <div
-        className='flex items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-lg mb-4 overflow-x-auto toolbar-scroll'
-        style={{
-          backgroundColor: 'var(--bg-tertiary)',
-          border: '1px solid var(--border-primary)',
-          boxShadow: 'var(--shadow-xs)',
-          minHeight: '40px',
-          WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'var(--border-secondary) transparent'
-        }}
-      >
+      <div className='flex items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-lg mb-4 overflow-x-auto toolbar-scroll bg-bg-tertiary border border-border-primary shadow-xs min-h-[40px]'>
         {/* Undo/Redo */}
         <Button
           onClick={() => editor?.chain().focus().undo().run()}
@@ -335,62 +306,47 @@ export default function FormattingToolbar({ editor }) {
             <ChevronDown className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
           </Button>
           {showHeadingMenu && (
-            <div
-              className='absolute top-full left-0 mt-1 rounded-lg shadow-lg z-50'
-              style={{
-                backgroundColor: 'var(--bg-panel)',
-                border: '1px solid var(--border-secondary)',
-                minWidth: '160px'
-              }}
-            >
+            <div className='absolute top-full left-0 mt-1 rounded-lg shadow-lg z-50 bg-bg-panel border border-border-secondary min-w-[160px]'>
               <button
                 onClick={() => handleHeadingClick(0)}
-                className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
-                style={{
-                  color:
-                    editorState.headingLevel === 0
-                      ? 'var(--accent-primary)'
-                      : 'var(--text-secondary)'
-                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
+                  editorState.headingLevel === 0
+                    ? 'text-accent-primary'
+                    : 'text-text-secondary'
+                }`}
               >
                 <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                 <span>Paragraph</span>
               </button>
               <button
                 onClick={() => handleHeadingClick(1)}
-                className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
-                style={{
-                  color:
-                    editorState.headingLevel === 1
-                      ? 'var(--accent-primary)'
-                      : 'var(--text-secondary)'
-                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
+                  editorState.headingLevel === 1
+                    ? 'text-accent-primary'
+                    : 'text-text-secondary'
+                }`}
               >
                 <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                 <span>Heading 1</span>
               </button>
               <button
                 onClick={() => handleHeadingClick(2)}
-                className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
-                style={{
-                  color:
-                    editorState.headingLevel === 2
-                      ? 'var(--accent-primary)'
-                      : 'var(--text-secondary)'
-                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
+                  editorState.headingLevel === 2
+                    ? 'text-accent-primary'
+                    : 'text-text-secondary'
+                }`}
               >
                 <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                 <span>Heading 2</span>
               </button>
               <button
                 onClick={() => handleHeadingClick(3)}
-                className='w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-panel-tertiary transition-colors text-sm'
-                style={{
-                  color:
-                    editorState.headingLevel === 3
-                      ? 'var(--accent-primary)'
-                      : 'var(--text-secondary)'
-                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
+                  editorState.headingLevel === 3
+                    ? 'text-accent-primary'
+                    : 'text-text-secondary'
+                }`}
               >
                 <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
                 <span>Heading 3</span>

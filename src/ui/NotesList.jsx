@@ -68,54 +68,30 @@ const NotesItem = ({ noteKey: key }) => {
     <div
       key={key}
       onClick={() => handleSelectNote(key)}
-      className='px-5 py-3.5 cursor-pointer transition-all group'
-      style={{
-        borderBottom: '1px solid var(--border-primary)',
-        backgroundColor: isSelected ? 'var(--accent-primary)' : 'transparent',
-        transform: isSelected ? 'translateX(2px)' : 'translateX(0)',
-        boxShadow: isSelected ? 'var(--shadow-xs)' : 'none',
-        transition: 'var(--transition-smooth)'
-      }}
-      onMouseEnter={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
-          e.currentTarget.style.transform = 'translateX(2px)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isSelected) {
-          e.currentTarget.style.backgroundColor = 'transparent'
-          e.currentTarget.style.transform = 'translateX(0)'
-        }
-      }}
+      className={`px-5 py-3.5 cursor-pointer transition-all ease-smooth duration-200 group border-b border-border-primary
+        ${
+          isSelected
+            ? 'bg-accent-primary translate-x-[2px] shadow-xs'
+            : 'bg-transparent hover:bg-bg-secondary hover:translate-x-[2px]'
+        }`}
     >
       <div className='flex items-start justify-between gap-2'>
         <div className='flex-1 min-w-0'>
           <h3
-            className='font-semibold text-[15px] mb-1.5 truncate'
-            style={{
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.01em',
-              fontWeight: isSelected ? '600' : '500'
-            }}
+            className={`font-semibold text-[15px] mb-1.5 truncate tracking-[-0.01em]
+              ${isSelected ? 'text-text-primary font-semibold' : 'text-text-primary font-medium'}`}
           >
             {noteData?.title || 'Untitled'}
           </h3>
           <p
-            className='text-[13px] line-clamp-2 mb-1.5 leading-relaxed'
-            style={{
-              color: isSelected ? 'rgba(255, 255, 255, 0.9)' : 'var(--text-tertiary)',
-              opacity: isSelected ? 1 : 1
-            }}
+            className={`text-[13px] line-clamp-2 mb-1.5 leading-relaxed
+              ${isSelected ? 'text-white/90' : 'text-text-tertiary'}`}
           >
             {getPreview(noteData?.note, noteData?.note)}
           </p>
           <p
-            className='text-[11px] font-medium'
-            style={{
-              color: isSelected ? 'rgba(255, 255, 255, 0.85)' : 'var(--text-tertiary)',
-              opacity: 1
-            }}
+            className={`text-[11px] font-medium
+              ${isSelected ? 'text-white/85' : 'text-text-tertiary'}`}
           >
             {formatDate(noteData?.updatedAt || noteData?.createdAt)}
           </p>
@@ -149,51 +125,19 @@ export default function NotesList({
   }, [])
 
   return (
-    <div
-      className='flex flex-col h-full w-full'
-      style={{
-        backgroundColor: 'var(--bg-primary)',
-        borderRight: '1px solid var(--border-primary)',
-        boxShadow: 'var(--shadow-sm)'
-      }}
-    >
-      <div
-        className='px-5 py-4'
-        style={{
-          borderBottom: '1px solid var(--border-primary)',
-          background: 'linear-gradient(to bottom, var(--bg-secondary), var(--bg-primary))'
-        }}
-      >
+    <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary shadow-sm'>
+      <div className='px-5 py-4 border-b border-border-primary bg-gradient-to-b from-bg-secondary to-bg-primary'>
         <div className='flex items-center justify-between mb-2'>
-          <h2
-            className='font-semibold text-[18px]'
-            style={{
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.02em',
-              fontWeight: '600'
-            }}
-          >
+          <h2 className='font-semibold text-[18px] text-text-primary tracking-[-0.02em]'>
             {folderNames[selectedFolder] || 'All Notes'}
           </h2>
           <button
-            className='text-[13px] px-2 py-1 rounded-md transition-all'
-            style={{ color: 'var(--text-tertiary)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)'
-              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-tertiary)'
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            className='text-[13px] px-2 py-1 rounded-md transition-all text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary'
           >
             Sort by
           </button>
         </div>
-        <p
-          className='text-[13px] font-medium'
-          style={{ color: 'var(--text-tertiary)', opacity: 0.8 }}
-        >
+        <p className='text-[13px] font-medium text-text-tertiary opacity-80'>
           {notesKeys.length} {notesKeys.length === 1 ? 'note' : 'notes'}
         </p>
       </div>
@@ -201,7 +145,7 @@ export default function NotesList({
       <div className='flex-1 overflow-y-auto'>
         {notesKeys.length === 0 ? (
           <div className='p-8 text-center'>
-            <p className='text-[15px]' style={{ color: 'var(--text-tertiary)' }}>
+            <p className='text-[15px] text-text-tertiary'>
               No notes yet
             </p>
           </div>
