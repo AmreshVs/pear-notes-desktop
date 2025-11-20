@@ -29,7 +29,6 @@ export default function SettingsScreen({ onClose }) {
 
   const handleConnect = () => {
     if (pasteCode.trim()) {
-      // Mock connection logic
       alert('Connecting to device...')
       setPasteCode('')
     }
@@ -46,7 +45,6 @@ export default function SettingsScreen({ onClose }) {
   return (
     <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm'>
       <div className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-5xl mx-4 h-[80vh] flex shadow-xl overflow-hidden'>
-        {/* Left Sidebar */}
         <div className='w-64 bg-bg-panel-secondary border-r border-border-tertiary flex flex-col'>
           <div className='p-4 border-b border-border-tertiary'>
             <h2 className='text-text-primary font-semibold text-lg'>Settings</h2>
@@ -81,7 +79,6 @@ export default function SettingsScreen({ onClose }) {
           </div>
         </div>
 
-        {/* Right Content */}
         <div className='flex-1 flex flex-col overflow-hidden bg-bg-panel'>
           <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
             <div>
@@ -108,7 +105,6 @@ export default function SettingsScreen({ onClose }) {
           <div className='flex-1 overflow-y-auto p-6'>
             {activeSection === 'general' && (
               <div className='space-y-8'>
-                {/* Appearance */}
                 <div>
                   <h3 className='text-text-primary font-semibold text-lg mb-2'>Appearance</h3>
                   <div className='space-y-4'>
@@ -136,7 +132,6 @@ export default function SettingsScreen({ onClose }) {
                   </div>
                 </div>
 
-                {/* Text */}
                 <div>
                   <h3 className='text-text-primary font-semibold text-lg mb-2'>Text</h3>
                   <div className='space-y-4'>
@@ -177,7 +172,6 @@ export default function SettingsScreen({ onClose }) {
                   </div>
                 </div>
 
-                {/* Language */}
                 <div>
                   <h3 className='text-text-primary font-semibold text-lg mb-2'>Language</h3>
                   <div>
@@ -211,7 +205,6 @@ export default function SettingsScreen({ onClose }) {
 
             {activeSection === 'sync' && (
               <div className='space-y-6'>
-                {/* Tabs */}
                 <div className='flex border-b border-border-primary'>
                   <button
                     onClick={() => setSyncTab('invite')}
@@ -235,7 +228,6 @@ export default function SettingsScreen({ onClose }) {
                   </button>
                 </div>
 
-                {/* Content */}
                 {syncTab === 'invite' ? (
                   <div>
                     <h3 className='text-text-primary font-semibold text-lg mb-2'>
@@ -247,7 +239,6 @@ export default function SettingsScreen({ onClose }) {
                     </p>
 
                     <div className='flex gap-6'>
-                      {/* QR Code Placeholder */}
                       <div className='w-48 h-48 bg-bg-panel-secondary rounded-lg flex items-center justify-center border border-border-tertiary'>
                         <div className='text-xs text-center text-text-tertiary'>
                           QR Code
@@ -257,7 +248,6 @@ export default function SettingsScreen({ onClose }) {
                       </div>
 
                       <div className='flex-1'>
-                        {/* Security Message */}
                         <div className='bg-accent-success/10 border border-accent-success/20 rounded-lg p-4 mb-4'>
                           <div className='flex items-start gap-3'>
                             <Check className='w-5 h-5 text-accent-success flex-shrink-0 mt-0.5' />
@@ -267,7 +257,6 @@ export default function SettingsScreen({ onClose }) {
                           </div>
                         </div>
 
-                        {/* Copy Invite Link */}
                         <button
                           onClick={handleCopyInvite}
                           className='w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium bg-accent-primary text-text-primary hover:bg-accent-primary-hover'
@@ -287,7 +276,6 @@ export default function SettingsScreen({ onClose }) {
                       </div>
                     </div>
 
-                    {/* Have an invite section */}
                     <div className='mt-8 pt-8 border-t border-border-primary'>
                       <h3 className='text-text-primary font-semibold text-lg mb-2'>Have an invite?</h3>
                       <p className='text-sm mb-4 text-text-tertiary'>
@@ -356,7 +344,6 @@ export default function SettingsScreen({ onClose }) {
             )}
           </div>
 
-          {/* Footer */}
           <div className='bg-bg-panel-secondary border-t border-border-primary px-6 py-4 flex items-center justify-end gap-3'>
             <button
               onClick={onClose}

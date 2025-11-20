@@ -6,7 +6,6 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
   const inputRef = useRef(null)
 
   useEffect(() => {
-    // Focus input when modal opens
     if (inputRef.current) {
       inputRef.current.focus()
     }
@@ -37,7 +36,6 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
         className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-md mx-4 shadow-xl overflow-hidden'
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <h2 className='text-text-primary text-xl font-semibold'>New Folder</h2>
           <button
@@ -48,7 +46,6 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
           </button>
         </div>
 
-        {/* Content */}
         <form onSubmit={handleSubmit} className='p-6 bg-bg-panel'>
           <div className='mb-6'>
             <label className='block text-text-primary text-sm mb-2 font-medium'>Folder Name</label>
@@ -64,7 +61,6 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
             <p className='text-xs mt-2 text-text-tertiary'>Choose a name for your new folder</p>
           </div>
 
-          {/* Actions */}
           <div className='flex items-center justify-end gap-3'>
             <button
               type='button'

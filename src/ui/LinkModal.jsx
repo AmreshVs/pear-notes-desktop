@@ -7,7 +7,6 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
   const urlInputRef = useRef(null)
 
   useEffect(() => {
-    // Focus URL input when modal opens
     if (urlInputRef.current) {
       urlInputRef.current.focus()
     }
@@ -36,7 +35,6 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
     const newText = e.target.value
     setText(newText)
     
-    // Auto-detect URL if text looks like a URL and no URL is set yet
     if (!url && newText) {
       const urlPattern = /^(https?:\/\/|www\.)/i
       if (urlPattern.test(newText)) {
@@ -55,7 +53,6 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
         className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-md mx-4 shadow-xl overflow-hidden'
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <div className='flex items-center gap-2'>
             <Link2 className='w-5 h-5 text-text-primary' />
@@ -69,7 +66,6 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
           </button>
         </div>
 
-        {/* Content */}
         <form onSubmit={handleSubmit} className='p-6 bg-bg-panel'>
           <div className='space-y-4'>
             <div>
@@ -98,7 +94,6 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
             </div>
           </div>
 
-          {/* Actions */}
           <div className='flex items-center justify-between mt-6'>
             {currentUrl && (
               <button

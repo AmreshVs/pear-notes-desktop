@@ -9,7 +9,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
   const noteData = useMemo(() => rawNoteData || {}, [rawNoteData])
 
-  // Initialize state from noteData props
   const [title, setTitle] = useState(noteData?.title || '')
   const [content, setContent] = useState(noteData?.note || '')
   const [contentText, setContentText] = useState('')
@@ -17,7 +16,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
 
-  // Auto-focus title when new note is created
   useEffect(() => {
     if (noteData && !noteData?.title && !noteData?.note) {
       setTimeout(() => {
@@ -26,7 +24,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     }
   }, [noteData])
 
-    // Expose editor to parent via callback and update local state
   useEffect(() => {
     const timer = setTimeout(() => {
       if (richTextEditorRef.current?.editor) {
@@ -34,7 +31,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
         setEditorInstance(editor)
         onEditorReady?.(editor)
       } else if (!noteData) {
-        // Clear editor when no note is selected
         setEditorInstance(null)
         onEditorReady?.(null)
       }
@@ -92,7 +88,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     }
   }
 
-  // Extract plain text from HTML for word count
   const getPlainText = (html) => {
     if (!html) return ''
     const div = document.createElement('div')
@@ -140,7 +135,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
 
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary shadow-sm'>
-      {/* Status Bar - Premium Styling */}
       <div className='px-6 py-2.5 flex items-center justify-end border-b border-border-primary bg-gradient-to-b from-bg-primary to-bg-secondary'>
         <div className='flex items-center gap-2 text-xs text-text-tertiary'>
           <span>
@@ -150,10 +144,8 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
         </div>
       </div>
 
-      {/* Editor Content */}
       <div className='flex-1 overflow-y-auto'>
         <div className='max-w-4xl mx-auto px-8 py-8 w-full'>
-          {/* Formatting Toolbar */}
           <FormattingToolbar editor={editorInstance} />
           <input
             ref={titleRef}
@@ -174,7 +166,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
         </div>
       </div>
 
-      {/* Bottom Status - Premium Styling */}
       <div className='px-6 py-2.5 flex items-center justify-end border-t border-border-primary bg-gradient-to-t from-bg-primary to-bg-secondary'>
         <div className='flex items-center gap-2 text-xs text-text-tertiary'>
           <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

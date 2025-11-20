@@ -45,12 +45,10 @@ export default function ResizablePanel({
   return (
     <div ref={panelRef} className='relative flex' style={{ width: `${width}px` }}>
       {children}
-      {/* Wider hover area for better UX */}
       <div
         className='absolute right-0 top-0 bottom-0 cursor-col-resize z-10 w-2 -mr-1 group'
         onMouseDown={handleMouseDown}
       >
-        {/* Visible resize handle */}
         <div
           className={`absolute right-0 top-0 bottom-0 w-0.5 transition-all duration-200 ${
             isResizing

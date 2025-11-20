@@ -12,7 +12,6 @@ import {
   Folder
 } from 'lucide-react'
 
-// Icon mapping for folder icons
 const ICON_MAP = {
   FileText,
   Briefcase,
@@ -33,7 +32,6 @@ export default function FoldersSidebar({
   onThemeToggle,
   theme
 }) {
-  // Calculate note counts for each folder
   const getFolderCount = (folderId) => {
     if (folderId === 'all') {
       return notes.length
@@ -43,7 +41,6 @@ export default function FoldersSidebar({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary shadow-sm'>
-      {/* User Info - Premium Header */}
       <div className='px-5 py-4 border-b border-border-primary bg-gradient-to-b from-bg-secondary to-bg-primary'>
         <h2 className='font-semibold text-[16px] mb-0.5 text-text-primary tracking-[-0.01em]'>
           Pear Notes
@@ -51,7 +48,6 @@ export default function FoldersSidebar({
         <p className='text-[13px] text-text-tertiary'>User</p>
       </div>
 
-      {/* Folders List - Premium Styling */}
       <div className='flex-1 overflow-y-auto py-3'>
         <div className='px-3'>
           <p className='text-[10px] font-semibold uppercase tracking-widest px-3 py-2.5 mb-1 text-text-tertiary opacity-70'>
@@ -101,7 +97,6 @@ export default function FoldersSidebar({
         </div>
       </div>
 
-      {/* Action Buttons - Premium Styling */}
       <div className='px-4 py-4 space-y-2.5 border-t border-border-primary bg-gradient-to-t from-bg-secondary to-bg-primary'>
         <button
           onClick={onCreateNote}
@@ -118,7 +113,6 @@ export default function FoldersSidebar({
           <span className='text-[14px]'>New Folder</span>
         </button>
 
-        {/* Settings and Theme Toggle */}
         <div className='flex gap-2 pt-2'>
           <button
             onClick={onSettingsClick}

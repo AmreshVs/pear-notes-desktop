@@ -94,10 +94,8 @@ export default function FormattingToolbar({ editor }) {
       })
     }
 
-    // Initial state
     updateState()
 
-    // Listen to editor events
     editor.on('selectionUpdate', updateState)
     editor.on('transaction', updateState)
     editor.on('update', updateState)
@@ -126,7 +124,6 @@ export default function FormattingToolbar({ editor }) {
     if (!editor) return
 
     if (url) {
-      // If there's selected text, wrap it in a link
       const { from, to } = editor.state.selection
       const selectedText = editor.state.doc.textBetween(from, to)
 
@@ -181,7 +178,6 @@ export default function FormattingToolbar({ editor }) {
     <>
       <div className='flex items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-lg mb-4 overflow-x-auto toolbar-scroll bg-bg-tertiary border border-border-primary shadow-xs min-h-[40px]'>
 
-        {/* Undo/Redo */}
         <Button
           onClick={() => editor?.chain().focus().undo().run()}
           isActive={false}
@@ -200,7 +196,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Text Formatting */}
         <Button
           onClick={() => editor?.chain().focus().toggleBold().run()}
           isActive={editorState.isBold}
@@ -243,7 +238,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Heading Dropdown */}
         <div className='relative' ref={headingMenuRef}>
           <Button
             onClick={() => setShowHeadingMenu(!showHeadingMenu)}
@@ -314,7 +308,6 @@ export default function FormattingToolbar({ editor }) {
         </div>
         <Divider />
 
-        {/* Lists */}
         <Button
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
           isActive={editorState.isBulletList}
@@ -341,7 +334,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Indent/Outdent */}
         <Button
           onClick={() => editor?.chain().focus().sinkListItem('listItem').run()}
           isActive={false}
@@ -360,7 +352,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Code */}
         <Button
           onClick={() => editor?.chain().focus().toggleCode().run()}
           isActive={editorState.isCode}
@@ -395,7 +386,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Text Alignment */}
         <Button
           onClick={() => editor?.chain().focus().setTextAlign('left').run()}
           isActive={editorState.textAlign === 'left'}
@@ -430,7 +420,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
         <Divider />
 
-        {/* Blockquote & Horizontal Rule */}
         <Button
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           isActive={editorState.isBlockquote}
@@ -457,7 +446,6 @@ export default function FormattingToolbar({ editor }) {
         </Button>
       </div>
 
-      {/* Link Modal */}
       <LinkModal
         isOpen={showLinkModal}
         onClose={() => setShowLinkModal(false)}

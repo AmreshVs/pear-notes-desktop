@@ -34,7 +34,7 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
-      'react/prop-types': 'off', // Disable prop-types as we might migrate to TS later or just prefer not to use them strictly in JS
+      'react/prop-types': 'off',
       ...prettierConfig.rules,
     },
   },

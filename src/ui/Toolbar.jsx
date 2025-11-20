@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight, MoreHorizontal, Search } from 'lucide-react'
 export default function Toolbar({ searchQuery, onSearchChange }) {
   return (
     <div className='h-12 flex items-center px-5 gap-4 bg-bg-secondary border-b border-border-primary shadow-xs backdrop-blur-sm'>
-      {/* Left: Navigation */}
       <div className='flex items-center gap-2'>
         <button className='p-1.5 rounded transition-colors text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'>
           <ChevronLeft className='w-4 h-4' />
@@ -16,7 +15,6 @@ export default function Toolbar({ searchQuery, onSearchChange }) {
         </button>
       </div>
 
-      {/* Center: Search */}
       <div className='flex-1 max-w-md mx-auto'>
         <div className='relative'>
           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary' />

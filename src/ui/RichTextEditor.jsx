@@ -31,7 +31,7 @@ const RichTextEditor = forwardRef(
             keepMarks: true,
             keepAttributes: false
           },
-          strike: false // Disable default strike, use extension instead
+          strike: false
         }),
         Underline,
         Strike,
@@ -72,7 +72,6 @@ const RichTextEditor = forwardRef(
       }
     })
 
-    // Expose editor instance via ref
     useImperativeHandle(
       ref,
       () => ({
@@ -84,7 +83,6 @@ const RichTextEditor = forwardRef(
     useEffect(() => {
       if (editor && content !== undefined) {
         const currentContent = editor.getHTML()
-        // Only update if content actually changed (avoid infinite loops)
         if (content !== currentContent) {
           isUpdatingRef.current = true
           editor.commands.setContent(content || '', false)
