@@ -55,6 +55,8 @@ export default function FormattingToolbar({ editor }) {
 
   // Update editor state when editor changes
   useEffect(() => {
+    if (!editor) return
+
     const updateState = () => {
       const headingLevel = editor.isActive('heading', { level: 1 })
         ? 1
@@ -446,13 +448,14 @@ export default function FormattingToolbar({ editor }) {
         </Button>
       </div>
 
-      <LinkModal
-        isOpen={showLinkModal}
-        onClose={() => setShowLinkModal(false)}
-        onSubmit={handleSetLink}
-        initialUrl={getCurrentLink().url}
-        initialText={getCurrentLink().text}
-      />
+      {showLinkModal && (
+        <LinkModal
+          onClose={() => setShowLinkModal(false)}
+          onSetLink={handleSetLink}
+          currentUrl={getCurrentLink().url}
+          currentText={getCurrentLink().text}
+        />
+      )}
     </>
   )
 }

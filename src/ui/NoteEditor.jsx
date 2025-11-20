@@ -1,18 +1,29 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
 import { getNoteData, getSelectedNote } from '../store/notesSlice'
-import { useSelector } from 'react-redux'
+import {
+  getEditorTitle,
+  getEditorContent,
+  getEditorContentText,
+  getEditorInstance,
+  setEditorTitle,
+  setEditorContent,
+  setEditorInstance
+} from '../store/editorSlice'
+import { useSelector, useDispatch } from 'react-redux'
 
 export default function NoteEditor({ onUpdate, onEditorReady }) {
+  const dispatch = useDispatch()
   const selectedNoteKey = useSelector(getSelectedNote)
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
   const noteData = useMemo(() => rawNoteData || {}, [rawNoteData])
 
-  const [title, setTitle] = useState(noteData?.title || '')
-  const [content, setContent] = useState(noteData?.note || '')
-  const [contentText, setContentText] = useState('')
-  const [editorInstance, setEditorInstance] = useState(null)
+  const title = useSelector(getEditorTitle)
+  const content = useSelector(getEditorContent)
+  const contentText = useSelector(getEditorContentText)
+  const editorInstance = useSelector(getEditorInstance)
+
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
 
@@ -28,28 +39,27 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     const timer = setTimeout(() => {
       if (richTextEditorRef.current?.editor) {
         const editor = richTextEditorRef.current.editor
-        setEditorInstance(editor)
+        dispatch(setEditorInstance(editor))
         onEditorReady?.(editor)
       } else if (!noteData) {
-        setEditorInstance(null)
+        dispatch(setEditorInstance(null))
         onEditorReady?.(null)
       }
     }, 100)
 
     return () => clearTimeout(timer)
-  }, [onEditorReady, noteData])
+  }, [onEditorReady, noteData, dispatch])
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value
-    setTitle(newTitle)
+    dispatch(setEditorTitle(newTitle))
     if (noteData) {
       onUpdate({ key: selectedNoteKey, title: newTitle, contentHtml: content, content: contentText })
     }
   }
 
   const handleContentChange = ({ html, text }) => {
-    setContent(html)
-    setContentText(text)
+    dispatch(setEditorContent({ html, text }))
     if (noteData) {
       onUpdate({ key: selectedNoteKey, title, contentHtml: html, content: text })
     }
