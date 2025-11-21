@@ -65,7 +65,7 @@ export default function FoldersSidebar({
               <button
                 key={folder.id}
                 onClick={() => onSelectFolder(folder.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg mb-0.5 transition-all ease-smooth duration-200 group
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg mb-0.5 transition-all ease-out duration-75 group
                   ${
                     isSelected
                       ? 'bg-[var(--bg-folder-selected)] text-accent-primary'
@@ -73,12 +73,12 @@ export default function FoldersSidebar({
                   }`}
                 title={isCollapsed ? folder.name : ''}
               >
-                <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3.5'}`}>
+                <div className={`flex items-center transition-all duration-100 ${isCollapsed ? 'gap-0' : 'gap-3.5'}`}>
                   <Icon
-                    className={`w-5 h-5 transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-80'} flex-shrink-0`}
+                    className={`w-5 h-5 transition-opacity duration-75 ${isSelected ? 'opacity-100' : 'opacity-80'} flex-shrink-0`}
                   />
                   <span
-                    className={`text-[14px] tracking-[-0.01em] whitespace-nowrap transition-all duration-300 ${
+                    className={`text-[14px] tracking-[-0.01em] whitespace-nowrap transition-opacity duration-100 ${
                       isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'
                     } ${isSelected ? 'font-medium' : 'font-normal'}`}
                   >

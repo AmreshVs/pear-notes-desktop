@@ -87,6 +87,10 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  button {
+    @apply cursor-pointer;
+  }
+
   /* Apple Notes-like scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
