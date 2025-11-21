@@ -44,10 +44,10 @@ export default function FoldersSidebar({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary transition-all duration-300'>
-      <div className={`px-4 py-3 border-b border-border-primary bg-bg-primary flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+      <div className='px-4 py-3 border-b border-border-primary bg-bg-primary flex items-center'>
         <button
           onClick={onToggleCollapse}
-          className='p-1.5 rounded-md hover:bg-bg-tertiary text-text-secondary transition-colors'
+          className='p-1.5 rounded-md text-text-secondary transition-colors'
           title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           <Menu className='w-5 h-5' />

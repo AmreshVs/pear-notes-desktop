@@ -468,7 +468,7 @@ const Button = ({ onClick, isActive, disabled, title, children, className = '' }
         ? 'bg-accent-primary text-text-primary'
         : disabled
           ? 'text-text-tertiary opacity-50 cursor-not-allowed'
-          : 'text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'
+          : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
     } ${className}`}
     title={title}
     disabled={disabled}
