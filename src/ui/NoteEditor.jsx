@@ -98,21 +98,6 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     }
   }
 
-  const getPlainText = (html) => {
-    if (!html) return ''
-    const div = document.createElement('div')
-    div.innerHTML = html
-    return div.textContent || div.innerText || ''
-  }
-
-  const getWordCount = (text) => {
-    if (!text) return 0
-    return text
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0).length
-  }
-
   if (!noteData) {
     return (
       <div className='flex-1 flex items-center justify-center bg-bg-secondary'>
@@ -141,20 +126,10 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     )
   }
 
-  const wordCount = getWordCount(getPlainText(content) || contentText)
-
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary'>
-      <div className='px-6 py-2.5 flex items-center justify-end border-b border-border-primary bg-bg-secondary'>
-        <div className='flex items-center gap-2 text-xs text-text-tertiary'>
-          <span>
-            Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)}
-          </span>
-        </div>
-      </div>
-
       <div className='flex-1 overflow-y-auto'>
-        <div className='max-w-4xl mx-auto px-8 py-8 w-full'>
+        <div className='max-w-4xl mx-auto px-3 py-3 w-full'>
           <FormattingToolbar editor={editorInstance} />
           <input
             ref={titleRef}
@@ -177,7 +152,9 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
 
       <div className='px-6 py-2.5 flex items-center justify-end border-t border-border-primary bg-bg-secondary'>
         <div className='flex items-center gap-2 text-xs text-text-tertiary'>
-          <span>{wordCount} words</span>
+          <span>
+            Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)}
+          </span>
         </div>
       </div>
     </div>

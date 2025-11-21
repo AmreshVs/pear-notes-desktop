@@ -68,23 +68,23 @@ const NotesItem = ({ noteKey: key }) => {
     <div
       key={key}
       onClick={() => handleSelectNote(key)}
-      className={`px-5 py-3.5 cursor-pointer transition-all ease-smooth duration-200 group border-b border-border-primary
+      className={`px-3 py-3 cursor-pointer transition-all ease-smooth duration-200 group border-b border-border-primary
         ${
           isSelected
-            ? 'bg-accent-primary translate-x-[2px]'
-            : 'bg-transparent hover:bg-bg-tertiary hover:translate-x-[2px]'
+            ? 'bg-accent-primary'
+            : 'bg-transparent hover:bg-bg-tertiary'
         }`}
     >
       <div className='flex items-start justify-between gap-2'>
         <div className='flex-1 min-w-0'>
           <h3
-            className={`text-[15px] mb-1.5 truncate tracking-[-0.01em]
+            className={`text-[15px] truncate tracking-[-0.01em]
               ${isSelected ? 'text-white font-bold' : 'text-text-primary font-bold'}`}
           >
             {noteData?.title || 'Untitled'}
           </h3>
           <p
-            className={`text-[13px] line-clamp-2 mb-1.5 leading-relaxed
+            className={`text-[13px] line-clamp-2 leading-relaxed
               ${isSelected ? 'text-white/90' : 'text-text-tertiary'}`}
           >
             {getPreview(noteData?.note, noteData?.note)}
@@ -126,7 +126,7 @@ export default function NotesList({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-secondary border-r border-border-primary'>
-      <div className='px-5 py-4 border-b border-border-primary bg-bg-secondary'>
+      <div className='px-3 py-3 border-b border-border-primary bg-bg-secondary'>
         <div className='flex items-center justify-between mb-2'>
           <h2 className='font-semibold text-[18px] text-text-primary tracking-[-0.02em]'>
             {folderNames[selectedFolder] || 'All Notes'}

@@ -48,9 +48,8 @@ export default function Sidebar({
 
   return (
     <div className='sidebar flex flex-col h-full bg-[#f5f5f7] dark:bg-[#1d1d1f] border-r border-[#e5e5e7] dark:border-[#2d2d2f]'>
-      {/* Header */}
       <div className='px-3 pt-4 pb-3 border-b border-[#e5e5e7] dark:border-[#2d2d2f]'>
-        <div className='flex items-center justify-between mb-3'>
+        <div className='flex items-center justify-between'>
           <h1 className='text-[17px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight'>
             Notes
           </h1>
@@ -63,7 +62,6 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Search */}
         <div className='relative'>
           <Search className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#86868b] dark:text-[#86868b]' />
           <input
@@ -76,7 +74,6 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Notes List */}
       <div className='flex-1 overflow-y-auto'>
         {filteredNotes.length === 0 ? (
           <div className='p-8 text-center'>
