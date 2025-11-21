@@ -9,7 +9,8 @@ import {
   Settings,
   Moon,
   Sun,
-  Folder
+  Folder,
+  Menu
 } from 'lucide-react'
 
 const ICON_MAP = {
@@ -30,7 +31,9 @@ export default function FoldersSidebar({
   onCreateFolder,
   onSettingsClick,
   onThemeToggle,
-  theme
+  theme,
+  isCollapsed,
+  onToggleCollapse
 }) {
   const getFolderCount = (folderId) => {
     if (folderId === 'all') {
@@ -40,19 +43,19 @@ export default function FoldersSidebar({
   }
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary shadow-sm'>
-      <div className='px-5 py-4 border-b border-border-primary bg-gradient-to-b from-bg-secondary to-bg-primary'>
-        <h2 className='font-semibold text-[16px] mb-0.5 text-text-primary tracking-[-0.01em]'>
-          Pear Notes
-        </h2>
-        <p className='text-[13px] text-text-tertiary'>User</p>
+    <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary transition-all duration-300'>
+      <div className={`px-4 py-3 border-b border-border-primary bg-bg-primary flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+        <button
+          onClick={onToggleCollapse}
+          className='p-1.5 rounded-md hover:bg-bg-tertiary text-text-secondary transition-colors'
+          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          <Menu className='w-5 h-5' />
+        </button>
       </div>
 
       <div className='flex-1 overflow-y-auto py-3'>
-        <div className='px-3'>
-          <p className='text-[10px] font-semibold uppercase tracking-widest px-3 py-2.5 mb-1 text-text-tertiary opacity-70'>
-            FOLDERS
-          </p>
+        <div className='px-2'>
           {folders.map((folder) => {
             const Icon = ICON_MAP[folder.icon] || Folder
             const isSelected = selectedFolder === folder.id
@@ -65,28 +68,31 @@ export default function FoldersSidebar({
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg mb-0.5 transition-all ease-smooth duration-200 group
                   ${
                     isSelected
-                      ? 'bg-accent-primary text-text-primary translate-x-[2px] shadow-xs'
-                      : 'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:translate-x-[2px]'
+                      ? 'bg-[var(--bg-folder-selected)] text-accent-primary'
+                      : 'bg-transparent text-text-secondary hover:bg-bg-tertiary'
                   }`}
+                title={isCollapsed ? folder.name : ''}
               >
-                <div className='flex items-center gap-3.5'>
+                <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3.5'}`}>
                   <Icon
-                    className={`w-4 h-4 transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-80'}`}
+                    className={`w-5 h-5 transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-80'} flex-shrink-0`}
                   />
                   <span
-                    className={`text-[14px] tracking-[-0.01em] ${isSelected ? 'font-medium' : 'font-normal'}`}
+                    className={`text-[14px] tracking-[-0.01em] whitespace-nowrap transition-all duration-300 ${
+                      isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'
+                    } ${isSelected ? 'font-medium' : 'font-normal'}`}
                   >
                     {folder.name}
                   </span>
                 </div>
                 {count > 0 && (
                   <span
-                    className={`text-[12px] font-medium px-1.5 py-0.5 rounded-md transition-colors duration-150
+                    className={`text-[12px] font-medium px-1.5 py-0.5 rounded-md transition-colors duration-150 whitespace-nowrap
                       ${
                         isSelected
-                          ? 'text-white/90 bg-white/15'
+                          ? 'text-accent-primary bg-transparent'
                           : 'text-text-tertiary bg-transparent'
-                      }`}
+                      } ${isCollapsed ? 'hidden' : 'block'}`}
                   >
                     {count}
                   </span>
@@ -97,33 +103,37 @@ export default function FoldersSidebar({
         </div>
       </div>
 
-      <div className='px-4 py-4 space-y-2.5 border-t border-border-primary bg-gradient-to-t from-bg-secondary to-bg-primary'>
+      <div className={`px-2 py-4 space-y-2.5 border-t border-border-primary bg-bg-primary flex flex-col ${isCollapsed ? 'items-center' : ''}`}>
         <button
           onClick={onCreateNote}
-          className='w-full flex items-center justify-center gap-2.5 px-4 py-3 text-white rounded-xl transition-all font-medium shadow-md shadow-glow-primary bg-accent-primary hover:bg-accent-primary-hover hover:scale-[1.02] hover:shadow-lg hover:shadow-glow-primary-strong active:scale-100 active:shadow-md'
+          className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 p-0 rounded-full' : 'w-full gap-2.5 px-4 py-3 rounded-xl'} text-[#1c1c1e] transition-all font-medium bg-accent-primary hover:bg-accent-primary-hover hover:scale-[1.02] active:scale-100`}
+          title='New Note'
         >
-          <Plus className='w-4 h-4' strokeWidth={2.5} />
-          <span className='text-[14px] font-semibold'>New Note</span>
+          <Plus className='w-5 h-5 flex-shrink-0' strokeWidth={2.5} />
+          <span className={`text-[14px] font-semibold whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'}`}>New Note</span>
         </button>
-        <button
-          onClick={onCreateFolder}
-          className='w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all font-medium bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.01] hover:border-border-secondary hover:shadow-xs active:scale-100 active:shadow-none'
-        >
-          <FolderPlus className='w-4 h-4' />
-          <span className='text-[14px]'>New Folder</span>
-        </button>
+        
+        <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-10 h-10 p-0 rounded-full' : 'w-full gap-2.5 rounded-xl'}`}>
+          <button
+            onClick={onCreateFolder}
+            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 p-0 rounded-full' : 'w-full gap-2.5 px-4 py-3 rounded-xl'} bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.02] hover:border-border-secondary active:scale-100`}
+          >
+            <FolderPlus className='w-4 h-4 flex-shrink-0' />
+            <span className={`text-[14px] whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'}`}>New Folder</span>
+          </button>
+        </div>
 
-        <div className='flex gap-2 pt-2'>
+        <div className={`flex ${isCollapsed ? 'flex-col gap-3' : 'gap-2 pt-2'}`}>
           <button
             onClick={onSettingsClick}
-            className='flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all font-medium bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.01] hover:border-border-secondary hover:shadow-xs active:scale-100 active:shadow-none'
+            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 rounded-full' : 'flex-1 px-3 py-2.5 rounded-xl'} transition-all font-medium bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.01] hover:border-border-secondary active:scale-100`}
             title='Settings'
           >
             <Settings className='w-4 h-4' />
           </button>
           <button
             onClick={onThemeToggle}
-            className='flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all font-medium bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.01] hover:border-border-secondary hover:shadow-xs active:scale-100 active:shadow-none'
+            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 rounded-full' : 'flex-1 px-3 py-2.5 rounded-xl'} transition-all font-medium bg-bg-tertiary text-text-secondary border border-border-primary hover:bg-bg-quaternary hover:scale-[1.01] hover:border-border-secondary active:scale-100`}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}

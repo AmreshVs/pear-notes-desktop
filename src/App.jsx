@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote } from './store/notesSlice'
+import { createNote, updateNote, deleteNote } from './store/slices/notesSlice'
 import {
   setSelectedFolder,
   setSearchQuery,
@@ -10,7 +10,7 @@ import {
   toggleTheme,
   createFolder,
   appReady
-} from './store/uiSlice'
+} from './store/slices/uiSlice'
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
 import NotesList from './ui/NotesList'
@@ -23,6 +23,7 @@ import { backendApi } from './backend/api'
 
 function App() {
   const dispatch = useDispatch()
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const notes = useSelector((state) => state.notes.notes)
   const selectedNote = useSelector((state) => state.notes.selectedNote)
@@ -95,7 +96,7 @@ function App() {
         />
 
         <div className='flex-1 flex overflow-hidden'>
-          <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400}>
+          <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>
             <FoldersSidebar
               selectedFolder={selectedFolder}
               onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
@@ -106,6 +107,8 @@ function App() {
               onSettingsClick={() => dispatch(setShowSettings(true))}
               onThemeToggle={() => dispatch(toggleTheme())}
               theme={theme}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
           </ResizablePanel>
 

@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/notesSlice'
+import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -71,15 +71,15 @@ const NotesItem = ({ noteKey: key }) => {
       className={`px-5 py-3.5 cursor-pointer transition-all ease-smooth duration-200 group border-b border-border-primary
         ${
           isSelected
-            ? 'bg-accent-primary translate-x-[2px] shadow-xs'
-            : 'bg-transparent hover:bg-bg-secondary hover:translate-x-[2px]'
+            ? 'bg-accent-primary translate-x-[2px]'
+            : 'bg-transparent hover:bg-bg-tertiary hover:translate-x-[2px]'
         }`}
     >
       <div className='flex items-start justify-between gap-2'>
         <div className='flex-1 min-w-0'>
           <h3
-            className={`font-semibold text-[15px] mb-1.5 truncate tracking-[-0.01em]
-              ${isSelected ? 'text-text-primary font-semibold' : 'text-text-primary font-medium'}`}
+            className={`text-[15px] mb-1.5 truncate tracking-[-0.01em]
+              ${isSelected ? 'text-white font-bold' : 'text-text-primary font-bold'}`}
           >
             {noteData?.title || 'Untitled'}
           </h3>
@@ -91,7 +91,7 @@ const NotesItem = ({ noteKey: key }) => {
           </p>
           <p
             className={`text-[11px] font-medium
-              ${isSelected ? 'text-white/85' : 'text-text-tertiary'}`}
+              ${isSelected ? 'text-white/80' : 'text-text-tertiary'}`}
           >
             {formatDate(noteData?.updatedAt || noteData?.createdAt)}
           </p>
@@ -102,10 +102,10 @@ const NotesItem = ({ noteKey: key }) => {
               e.stopPropagation()
               handleDeleteNote(key)
             }}
-            className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-red-500/20 transition-all'
+            className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-black/10 transition-all'
             title='Delete Note'
           >
-            <Trash2 className='w-4 h-4 text-red-400' />
+            <Trash2 className='w-4 h-4 text-white' />
           </button>
         )}
       </div>
@@ -125,8 +125,8 @@ export default function NotesList({
   }, [])
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-primary border-r border-border-primary shadow-sm'>
-      <div className='px-5 py-4 border-b border-border-primary bg-gradient-to-b from-bg-secondary to-bg-primary'>
+    <div className='flex flex-col h-full w-full bg-bg-secondary border-r border-border-primary'>
+      <div className='px-5 py-4 border-b border-border-primary bg-bg-secondary'>
         <div className='flex items-center justify-between mb-2'>
           <h2 className='font-semibold text-[18px] text-text-primary tracking-[-0.02em]'>
             {folderNames[selectedFolder] || 'All Notes'}

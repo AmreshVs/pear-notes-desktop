@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
-import { getNoteData, getSelectedNote } from '../store/notesSlice'
+import { getNoteData, getSelectedNote } from '../store/slices/notesSlice'
 import {
   getEditorTitle,
   getEditorContent,
@@ -10,7 +10,7 @@ import {
   setEditorTitle,
   setEditorContent,
   setEditorInstance
-} from '../store/editorSlice'
+} from '../store/slices/editorSlice'
 import { useSelector, useDispatch } from 'react-redux'
 
 export default function NoteEditor({ onUpdate, onEditorReady }) {
@@ -144,12 +144,11 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   const wordCount = getWordCount(getPlainText(content) || contentText)
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary shadow-sm'>
-      <div className='px-6 py-2.5 flex items-center justify-end border-b border-border-primary bg-gradient-to-b from-bg-primary to-bg-secondary'>
+    <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary'>
+      <div className='px-6 py-2.5 flex items-center justify-end border-b border-border-primary bg-bg-secondary'>
         <div className='flex items-center gap-2 text-xs text-text-tertiary'>
           <span>
-            Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)} | {wordCount}{' '}
-            words
+            Last edited {formatDate(noteData?.updatedAt || noteData?.createdAt)}
           </span>
         </div>
       </div>
@@ -176,12 +175,9 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
         </div>
       </div>
 
-      <div className='px-6 py-2.5 flex items-center justify-end border-t border-border-primary bg-gradient-to-t from-bg-primary to-bg-secondary'>
+      <div className='px-6 py-2.5 flex items-center justify-end border-t border-border-primary bg-bg-secondary'>
         <div className='flex items-center gap-2 text-xs text-text-tertiary'>
-          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
-          </svg>
-          <span>Synced</span>
+          <span>{wordCount} words</span>
         </div>
       </div>
     </div>

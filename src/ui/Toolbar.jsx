@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal, Search } from 'lucide-react'
 
 export default function Toolbar({ searchQuery, onSearchChange }) {
   return (
-    <div className='h-12 flex items-center px-5 gap-4 bg-bg-secondary border-b border-border-primary shadow-xs backdrop-blur-sm'>
+    <div className='h-12 flex items-center px-5 gap-4 bg-bg-secondary border-b border-border-primary'>
       <div className='flex items-center gap-2'>
         <button className='p-1.5 rounded transition-colors text-text-tertiary hover:bg-bg-tertiary hover:text-text-primary'>
           <ChevronLeft className='w-4 h-4' />
@@ -16,14 +16,14 @@ export default function Toolbar({ searchQuery, onSearchChange }) {
       </div>
 
       <div className='flex-1 max-w-md mx-auto'>
-        <div className='relative'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary' />
+        <div className='relative group'>
+          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
           <input
             type='text'
-            placeholder='Search All Notes'
+            placeholder='Search'
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full pl-9 pr-3 py-1.5 rounded-md text-[13px] focus:outline-none focus:ring-1 bg-bg-primary border border-border-primary text-text-primary focus:border-accent-primary focus:ring-accent-primary'
+            className='w-full pl-9 pr-3 py-1.5 rounded-md text-[13px] focus:outline-none bg-[#2c2c2e] text-text-primary placeholder-text-tertiary transition-all'
           />
         </div>
       </div>

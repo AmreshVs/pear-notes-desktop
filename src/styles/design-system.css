@@ -1,67 +1,56 @@
-/* Design System - Reusable Color Variables */
 :root {
-  /* Dark Mode (Default) */
-  --bg-primary: #121214;
-  --bg-secondary: #1a1a1d;
-  --bg-tertiary: #1f1f23;
-  --bg-quaternary: #2a2a2e;
-  --bg-panel: #1c1c1e;
-  --bg-panel-secondary: #2c2c2e;
-  --bg-panel-tertiary: #3a3a3c;
+  --bg-primary: #202020;
+  --bg-secondary: #1c1c1e;
+  --bg-tertiary: #2c2c2e;
+  --bg-quaternary: #3a3a3c;
+  --bg-panel: #202020;
+  --bg-panel-secondary: #1c1c1e;
+  --bg-panel-tertiary: #2c2c2e;
+  --bg-folder-selected: #2c2c2e;
 
-  /* Text Colors - Improved contrast for readability */
   --text-primary: #ffffff;
-  --text-secondary: #e5e5e7;
-  --text-tertiary: #a8a8ad;
-  --text-muted: #9a9a9f;
+  --text-secondary: #98989d;
+  --text-tertiary: #636366;
+  --text-muted: #48484a;
 
-  /* Border Colors */
-  --border-primary: #1f1f23;
+  --border-primary: #38383a;
   --border-secondary: #2c2c2e;
-  --border-tertiary: #3a3a3c;
+  --border-tertiary: #1c1c1e;
 
-  /* Accent Colors */
-  --accent-primary: #007aff;
-  --accent-primary-hover: #0051d5;
-  --accent-success: #34c759;
-  --accent-danger: #ff3b30;
-  --accent-warning: #ff9500;
+  --accent-primary: #DCA323;
+  --accent-primary-hover: #c8931f;
+  --accent-success: #30d158;
+  --accent-danger: #ff453a;
+  --accent-warning: #ff9f0a;
 
-  /* Interactive States */
-  --interactive-hover: rgba(255, 255, 255, 0.1);
-  --interactive-active: rgba(255, 255, 255, 0.15);
+  --interactive-hover: rgba(255, 255, 255, 0.05);
+  --interactive-active: rgba(255, 255, 255, 0.1);
   --interactive-selected: var(--accent-primary);
 
-  /* Shadows - Premium depth */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.35);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 
-  /* Glows */
-  --glow-primary: 0 0 20px rgba(0, 122, 255, 0.3);
-  --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.5);
+  --glow-primary: none;
+  --glow-primary-strong: none;
 
-  /* Spacing Scale */
-  --spacing-xs: 0.25rem; /* 4px */
-  --spacing-sm: 0.5rem; /* 8px */
-  --spacing-md: 1rem; /* 16px */
-  --spacing-lg: 1.5rem; /* 24px */
-  --spacing-xl: 2rem; /* 32px */
-  --spacing-2xl: 3rem; /* 48px */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
 
-  /* Typography */
-  --font-family-system:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI',
-    Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-size-xs: 0.6875rem; /* 11px */
-  --font-size-sm: 0.8125rem; /* 13px */
-  --font-size-base: 0.9375rem; /* 15px */
-  --font-size-lg: 1.0625rem; /* 17px */
-  --font-size-xl: 1.75rem; /* 28px */
-  --font-size-2xl: 2rem; /* 32px */
+  --font-family-system: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-xs: 0.6875rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-lg: 1.0625rem;
+  --font-size-xl: 1.75rem;
+  --font-size-2xl: 2rem;
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -72,69 +61,60 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.6;
 
-  /* Border Radius - Premium rounded corners */
-  --radius-xs: 0.25rem; /* 4px */
-  --radius-sm: 0.375rem; /* 6px */
-  --radius-md: 0.5rem; /* 8px */
-  --radius-lg: 0.75rem; /* 12px */
-  --radius-xl: 1rem; /* 16px */
-  --radius-2xl: 1.5rem; /* 24px */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Transitions - Premium easing */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-bounce: 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 200ms ease-in-out;
+  --transition-slow: 300ms ease-in-out;
+  --transition-smooth: 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-bounce: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Backdrop blur */
   --blur-sm: blur(4px);
   --blur-md: blur(8px);
   --blur-lg: blur(16px);
 }
 
-/* Light Mode - Premium Apple Notes inspired */
 [data-theme='light'] {
-  --bg-primary: #fafafa;
+  --bg-primary: #f2f2f7;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f0f0f0;
-  --bg-quaternary: #e8e8e8;
-  --bg-panel: #ffffff;
-  --bg-panel-secondary: #fafafa;
-  --bg-panel-tertiary: #f5f5f5;
+  --bg-tertiary: #e5e5ea;
+  --bg-quaternary: #d1d1d6;
+  --bg-panel: #f2f2f7;
+  --bg-panel-secondary: #ffffff;
+  --bg-panel-tertiary: #e5e5ea;
+  --bg-folder-selected: #d1d1d6;
 
-  /* Text Colors - Better contrast for readability */
-  --text-primary: #1a1a1a;
-  --text-secondary: #2c2c2e;
-  --text-tertiary: #5a5a5f;
-  --text-muted: #6e6e73;
+  --text-primary: #000000;
+  --text-secondary: #636366;
+  --text-tertiary: #8e8e93;
+  --text-muted: #aeaeb2;
 
-  /* Border Colors - More defined */
-  --border-primary: #d1d1d6;
-  --border-secondary: #c7c7cc;
-  --border-tertiary: #b8b8bd;
+  --border-primary: #c6c6c8;
+  --border-secondary: #d1d1d6;
+  --border-tertiary: #e5e5ea;
 
-  /* Accent Colors - Adjusted for light mode */
-  --accent-primary: #007aff;
-  --accent-primary-hover: #0056d6;
-  --accent-success: #28a745;
-  --accent-danger: #dc3545;
+  --accent-primary: #DCA323;
+  --accent-primary-hover: #c8931f;
+  --accent-success: #34c759;
+  --accent-danger: #ff3b30;
   --accent-warning: #ff9500;
 
-  /* Interactive States - Better visibility */
-  --interactive-hover: rgba(0, 0, 0, 0.06);
-  --interactive-active: rgba(0, 0, 0, 0.12);
+  --interactive-hover: rgba(0, 0, 0, 0.05);
+  --interactive-active: rgba(0, 0, 0, 0.1);
 
-  /* Shadows - Lighter for light mode */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
-  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 
-  /* Glows - Adjusted for light mode */
-  --glow-primary: 0 0 20px rgba(0, 122, 255, 0.25);
-  --glow-primary-strong: 0 0 30px rgba(0, 122, 255, 0.4);
+  --glow-primary: none;
+  --glow-primary-strong: none;
 }
