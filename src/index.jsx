@@ -14,9 +14,10 @@ const rpc = new HRPC(stream)
 globalThis.__rpc = rpc
 
 Pear.updates(() => Pear.reload())
+Pear.teardown(() => backendApi.destroy())
 
-window.addEventListener('beforeunload', async () => {
-  await backendApi.destroy()
+window.addEventListener('beforeunload', () => {
+  backendApi.destroy()
 })
 
 const container = document.getElementById('root')
