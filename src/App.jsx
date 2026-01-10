@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote } from './store/slices/notesSlice'
+import { createNote, updateNote, deleteNote, getNotes } from './store/slices/notesSlice'
 import {
   setSelectedFolder,
+  getFolders,
+  createFolder,
+  deleteFolder
+} from './store/slices/foldersSlice'
+import {
   setSearchQuery,
   setShowSettings,
   setShowNewFolderModal,
   setEditor,
   toggleTheme,
-  createFolder,
   appReady
 } from './store/slices/uiSlice'
 import TitleBar from './ui/TitleBar'
@@ -24,14 +28,15 @@ function App() {
   const dispatch = useDispatch()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
-  const notes = useSelector((state) => state.notes.notes)
+  const notes = useSelector(getNotes)
   const selectedNote = useSelector((state) => state.notes.selectedNote)
   const isLoading = useSelector((state) => state.notes.isLoading)
-  const selectedFolder = useSelector((state) => state.ui.selectedFolder)
+  const selectedFolder = useSelector((state) => state.folders.selectedFolder)
+  console.log({ selectedFolder })
   const searchQuery = useSelector((state) => state.ui.searchQuery)
   const showSettings = useSelector((state) => state.ui.showSettings)
   const showNewFolderModal = useSelector((state) => state.ui.showNewFolderModal)
-  const folders = useSelector((state) => state.ui.folders)
+  const folders = useSelector(getFolders)
   const theme = useSelector((state) => state.ui.theme)
 
   useEffect(() => {
@@ -69,6 +74,10 @@ function App() {
     dispatch(createFolder({ name }))
   }
 
+  const handleDeleteFolder = (key) => {
+    dispatch(deleteFolder(key))
+  }
+
   if (isLoading) {
     return (
       <main className='min-h-screen flex flex-col bg-bg-primary'>
@@ -97,6 +106,7 @@ function App() {
             folders={folders}
             onCreateNote={handleCreateNote}
             onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+            onDeleteFolder={handleDeleteFolder}
             onSettingsClick={() => dispatch(setShowSettings(true))}
             onThemeToggle={() => dispatch(toggleTheme())}
             theme={theme}

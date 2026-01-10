@@ -2,6 +2,7 @@ import { Trash2, Search } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
+import { getFolders } from '../store/slices/foldersSlice'
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -40,14 +41,6 @@ const getPreview = (content, contentHtml) => {
 
   text = text.replace(/\n/g, ' ').trim()
   return text.length > 60 ? text.substring(0, 60) + '...' : text
-}
-
-const folderNames = {
-  all: 'All Notes',
-  work: 'Work',
-  personal: 'Personal',
-  ideas: 'Ideas',
-  trash: 'Recently Deleted'
 }
 
 const NotesItem = ({ noteKey: key }) => {
@@ -117,6 +110,8 @@ export default function NotesList({
   onSearchChange
 }) {
   const notesKeys = useSelector(getNoteKeys)
+  const folders = useSelector(getFolders)
+  const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
 
   const renderNotesList = useCallback((key) => {
     return (
@@ -129,7 +124,7 @@ export default function NotesList({
       <div className='px-4 py-3 border-b border-border-primary bg-bg-secondary'>
         <div className='flex items-center justify-between mb-1'>
           <h2 className='font-bold text-[18px] text-text-primary tracking-tight'>
-            {folderNames[selectedFolder] || 'All Notes'}
+            {currentFolderName}
           </h2>
           <button
             className='text-[12px] font-medium text-text-tertiary hover:text-text-primary transition-colors'
