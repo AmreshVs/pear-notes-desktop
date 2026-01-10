@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Trash2, Search } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
@@ -96,25 +96,25 @@ const NotesItem = ({ noteKey: key }) => {
             {formatDate(noteData?.updatedAt || noteData?.createdAt)}
           </p>
         </div>
-        {isSelected && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleDeleteNote(key)
-            }}
-            className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-black/10 transition-all'
-            title='Delete Note'
-          >
-            <Trash2 className='w-4 h-4 text-white' />
-          </button>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            handleDeleteNote(key)
+          }}
+          className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-black/10 transition-all'
+          title='Delete Note'
+        >
+          <Trash2 className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-text-primary'}`} />
+        </button>
       </div>
     </div>
   )
 }
 
 export default function NotesList({
-  selectedFolder
+  selectedFolder,
+  searchQuery,
+  onSearchChange
 }) {
   const notesKeys = useSelector(getNoteKeys)
 
@@ -126,20 +126,31 @@ export default function NotesList({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-secondary border-r border-border-primary'>
-      <div className='px-3 py-3 border-b border-border-primary bg-bg-secondary'>
-        <div className='flex items-center justify-between mb-2'>
-          <h2 className='font-semibold text-[18px] text-text-primary tracking-[-0.02em]'>
+      <div className='px-4 py-3 border-b border-border-primary bg-bg-secondary'>
+        <div className='flex items-center justify-between mb-1'>
+          <h2 className='font-bold text-[18px] text-text-primary tracking-tight'>
             {folderNames[selectedFolder] || 'All Notes'}
           </h2>
           <button
-            className='text-[13px] px-2 py-1 rounded-md transition-all text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary'
+            className='text-[12px] font-medium text-text-tertiary hover:text-text-primary transition-colors'
           >
             Sort by
           </button>
         </div>
-        <p className='text-[13px] font-medium text-text-tertiary opacity-80'>
+        <p className='text-[12px] text-text-tertiary mb-3'>
           {notesKeys.length} {notesKeys.length === 1 ? 'note' : 'notes'}
         </p>
+        
+        <div className='relative group'>
+          <Search className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
+          <input
+            type='text'
+            placeholder='Search notes'
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className='w-full pl-8 pr-3 py-1.5 rounded-md text-[13px] focus:outline-none bg-bg-tertiary text-text-primary placeholder-text-tertiary border border-transparent focus:border-border-secondary transition-all shadow-sm'
+          />
+        </div>
       </div>
 
       <div className='flex-1 overflow-y-auto'>

@@ -3,27 +3,9 @@ import {
   Italic,
   Underline,
   Strikethrough,
-  List,
-  ListOrdered,
   Square,
-  Indent,
-  Outdent,
-  Code,
   Link2,
-  Quote,
-  Minus,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
   Highlighter,
-  Heading1,
-  Heading2,
-  Heading3,
-  Type,
-  Subscript as SubscriptIcon,
-  Superscript as SuperscriptIcon,
-  ChevronDown,
   Undo,
   Redo
 } from 'lucide-react'
@@ -49,9 +31,9 @@ export default function FormattingToolbar({ editor }) {
     canUndo: false,
     canRedo: false
   })
-  const [showHeadingMenu, setShowHeadingMenu] = useState(false)
+  const [showFormatMenu, setShowFormatMenu] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
-  const headingMenuRef = useRef(null)
+  const formatMenuRef = useRef(null)
 
   // Update editor state when editor changes
   useEffect(() => {
@@ -109,18 +91,18 @@ export default function FormattingToolbar({ editor }) {
     }
   }, [editor])
 
-  // Close heading menu when clicking outside
+  // Close format menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (headingMenuRef.current && !headingMenuRef.current.contains(event.target)) {
-        setShowHeadingMenu(false)
+      if (formatMenuRef.current && !formatMenuRef.current.contains(event.target)) {
+        setShowFormatMenu(false)
       }
     }
-    if (showHeadingMenu) {
+    if (showFormatMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showHeadingMenu])
+  }, [showFormatMenu])
 
   const handleSetLink = ({ url, text }) => {
     if (!editor) return
@@ -156,7 +138,7 @@ export default function FormattingToolbar({ editor }) {
     } else {
       editor.chain().focus().toggleHeading({ level }).run()
     }
-    setShowHeadingMenu(false)
+    setShowFormatMenu(false)
   }
 
   const getCurrentLink = () => {
@@ -178,274 +160,164 @@ export default function FormattingToolbar({ editor }) {
 
   return (
     <>
-      <div className='flex items-center gap-0.5 sm:gap-1 px-2 sm:px-4 py-2 rounded-lg mb-4 overflow-x-auto toolbar-scroll bg-bg-tertiary border border-border-primary shadow-xs min-h-[40px]'>
-
-        <Button
-          onClick={() => editor?.chain().focus().undo().run()}
-          isActive={false}
-          disabled={!editorState.canUndo}
-          title='Undo (⌘Z)'
-        >
-          <Undo className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().redo().run()}
-          isActive={false}
-          disabled={!editorState.canRedo}
-          title='Redo (⌘⇧Z)'
-        >
-          <Redo className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Divider />
-
-        <Button
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          isActive={editorState.isBold}
-          disabled={!editor}
-          title='Bold'
-        >
-          <Bold className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          isActive={editorState.isItalic}
-          disabled={!editor}
-          title='Italic'
-        >
-          <Italic className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          isActive={editorState.isUnderline}
-          disabled={!editor}
-          title='Underline'
-        >
-          <Underline className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleStrike().run()}
-          isActive={editorState.isStrike}
-          disabled={!editor}
-          title='Strikethrough'
-        >
-          <Strikethrough className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleHighlight().run()}
-          isActive={editorState.isHighlight}
-          disabled={!editor}
-          title='Highlight'
-        >
-          <Highlighter className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Divider />
-
-        <div className='relative' ref={headingMenuRef}>
-          <Button
-            onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-            isActive={editorState.headingLevel > 0}
-            disabled={!editor}
-            title='Heading'
-            className='flex items-center gap-1'
+      <div className='flex items-center gap-1 sm:gap-1 px-1.5 py-1 rounded-lg bg-bg-tertiary border border-border-primary shadow-sm min-h-[34px] w-fit relative z-20'>
+        {/* Formatting Menu Button */}
+        <div className='relative' ref={formatMenuRef}>
+          <button
+            onClick={() => setShowFormatMenu(!showFormatMenu)}
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all ${
+              showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic 
+                ? 'bg-accent-primary text-white' 
+                : 'text-text-secondary hover:bg-bg-secondary'
+            }`}
+            title='Formatting'
           >
-            {editorState.headingLevel === 1 ? (
-              <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-            ) : editorState.headingLevel === 2 ? (
-              <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-            ) : editorState.headingLevel === 3 ? (
-              <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-            ) : (
-              <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-            )}
-            <ChevronDown className='w-2.5 h-2.5 sm:w-3 sm:h-3' />
-          </Button>
-          {showHeadingMenu && (
-            <div className='absolute top-full left-0 mt-1 rounded-lg shadow-lg z-50 bg-bg-panel border border-border-secondary min-w-[160px]'>
-              <button
-                onClick={() => handleHeadingClick(0)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
-                  editorState.headingLevel === 0
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary'
-                }`}
-              >
-                <Type className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-                <span>Paragraph</span>
-              </button>
-              <button
-                onClick={() => handleHeadingClick(1)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
-                  editorState.headingLevel === 1
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary'
-                }`}
-              >
-                <Heading1 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-                <span>Heading 1</span>
-              </button>
-              <button
-                onClick={() => handleHeadingClick(2)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
-                  editorState.headingLevel === 2
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary'
-                }`}
-              >
-                <Heading2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-                <span>Heading 2</span>
-              </button>
-              <button
-                onClick={() => handleHeadingClick(3)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-bg-panel-tertiary transition-colors text-sm ${
-                  editorState.headingLevel === 3
-                    ? 'text-accent-primary'
-                    : 'text-text-secondary'
-                }`}
-              >
-                <Heading3 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-                <span>Heading 3</span>
-              </button>
+            <span className='font-serif text-[15px] font-bold tracking-tight'>Aa</span>
+          </button>
+
+          {showFormatMenu && (
+            <div className='absolute top-full left-0 mt-2 rounded-lg shadow-xl z-50 bg-bg-panel border border-border-secondary min-w-[260px] overflow-hidden'>
+              {/* Header: Row of formatting tools */}
+              <div className='flex items-center justify-between p-1.5 border-b border-border-secondary bg-bg-panel-secondary/50'>
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                  isActive={editorState.isBold}
+                  title='Bold'
+                >
+                  <Bold className='w-4 h-4' />
+                </MenuButton>
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  isActive={editorState.isItalic}
+                  title='Italic'
+                >
+                  <Italic className='w-4 h-4' />
+                </MenuButton>
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                  isActive={editorState.isUnderline}
+                  title='Underline'
+                >
+                  <Underline className='w-4 h-4' />
+                </MenuButton>
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleStrike().run()}
+                  isActive={editorState.isStrike}
+                  title='Strikethrough'
+                >
+                  <Strikethrough className='w-4 h-4' />
+                </MenuButton>
+                <div className='w-px h-4 bg-border-secondary mx-1' />
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleHighlight().run()}
+                  isActive={editorState.isHighlight}
+                  title='Highlight'
+                >
+                  <div className='relative'>
+                    <Highlighter className='w-4 h-4' />
+                    <div className='absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent-primary' />
+                  </div>
+                </MenuButton>
+              </div>
+
+              {/* List: Text styles and more */}
+              <div className='p-1.5 max-h-[400px] overflow-y-auto custom-scrollbar'>
+                <ListButton
+                  onClick={() => handleHeadingClick(1)}
+                  isActive={editorState.headingLevel === 1}
+                  label='Title'
+                />
+                <ListButton
+                  onClick={() => handleHeadingClick(2)}
+                  isActive={editorState.headingLevel === 2}
+                  label='Heading'
+                />
+                <ListButton
+                  onClick={() => handleHeadingClick(3)}
+                  isActive={editorState.headingLevel === 3}
+                  label='Subheading'
+                />
+                <ListButton
+                  onClick={() => handleHeadingClick(0)}
+                  isActive={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
+                  label='Body'
+                  showCheck={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
+                />
+                <ListButton
+                  onClick={() => editor?.chain().focus().toggleCode().run()}
+                  isActive={editorState.isCode}
+                  label='Monostyled'
+                />
+                
+                <div className='h-px bg-border-secondary my-1.5 mx-1' />
+                
+                <ListButton
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                  isActive={editorState.isBulletList}
+                  label='Bulleted List'
+                  icon={<div className='w-1.5 h-1.5 rounded-full bg-text-tertiary mr-3 ml-1' />}
+                />
+                <ListButton
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                  isActive={editorState.isOrderedList}
+                  label='Numbered List'
+                  icon={<span className='text-xs font-bold text-text-tertiary mr-3 ml-0.5'>1.</span>}
+                />
+
+                <div className='h-px bg-border-secondary my-1.5 mx-1' />
+
+                <ListButton
+                  onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+                  isActive={editorState.isBlockquote}
+                  label='Block Quote'
+                  icon={<div className='w-1 h-4 bg-border-tertiary rounded-full mr-3.5 ml-1' />}
+                />
+              </div>
             </div>
           )}
         </div>
-        <Divider />
 
-        <Button
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          isActive={editorState.isBulletList}
-          disabled={!editor}
-          title='Bullet List'
-        >
-          <List className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          isActive={editorState.isOrderedList}
-          disabled={!editor}
-          title='Numbered List'
-        >
-          <ListOrdered className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
+        <div className='w-px h-6 bg-border-primary mx-1' />
+
+        {/* Task List Shortcut */}
         <Button
           onClick={() => editor?.chain().focus().toggleTaskList().run()}
           isActive={editorState.isTaskList}
-          disabled={!editor}
           title='Checklist'
+          className='w-8 h-8'
         >
-          <Square className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+          <Square className='w-4 h-4' />
         </Button>
-        <Divider />
 
-        <Button
-          onClick={() => editor?.chain().focus().sinkListItem('listItem').run()}
-          isActive={false}
-          disabled={!editor || !editor.can().sinkListItem('listItem')}
-          title='Indent'
-        >
-          <Indent className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().liftListItem('listItem').run()}
-          isActive={false}
-          disabled={!editor || !editor.can().liftListItem('listItem')}
-          title='Outdent'
-        >
-          <Outdent className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Divider />
-
-        <Button
-          onClick={() => editor?.chain().focus().toggleCode().run()}
-          isActive={editorState.isCode}
-          disabled={!editor}
-          title='Inline Code'
-        >
-          <Code className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-          isActive={editorState.isCodeBlock}
-          disabled={!editor}
-          title='Code Block'
-        >
-          <Code className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleSubscript().run()}
-          isActive={false}
-          disabled={!editor}
-          title='Subscript'
-        >
-          <SubscriptIcon className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().toggleSuperscript().run()}
-          isActive={false}
-          disabled={!editor}
-          title='Superscript'
-        >
-          <SuperscriptIcon className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Divider />
-
-        <Button
-          onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-          isActive={editorState.textAlign === 'left'}
-          disabled={!editor}
-          title='Align Left'
-        >
-          <AlignLeft className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-          isActive={editorState.textAlign === 'center'}
-          disabled={!editor}
-          title='Align Center'
-        >
-          <AlignCenter className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-          isActive={editorState.textAlign === 'right'}
-          disabled={!editor}
-          title='Align Right'
-        >
-          <AlignRight className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
-          isActive={editorState.textAlign === 'justify'}
-          disabled={!editor}
-          title='Justify'
-        >
-          <AlignJustify className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Divider />
-
-        <Button
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          isActive={editorState.isBlockquote}
-          disabled={!editor}
-          title='Blockquote'
-        >
-          <Quote className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
-        <Button
-          onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-          isActive={false}
-          disabled={!editor}
-          title='Horizontal Rule'
-        >
-          <Minus className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
-        </Button>
+        {/* Link Shortcut */}
         <Button
           onClick={() => setShowLinkModal(true)}
           isActive={editorState.isLink}
-          disabled={!editor}
           title='Link'
+          className='w-8 h-8'
         >
-          <Link2 className='w-3.5 h-3.5 sm:w-4 sm:h-4' />
+          <Link2 className='w-4 h-4' />
         </Button>
+
+        {/* Undo/Redo - Subtle */}
+        <div className='flex items-center gap-0.5 ml-1 mr-0.5'>
+          <button
+            onClick={() => editor?.chain().focus().undo().run()}
+            disabled={!editorState.canUndo}
+            className='p-1.5 text-text-tertiary hover:text-text-primary hover:bg-bg-secondary rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+            title='Undo'
+          >
+            <Undo className='w-4 h-4' />
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().redo().run()}
+            disabled={!editorState.canRedo}
+            className='p-1.5 text-text-tertiary hover:text-text-primary hover:bg-bg-secondary rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+            title='Redo'
+          >
+            <Redo className='w-4 h-4' />
+          </button>
+        </div>
       </div>
 
       {showLinkModal && (
@@ -463,12 +335,12 @@ export default function FormattingToolbar({ editor }) {
 const Button = ({ onClick, isActive, disabled, title, children, className = '' }) => (
   <button
     onClick={onClick}
-    className={`p-1 sm:p-1.5 rounded transition-colors flex-shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center ${
+    className={`p-1 rounded-md transition-all flex-shrink-0 flex items-center justify-center ${
       isActive
-        ? 'bg-accent-primary text-text-primary'
+        ? 'bg-accent-primary text-white shadow-sm'
         : disabled
           ? 'text-text-tertiary opacity-50 cursor-not-allowed'
-          : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
+          : 'text-text-secondary hover:bg-bg-secondary hover:text-text-primary'
     } ${className}`}
     title={title}
     disabled={disabled}
@@ -477,6 +349,35 @@ const Button = ({ onClick, isActive, disabled, title, children, className = '' }
   </button>
 )
 
-const Divider = () => (
-  <div className='w-px h-6 mx-0.5 sm:mx-1 flex-shrink-0 bg-border-primary' />
+const MenuButton = ({ onClick, isActive, title, children }) => (
+  <button
+    onClick={onClick}
+    className={`p-1 rounded-md transition-all flex items-center justify-center ${
+      isActive
+        ? 'bg-accent-primary text-white shadow-sm'
+        : 'text-text-secondary hover:bg-bg-panel-tertiary hover:text-text-primary'
+    }`}
+    title={title}
+  >
+    {children}
+  </button>
+)
+
+const ListButton = ({ onClick, isActive, label, icon, showCheck }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-left transition-all hover:bg-bg-panel-tertiary group mb-0.5 ${
+      isActive ? 'text-text-primary bg-bg-panel-tertiary/50' : 'text-text-secondary'
+    }`}
+  >
+    <div className='flex items-center'>
+      {icon}
+      <span className={`text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}>{label}</span>
+    </div>
+    {(isActive || showCheck) && (
+      <svg className='w-3 h-3 text-accent-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
+      </svg>
+    )}
+  </button>
 )

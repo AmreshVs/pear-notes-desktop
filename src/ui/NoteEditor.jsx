@@ -127,19 +127,23 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   }
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden bg-bg-secondary'>
-      <div className='flex-1 overflow-y-auto'>
-        <div className='max-w-4xl mx-auto px-3 py-3 w-full'>
-          <FormattingToolbar editor={editorInstance} />
+    <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative'>
+      {/* Absolute positioned toolbar to float at top left */}
+      <div className='absolute top-3 left-6 z-30'>
+        <FormattingToolbar editor={editorInstance} />
+      </div>
+
+      <div className='flex-1 overflow-y-auto custom-scrollbar pt-16'>
+        <div className='max-w-4xl mx-auto px-6 py-4 w-full min-h-full bg-bg-primary'>
           <input
             ref={titleRef}
             type='text'
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-2xl font-bold mb-6 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-[-0.02em]'
+            className='w-full text-4xl font-black mb-8 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-tighter'
           />
-          <div className='min-h-[500px]'>
+          <div className='min-h-[600px]'>
             <RichTextEditor
               ref={richTextEditorRef}
               content={content}

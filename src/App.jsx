@@ -15,7 +15,6 @@ import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
 import NotesList from './ui/NotesList'
 import NoteEditor from './ui/NoteEditor'
-import Toolbar from './ui/Toolbar'
 import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import NewFolderModal from './ui/NewFolderModal'
@@ -89,40 +88,37 @@ function App() {
   return (
     <main className='min-h-screen flex flex-col bg-bg-primary'>
       <TitleBar />
-      <div className='flex-1 flex flex-col overflow-hidden'>
-        <Toolbar
-          searchQuery={searchQuery}
-          onSearchChange={(value) => dispatch(setSearchQuery(value))}
-        />
-
-        <div className='flex-1 flex overflow-hidden'>
-          <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>
-            <FoldersSidebar
-              selectedFolder={selectedFolder}
-              onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
-              notes={notes}
-              folders={folders}
-              onCreateNote={handleCreateNote}
-              onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
-              onSettingsClick={() => dispatch(setShowSettings(true))}
-              onThemeToggle={() => dispatch(toggleTheme())}
-              theme={theme}
-              isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            />
-          </ResizablePanel>
-
-          <ResizablePanel defaultWidth={280} minWidth={200} maxWidth={500}>
-            <NotesList selectedFolder={selectedFolder} />
-          </ResizablePanel>
-
-          <NoteEditor
-            key={selectedNote}
-            onUpdate={handleUpdateNote}
-            onDelete={handleDeleteNote}
-            onEditorReady={handleEditorReady}
+      <div className='flex-1 flex overflow-hidden'>
+        <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>
+          <FoldersSidebar
+            selectedFolder={selectedFolder}
+            onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
+            notes={notes}
+            folders={folders}
+            onCreateNote={handleCreateNote}
+            onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+            onSettingsClick={() => dispatch(setShowSettings(true))}
+            onThemeToggle={() => dispatch(toggleTheme())}
+            theme={theme}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
-        </div>
+        </ResizablePanel>
+
+        <ResizablePanel defaultWidth={280} minWidth={200} maxWidth={500}>
+          <NotesList 
+            selectedFolder={selectedFolder} 
+            searchQuery={searchQuery}
+            onSearchChange={(value) => dispatch(setSearchQuery(value))}
+          />
+        </ResizablePanel>
+
+        <NoteEditor
+          key={selectedNote}
+          onUpdate={handleUpdateNote}
+          onDelete={handleDeleteNote}
+          onEditorReady={handleEditorReady}
+        />
       </div>
 
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
