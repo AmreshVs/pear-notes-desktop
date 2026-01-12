@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
@@ -10,12 +11,30 @@ import Link from '@tiptap/extension-link'
 import Highlight from '@tiptap/extension-highlight'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
+import ImageResize from 'tiptap-extension-resize-image'
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
+import { all, createLowlight } from 'lowlight'
+import { 
+  Trash2, 
+  ChevronDown, 
+  ChevronUp, 
+  ChevronLeft, 
+  ChevronRight,
+  Split,
+  Table as TableIcon
+} from 'lucide-react'
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import '../styles/tiptap.css'
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
     const isUpdatingRef = useRef(false)
+    const lowlight = createLowlight(all)
 
     const editor = useEditor({
       extensions: [
@@ -31,7 +50,8 @@ const RichTextEditor = forwardRef(
             keepMarks: true,
             keepAttributes: false
           },
-          strike: false
+          strike: false,
+          codeBlock: false
         }),
         Underline,
         Strike,
@@ -55,10 +75,49 @@ const RichTextEditor = forwardRef(
         Superscript,
         Placeholder.configure({
           placeholder
+        }),
+        ImageResize.configure({
+          allowBase64: true,
+          HTMLAttributes: {
+            class: 'rounded-lg max-w-full h-auto my-4 border border-border-primary shadow-lg'
+          }
+        }),
+        BubbleMenuExtension,
+        Table.configure({
+          resizable: true,
+          lastColumnResizable: true,
+          allowTableNodeSelection: true
+        }),
+        TableRow,
+        TableHeader,
+        TableCell,
+        CodeBlockLowlight.configure({
+          lowlight
         })
       ],
       content: content || '',
       editorProps: {
+        handlePaste: (view, event) => {
+          const items = Array.from(event.clipboardData?.items || [])
+          const imageItem = items.find((item) => item.type.startsWith('image'))
+
+          if (imageItem) {
+            const file = imageItem.getAsFile()
+            if (file) {
+              const reader = new FileReader()
+              reader.onload = (e) => {
+                const base64 = e.target.result
+                const { schema } = view.state
+                const node = schema.nodes.image.create({ src: base64 })
+                const transaction = view.state.tr.replaceSelectionWith(node)
+                view.dispatch(transaction)
+              }
+              reader.readAsDataURL(file)
+              return true
+            }
+          }
+          return false
+        },
         attributes: {
           class: 'prose prose-invert max-w-none focus:outline-none',
           'data-placeholder': placeholder
@@ -103,9 +162,88 @@ const RichTextEditor = forwardRef(
           editor={editor}
           className='flex-1 font-sans text-lg leading-relaxed text-text-primary'
         />
+        
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            tippyOptions={{ duration: 100 }}
+            shouldShow={({ editor }) => editor.isActive('table')}
+            className='flex items-center gap-1 p-1 bg-bg-panel border border-border-secondary rounded-lg shadow-xl z-[60]'
+          >
+            <div className='flex items-center gap-1 border-r border-border-primary pr-1 mr-1'>
+              <BubbleButton
+                onClick={() => editor.chain().focus().addRowBefore().run()}
+                title='Add Row Above'
+              >
+                <ChevronUp className='w-4 h-4 text-text-secondary' />
+              </BubbleButton>
+              <BubbleButton
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                title='Add Row Below'
+              >
+                <ChevronDown className='w-4 h-4 text-text-secondary' />
+              </BubbleButton>
+              <BubbleButton
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                title='Delete Row'
+                className='hover:bg-accent-danger/10 hover:text-accent-danger'
+              >
+                <Trash2 className='w-4 h-4' />
+              </BubbleButton>
+            </div>
+
+            <div className='flex items-center gap-1 border-r border-border-primary pr-1 mr-1'>
+              <BubbleButton
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+                title='Add Column Before'
+              >
+                <ChevronLeft className='w-4 h-4 text-text-secondary' />
+              </BubbleButton>
+              <BubbleButton
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                title='Add Column After'
+              >
+                <ChevronRight className='w-4 h-4 text-text-secondary' />
+              </BubbleButton>
+              <BubbleButton
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                title='Delete Column'
+                className='hover:bg-accent-danger/10 hover:text-accent-danger'
+              >
+                <Trash2 className='w-4 h-4' />
+              </BubbleButton>
+            </div>
+
+            <BubbleButton
+              onClick={() => editor.chain().focus().mergeCells().run()}
+              title='Merge Cells'
+            >
+              <Split className='w-4 h-4 text-text-secondary' />
+            </BubbleButton>
+            
+            <BubbleButton
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              title='Delete Table'
+              className='hover:bg-accent-danger/10 hover:text-accent-danger'
+            >
+              <TableIcon className='w-4 h-4' />
+            </BubbleButton>
+          </BubbleMenu>
+        )}
       </div>
     )
   }
+)
+
+const BubbleButton = ({ onClick, title, children, className = '' }) => (
+  <button
+    type='button'
+    onClick={onClick}
+    className={`p-1.5 rounded-md hover:bg-bg-panel-tertiary transition-all flex items-center justify-center ${className}`}
+    title={title}
+  >
+    {children}
+  </button>
 )
 
 RichTextEditor.displayName = 'RichTextEditor'

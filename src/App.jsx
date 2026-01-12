@@ -80,7 +80,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <main className='min-h-screen flex flex-col bg-bg-primary'>
+      <main className='h-screen flex flex-col bg-bg-primary overflow-hidden'>
         <TitleBar />
         <div className='flex-1 flex items-center justify-center'>
           <div className='text-center'>
@@ -95,7 +95,7 @@ function App() {
   }
 
   return (
-    <main className='min-h-screen flex flex-col bg-bg-primary'>
+    <main className='h-screen flex flex-col bg-bg-primary overflow-hidden'>
       <TitleBar />
       <div className='flex-1 flex overflow-hidden'>
         <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>

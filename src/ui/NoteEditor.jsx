@@ -143,7 +143,7 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
             placeholder='Title'
             className='w-full text-4xl font-black mb-8 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-tighter'
           />
-          <div className='min-h-[600px]'>
+          <div className='flex-1'>
             <RichTextEditor
               ref={richTextEditorRef}
               content={content}

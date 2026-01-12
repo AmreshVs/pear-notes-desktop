@@ -7,7 +7,9 @@ import {
   Link2,
   Highlighter,
   Undo,
-  Redo
+  Redo,
+  Table as TableIcon,
+  Code as CodeIcon
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import LinkModal from './LinkModal'
@@ -130,6 +132,7 @@ export default function FormattingToolbar({ editor }) {
     }
     setShowLinkModal(false)
   }
+
 
   const handleHeadingClick = (level) => {
     if (!editor) return
@@ -272,10 +275,30 @@ export default function FormattingToolbar({ editor }) {
                   label='Block Quote'
                   icon={<div className='w-1 h-4 bg-border-tertiary rounded-full mr-3.5 ml-1' />}
                 />
+
+                <div className='h-px bg-border-secondary my-1.5 mx-1' />
+
+                <ListButton
+                  onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                  label='Insert Table (3x3)'
+                  icon={<TableIcon className='w-4 h-4 text-text-tertiary mr-3 ml-0.5' />}
+                />
               </div>
             </div>
           )}
         </div>
+
+        <div className='w-px h-6 bg-border-primary mx-1' />
+
+        {/* Code Block Shortcut */}
+        <Button
+          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+          isActive={editorState.isCodeBlock}
+          title='Code Block'
+          className='w-8 h-8'
+        >
+          <CodeIcon className='w-4 h-4' />
+        </Button>
 
         <div className='w-px h-6 bg-border-primary mx-1' />
 
