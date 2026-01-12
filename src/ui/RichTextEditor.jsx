@@ -19,6 +19,8 @@ import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { all, createLowlight } from 'lowlight'
+import FileAttachment from './FileAttachment'
+import AudioAttachment from './AudioAttachment'
 import { 
   Trash2, 
   ChevronDown, 
@@ -93,7 +95,9 @@ const RichTextEditor = forwardRef(
         TableCell,
         CodeBlockLowlight.configure({
           lowlight
-        })
+        }),
+        FileAttachment,
+        AudioAttachment
       ],
       content: content || '',
       editorProps: {
@@ -117,6 +121,48 @@ const RichTextEditor = forwardRef(
             }
           }
           return false
+        },
+        handleDrop: (view, event, slice, moved) => {
+          if (moved) return false
+
+          const files = Array.from(event.dataTransfer?.files || [])
+          if (files.length === 0) return false
+
+          event.preventDefault()
+
+          files.forEach((file) => {
+            if (file.type.startsWith('image/')) {
+              // Handle image files
+              const reader = new FileReader()
+              reader.onload = (e) => {
+                const base64 = e.target.result
+                const { schema } = view.state
+                const node = schema.nodes.image.create({ src: base64 })
+                const transaction = view.state.tr.replaceSelectionWith(node)
+                view.dispatch(transaction)
+              }
+              reader.readAsDataURL(file)
+            } else {
+              // Handle other files
+              const reader = new FileReader()
+              reader.onload = (e) => {
+                const { schema } = view.state
+                if (schema.nodes.fileAttachment) {
+                  const node = schema.nodes.fileAttachment.create({
+                    fileName: file.name,
+                    fileSize: file.size,
+                    fileType: file.type,
+                    fileData: e.target.result
+                  })
+                  const transaction = view.state.tr.replaceSelectionWith(node)
+                  view.dispatch(transaction)
+                }
+              }
+              reader.readAsDataURL(file)
+            }
+          })
+
+          return true
         },
         attributes: {
           class: 'prose prose-invert max-w-none focus:outline-none',

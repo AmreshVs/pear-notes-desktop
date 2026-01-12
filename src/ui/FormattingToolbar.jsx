@@ -9,10 +9,13 @@ import {
   Undo,
   Redo,
   Table as TableIcon,
-  Code as CodeIcon
+  Code as CodeIcon,
+  Paperclip
 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, forwardRef } from 'react'
 import LinkModal from './LinkModal'
+import AttachmentMenu from './AttachmentMenu'
+import AudioRecorderModal from './AudioRecorderModal'
 
 export default function FormattingToolbar({ editor }) {
   const [editorState, setEditorState] = useState({
@@ -35,7 +38,10 @@ export default function FormattingToolbar({ editor }) {
   })
   const [showFormatMenu, setShowFormatMenu] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false)
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
   const formatMenuRef = useRef(null)
+  const attachmentButtonRef = useRef(null)
 
   // Update editor state when editor changes
   useEffect(() => {
@@ -155,6 +161,35 @@ export default function FormattingToolbar({ editor }) {
       url: attrs.href || '',
       text: selectedText || attrs.href || ''
     }
+  }
+
+  const handleInsertImage = (base64) => {
+    if (!editor) return
+    editor.chain().focus().setImage({ src: base64 }).run()
+  }
+
+  const handleInsertFile = (file) => {
+    if (!editor) return
+    
+    // Read file as base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      editor.chain().focus().setFileAttachment({
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileData: e.target.result
+      }).run()
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleInsertAudio = ({ data, duration }) => {
+    if (!editor) return
+    editor.chain().focus().setAudioAttachment({
+      audioData: data,
+      duration: duration
+    }).run()
   }
 
   if (!editor) {
@@ -277,12 +312,6 @@ export default function FormattingToolbar({ editor }) {
                 />
 
                 <div className='h-px bg-border-secondary my-1.5 mx-1' />
-
-                <ListButton
-                  onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-                  label='Insert Table (3x3)'
-                  icon={<TableIcon className='w-4 h-4 text-text-tertiary mr-3 ml-0.5' />}
-                />
               </div>
             </div>
           )}
@@ -322,6 +351,25 @@ export default function FormattingToolbar({ editor }) {
           <Link2 className='w-4 h-4' />
         </Button>
 
+        {/* Table Button */}
+        <Button
+          onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          title='Insert Table'
+          className='w-8 h-8'
+        >
+          <TableIcon className='w-4 h-4' />
+        </Button>
+
+        {/* Attachment Button */}
+        <Button
+          ref={attachmentButtonRef}
+          onClick={() => setShowAttachmentMenu(true)}
+          title='Attachments'
+          className='w-8 h-8'
+        >
+          <Paperclip className='w-4 h-4' />
+        </Button>
+
         {/* Undo/Redo - Subtle */}
         <div className='flex items-center gap-0.5 ml-1 mr-0.5'>
           <button
@@ -351,12 +399,28 @@ export default function FormattingToolbar({ editor }) {
           currentText={getCurrentLink().text}
         />
       )}
+      {showAttachmentMenu && (
+        <AttachmentMenu
+          onClose={() => setShowAttachmentMenu(false)}
+          onInsertImage={handleInsertImage}
+          onInsertFile={handleInsertFile}
+          onRecordAudio={() => setShowAudioRecorder(true)}
+          buttonRef={attachmentButtonRef}
+        />
+      )}
+      {showAudioRecorder && (
+        <AudioRecorderModal
+          onClose={() => setShowAudioRecorder(false)}
+          onSaveAudio={handleInsertAudio}
+        />
+      )}
     </>
   )
 }
 
-const Button = ({ onClick, isActive, disabled, title, children, className = '' }) => (
+const Button = forwardRef(({ onClick, isActive, disabled, title, children, className = '' }, ref) => (
   <button
+    ref={ref}
     onClick={onClick}
     className={`p-1 rounded-md transition-all flex-shrink-0 flex items-center justify-center ${
       isActive
@@ -370,7 +434,8 @@ const Button = ({ onClick, isActive, disabled, title, children, className = '' }
   >
     {children}
   </button>
-)
+))
+Button.displayName = 'Button'
 
 const MenuButton = ({ onClick, isActive, title, children }) => (
   <button
