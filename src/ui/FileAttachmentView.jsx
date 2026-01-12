@@ -10,6 +10,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const [duration, setDuration] = useState(0)
   const mediaRef = useRef(null)
   const isVideo = fileType?.startsWith('video/')
+  const isAudio = fileType?.startsWith('audio/')
 
   useEffect(() => {
     const media = mediaRef.current
@@ -98,64 +99,18 @@ export default function FileAttachmentView({ node, deleteNode }) {
     if (deleteNode) deleteNode()
   }
 
-  const isAudio = fileType?.startsWith('audio/')
-
   return (
     <NodeViewWrapper className='file-attachment-wrapper'>
-      <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
-        {/* Playback Area for Video */}
-        {isVideo && fileData && (
-          <div className='relative aspect-video bg-black'>
-            <video
-              ref={mediaRef}
-              src={fileData}
-              className='w-full h-full'
-              onClick={togglePlayPause}
-            />
-            <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none'>
-              <button 
-                onClick={togglePlayPause}
-                className='w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-white pointer-events-auto'
-              >
-                {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Main Header / Info Area */}
-        <div className={`relative flex items-center gap-4 p-${isVideo ? 6 : 4}`}>
-          {/* Audio Player using shared component */}
-          {isAudio ? (
-            <div className='flex-1'>
-              <AudioPlayer 
-                src={fileData} 
-                duration={node.attrs.duration || 0} 
-                title={fileName || 'Audio Attachment'} 
-              />
-            </div>
-          ) : !isVideo && (
-            /* Normal File Info Area */
-            <>
-              <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-secondary border border-border-primary'>
-                {getFileIcon()}
-              </div>
-
-              {/* File Info */}
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-semibold text-text-primary truncate mb-1'>{fileName || 'Untitled File'}</p>
-                <div className='flex items-center gap-2'>
-                  <span className='text-xs font-medium text-text-tertiary bg-bg-tertiary px-2 py-0.5 rounded-md'>
-                    {getFileExtension()}
-                  </span>
-                  <span className='text-xs text-text-tertiary'>•</span>
-                  <span className='text-xs text-text-tertiary'>{formatFileSize(fileSize)}</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Action Buttons Overlay for Audio/Video/General - Pinned to the info area */}
+      {isAudio ? (
+        /* SPECIAL HANDLING FOR AUDIO: Use local relative container to avoid double borders from AudioPlayer */
+        <div className='relative my-3 group'>
+          <AudioPlayer 
+            src={fileData} 
+            duration={node.attrs.duration || 0} 
+            title={fileName || 'Audio Attachment'} 
+          />
+          
+          {/* Hover actions for audio files */}
           <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
             {fileData && (
               <button
@@ -175,17 +130,78 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </button>
           </div>
         </div>
+      ) : (
+        /* HANDLING FOR VIDEO AND OTHER FILES: Use the standard bordered wrapper */
+        <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
+          {/* Playback Area for Video */}
+          {isVideo && fileData && (
+            <div className='relative aspect-video bg-black'>
+              <video
+                ref={mediaRef}
+                src={fileData}
+                className='w-full h-full'
+                onClick={togglePlayPause}
+              />
+              <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none'>
+                <button 
+                  onClick={togglePlayPause}
+                  className='w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-white pointer-events-auto'
+                >
+                  {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
+                </button>
+              </div>
+            </div>
+          )}
 
-        {/* Progress bar for video (AudioPlayer has its own) */}
-        {isVideo && (
-          <div className='h-1 bg-bg-tertiary w-full overflow-hidden'>
-            <div
-              className='h-full bg-accent-primary transition-all duration-100'
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
+          {/* Info Area */}
+          <div className={`relative flex items-center gap-4 p-${isVideo ? 6 : 4}`}>
+            <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-secondary border border-border-primary'>
+              {getFileIcon()}
+            </div>
+
+            <div className='flex-1 min-w-0'>
+              <p className='text-sm font-semibold text-text-primary truncate mb-1'>{fileName || 'Untitled File'}</p>
+              <div className='flex items-center gap-2'>
+                <span className='text-xs font-medium text-text-tertiary bg-bg-tertiary px-2 py-0.5 rounded-md'>
+                  {getFileExtension()}
+                </span>
+                <span className='text-xs text-text-tertiary'>•</span>
+                <span className='text-xs text-text-tertiary'>{formatFileSize(fileSize)}</span>
+              </div>
+            </div>
+
+            {/* Hover Actions for non-audio files */}
+            <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
+              {fileData && (
+                <button
+                  onClick={handleDownload}
+                  className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'
+                  title='Download'
+                >
+                  <Download className='w-4 h-4 text-text-secondary' />
+                </button>
+              )}
+              <button
+                onClick={handleDelete}
+                className='flex-shrink-0 p-2.5 rounded-lg hover:bg-accent-danger/10 transition-all duration-200'
+                title='Delete'
+              >
+                <Trash2 className='w-4 h-4 text-accent-danger' />
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Progress bar for video */}
+          {isVideo && (
+            <div className='h-1 bg-bg-tertiary w-full overflow-hidden'>
+              <div
+                className='h-full bg-accent-primary transition-all duration-100'
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </NodeViewWrapper>
   )
 }

@@ -141,7 +141,7 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-4xl font-black mb-8 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-tighter'
+            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-tighter'
           />
           <div className='flex-1'>
             <RichTextEditor
