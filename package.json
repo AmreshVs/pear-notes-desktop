@@ -1,10 +1,12 @@
 {
   "name": "pear-notes",
-  "main": "dist/src/index.html",
+  "main": "index.js",
   "pear": {
     "name": "pear-notes",
     "type": "desktop",
+    "pre": "pear-electron/pre",
     "gui": {
+      "main": "index.html",
       "backgroundColor": "#1F2430",
       "height": "1280",
       "width": "1280"
@@ -79,6 +81,9 @@
     "hyperswarm": "^4.14.2",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.553.0",
+    "pear-bridge": "^1.2.4",
+    "pear-electron": "^1.7.26",
+    "pear-run": "^2.0.0",
     "react-redux": "^9.2.0",
     "ready-resource": "^1.2.0",
     "redux-saga": "^1.4.2",

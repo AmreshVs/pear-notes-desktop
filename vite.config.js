@@ -10,9 +10,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
-      input: resolve(__dirname, 'src/index.html'),
+      input: resolve(__dirname, 'index.html'),
+      output: { entryFileNames: 'assets/[name].js', chunkFileNames: 'assets/[name].js', assetFileNames: 'assets/[name].[ext]' },
       external: [
         // Full core module list (Node 22+ superset)
         'assert',
