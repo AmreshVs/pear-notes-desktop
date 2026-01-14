@@ -1,9 +1,8 @@
 import { Trash2, Search } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
-import { getFolders, getSelectedFolder } from '../store/slices/foldersSlice'
-import { ALL_NOTES_KEY } from '../constant'
+import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice' // Changed import
+import { getFolders } from '../store/slices/foldersSlice'
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -48,7 +47,6 @@ const NotesItem = ({ noteKey: key }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
-  const selectedFolder = useSelector(getSelectedFolder)
   const isSelected = selectedNote === key
 
 
@@ -60,7 +58,6 @@ const NotesItem = ({ noteKey: key }) => {
     dispatch(deleteNote(key))
   }, [dispatch])
 
-  if (noteData?.folderKey !== selectedFolder && selectedFolder !== ALL_NOTES_KEY) return null
 
   return (
     <div
@@ -114,13 +111,13 @@ export default function NotesList({
   searchQuery,
   onSearchChange
 }) {
-  const notesKeys = useSelector(getNoteKeys)
+  const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
 
-  const renderNotesList = useCallback((key) => {
+  const renderNotesList = useCallback((note) => {
     return (
-      <NotesItem noteKey={key} />
+      <NotesItem key={note.key} noteKey={note.key} />
     )
   }, [])
 
@@ -138,7 +135,7 @@ export default function NotesList({
           </button>
         </div>
         <p className='text-[12px] text-text-tertiary mb-3'>
-          {notesKeys.length} {notesKeys.length === 1 ? 'note' : 'notes'}
+          {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
         </p>
         
         <div className='relative group'>
@@ -154,14 +151,14 @@ export default function NotesList({
       </div>
 
       <div className='flex-1 overflow-y-auto'>
-        {notesKeys.length === 0 ? (
+        {filteredNotes.length === 0 ? (
           <div className='p-8 text-center'>
             <p className='text-[15px] text-text-tertiary'>
-              No notes yet
+              {searchQuery ? 'No notes matching search' : 'No notes yet'}
             </p>
           </div>
         ) : (
-          <div>{notesKeys.map(renderNotesList)}</div>
+          <div>{filteredNotes.map(renderNotesList)}</div>
         )}
       </div>
     </div>
