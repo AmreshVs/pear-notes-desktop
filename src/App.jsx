@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, getNotes } from './store/slices/notesSlice'
+import { createNote, updateNote, deleteNote, getNotes, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
 import {
   setSelectedFolder,
   getFolders,
   createFolder,
-  deleteFolder
+  deleteFolder,
+  getSelectedFolder
 } from './store/slices/foldersSlice'
 import {
   setSearchQuery,
@@ -13,7 +14,11 @@ import {
   setShowNewFolderModal,
   setEditor,
   toggleTheme,
-  appReady
+  appReady,
+  getSearchQuery,
+  getShowSettings,
+  getShowNewFolderModal,
+  getTheme
 } from './store/slices/uiSlice'
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
@@ -29,14 +34,14 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const notes = useSelector(getNotes)
-  const selectedNote = useSelector((state) => state.notes.selectedNote)
-  const isLoading = useSelector((state) => state.notes.isLoading)
-  const selectedFolder = useSelector((state) => state.folders.selectedFolder)
-  const searchQuery = useSelector((state) => state.ui.searchQuery)
-  const showSettings = useSelector((state) => state.ui.showSettings)
-  const showNewFolderModal = useSelector((state) => state.ui.showNewFolderModal)
+  const selectedNote = useSelector(getSelectedNote)
+  const isLoading = useSelector(getNotesLoading)
+  const selectedFolder = useSelector(getSelectedFolder)
+  const searchQuery = useSelector(getSearchQuery)
+  const showSettings = useSelector(getShowSettings)
+  const showNewFolderModal = useSelector(getShowNewFolderModal)
   const folders = useSelector(getFolders)
-  const theme = useSelector((state) => state.ui.theme)
+  const theme = useSelector(getTheme)
 
   useEffect(() => {
     const load = async () => {
