@@ -2,7 +2,8 @@ import { Trash2, Search } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getNoteKeys, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
-import { getFolders } from '../store/slices/foldersSlice'
+import { getFolders, getSelectedFolder } from '../store/slices/foldersSlice'
+import { ALL_NOTES_KEY } from '../constant'
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -47,7 +48,9 @@ const NotesItem = ({ noteKey: key }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
+  const selectedFolder = useSelector(getSelectedFolder)
   const isSelected = selectedNote === key
+
 
   const handleSelectNote = useCallback((key) => {
     dispatch(setSelectedNote(key))
@@ -56,6 +59,8 @@ const NotesItem = ({ noteKey: key }) => {
   const handleDeleteNote = useCallback(async (key) => {
     dispatch(deleteNote(key))
   }, [dispatch])
+
+  if (noteData?.folderKey !== selectedFolder && selectedFolder !== ALL_NOTES_KEY) return null
 
   return (
     <div
