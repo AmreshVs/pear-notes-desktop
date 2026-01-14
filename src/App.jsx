@@ -32,7 +32,6 @@ function App() {
   const selectedNote = useSelector((state) => state.notes.selectedNote)
   const isLoading = useSelector((state) => state.notes.isLoading)
   const selectedFolder = useSelector((state) => state.folders.selectedFolder)
-  console.log({ selectedFolder })
   const searchQuery = useSelector((state) => state.ui.searchQuery)
   const showSettings = useSelector((state) => state.ui.showSettings)
   const showNewFolderModal = useSelector((state) => state.ui.showNewFolderModal)
