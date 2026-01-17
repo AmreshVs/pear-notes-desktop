@@ -33,14 +33,14 @@ const getPreview = (content, contentHtml) => {
 
   let text = ''
   if (contentHtml) {
-    const div = document.createElement('div')
-    div.innerHTML = contentHtml
-    text = div.textContent || div.innerText || ''
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(contentHtml, 'text/html')
+    text = doc.body.textContent || doc.body.innerText || ''
   } else {
     text = content || ''
   }
-
-  text = text.replace(/\n/g, ' ').trim()
+  
+  if (text) text = text.replace(/\n/g, ' ').trim()
   return text.length > 60 ? text.substring(0, 60) + '...' : text
 }
 
