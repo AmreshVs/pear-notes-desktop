@@ -101,7 +101,7 @@ const RichTextEditor = forwardRef(
             return ReactNodeViewRenderer(ImageView)
           }
         }).configure({
-            inline: true,
+            inline: false,
             allowBase64: true
         }),
         BubbleMenuExtension,

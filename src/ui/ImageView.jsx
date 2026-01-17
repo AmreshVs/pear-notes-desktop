@@ -47,11 +47,11 @@ export default function ImageView({ node, updateAttributes, selected }) {
 
   return (
     <NodeViewWrapper 
-      className="inline-block relative my-4" 
+      className="block relative my-4 w-fit" 
       draggable={!selected}
     >
       <div 
-        className={`relative inline-block transition-all rounded-lg ${selected ? 'ring-2 ring-accent-primary' : ''}`}
+        className={`relative block transition-all rounded-lg ${selected ? 'ring-2 ring-accent-primary' : ''}`}
         onMouseDown={(e) => { if (selected) e.stopPropagation() }}
       >
         <Resizable

@@ -174,7 +174,10 @@ export default function FormattingToolbar({ editor, noteKey }) {
         buffer 
       })
       if (link) {
-        editor.chain().focus().setImage({ src: link }).run()
+        editor.chain().focus().insertContent([
+          { type: 'image', attrs: { src: link } },
+          { type: 'paragraph' }
+        ]).run()
       }
     } catch (error) {
       console.error('Error uploading image:', error)
@@ -192,12 +195,18 @@ export default function FormattingToolbar({ editor, noteKey }) {
       })
 
       if (link) {
-        editor.chain().focus().setFileAttachment({
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: file.type,
-          url: link
-        }).run()
+        editor.chain().focus().insertContent([
+          {
+            type: 'fileAttachment',
+            attrs: {
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              url: link
+            }
+          },
+          { type: 'paragraph' }
+        ]).run()
       }
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -220,11 +229,17 @@ export default function FormattingToolbar({ editor, noteKey }) {
       })
 
       if (link) {
-        editor.chain().focus().setAudioAttachment({
-          audioData: null, // Don't store huge base64
-          url: link,
-          duration: duration
-        }).run()
+        editor.chain().focus().insertContent([
+          {
+            type: 'audioAttachment',
+            attrs: {
+              audioData: null,
+              url: link,
+              duration: duration
+            }
+          },
+          { type: 'paragraph' }
+        ]).run()
       }
     } catch (error) {
       console.error('Error uploading audio:', error)

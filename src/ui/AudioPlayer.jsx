@@ -1,9 +1,10 @@
 import { Play, Pause } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
-export default function AudioPlayer({ src, duration, title = 'Audio Recording' }) {
+export default function AudioPlayer({ src, duration: propDuration, title = 'Audio Recording' }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
+  const [internalDuration, setInternalDuration] = useState(propDuration || 0)
   const mediaRef = useRef(null)
 
   useEffect(() => {
@@ -11,6 +12,11 @@ export default function AudioPlayer({ src, duration, title = 'Audio Recording' }
     if (!media) return
 
     const handleTimeUpdate = () => setCurrentTime(media.currentTime)
+    const handleLoadedMetadata = () => {
+      if (media.duration && media.duration !== Infinity) {
+        setInternalDuration(media.duration)
+      }
+    }
     const handleEnded = () => {
       setIsPlaying(false)
       media.currentTime = 0
@@ -18,10 +24,17 @@ export default function AudioPlayer({ src, duration, title = 'Audio Recording' }
     }
 
     media.addEventListener('timeupdate', handleTimeUpdate)
+    media.addEventListener('loadedmetadata', handleLoadedMetadata)
     media.addEventListener('ended', handleEnded)
+
+    // Trigger duration load if already loaded
+    if (media.duration && media.duration !== Infinity) {
+      setInternalDuration(media.duration)
+    }
 
     return () => {
       media.removeEventListener('timeupdate', handleTimeUpdate)
+      media.removeEventListener('loadedmetadata', handleLoadedMetadata)
       media.removeEventListener('ended', handleEnded)
     }
   }, [src])
@@ -40,10 +53,13 @@ export default function AudioPlayer({ src, duration, title = 'Audio Recording' }
   }
 
   const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds) || seconds === Infinity) return '0:00'
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const displayDuration = internalDuration || propDuration || 0
 
   return (
     <div className='flex flex-col bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
@@ -63,7 +79,9 @@ export default function AudioPlayer({ src, duration, title = 'Audio Recording' }
               AUDIO
             </span>
             <span className='text-xs text-text-tertiary'>•</span>
-            <span className='text-xs text-text-tertiary font-mono'>{formatTime(isPlaying ? currentTime : (duration || 0))}</span>
+            <span className='text-xs text-text-tertiary font-mono'>
+              {formatTime(currentTime)} / {formatTime(displayDuration)}
+            </span>
           </div>
         </div>
       </div>
@@ -71,7 +89,7 @@ export default function AudioPlayer({ src, duration, title = 'Audio Recording' }
       <div className='h-1 bg-bg-tertiary w-full overflow-hidden'>
         <div
           className='h-full bg-accent-primary transition-all duration-100'
-          style={{ width: `${(duration > 0 ? (currentTime / duration) * 100 : 0)}%` }}
+          style={{ width: `${(displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0)}%` }}
         />
       </div>
     </div>
