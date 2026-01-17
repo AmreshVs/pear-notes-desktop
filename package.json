@@ -77,6 +77,8 @@
     "framed-stream": "^1.0.1",
     "hrpc": "^4.2.0",
     "hyperbee": "^2.26.5",
+    "hypercore-blob-server": "^1.12.0",
+    "hyperdrive": "^13.1.1",
     "hyperschema": "^1.15.0",
     "hyperswarm": "^4.14.2",
     "lowlight": "^3.3.0",

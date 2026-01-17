@@ -32,9 +32,13 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import '../styles/tiptap.css'
+import { backendApi } from '../backend/api'
+import { useSelector } from 'react-redux'
+import { getSelectedNote } from '../store/slices/notesSlice'
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
+    const currentNoteKey = useSelector(getSelectedNote)
     const isUpdatingRef = useRef(false)
     const lowlight = createLowlight(all)
 
@@ -130,7 +134,7 @@ const RichTextEditor = forwardRef(
 
           event.preventDefault()
 
-          files.forEach((file) => {
+          files.forEach(async (file) => {
             if (file.type.startsWith('image/')) {
               // Handle image files
               const reader = new FileReader()
