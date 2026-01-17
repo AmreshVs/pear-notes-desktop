@@ -76,17 +76,27 @@ export default function FileAttachmentView({ node, deleteNode }) {
     return parts.length > 1 ? parts[parts.length - 1].toUpperCase() : 'FILE'
   }
 
-  const handleDownload = (e) => {
+  const handleDownload = async (e) => {
+    e.preventDefault()
     e.stopPropagation()
     
     // Handle URL download
     if (resolvedUrl) {
-      const a = document.createElement('a')
-      a.href = resolvedUrl
-      a.download = fileName || 'download'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      try {
+        const response = await fetch(resolvedUrl)
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = url
+        a.download = fileName || 'download'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } catch (error) {
+        console.error('Download failed:', error)
+      }
       return
     }
 
