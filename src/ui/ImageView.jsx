@@ -4,9 +4,11 @@ import { getHyperdriveAddress } from '../store/slices/uiSlice'
 import { HYPERDRIVE_URL_PREFIX } from '../constant'
 import { Resizable } from 'react-resizable'
 import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
+import { backendApi } from '../backend/api'
 import 'react-resizable/css/styles.css'
 
-export default function ImageView({ node, updateAttributes, selected }) {
+export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
   const { src, alt, title, width: initialWidth, height: initialHeight } = node.attrs
   const resolvedUrl = useSelector((state) => (src && src.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, src) : src))
   
@@ -45,6 +47,22 @@ export default function ImageView({ node, updateAttributes, selected }) {
     updateAttributes({ width: size.width, height: finalHeight })
   }
 
+  const handleDelete = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (src && src.startsWith(HYPERDRIVE_URL_PREFIX)) {
+      try {
+        const key = src.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
+        await backendApi.deleteFile(key)
+      } catch (error) {
+        console.error('Error deleting image from backend:', error)
+      }
+    }
+
+    if (deleteNode) deleteNode()
+  }
+
   return (
     <NodeViewWrapper 
       className="block relative my-4 w-fit" 
@@ -54,6 +72,15 @@ export default function ImageView({ node, updateAttributes, selected }) {
         className={`relative block transition-all rounded-lg ${selected ? 'ring-2 ring-accent-primary' : ''}`}
         onMouseDown={(e) => { if (selected) e.stopPropagation() }}
       >
+        {selected && (
+          <button
+            onClick={handleDelete}
+            className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-accent-danger hover:bg-accent-danger/10 transition-colors z-50 pointer-events-auto"
+            title="Delete Image"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
         <Resizable
           width={typeof width === 'number' ? width : 300}
           height={typeof height === 'number' ? (height === 'auto' ? 200 : height) : 200}

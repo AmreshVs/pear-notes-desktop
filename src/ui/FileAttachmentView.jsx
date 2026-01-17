@@ -2,6 +2,7 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
+import { backendApi } from '../backend/api'
 import { useSelector } from 'react-redux'
 import { getHyperdriveAddress } from '../store/slices/uiSlice'
 import { HYPERDRIVE_URL_PREFIX } from '../constant'
@@ -123,8 +124,19 @@ export default function FileAttachmentView({ node, deleteNode }) {
     }
   }
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     e.stopPropagation()
+    
+    // Call backend API to delete from Hyperdrive if we have a URL
+    if (url && url.startsWith(HYPERDRIVE_URL_PREFIX)) {
+      try {
+        const key = url.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
+        await backendApi.deleteFile(key)
+      } catch (error) {
+        console.error('Error deleting file from backend:', error)
+      }
+    }
+
     if (deleteNode) deleteNode()
   }
 
