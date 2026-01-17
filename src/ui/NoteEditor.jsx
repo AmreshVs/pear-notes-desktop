@@ -130,7 +130,7 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative'>
       {/* Absolute positioned toolbar to float at top left */}
       <div className='absolute top-3 left-6 z-30'>
-        <FormattingToolbar editor={editorInstance} />
+        <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
       </div>
 
       <div className='flex-1 overflow-y-auto custom-scrollbar pt-16'>

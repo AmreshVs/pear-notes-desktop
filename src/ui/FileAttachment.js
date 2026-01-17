@@ -22,6 +22,9 @@ export default Node.create({
       },
       fileData: {
         default: null
+      },
+      url: {
+        default: null
       }
     }
   },

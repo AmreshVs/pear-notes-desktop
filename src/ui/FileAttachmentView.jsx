@@ -2,13 +2,18 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
+import { useSelector } from 'react-redux'
+import { getHyperdriveAddress } from '../store/slices/uiSlice'
 
 export default function FileAttachmentView({ node, deleteNode }) {
-  const { fileName, fileSize, fileType, fileData } = node.attrs
+  const { fileName, fileSize, fileType, fileData, url } = node.attrs
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const mediaRef = useRef(null)
+  
+  const resolvedUrl = useSelector((state) => (url && url.startsWith('http://hyperdrive') ? getHyperdriveAddress(state, url) : url))
+  
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')
 
@@ -34,7 +39,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
       media.removeEventListener('loadedmetadata', handleLoadedMetadata)
       media.removeEventListener('ended', handleEnded)
     }
-  }, [fileData, isVideo])
+  }, [fileData, resolvedUrl, isVideo])
 
   const togglePlayPause = (e) => {
     e.stopPropagation()
@@ -73,6 +78,19 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
   const handleDownload = (e) => {
     e.stopPropagation()
+    
+    // Handle URL download
+    if (resolvedUrl) {
+      const a = document.createElement('a')
+      a.href = resolvedUrl
+      a.download = fileName || 'download'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      return
+    }
+
+    // Handle legacy base64 download
     if (!fileData) return
     try {
       const byteString = atob(fileData.split(',')[1])
@@ -105,14 +123,14 @@ export default function FileAttachmentView({ node, deleteNode }) {
         /* SPECIAL HANDLING FOR AUDIO: Use local relative container to avoid double borders from AudioPlayer */
         <div className='relative my-3 group'>
           <AudioPlayer 
-            src={fileData} 
+            src={resolvedUrl || fileData} 
             duration={node.attrs.duration || 0} 
             title={fileName || 'Audio Attachment'} 
           />
           
           {/* Hover actions for audio files */}
           <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
-            {fileData && (
+            {(resolvedUrl || fileData) && (
               <button
                 onClick={handleDownload}
                 className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'
@@ -134,11 +152,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
         /* HANDLING FOR VIDEO AND OTHER FILES: Use the standard bordered wrapper */
         <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
           {/* Playback Area for Video */}
-          {isVideo && fileData && (
+          {isVideo && (resolvedUrl || fileData) && (
             <div className='relative aspect-video bg-black'>
               <video
                 ref={mediaRef}
-                src={fileData}
+                src={resolvedUrl || fileData}
                 className='w-full h-full'
                 onClick={togglePlayPause}
               />
@@ -172,7 +190,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
             {/* Hover Actions for non-audio files */}
             <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
-              {fileData && (
+              {(resolvedUrl || fileData) && (
                 <button
                   onClick={handleDownload}
                   className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'

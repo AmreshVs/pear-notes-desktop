@@ -17,12 +17,8 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
   const handleImageSelect = (event) => {
     const file = event.target.files?.[0]
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        onInsertImage(e.target.result)
-        onClose()
-      }
-      reader.readAsDataURL(file)
+      onInsertImage(file)
+      onClose()
     }
   }
 

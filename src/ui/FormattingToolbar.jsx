@@ -13,11 +13,12 @@ import {
   Paperclip
 } from 'lucide-react'
 import { useState, useEffect, useRef, forwardRef } from 'react'
+import { backendApi } from '../backend/api'
 import LinkModal from './LinkModal'
 import AttachmentMenu from './AttachmentMenu'
 import AudioRecorderModal from './AudioRecorderModal'
 
-export default function FormattingToolbar({ editor }) {
+export default function FormattingToolbar({ editor, noteKey }) {
   const [editorState, setEditorState] = useState({
     isBold: false,
     isItalic: false,
@@ -163,33 +164,71 @@ export default function FormattingToolbar({ editor }) {
     }
   }
 
-  const handleInsertImage = (base64) => {
-    if (!editor) return
-    editor.chain().focus().setImage({ src: base64 }).run()
-  }
-
-  const handleInsertFile = (file) => {
-    if (!editor) return
-    
-    // Read file as base64
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      editor.chain().focus().setFileAttachment({
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        fileData: e.target.result
-      }).run()
+  const handleInsertImage = async (file) => {
+    if (!editor || !file) return
+    try {
+      const buffer = await file.arrayBuffer()
+      const { link } = await backendApi.insertFile({ 
+        key: noteKey, 
+        fileName: file.name, 
+        buffer 
+      })
+      if (link) {
+        editor.chain().focus().setImage({ src: link }).run()
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
     }
-    reader.readAsDataURL(file)
   }
 
-  const handleInsertAudio = ({ data, duration }) => {
+  const handleInsertFile = async (file) => {
+    if (!editor || !file) return
+    try {
+      const buffer = await file.arrayBuffer()
+      const { link } = await backendApi.insertFile({ 
+        key: noteKey, 
+        fileName: file.name, 
+        buffer 
+      })
+
+      if (link) {
+        editor.chain().focus().setFileAttachment({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          url: link
+        }).run()
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+    }
+  }
+
+  const handleInsertAudio = async ({ data, duration }) => {
     if (!editor) return
-    editor.chain().focus().setAudioAttachment({
-      audioData: data,
-      duration: duration
-    }).run()
+    try {
+      // Data is base64 data URI from AudioRecorderModal
+      const response = await fetch(data)
+      const blob = await response.blob()
+      const buffer = await blob.arrayBuffer()
+      const fileName = `Audio Recording ${new Date().toLocaleString()}.webm`
+
+      const { link } = await backendApi.insertFile({ 
+        key: noteKey, 
+        fileName,
+        buffer 
+      })
+
+      if (link) {
+        editor.chain().focus().setAudioAttachment({
+          audioData: null, // Don't store huge base64
+          url: link,
+          duration: duration
+        }).run()
+      }
+    } catch (error) {
+      console.error('Error uploading audio:', error)
+    }
   }
 
   if (!editor) {

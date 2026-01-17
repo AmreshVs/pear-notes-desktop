@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -12,6 +12,7 @@ import Highlight from '@tiptap/extension-highlight'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import ImageResize from 'tiptap-extension-resize-image'
+import Image from '@tiptap/extension-image'
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
@@ -20,6 +21,8 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { all, createLowlight } from 'lowlight'
 import FileAttachment from './FileAttachment'
+import FileAttachmentView from './FileAttachmentView'
+import ImageView from './ImageView'
 import AudioAttachment from './AudioAttachment'
 import { 
   Trash2, 
@@ -82,6 +85,14 @@ const RichTextEditor = forwardRef(
         Placeholder.configure({
           placeholder
         }),
+        Image.extend({
+          addNodeView() {
+            return ReactNodeViewRenderer(ImageView)
+          }
+        }).configure({
+            inline: true,
+            allowBase64: true
+        }),
         ImageResize.configure({
           allowBase64: true,
           HTMLAttributes: {
@@ -107,24 +118,49 @@ const RichTextEditor = forwardRef(
       editorProps: {
         handlePaste: (view, event) => {
           const items = Array.from(event.clipboardData?.items || [])
-          const imageItem = items.find((item) => item.type.startsWith('image'))
+          
+          items.forEach(async (item) => {
+            if (item.kind === 'file') {
+              const file = item.getAsFile()
+              if (!file) return
 
-          if (imageItem) {
-            const file = imageItem.getAsFile()
-            if (file) {
-              const reader = new FileReader()
-              reader.onload = (e) => {
-                const base64 = e.target.result
+              // Upload file
+              try {
+                const buffer = await file.arrayBuffer()
+                const { link } = await backendApi.insertFile({ 
+                  key: currentNoteKey, 
+                  fileName: file.name, 
+                  buffer 
+                })
+                console.log({link})
+                if (!link) return
+
                 const { schema } = view.state
-                const node = schema.nodes.image.create({ src: base64 })
-                const transaction = view.state.tr.replaceSelectionWith(node)
-                view.dispatch(transaction)
+
+                if (file.type.startsWith('image/')) {
+                  const node = schema.nodes.image.create({ src: link })
+                  const transaction = view.state.tr.replaceSelectionWith(node)
+                  view.dispatch(transaction)
+                } else {
+                  if (schema.nodes.fileAttachment) {
+                    const node = schema.nodes.fileAttachment.create({
+                      fileName: file.name,
+                      fileSize: file.size,
+                      fileType: file.type,
+                      url: link
+                    })
+                    const transaction = view.state.tr.replaceSelectionWith(node)
+                    view.dispatch(transaction)
+                  }
+                }
+              } catch (error) {
+                console.error('Error uploading file:', error)
               }
-              reader.readAsDataURL(file)
-              return true
             }
-          }
-          return false
+          })
+          
+          // Return false to let default handler handle text
+          return items.some(item => item.kind === 'file')
         },
         handleDrop: (view, event, slice, moved) => {
           if (moved) return false
@@ -135,34 +171,37 @@ const RichTextEditor = forwardRef(
           event.preventDefault()
 
           files.forEach(async (file) => {
-            if (file.type.startsWith('image/')) {
-              // Handle image files
-              const reader = new FileReader()
-              reader.onload = (e) => {
-                const base64 = e.target.result
-                const { schema } = view.state
-                const node = schema.nodes.image.create({ src: base64 })
+            try {
+              // Upload file
+              const buffer = await file.arrayBuffer()
+              const { link } = await backendApi.insertFile({ 
+                key: currentNoteKey, 
+                fileName: file.name, 
+                buffer 
+              })
+
+              if (!link) return
+
+              const { schema } = view.state
+
+              if (file.type.startsWith('image/')) {
+                const node = schema.nodes.image.create({ src: link })
                 const transaction = view.state.tr.replaceSelectionWith(node)
                 view.dispatch(transaction)
-              }
-              reader.readAsDataURL(file)
-            } else {
-              // Handle other files
-              const reader = new FileReader()
-              reader.onload = (e) => {
-                const { schema } = view.state
+              } else {
                 if (schema.nodes.fileAttachment) {
                   const node = schema.nodes.fileAttachment.create({
                     fileName: file.name,
                     fileSize: file.size,
                     fileType: file.type,
-                    fileData: e.target.result
+                    url: link
                   })
                   const transaction = view.state.tr.replaceSelectionWith(node)
                   view.dispatch(transaction)
                 }
               }
-              reader.readAsDataURL(file)
+            } catch (error) {
+              console.error('Error uploading dropped file:', error)
             }
           })
 

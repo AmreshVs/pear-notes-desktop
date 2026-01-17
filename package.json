@@ -9,9 +9,13 @@
       "main": "index.html",
       "backgroundColor": "#1F2430",
       "height": "1280",
-      "width": "1280"
+      "width": "1280",
+      "userAgent": "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)"
     },
-    "links": []
+    "links": {
+      "localhost": "http://127.0.0.1",
+      "https": "https://*"
+    }
   },
   "type": "module",
   "license": "MIT",
