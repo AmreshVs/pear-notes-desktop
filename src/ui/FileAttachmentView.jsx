@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
 import { useSelector } from 'react-redux'
 import { getHyperdriveAddress } from '../store/slices/uiSlice'
+import { HYPERDRIVE_URL_PREFIX } from '../constant'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { fileName, fileSize, fileType, fileData, url } = node.attrs
@@ -12,7 +13,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const [duration, setDuration] = useState(0)
   const mediaRef = useRef(null)
   
-  const resolvedUrl = useSelector((state) => (url && url.startsWith('http://hyperdrive') ? getHyperdriveAddress(state, url) : url))
+  const resolvedUrl = useSelector((state) => (url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url))
   
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')

@@ -11,7 +11,7 @@ import Link from '@tiptap/extension-link'
 import Highlight from '@tiptap/extension-highlight'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
-import ImageResize from 'tiptap-extension-resize-image'
+
 import Image from '@tiptap/extension-image'
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
 import { Table } from '@tiptap/extension-table'
@@ -21,7 +21,7 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { all, createLowlight } from 'lowlight'
 import FileAttachment from './FileAttachment'
-import FileAttachmentView from './FileAttachmentView'
+
 import ImageView from './ImageView'
 import AudioAttachment from './AudioAttachment'
 import { 
@@ -86,18 +86,23 @@ const RichTextEditor = forwardRef(
           placeholder
         }),
         Image.extend({
+          addAttributes() {
+            return {
+              ...this.parent?.(),
+              width: {
+                default: null,
+              },
+              height: {
+                default: null,
+              },
+            }
+          },
           addNodeView() {
             return ReactNodeViewRenderer(ImageView)
           }
         }).configure({
             inline: true,
             allowBase64: true
-        }),
-        ImageResize.configure({
-          allowBase64: true,
-          HTMLAttributes: {
-            class: 'rounded-lg max-w-full h-auto my-4 border border-border-primary shadow-lg'
-          }
         }),
         BubbleMenuExtension,
         Table.configure({
