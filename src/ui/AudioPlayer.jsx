@@ -61,8 +61,22 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
 
   const displayDuration = internalDuration || propDuration || 0
 
+  const handleSeek = (e) => {
+    const time = parseFloat(e.target.value)
+    setCurrentTime(time)
+    if (mediaRef.current) {
+      mediaRef.current.currentTime = time
+    }
+  }
+
+  // Calculate the percentage for the slider handle position, ensuring it stays within bounds
+  const handlePositionPercentage = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0;
+  // Adjust handle position to account for its width (12px) so it doesn't go off the edge
+  const clampedHandlePosition = `calc(${handlePositionPercentage}% - ${handlePositionPercentage / 100 * 12}px + 6px)`;
+
+
   return (
-    <div className='flex flex-col bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
+    <div className='flex flex-col bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300'>
       <div className='flex items-center gap-4 p-4'>
         <button
           onClick={togglePlayPause}
@@ -86,11 +100,28 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
         </div>
       </div>
 
-      <div className='h-1 bg-bg-tertiary w-full overflow-hidden'>
-        <div
-          className='h-full bg-accent-primary transition-all duration-100'
-          style={{ width: `${(displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0)}%` }}
-        />
+      <div className='px-4 pb-4'>
+        <div className='relative h-1.5 bg-bg-tertiary w-full rounded-full group/slider'>
+          <input
+            type='range'
+            min='0'
+            max={displayDuration || 0}
+            step='any'
+            value={currentTime}
+            onChange={handleSeek}
+            onMouseDown={(e) => e.stopPropagation()}
+            className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30'
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div
+            className='absolute top-0 left-0 h-full bg-accent-primary rounded-full transition-all duration-100 ease-out pointer-events-none'
+            style={{ width: `${displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0}%` }}
+          />
+          <div 
+            className='absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
+            style={{ left: clampedHandlePosition }}
+          />
+        </div>
       </div>
     </div>
   )

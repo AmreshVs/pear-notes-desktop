@@ -173,7 +173,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
         </div>
       ) : (
         /* HANDLING FOR VIDEO AND OTHER FILES: Use the standard bordered wrapper */
-        <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl overflow-hidden group transition-all duration-300'>
+        <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300'>
           {/* Playback Area for Video */}
           {isVideo && (resolvedUrl || fileData) && (
             <div className='relative aspect-video bg-black'>
@@ -181,7 +181,10 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 ref={mediaRef}
                 src={resolvedUrl || fileData}
                 className='w-full h-full'
-                onClick={togglePlayPause}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  togglePlayPause(e)
+                }}
               />
               <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none'>
                 <button 
@@ -234,11 +237,32 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
           {/* Progress bar for video */}
           {isVideo && (
-            <div className='h-1 bg-bg-tertiary w-full overflow-hidden'>
-              <div
-                className='h-full bg-accent-primary transition-all duration-100'
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
+            <div className='px-4 pb-4'>
+              <div className='relative h-1.5 bg-bg-tertiary w-full rounded-full group/slider'>
+                <input
+                  type='range'
+                  min='0'
+                  max={duration || 0}
+                  step='any'
+                  value={currentTime}
+                  onChange={(e) => {
+                    const time = parseFloat(e.target.value)
+                    setCurrentTime(time)
+                    if (mediaRef.current) mediaRef.current.currentTime = time
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30'
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div
+                  className='absolute top-0 left-0 h-full bg-accent-primary rounded-full transition-all duration-100 ease-out pointer-events-none'
+                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                />
+                <div 
+                  className='absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
+                  style={{ left: `calc(${duration > 0 ? (currentTime / duration) * 100 : 0}% - 6px)` }}
+                />
+              </div>
             </div>
           )}
         </div>
