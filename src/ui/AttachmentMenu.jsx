@@ -15,17 +15,17 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
   }, [buttonRef])
 
   const handleImageSelect = (event) => {
-    const file = event.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      onInsertImage(file)
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      onInsertImage(files)
       onClose()
     }
   }
 
   const handleFileSelect = (event) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      onInsertFile(file)
+    const files = Array.from(event.target.files || [])
+    if (files.length > 0) {
+      onInsertFile(files)
       onClose()
     }
   }
@@ -47,16 +47,17 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
                 accept='image/*'
                 onChange={handleImageSelect}
                 className='hidden'
+                multiple
               />
               <div className='px-4 py-3 hover:bg-bg-tertiary transition-colors cursor-pointer border-b border-border-primary flex items-center gap-3'>
                 <Image className='w-4 h-4 text-text-primary' />
-                <p className='text-sm text-text-primary'>Choose Photo or Video</p>
+                <p className='text-sm text-text-primary'>Choose Photos or Videos</p>
               </div>
             </label>
 
             {/* Attach File */}
             <label className='block'>
-              <input type='file' onChange={handleFileSelect} className='hidden' />
+              <input type='file' onChange={handleFileSelect} className='hidden' multiple />
               <div className='px-4 py-3 hover:bg-bg-tertiary transition-colors cursor-pointer border-b border-border-primary flex items-center gap-3'>
                 <Paperclip className='w-4 h-4 text-text-primary' />
                 <p className='text-sm text-text-primary'>Attach File</p>

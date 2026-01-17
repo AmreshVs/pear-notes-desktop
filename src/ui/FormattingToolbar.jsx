@@ -164,52 +164,60 @@ export default function FormattingToolbar({ editor, noteKey }) {
     }
   }
 
-  const handleInsertImage = async (file) => {
-    if (!editor || !file) return
-    try {
-      const buffer = await file.arrayBuffer()
-      const { link } = await backendApi.insertFile({ 
-        key: noteKey, 
-        fileName: file.name, 
-        buffer 
-      })
-      if (link) {
-        editor.chain().focus().insertContent([
-          { type: 'image', attrs: { src: link } },
-          { type: 'paragraph' }
-        ]).run()
+  const handleInsertImage = async (files) => {
+    if (!editor || !files) return
+    const fileList = Array.isArray(files) ? files : [files]
+    
+    for (const file of fileList) {
+      try {
+        const buffer = await file.arrayBuffer()
+        const { link } = await backendApi.insertFile({ 
+          key: noteKey, 
+          fileName: file.name, 
+          buffer 
+        })
+        if (link) {
+          editor.chain().focus().insertContent([
+            { type: 'image', attrs: { src: link } },
+            { type: 'paragraph' }
+          ]).run()
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error)
       }
-    } catch (error) {
-      console.error('Error uploading image:', error)
     }
   }
 
-  const handleInsertFile = async (file) => {
-    if (!editor || !file) return
-    try {
-      const buffer = await file.arrayBuffer()
-      const { link } = await backendApi.insertFile({ 
-        key: noteKey, 
-        fileName: file.name, 
-        buffer 
-      })
+  const handleInsertFile = async (files) => {
+    if (!editor || !files) return
+    const fileList = Array.isArray(files) ? files : [files]
 
-      if (link) {
-        editor.chain().focus().insertContent([
-          {
-            type: 'fileAttachment',
-            attrs: {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type,
-              url: link
-            }
-          },
-          { type: 'paragraph' }
-        ]).run()
+    for (const file of fileList) {
+      try {
+        const buffer = await file.arrayBuffer()
+        const { link } = await backendApi.insertFile({ 
+          key: noteKey, 
+          fileName: file.name, 
+          buffer 
+        })
+
+        if (link) {
+          editor.chain().focus().insertContent([
+            {
+              type: 'fileAttachment',
+              attrs: {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                url: link
+              }
+            },
+            { type: 'paragraph' }
+          ]).run()
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error)
       }
-    } catch (error) {
-      console.error('Error uploading file:', error)
     }
   }
 
