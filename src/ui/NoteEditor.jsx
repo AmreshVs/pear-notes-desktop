@@ -12,8 +12,11 @@ import {
   setEditorInstance
 } from '../store/slices/editorSlice'
 import { useSelector, useDispatch } from 'react-redux'
+import NoteOptionsMenu from './NoteOptionsMenu'
+import { getFolders } from '../store/slices/foldersSlice'
+import { updateNote } from '../store/slices/notesSlice'
 
-export default function NoteEditor({ onUpdate, onEditorReady }) {
+export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const dispatch = useDispatch()
   const selectedNoteKey = useSelector(getSelectedNote)
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
@@ -26,6 +29,8 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
 
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
+  const optionsButtonRef = useRef(null)
+  const folders = useSelector(getFolders)
 
   useEffect(() => {
     if (noteData && !noteData?.title && !noteData?.note) {
@@ -54,7 +59,8 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     const newTitle = e.target.value
     dispatch(setEditorTitle(newTitle))
     if (noteData) {
-      onUpdate({ key: selectedNoteKey, title: newTitle, contentHtml: content, content: contentText })
+      const currentText = editorInstance?.getText() || contentText
+      onUpdate({ key: selectedNoteKey, title: newTitle, contentHtml: content, content: currentText })
     }
   }
 
@@ -63,6 +69,23 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
     if (noteData) {
       onUpdate({ key: selectedNoteKey, title, contentHtml: html, content: text })
     }
+  }
+
+  const handleMoveTo = (folderKey) => {
+    if (noteData) {
+      dispatch(updateNote({ 
+        key: selectedNoteKey, 
+        title, 
+        note: content,
+        folderKey 
+      }))
+    }
+  }
+
+  const handleCopy = () => {
+    if (!noteData) return ''
+    const currentText = editorInstance?.getText() || contentText
+    return `${title || 'Untitled Note'}\n\n${currentText || ''}`
   }
 
   const formatDate = (timestamp) => {
@@ -129,8 +152,21 @@ export default function NoteEditor({ onUpdate, onEditorReady }) {
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative'>
       {/* Absolute positioned toolbar to float at top left */}
-      <div className='absolute top-3 left-6 z-30'>
-        <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+      <div className='absolute top-3 left-0 right-0 px-6 flex items-center justify-between z-30 pointer-events-none'>
+        <div className='pointer-events-auto'>
+          <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+        </div>
+        
+        <div className='flex items-center gap-1.5 px-1.5 py-1 rounded-lg bg-bg-tertiary border border-border-primary shadow-sm min-h-[34px] pointer-events-auto'>
+          <NoteOptionsMenu 
+            buttonRef={optionsButtonRef}
+            folders={folders}
+            currentFolderKey={noteData?.folderKey}
+            onMoveTo={handleMoveTo}
+            onCopy={handleCopy}
+            onDelete={() => onDelete(selectedNoteKey)}
+          />
+        </div>
       </div>
 
       <div className='flex-1 overflow-y-auto custom-scrollbar pt-16'>

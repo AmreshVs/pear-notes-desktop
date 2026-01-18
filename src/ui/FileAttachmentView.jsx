@@ -173,7 +173,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
         </div>
       ) : (
         /* HANDLING FOR VIDEO AND OTHER FILES: Use the standard bordered wrapper */
-        <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300'>
+        <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden'>
           {/* Playback Area for Video */}
           {isVideo && (resolvedUrl || fileData) && (
             <div className='relative aspect-video bg-black'>
