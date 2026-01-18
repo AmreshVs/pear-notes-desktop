@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, getNotes, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
+import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
 import {
   setSelectedFolder,
   getFolders,
@@ -33,7 +33,6 @@ function App() {
   const dispatch = useDispatch()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
-  const notes = useSelector(getNotes)
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)
   const selectedFolder = useSelector(getSelectedFolder)
@@ -106,7 +105,6 @@ function App() {
           <FoldersSidebar
             selectedFolder={selectedFolder}
             onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
-            notes={notes}
             folders={folders}
             onCreateNote={handleCreateNote}
             onCreateFolder={() => dispatch(setShowNewFolderModal(true))}

@@ -1,3 +1,4 @@
 export const ALL_NOTES_KEY = '84296db76dde4da98c383168b905184d62c31ac117f8bfbc2b8c938cf2728322'
 export const RECENTLY_DELETED_KEY = '84296db76dde4da98c383168b905184d62c31ac117f8bfbc2b8c938cf2728090'
+export const DEFAULT_FOLDER_NAME = 'Untitled'
 export const HYPERDRIVE_URL_PREFIX = 'http://hyperdrive'

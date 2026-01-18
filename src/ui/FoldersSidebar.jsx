@@ -13,8 +13,10 @@ import {
   Menu
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { updateFolder } from '../store/slices/foldersSlice'
+import { getNoteCountsPerFolder } from '../store/slices/notesSlice'
+import { DEFAULT_FOLDER_NAME } from '../constant'
 
 const ICON_MAP = {
   FileText,
@@ -28,7 +30,6 @@ const ICON_MAP = {
 export default function FoldersSidebar({
   selectedFolder,
   onSelectFolder,
-  notes,
   folders,
   onCreateNote,
   onCreateFolder,
@@ -43,6 +44,7 @@ export default function FoldersSidebar({
   const [editingFolderId, setEditingFolderId] = useState(null)
   const [editName, setEditName] = useState('')
   const inputRef = useRef(null)
+  const noteCounts = useSelector(getNoteCountsPerFolder)
 
   useEffect(() => {
     if (editingFolderId && inputRef.current) {
@@ -66,6 +68,10 @@ export default function FoldersSidebar({
     setEditName('')
   }
 
+  const getFolderCount = (folderId) => {
+    return noteCounts[folderId] || 0
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSubmitRename()
@@ -75,13 +81,7 @@ export default function FoldersSidebar({
     }
   }
 
-  const getFolderCount = (folderId) => {
-    const isAll = folders.find(f => f.id === folderId)?.isAll
-    if (isAll) {
-      return notes.length
-    }
-    return notes.filter((n) => n.value?.folderKey === folderId).length
-  }
+
 
   const renderFolder = (folder) => {
     const Icon = ICON_MAP[folder.icon] || Folder
@@ -124,7 +124,7 @@ export default function FoldersSidebar({
                 isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'
               } ${isSelected ? 'font-medium' : 'font-normal'}`}
             >
-              {folder.name}
+              {folder.name || DEFAULT_FOLDER_NAME}
             </span>
           )}
         </div>
