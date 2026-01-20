@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice' // Changed import
 import { getFolders, getSelectedFolder } from '../store/slices/foldersSlice'
+import { getPairingStatus } from '../store/slices/syncSlice'
 import { RECENTLY_DELETED_KEY } from '../constant'
 
 const formatDate = (timestamp) => {
@@ -121,6 +122,7 @@ export default function NotesList({
 }) {
   const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
+  const { syncing } = useSelector(getPairingStatus)
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
 
   const renderNotesList = useCallback((note) => {
@@ -161,9 +163,21 @@ export default function NotesList({
       <div className='flex-1 overflow-y-auto'>
         {filteredNotes.length === 0 ? (
           <div className='p-8 text-center'>
-            <p className='text-[15px] text-text-tertiary'>
-              {searchQuery ? 'No notes matching search' : 'No notes yet'}
-            </p>
+            {syncing ? (
+              <div className='flex flex-col items-center gap-3 animate-pulse'>
+                <div className='w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin' />
+                <p className='text-[15px] text-text-tertiary font-medium'>
+                  Syncing your notes...
+                </p>
+                <p className='text-[11px] text-text-tertiary px-4'>
+                  Downloading data from your paired devices. 
+                </p>
+              </div>
+            ) : (
+              <p className='text-[15px] text-text-tertiary'>
+                {searchQuery ? 'No notes matching search' : 'No notes yet'}
+              </p>
+            )}
           </div>
         ) : (
           <div>{filteredNotes.map(renderNotesList)}</div>

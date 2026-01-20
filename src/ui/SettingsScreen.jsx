@@ -68,7 +68,7 @@ export default function SettingsScreen({ onClose }) {
 
           <div className='flex-1 overflow-y-auto p-6'>
             {activeSection === 'general' && <GeneralSettings />}
-            {activeSection === 'sync' && <SyncSettings />}
+            {activeSection === 'sync' && <SyncSettings onClose={onClose} />}
           </div>
 
           <div className='bg-bg-panel-secondary border-t border-border-primary px-6 py-4 flex items-center justify-end gap-3'>

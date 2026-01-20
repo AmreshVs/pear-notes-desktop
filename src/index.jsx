@@ -11,7 +11,7 @@ import FramedStream from 'framed-stream'
 import HRPC from './spec/hrpc/'
 import { backendApi } from './backend/api.js'
 
-const worker = run(`${Pear.config.link}/src/backend/main.js`)
+const worker = run(`${Pear.config.link}/src/backend/main.js`, ['amr'])
 const stream = new FramedStream(worker)
 const rpc = new HRPC(stream)
 globalThis.__rpc = rpc

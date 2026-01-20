@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "concurrently \"npm:dev:*\"",
     "dev:vite": "vite build --watch --sourcemap inline",
-    "dev:pear": "pear run -d .",
+    "dev:pear": "pear run -s ../storage/notebaseStorage -d .",
     "build": "vite build",
     "lint": "eslint .",
     "prettier-fix": "prettier . --write",
