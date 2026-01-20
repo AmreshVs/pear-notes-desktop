@@ -27,6 +27,7 @@ import NoteEditor from './ui/NoteEditor'
 import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import NewFolderModal from './ui/NewFolderModal'
+import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import { backendApi } from './backend/api'
 
 function App() {
@@ -140,6 +141,7 @@ function App() {
           onCreateFolder={handleCreateFolder}
         />
       )}
+      <PairingStatusOverlay />
     </main>
   )
 }

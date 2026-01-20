@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice' // Changed import
 import { getFolders, getSelectedFolder } from '../store/slices/foldersSlice'
-import { getPairingStatus } from '../store/slices/syncSlice'
+import { getInviterStatus } from '../store/slices/syncSlice'
 import { RECENTLY_DELETED_KEY } from '../constant'
 
 const formatDate = (timestamp) => {
@@ -122,7 +122,8 @@ export default function NotesList({
 }) {
   const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
-  const { syncing } = useSelector(getPairingStatus)
+  const { step } = useSelector(getInviterStatus)
+  const syncing = step === 'syncing'
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
 
   const renderNotesList = useCallback((note) => {
