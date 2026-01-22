@@ -1,4 +1,3 @@
-import { X } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 
 export default function NewFolderModal({ onClose, onCreateFolder }) {
@@ -28,56 +27,58 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
 
   return (
     <div
-      className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm'
-      onClick={onClose}
+      className='fixed inset-0 flex items-center justify-center z-[110] p-6'
       onKeyDown={handleKeyDown}
     >
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-700 cursor-pointer"
+        onClick={onClose}
+      />
+
       <div
-        className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-md mx-4 shadow-xl overflow-hidden'
+        className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
-          <h2 className='text-text-primary text-xl font-semibold'>New Folder</h2>
-          <button
-            onClick={onClose}
-            className='w-8 h-8 rounded-full bg-bg-panel-secondary hover:bg-bg-panel-tertiary flex items-center justify-center text-text-primary transition-colors'
-          >
-            <X className='w-4 h-4' />
-          </button>
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
+
+        <div className='relative z-10 text-center space-y-6'>
+          <div className="flex flex-col items-center gap-2">
+            <h2 className='text-text-primary text-2xl font-bold tracking-tight'>New Folder</h2>
+            <p className='text-text-tertiary text-sm max-w-[240px]'>Organize your library with a dedicated workspace.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className='space-y-6'>
+            <div className='relative group'>
+              <input
+                ref={inputRef}
+                type='text'
+                value={folderName}
+                onChange={(e) => setFolderName(e.target.value)}
+                placeholder='Folder name'
+                className='w-full px-5 py-4 bg-bg-panel/50 border border-border-secondary rounded-xl text-text-primary font-medium text-base shadow-inner outline-none transition-all group-hover:border-border-primary focus:border-accent-primary'
+                maxLength={50}
+              />
+            </div>
+
+            <div className='flex flex-col gap-3 pt-2'>
+              <button
+                type='submit'
+                disabled={!folderName.trim()}
+                className='w-full py-4 bg-accent-primary text-text-primary rounded-xl font-bold hover:brightness-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                Create Folder
+              </button>
+              <button
+                type='button'
+                onClick={onClose}
+                className='w-full py-3.5 bg-bg-panel-secondary/50 border border-border-primary text-text-secondary rounded-xl hover:bg-bg-panel-tertiary transition-all font-medium active:scale-95'
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className='p-6 bg-bg-panel'>
-          <div className='mb-6'>
-            <label className='block text-text-primary text-sm mb-2 font-medium'>Folder Name</label>
-            <input
-              ref={inputRef}
-              type='text'
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-              placeholder='Enter folder name'
-              className='w-full px-4 py-2.5 rounded-lg text-sm bg-bg-tertiary border border-border-tertiary text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary'
-              maxLength={50}
-            />
-            <p className='text-xs mt-2 text-text-tertiary'>Choose a name for your new folder</p>
-          </div>
-
-          <div className='flex items-center justify-end gap-3'>
-            <button
-              type='button'
-              onClick={onClose}
-              className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium bg-bg-panel-tertiary hover:bg-bg-panel-secondary text-text-secondary hover:text-text-primary border border-border-tertiary hover:border-border-secondary'
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              disabled={!folderName.trim()}
-              className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md bg-accent-primary text-text-primary hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-primary'
-            >
-              Create Folder
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   )

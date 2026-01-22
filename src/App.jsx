@@ -99,9 +99,12 @@ function App() {
   }
 
   return (
-    <main className='h-screen flex flex-col bg-bg-primary overflow-hidden'>
+    <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
+      <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+      <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+
       <TitleBar />
-      <div className='flex-1 flex overflow-hidden'>
+      <div className='flex-1 flex overflow-hidden relative z-10'>
         <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>
           <FoldersSidebar
             selectedFolder={selectedFolder}

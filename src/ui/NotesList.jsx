@@ -1,7 +1,7 @@
-import { Trash2, Search } from 'lucide-react'
+import { Trash2, Search, Loader2 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice' // Changed import
+import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote } from '../store/slices/notesSlice'
 import { getFolders, getSelectedFolder } from '../store/slices/foldersSlice'
 import { getInviterStatus } from '../store/slices/syncSlice'
 import { RECENTLY_DELETED_KEY } from '../constant'
@@ -52,7 +52,6 @@ const NotesItem = ({ noteKey: key }) => {
   const selectedFolder = useSelector(getSelectedFolder)
   const isSelected = selectedNote === key
 
-
   const handleSelectNote = useCallback((key) => {
     dispatch(setSelectedNote(key))
   }, [dispatch])
@@ -67,48 +66,50 @@ const NotesItem = ({ noteKey: key }) => {
     }
   }, [dispatch, selectedFolder])
 
-
   return (
     <div
       key={key}
       onClick={() => handleSelectNote(key)}
-      className={`px-3 py-3 cursor-pointer transition-all ease-smooth duration-200 group border-b border-border-primary
+      className={`relative px-6 py-5 cursor-pointer transition-all duration-300 group border-b border-white/[0.03]
         ${
           isSelected
-            ? 'bg-accent-primary'
-            : 'bg-transparent hover:bg-bg-tertiary'
+            ? 'bg-accent-primary/5 shadow-inner'
+            : 'bg-transparent hover:bg-white/[0.02]'
         }`}
     >
-      <div className='flex items-start justify-between gap-2'>
+      <div className='flex items-start justify-between gap-3'>
         <div className='flex-1 min-w-0'>
           <h3
-            className={`text-[15px] truncate tracking-[-0.01em]
-              ${isSelected ? 'text-white font-bold' : 'text-text-primary font-bold'}`}
+            className={`text-[15px] truncate tracking-tight mb-1
+              ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
           >
             {noteData?.title || 'Untitled'}
           </h3>
           <p
-            className={`text-[13px] line-clamp-2 leading-relaxed
-              ${isSelected ? 'text-white/90' : 'text-text-tertiary'}`}
+            className={`text-[12px] line-clamp-2 leading-relaxed mb-2 opacity-80
+              ${isSelected ? 'text-text-primary/90' : 'text-text-tertiary'}`}
           >
             {getPreview(noteData?.note, noteData?.note)}
           </p>
-          <p
-            className={`text-[11px] font-medium
-              ${isSelected ? 'text-white/80' : 'text-text-tertiary'}`}
-          >
-            {formatDate(noteData?.updatedAt || noteData?.createdAt)}
-          </p>
+          <div className='flex items-center gap-2'>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md
+                ${isSelected ? 'bg-accent-primary/20 text-accent-primary' : 'bg-bg-tertiary/50 text-text-muted'}`}
+            >
+              {formatDate(noteData?.updatedAt || noteData?.createdAt)}
+            </span>
+          </div>
         </div>
+        
         <button
           onClick={(e) => {
             e.stopPropagation()
             handleDeleteNote(key)
           }}
-          className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-black/10 transition-all'
+          className='opacity-0 group-hover:opacity-100 p-2 rounded-xl hover:bg-accent-danger/10 transition-all text-text-muted hover:text-accent-danger active:scale-90 scale-90 group-hover:scale-100'
           title='Delete Note'
         >
-          <Trash2 className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-text-primary'}`} />
+          <Trash2 className='w-4 h-4' />
         </button>
       </div>
     </div>
@@ -133,55 +134,64 @@ export default function NotesList({
   }, [])
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-secondary border-r border-border-primary'>
-      <div className='px-4 py-3 border-b border-border-primary bg-bg-secondary'>
-        <div className='flex items-center justify-between mb-1'>
-          <h2 className='font-bold text-[18px] text-text-primary tracking-tight'>
+    <div className='flex flex-col h-full w-full bg-bg-secondary/40 backdrop-blur-xl border-r border-border-primary/50'>
+      <div className='px-6 py-5 border-b border-border-primary/30'>
+        <div className='flex items-center justify-between mb-2'>
+          <h2 className='font-bold text-[22px] text-text-primary tracking-tight'>
             {currentFolderName}
           </h2>
-          <button
-            className='text-[12px] font-medium text-text-tertiary hover:text-text-primary transition-colors'
-          >
-            Sort by
-          </button>
+          <div className='flex items-center gap-1.5 px-2 py-1 bg-bg-tertiary/50 rounded-lg border border-border-primary/50 text-[11px] font-bold text-text-tertiary hover:text-text-primary transition-all cursor-pointer'>
+            <span>Sort</span>
+            <div className='w-1 h-1 bg-text-muted rounded-full' />
+            <span className='text-accent-primary'>Date</span>
+          </div>
         </div>
-        <p className='text-[12px] text-text-tertiary mb-3'>
-          {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
+        <p className='text-[12px] font-medium text-text-tertiary mb-5 ml-0.5 opacity-60 uppercase tracking-widest'>
+          {filteredNotes.length} {filteredNotes.length === 1 ? 'recorded item' : 'recorded items'}
         </p>
         
         <div className='relative group'>
-          <Search className='absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
+          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
           <input
             type='text'
-            placeholder='Search notes'
+            placeholder='Search notes...'
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full pl-8 pr-3 py-1.5 rounded-md text-[13px] focus:outline-none bg-bg-tertiary text-text-primary placeholder-text-tertiary border border-transparent focus:border-border-secondary transition-all shadow-sm'
+            className='w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] focus:outline-none bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
           />
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto'>
+      <div className='flex-1 overflow-y-auto py-2 scrollbar-hide'>
         {filteredNotes.length === 0 ? (
-          <div className='p-8 text-center'>
+          <div className='p-12 text-center'>
             {syncing ? (
-              <div className='flex flex-col items-center gap-3 animate-pulse'>
-                <div className='w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin' />
-                <p className='text-[15px] text-text-tertiary font-medium'>
-                  Syncing your notes...
-                </p>
-                <p className='text-[11px] text-text-tertiary px-4'>
-                  Downloading data from your paired devices. 
-                </p>
+              <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
+                <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
+                <div className='space-y-1'>
+                  <p className='text-[15px] text-text-primary font-bold'>
+                    Syncing Archive
+                  </p>
+                  <p className='text-[12px] text-text-tertiary leading-relaxed px-4'>
+                    Updating your library with the latest changes from your other devices.
+                  </p>
+                </div>
               </div>
             ) : (
-              <p className='text-[15px] text-text-tertiary'>
-                {searchQuery ? 'No notes matching search' : 'No notes yet'}
-              </p>
+              <div className='space-y-2 opacity-40'>
+                <p className='text-[15px] text-text-tertiary font-medium'>
+                  {searchQuery ? 'No matches found' : 'Your vault is empty'}
+                </p>
+                <p className='text-[11px] text-text-tertiary uppercase tracking-widest'>
+                  {searchQuery ? 'Try a different query' : 'Create a note to start'}
+                </p>
+              </div>
             )}
           </div>
         ) : (
-          <div>{filteredNotes.map(renderNotesList)}</div>
+          <div className='animate-in fade-in slide-in-from-bottom-4 duration-500'>
+            {filteredNotes.map(renderNotesList)}
+          </div>
         )}
       </div>
     </div>

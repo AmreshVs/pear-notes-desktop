@@ -18,12 +18,12 @@ export default function ResizablePanel({
   useEffect(() => {
     if (collapsed) {
       lastWidthRef.current = width > collapsedWidth ? width : minWidth
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWidth(collapsedWidth)
     } else {
       setWidth(Math.max(minWidth, lastWidthRef.current))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collapsed, collapsedWidth, minWidth])
+  }, [collapsed, collapsedWidth, minWidth, width])
 
   useEffect(() => {
     const handleMouseMove = (e) => {

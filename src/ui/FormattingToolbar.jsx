@@ -44,7 +44,6 @@ export default function FormattingToolbar({ editor, noteKey }) {
   const formatMenuRef = useRef(null)
   const attachmentButtonRef = useRef(null)
 
-  // Update editor state when editor changes
   useEffect(() => {
     if (!editor) return
 
@@ -100,7 +99,6 @@ export default function FormattingToolbar({ editor, noteKey }) {
     }
   }, [editor])
 
-  // Close format menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (formatMenuRef.current && !formatMenuRef.current.contains(event.target)) {
@@ -121,20 +119,15 @@ export default function FormattingToolbar({ editor, noteKey }) {
       const selectedText = editor.state.doc.textBetween(from, to)
 
       if (selectedText && text) {
-        // Replace selected text with link
         editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run()
       } else if (selectedText) {
-        // Wrap selected text in link
         editor.chain().focus().setLink({ href: url }).run()
       } else if (text) {
-        // Insert new link with text
         editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run()
       } else {
-        // Just set link on current selection
         editor.chain().focus().setLink({ href: url }).run()
       }
     } else {
-      // Remove link
       editor.chain().focus().unsetLink().run()
     }
     setShowLinkModal(false)
@@ -224,7 +217,6 @@ export default function FormattingToolbar({ editor, noteKey }) {
   const handleInsertAudio = async ({ data, duration }) => {
     if (!editor) return
     try {
-      // Data is base64 data URI from AudioRecorderModal
       const response = await fetch(data)
       const blob = await response.blob()
       const buffer = await blob.arrayBuffer()
@@ -260,184 +252,182 @@ export default function FormattingToolbar({ editor, noteKey }) {
 
   return (
     <>
-      <div className='flex items-center gap-1 sm:gap-1 px-1.5 py-1 rounded-lg bg-bg-tertiary border border-border-primary shadow-sm min-h-[34px] w-fit relative z-20'>
-        {/* Formatting Menu Button */}
+      <div className='flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit relative z-20 transition-all duration-300 hover:bg-bg-panel/80 hover:border-white/[0.1]'>
         <div className='relative' ref={formatMenuRef}>
           <button
             onClick={() => setShowFormatMenu(!showFormatMenu)}
-            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all ${
+            className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 duration-200 ${
               showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic 
-                ? 'bg-accent-primary text-white' 
-                : 'text-text-secondary hover:bg-bg-secondary'
+                ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' 
+                : 'text-text-secondary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
             title='Formatting'
           >
-            <span className='font-serif text-[15px] font-bold tracking-tight'>Aa</span>
+            <span className='font-serif text-[18px] font-black tracking-tighter'>Aa</span>
           </button>
 
           {showFormatMenu && (
-            <div className='absolute top-full left-0 mt-2 rounded-lg shadow-xl z-50 bg-bg-panel border border-border-secondary min-w-[260px] overflow-hidden'>
-              {/* Header: Row of formatting tools */}
-              <div className='flex items-center justify-between p-1.5 border-b border-border-secondary bg-bg-panel-secondary/50'>
+            <div className='absolute top-full left-0 mt-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 bg-bg-panel backdrop-blur-2xl border border-white/[0.08] min-w-[280px] overflow-hidden animate-in zoom-in-95 fade-in duration-200 origin-top-left'>
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
+              
+              <div className='flex items-center justify-between p-2 border-b border-white/[0.06] relative z-10'>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleBold().run()}
                   isActive={editorState.isBold}
                   title='Bold'
                 >
-                  <Bold className='w-4 h-4' />
+                  <Bold className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleItalic().run()}
                   isActive={editorState.isItalic}
                   title='Italic'
                 >
-                  <Italic className='w-4 h-4' />
+                  <Italic className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleUnderline().run()}
                   isActive={editorState.isUnderline}
                   title='Underline'
                 >
-                  <Underline className='w-4 h-4' />
+                  <Underline className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleStrike().run()}
                   isActive={editorState.isStrike}
                   title='Strikethrough'
                 >
-                  <Strikethrough className='w-4 h-4' />
+                  <Strikethrough className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
-                <div className='w-px h-4 bg-border-secondary mx-1' />
+                <div className='w-px h-5 bg-white/[0.1] mx-1' />
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleHighlight().run()}
                   isActive={editorState.isHighlight}
                   title='Highlight'
                 >
                   <div className='relative'>
-                    <Highlighter className='w-4 h-4' />
-                    <div className='absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent-primary' />
+                    <Highlighter className='w-4 h-4' strokeWidth={2.5} />
+                    <div className='absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_5px_var(--accent-primary)]' />
                   </div>
                 </MenuButton>
               </div>
 
-              {/* List: Text styles and more */}
-              <div className='p-1.5 max-h-[400px] overflow-y-auto custom-scrollbar'>
+              <div className='p-2 max-h-[400px] overflow-y-auto custom-scrollbar space-y-1 relative z-10'>
                 <ListButton
                   onClick={() => handleHeadingClick(1)}
                   isActive={editorState.headingLevel === 1}
                   label='Title'
+                  style="text-2xl font-black tracking-tight"
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(2)}
                   isActive={editorState.headingLevel === 2}
                   label='Heading'
+                  style="text-xl font-bold tracking-tight"
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(3)}
                   isActive={editorState.headingLevel === 3}
                   label='Subheading'
+                  style="text-lg font-bold opacity-90"
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(0)}
                   isActive={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
-                  label='Body'
+                  label='Body Text'
                   showCheck={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
+                  style="font-medium opacity-80"
                 />
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleCode().run()}
                   isActive={editorState.isCode}
-                  label='Monostyled'
+                  label='Monospaced'
+                  style="font-mono text-sm opacity-80"
                 />
                 
-                <div className='h-px bg-border-secondary my-1.5 mx-1' />
+                <div className='h-px bg-white/[0.06] my-2 mx-1' />
                 
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBulletList().run()}
                   isActive={editorState.isBulletList}
                   label='Bulleted List'
-                  icon={<div className='w-1.5 h-1.5 rounded-full bg-text-tertiary mr-3 ml-1' />}
+                  icon={<div className='w-1.5 h-1.5 rounded-full bg-text-tertiary/70 mr-3 ml-1 group-hover:bg-accent-primary transition-colors' />}
                 />
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleOrderedList().run()}
                   isActive={editorState.isOrderedList}
                   label='Numbered List'
-                  icon={<span className='text-xs font-bold text-text-tertiary mr-3 ml-0.5'>1.</span>}
+                  icon={<span className='text-[10px] font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>1.</span>}
                 />
 
-                <div className='h-px bg-border-secondary my-1.5 mx-1' />
+                <div className='h-px bg-white/[0.06] my-2 mx-1' />
 
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBlockquote().run()}
                   isActive={editorState.isBlockquote}
-                  label='Block Quote'
-                  icon={<div className='w-1 h-4 bg-border-tertiary rounded-full mr-3.5 ml-1' />}
+                  label='Quote Block'
+                  icon={<div className='w-1 h-3 bg-text-tertiary/50 rounded-full mr-3.5 ml-1 group-hover:bg-accent-primary transition-colors' />}
                 />
-
-                <div className='h-px bg-border-secondary my-1.5 mx-1' />
               </div>
             </div>
           )}
         </div>
 
-        <div className='w-px h-6 bg-border-primary mx-1' />
+        <div className='w-px h-5 bg-white/[0.1] mx-1' />
 
-        {/* Code Block Shortcut */}
         <Button
           onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           isActive={editorState.isCodeBlock}
           title='Code Block'
-          className='w-8 h-8'
+          className='w-9 h-9'
         >
-          <CodeIcon className='w-4 h-4' />
+          <CodeIcon className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        <div className='w-px h-6 bg-border-primary mx-1' />
+        <div className='w-px h-5 bg-white/[0.1] mx-1' />
 
-        {/* Task List Shortcut */}
         <Button
           onClick={() => editor?.chain().focus().toggleTaskList().run()}
           isActive={editorState.isTaskList}
           title='Checklist'
-          className='w-8 h-8'
+          className='w-9 h-9'
         >
-          <Square className='w-4 h-4' />
+          <Square className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        {/* Link Shortcut */}
         <Button
           onClick={() => setShowLinkModal(true)}
           isActive={editorState.isLink}
           title='Link'
-          className='w-8 h-8'
+          className='w-9 h-9'
         >
-          <Link2 className='w-4 h-4' />
+          <Link2 className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        {/* Table Button */}
         <Button
           onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
           title='Insert Table'
-          className='w-8 h-8'
+          className='w-9 h-9'
         >
-          <TableIcon className='w-4 h-4' />
+          <TableIcon className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        {/* Attachment Button */}
         <Button
           ref={attachmentButtonRef}
           onClick={() => setShowAttachmentMenu(true)}
           title='Attachments'
-          className='w-8 h-8'
+          className='w-9 h-9'
         >
-          <Paperclip className='w-4 h-4' />
+          <Paperclip className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        {/* Undo/Redo - Subtle */}
-        <div className='flex items-center gap-0.5 ml-1 mr-0.5'>
+        <div className='w-px h-5 bg-white/[0.1] mx-1' />
+
+        <div className='flex items-center gap-1'>
           <button
             onClick={() => editor?.chain().focus().undo().run()}
             disabled={!editorState.canUndo}
-            className='p-1.5 text-text-tertiary hover:text-text-primary hover:bg-bg-secondary rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+            className='p-2 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             title='Undo'
           >
             <Undo className='w-4 h-4' />
@@ -445,7 +435,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <button
             onClick={() => editor?.chain().focus().redo().run()}
             disabled={!editorState.canRedo}
-            className='p-1.5 text-text-tertiary hover:text-text-primary hover:bg-bg-secondary rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed'
+            className='p-2 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             title='Redo'
           >
             <Redo className='w-4 h-4' />
@@ -484,12 +474,12 @@ const Button = forwardRef(({ onClick, isActive, disabled, title, children, class
   <button
     ref={ref}
     onClick={onClick}
-    className={`p-1 rounded-md transition-all flex-shrink-0 flex items-center justify-center ${
+    className={`rounded-lg transition-all flex-shrink-0 flex items-center justify-center active:scale-95 duration-200 ${
       isActive
-        ? 'bg-accent-primary text-white shadow-sm'
+        ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
         : disabled
-          ? 'text-text-tertiary opacity-50 cursor-not-allowed'
-          : 'text-text-secondary hover:bg-bg-secondary hover:text-text-primary'
+          ? 'text-text-tertiary opacity-30 cursor-not-allowed'
+          : 'text-text-secondary hover:bg-bg-tertiary/60 hover:text-text-primary'
     } ${className}`}
     title={title}
     disabled={disabled}
@@ -502,10 +492,10 @@ Button.displayName = 'Button'
 const MenuButton = ({ onClick, isActive, title, children }) => (
   <button
     onClick={onClick}
-    className={`p-1 rounded-md transition-all flex items-center justify-center ${
+    className={`p-1.5 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
       isActive
-        ? 'bg-accent-primary text-white shadow-sm'
-        : 'text-text-secondary hover:bg-bg-panel-tertiary hover:text-text-primary'
+        ? 'bg-accent-primary text-text-primary shadow-[0_0_10px_rgba(var(--accent-primary),0.2)]'
+        : 'text-text-secondary hover:bg-white/[0.05] hover:text-text-primary'
     }`}
     title={title}
   >
@@ -513,20 +503,20 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
   </button>
 )
 
-const ListButton = ({ onClick, isActive, label, icon, showCheck }) => (
+const ListButton = ({ onClick, isActive, label, icon, showCheck, style }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-left transition-all hover:bg-bg-panel-tertiary group mb-0.5 ${
-      isActive ? 'text-text-primary bg-bg-panel-tertiary/50' : 'text-text-secondary'
+    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent-primary/10 group active:scale-95 ${
+      isActive ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:text-text-primary'
     }`}
   >
     <div className='flex items-center'>
       {icon}
-      <span className={`text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}>{label}</span>
+      <span className={`text-[14px] tracking-tight ${style || (isActive ? 'font-bold' : 'font-medium')}`}>{label}</span>
     </div>
     {(isActive || showCheck) && (
-      <svg className='w-3 h-3 text-accent-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
+      <svg className='w-4 h-4 text-accent-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
       </svg>
     )}
   </button>

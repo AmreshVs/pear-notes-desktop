@@ -151,7 +151,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative'>
-      {/* Absolute positioned toolbar to float at top left */}
       <div className='absolute top-3 left-0 right-0 px-6 flex items-center justify-between z-30 pointer-events-none'>
         <div className='pointer-events-auto'>
           <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />

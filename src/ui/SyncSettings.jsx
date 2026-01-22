@@ -46,7 +46,6 @@ export default function SyncSettings() {
 
   return (
     <div className='max-w-3xl mx-auto px-6 py-4 space-y-6'>
-      {/* Premium Tab Switcher */}
       <div className='flex p-1 bg-bg-panel-secondary rounded-xl border border-border-primary w-fit mx-auto'>
         <button
           onClick={() => setSyncTab('invite')}
@@ -97,7 +96,6 @@ export default function SyncSettings() {
             ) : (
               <div className='space-y-5'>
                 <div className='bg-bg-panel-secondary/60 backdrop-blur-lg border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
-                   {/* Background Glow */}
                   <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
                   
                   <div className='flex items-center gap-3 mb-6'>
@@ -151,7 +149,6 @@ export default function SyncSettings() {
               </div>
             )}
 
-            {/* Join Existing Link Section - Moved here */}
             <div className='pt-6 border-t border-border-primary space-y-4'>
               <div className='flex items-center gap-2 ml-1'>
                 <Plus className='w-4 h-4 text-accent-primary' />
@@ -193,7 +190,6 @@ export default function SyncSettings() {
           </div>
           
           <div className='grid gap-4'>
-            {/* Primary Device Card */}
             <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 transition-all hover:bg-bg-panel-secondary/60 hover:border-border-secondary'>
               <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
                 <Monitor className='w-7 h-7' />
@@ -215,7 +211,6 @@ export default function SyncSettings() {
               </div>
             </div>
 
-            {/* Remote Device Card */}
             <div className='p-5 bg-bg-panel-secondary/20 border border-border-primary/50 rounded-2xl flex items-center gap-5 opacity-80 hover:opacity-100 transition-all cursor-default'>
               <div className='w-14 h-14 bg-bg-panel/30 rounded-2xl flex items-center justify-center text-text-muted border border-border-primary/30'>
                 <Smartphone className='w-7 h-7' />

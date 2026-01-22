@@ -1,5 +1,4 @@
 import {
-  X,
   Settings as SettingsIcon,
   RefreshCw
 } from 'lucide-react'
@@ -12,17 +11,27 @@ export default function SettingsScreen({ onClose }) {
 
   const sections = [
     { id: 'general', name: 'General', icon: SettingsIcon },
-    { id: 'sync', name: 'Syncing & P2P', icon: RefreshCw }
+    { id: 'sync', name: 'Linking & P2P', icon: RefreshCw }
   ]
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm'>
-      <div className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-5xl mx-4 h-[80vh] flex shadow-xl overflow-hidden'>
-        <div className='w-64 bg-bg-panel-secondary border-r border-border-tertiary flex flex-col'>
-          <div className='p-4 border-b border-border-tertiary'>
-            <h2 className='text-text-primary font-semibold text-lg'>Settings</h2>
+    <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-700 cursor-pointer"
+        onClick={onClose}
+      />
+
+      <div className='relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500'>
+        <div className="absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none" />
+
+        <div className='w-72 bg-white/[0.02] border-r border-white/[0.05] flex flex-col relative z-10'>
+          <div className='p-8'>
+            <h2 className='text-text-primary font-black text-2xl tracking-tighter'>Settings</h2>
+            <p className='text-text-tertiary text-[11px] font-bold uppercase tracking-[0.2em] mt-1 opacity-50'>Preference Hub</p>
           </div>
-          <div className='flex-1 overflow-y-auto p-2'>
+          
+          <div className='flex-1 overflow-y-auto px-4 space-y-2'>
             {sections.map((section) => {
               const Icon = section.icon
               const isActive = activeSection === section.id
@@ -30,57 +39,49 @@ export default function SettingsScreen({ onClose }) {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all ${
-                    isActive
-                      ? 'bg-accent-primary text-text-primary shadow-sm'
-                      : 'text-text-secondary hover:bg-bg-panel-tertiary'
-                  }`}
+                  className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-300 relative group
+                    ${
+                      isActive
+                        ? 'bg-accent-primary/10 text-accent-primary'
+                        : 'text-text-secondary hover:bg-white/[0.04] hover:text-text-primary'
+                    }`}
                 >
                   <Icon
-                    className={`w-4 h-4 flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-80'}`}
+                    className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
                   />
-                  <span className='text-sm font-medium'>{section.name}</span>
+                  <span className={`text-[15px] tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{section.name}</span>
                 </button>
               )
             })}
           </div>
+
+          <div className="p-6">
+            <button
+              onClick={onClose}
+              className='w-full py-4 bg-bg-tertiary/40 border border-white/[0.05] text-text-secondary rounded-2xl hover:bg-bg-tertiary transition-all font-bold text-sm active:scale-95'
+            >
+              Close Window
+            </button>
+          </div>
         </div>
 
-        <div className='flex-1 flex flex-col overflow-hidden bg-bg-panel'>
-          <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
+        <div className='flex-1 flex flex-col overflow-hidden bg-transparent relative z-10'>
+          <div className='px-10 py-10 flex items-center justify-between'>
             <div>
-              <h2 className='text-text-primary text-xl font-semibold'>
+              <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
                 {sections.find((s) => s.id === activeSection)?.name || 'Settings'}
               </h2>
-              <p className='text-sm mt-1 text-text-tertiary'>
+              <p className='text-[13px] mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' &&
-                  'Customize the appearance and language of the application.'}
-                {activeSection === 'sync' && 'Configure device syncing and P2P connections.'}
+                  'Customize your personal workspace experience, from aesthetics to native language supports.'}
+                {activeSection === 'sync' && 'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className='w-8 h-8 rounded-full bg-bg-panel-secondary hover:bg-bg-panel-tertiary flex items-center justify-center text-text-primary transition-colors'
-            >
-              <X className='w-4 h-4' />
-            </button>
           </div>
 
-          <div className='flex-1 overflow-y-auto p-6'>
+          <div className='flex-1 overflow-y-auto px-10 pb-10 scrollbar-hide'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'sync' && <SyncSettings onClose={onClose} />}
-          </div>
-
-          <div className='bg-bg-panel-secondary border-t border-border-primary px-6 py-4 flex items-center justify-end gap-3'>
-            <button
-              onClick={onClose}
-              className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium bg-bg-panel-tertiary hover:bg-bg-panel-secondary text-text-secondary hover:text-text-primary border border-border-tertiary hover:border-border-secondary'
-            >
-              Cancel
-            </button>
-            <button className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md bg-accent-primary text-text-primary hover:bg-accent-primary-hover'>
-              Save Changes
-            </button>
           </div>
         </div>
       </div>

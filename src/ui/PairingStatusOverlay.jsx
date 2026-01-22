@@ -51,10 +51,7 @@ export default function PairingStatusOverlay() {
           <div className="absolute inset-0 bg-gradient-to-t from-accent-primary/10 to-transparent animate-pulse" />
         </div>
         
-        {/* Simple, clean, high-fidelity loader */}
         <Loader2 className="absolute w-24 h-24 text-accent-primary animate-spin opacity-80" strokeWidth={1} />
-
-        {/* Outer Glow */}
         <div className="absolute inset-4 bg-accent-primary/5 blur-2xl rounded-full animate-pulse" />
       </div>
     )
@@ -193,15 +190,12 @@ export default function PairingStatusOverlay() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-0">
-      {/* Immersive backdrop */}
       <div 
         className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-700 cursor-pointer"
         onClick={isDone ? handleClose : undefined}
       />
       
-      {/* Dialog Card */}
       <div className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 overflow-hidden">
-        {/* Ambient background glow */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
         

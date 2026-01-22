@@ -6,24 +6,25 @@ export default function GeneralSettings() {
   const [textSize, setTextSize] = useState(50)
 
   return (
-    <div className='space-y-8'>
-      <div>
-        <h3 className='text-text-primary font-semibold text-lg mb-2'>Appearance</h3>
-        <div className='space-y-4'>
-          <div>
-            <label className='block text-text-primary text-sm mb-1'>Theme</label>
-            <p className='text-xs mb-3 text-text-tertiary'>
-              Select your preferred interface theme.
-            </p>
-            <div className='flex gap-2'>
+    <div className='space-y-12 animate-in fade-in duration-700 max-w-2xl mx-auto'>
+      <div className="space-y-6">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Interface</h3>
+        
+        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
+          <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
+            <div className="space-y-1">
+              <label className='block text-text-primary text-[15px] font-bold'>App Theme</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Select your preferred aesthetic.</p>
+            </div>
+            <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-white/[0.05]'>
               {['System', 'Light', 'Dark'].map((option) => (
                 <button
                   key={option}
                   onClick={() => setTheme(option.toLowerCase())}
-                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
                     theme === option.toLowerCase()
-                      ? 'bg-bg-panel-secondary text-text-primary border border-border-secondary'
-                      : 'bg-bg-panel-tertiary hover:bg-bg-panel-secondary hover:text-text-primary text-text-secondary border border-transparent'
+                      ? 'bg-accent-primary text-text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
                   }`}
                 >
                   {option}
@@ -31,64 +32,69 @@ export default function GeneralSettings() {
               ))}
             </div>
           </div>
+
+          <div className="p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
+             <div className="space-y-1">
+              <label className='block text-text-primary text-[15px] font-bold'>Language</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Interface and system messages.</p>
+            </div>
+            <div className='relative group/select'>
+              <select className='appearance-none bg-bg-tertiary/50 border border-white/[0.05] text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'>
+                <option>English (US)</option>
+                <option>English (UK)</option>
+                <option>Spanish (ES)</option>
+                <option>French (FR)</option>
+              </select>
+              <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary pointer-events-none group-hover/select:text-accent-primary transition-colors' />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div>
-        <h3 className='text-text-primary font-semibold text-lg mb-2'>Text</h3>
-        <div className='space-y-4'>
-          <div>
-            <label className='block text-text-primary text-sm mb-1'>Default Font</label>
-            <p className='text-xs mb-3 text-text-tertiary'>
-              Choose the default font for new notes.
-            </p>
-            <div className='relative'>
-              <select className='w-full px-4 py-2.5 rounded-lg text-sm appearance-none bg-bg-panel-secondary border border-border-primary text-text-primary focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 outline-none'>
+      <div className="space-y-6">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Typography</h3>
+
+        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
+          <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
+            <div className="space-y-1">
+              <label className='block text-text-primary text-[15px] font-bold'>Font Family</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Primary typeface for notes.</p>
+            </div>
+            <div className='relative group/select'>
+              <select className='appearance-none bg-bg-tertiary/50 border border-white/[0.05] text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'>
                 <option>System Default</option>
-                <option>SF Pro Text</option>
+                <option>Inter</option>
                 <option>Helvetica</option>
+                <option>Monospace</option>
               </select>
-              <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-text-tertiary' />
+              <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary pointer-events-none group-hover/select:text-accent-primary transition-colors' />
             </div>
           </div>
-          <div>
-            <label className='block text-text-primary text-sm mb-1'>Text Size</label>
-            <p className='text-xs mb-3 text-text-tertiary'>
-              Adjust the default text size for readability.
-            </p>
-            <div className='px-2'>
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs text-text-tertiary'>Small</span>
-                <span className='text-xs text-text-tertiary'>Large</span>
+
+          <div className="p-6 group hover:bg-white/[0.02] transition-colors">
+             <div className="flex items-center justify-between mb-6">
+              <div className="space-y-1">
+                <label className='block text-text-primary text-[15px] font-bold'>Visual Scale</label>
+                <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Adjust master text size.</p>
               </div>
-              <input
+              <span className="text-[13px] font-mono text-accent-primary bg-accent-primary/10 px-2 py-1 rounded-md">{textSize}%</span>
+            </div>
+            
+            <div className="relative h-2 bg-bg-tertiary rounded-full overflow-hidden">
+               <div className="absolute top-0 left-0 h-full bg-accent-primary rounded-full" style={{ width: `${textSize}%` }} />
+               <input
                 type='range'
                 min='0'
                 max='100'
                 value={textSize}
                 onChange={(e) => setTextSize(e.target.value)}
-                className='w-full h-2 bg-bg-panel-tertiary rounded-lg appearance-none cursor-pointer accent-accent-primary'
+                className='absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer'
               />
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className='text-text-primary font-semibold text-lg mb-2'>Language</h3>
-        <div>
-          <label className='block text-text-primary text-sm mb-1'>Application Language</label>
-          <p className='text-xs mb-3 text-text-tertiary'>
-            This will not affect the content of your notes.
-          </p>
-          <div className='relative'>
-            <select className='w-full px-4 py-2.5 rounded-lg text-sm appearance-none bg-bg-panel-secondary border border-border-primary text-text-primary focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20 outline-none'>
-              <option>English (US)</option>
-              <option>English (UK)</option>
-              <option>Spanish</option>
-              <option>French</option>
-            </select>
-            <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none' />
+            <div className="flex justify-between mt-3 text-[10px] uppercase font-bold text-text-tertiary/50 tracking-widest">
+              <span>Compact</span>
+              <span>Comfortable</span>
+            </div>
           </div>
         </div>
       </div>
