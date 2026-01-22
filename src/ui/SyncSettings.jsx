@@ -1,4 +1,4 @@
-import { Link2, Check, Info, Monitor, Smartphone, Plus } from 'lucide-react'
+import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '../store/slices/syncSlice'
@@ -45,201 +45,208 @@ export default function SyncSettings() {
   }
 
   return (
-    <div className='grow overflow-y-auto'>
-      <div className='max-w-xl mx-auto p-8 space-y-8'>
-        <div className='flex border-b border-border-primary'>
-          <button
-            onClick={() => setSyncTab('invite')}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-              syncTab === 'invite'
-                ? 'border-accent-primary text-text-primary'
-                : 'border-transparent text-text-tertiary hover:text-text-primary'
-            }`}
-          >
-            Invite a New Device
-          </button>
-          <button
-            onClick={() => setSyncTab('manage')}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-              syncTab === 'manage'
-                ? 'border-accent-primary text-text-primary'
-                : 'border-transparent text-text-tertiary hover:text-text-primary'
-            }`}
-          >
-            Manage Connected Devices
-          </button>
-        </div>
+    <div className='max-w-3xl mx-auto px-6 py-4 space-y-6'>
+      {/* Premium Tab Switcher */}
+      <div className='flex p-1 bg-bg-panel-secondary rounded-xl border border-border-primary w-fit mx-auto'>
+        <button
+          onClick={() => setSyncTab('invite')}
+          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            syncTab === 'invite'
+              ? 'bg-bg-quaternary text-text-primary'
+              : 'text-text-tertiary hover:text-text-secondary'
+          }`}
+        >
+          Link Device
+        </button>
+        <button
+          onClick={() => setSyncTab('manage')}
+          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            syncTab === 'manage'
+              ? 'bg-bg-quaternary text-text-primary'
+              : 'text-text-tertiary hover:text-text-secondary'
+          }`}
+        >
+          My Devices
+        </button>
+      </div>
 
+      <div className='space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-400'>
         {syncTab === 'invite' ? (
-          <div className='py-4 animate-in fade-in duration-300'>
-            <h3 className='text-text-primary font-semibold text-lg mb-2'>
-              Share this invite with another device
-            </h3>
-            <p className='text-sm mb-8 text-text-tertiary'>
-              Generate an invite link to connect another device running the app. 
-              All your notes will be synced securely with end-to-end encryption.
-            </p>
-
-            <div className='space-y-6'>
-              {!isInviteGenerated ? (
-                <article className='bg-bg-panel-secondary border border-border-tertiary rounded-xl p-12 flex flex-col items-center justify-center text-center space-y-4'>
-                  <div className='w-16 h-16 bg-accent-primary/10 rounded-full flex items-center justify-center'>
-                    <Plus className='w-8 h-8 text-accent-primary' />
-                  </div>
-                  <div>
-                    <h4 className='text-text-primary font-medium'>Ready to sync?</h4>
-                    <p className='text-text-tertiary text-sm max-w-xs mx-auto'>
-                      Create an invite code to securely link your other devices.
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleCreateInvite}
-                    disabled={isLoading}
-                    className='px-8 py-3 rounded-lg transition-all font-medium bg-accent-primary text-text-primary hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-accent-primary/20'
-                  >
-                    {isLoading ? 'Generating Invitation...' : 'Create Invite'}
-                  </button>
-                </article>
-              ) : (
-                <div className='space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300'>
-                  <div className='bg-accent-success/10 border border-accent-success/20 rounded-lg p-4'>
-                    <div className='flex items-start gap-3'>
-                      <Check className='w-5 h-5 text-accent-success flex-shrink-0 mt-0.5' />
-                      <p className='text-accent-success text-sm'>
-                        Your invitation is ready! It&apos;s secure and end-to-end encrypted.
+          <div className='space-y-6'>
+            {!isInviteGenerated ? (
+              <div className='bg-bg-panel-secondary/40 backdrop-blur-md border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 transition-all hover:border-border-secondary'>
+                <div className='w-20 h-20 bg-accent-primary/5 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/10 shadow-inner'>
+                  <Globe className='w-10 h-10 text-accent-primary animate-pulse' />
+                </div>
+                <div className='space-y-2'>
+                  <h3 className='text-text-primary font-bold text-xl'>Link Your Devices</h3>
+                  <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
+                    Create a secure, end-to-end encrypted connection to sync your notes across devices instantly.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCreateInvite}
+                  disabled={isLoading}
+                  className='group relative px-10 py-3.5 bg-accent-primary text-text-primary rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2'
+                >
+                  <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
+                  {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
+                  {isLoading ? 'Preparing Secure Link...' : 'Generate New Invite'}
+                </button>
+              </div>
+            ) : (
+              <div className='space-y-5'>
+                <div className='bg-bg-panel-secondary/60 backdrop-blur-lg border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
+                   {/* Background Glow */}
+                  <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
+                  
+                  <div className='flex items-center gap-3 mb-6'>
+                    <div className='w-10 h-10 bg-accent-primary/10 rounded-full flex items-center justify-center border border-accent-primary/20'>
+                      <ShieldCheck className='w-5 h-5 text-accent-primary' />
+                    </div>
+                    <div>
+                      <h4 className='text-text-primary font-semibold'>Invitation Ready</h4>
+                      <p className='text-xs text-text-tertiary font-medium bg-bg-panel-tertiary/50 px-2 py-0.5 rounded-full inline-block mt-1'>
+                        {expiresAt ? formatExpiration(expiresAt) : 'Permanent Link'}
                       </p>
                     </div>
                   </div>
 
-                  <div className='space-y-1.5'>
-                    <div className='flex justify-between items-end px-1'>
-                      <label className='text-text-tertiary text-[11px] font-medium'>
-                        Invite Code
-                      </label>
-                      {expiresAt ? (
-                        <span className='text-text-tertiary text-[10px] font-medium bg-bg-panel-tertiary px-2 py-0.5 rounded-full border border-border-tertiary'>
-                          {formatExpiration(expiresAt)}
-                        </span>
-                      ) : (
-                        <span className='text-text-tertiary text-[10px] opacity-50'>
-                          No expiration set
-                        </span>
-                      )}
+                  <div className='space-y-3'>
+                    <label className='text-[10px] uppercase tracking-wider font-bold text-text-tertiary ml-1'>
+                      Secure Pair Code
+                    </label>
+                    <div className='relative group'>
+                      <input
+                        type='text'
+                        readOnly
+                        value={inviteCode}
+                        className='w-full px-5 py-4 bg-bg-panel/50 border border-border-secondary rounded-xl text-text-primary font-mono text-base tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
+                      />
                     </div>
-                    <input
-                      type='text'
-                      readOnly
-                      value={inviteCode}
-                      className='w-full px-4 py-3.5 rounded-lg bg-bg-panel-secondary border border-border-tertiary text-text-primary font-mono text-sm shadow-inner outline-none'
-                    />
                   </div>
 
                   <button
                     onClick={handleCopyInvite}
-                    className='w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg transition-all font-medium bg-accent-primary text-text-primary hover:bg-accent-primary-hover shadow-sm cursor-pointer'
+                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
+                      copied 
+                        ? 'bg-accent-success text-white scale-[1.02]' 
+                        : 'bg-accent-primary text-text-primary'
+                    }`}
                   >
                     {copied ? (
-                      <>
-                        <Check className='w-4 h-4' />
-                        Copied to Clipboard!
-                      </>
+                      <><Check className='w-5 h-5' /> Copied Successfully!</>
                     ) : (
-                      <>
-                        <Link2 className='w-4 h-4' />
-                        Copy Invite Link
-                      </>
+                      <><Link2 className='w-5 h-5' /> Copy Identity Link</>
                     )}
                   </button>
-                  
-                  <div className='bg-bg-panel-tertiary/50 rounded-lg p-4 flex gap-3 border border-border-tertiary'>
-                    <Info className='w-4 h-4 text-text-tertiary flex-shrink-0 mt-0.5' />
-                    <p className='text-[11px] text-text-tertiary leading-relaxed'>
-                      Paste this code on your other device to establish a connection. Keep this window open until pairing is confirmed.
-                    </p>
-                  </div>
                 </div>
-              )}
+
+                <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-start'>
+                  <Info className='w-5 h-5 text-accent-primary shrink-0' />
+                  <p className='text-xs text-text-tertiary leading-relaxed'>
+                    For security, don&apos;t share this code in public channels as it grants full access to your notes.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Join Existing Link Section - Moved here */}
+            <div className='pt-6 border-t border-border-primary space-y-4'>
+              <div className='flex items-center gap-2 ml-1'>
+                <Plus className='w-4 h-4 text-accent-primary' />
+                <h4 className='font-bold text-sm text-text-primary'>Already have an invite?</h4>
+              </div>
+              
+              <div className='relative flex gap-2'>
+                <input
+                  type='text'
+                  value={pasteCode}
+                  onChange={(e) => setPasteCode(e.target.value)}
+                  placeholder='Paste invite code here...'
+                  className='flex-1 px-4 py-3 rounded-xl bg-bg-panel-secondary/50 border border-border-primary text-text-primary text-sm focus:outline-none focus:border-accent-primary transition-all placeholder:text-text-tertiary/50'
+                />
+                <button 
+                  onClick={handleConnect}
+                  disabled={!pasteCode.trim() || isLoading || step !== 'idle'}
+                  className='px-6 py-3 bg-bg-quaternary text-text-primary rounded-xl hover:bg-bg-panel-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-bold border border-border-primary hover:border-border-secondary active:scale-95 flex items-center gap-2'
+                >
+                  {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
+                  Link Device
+                </button>
+              </div>
             </div>
           </div>
         ) : (
-          <div className='py-4 animate-in fade-in duration-300 space-y-8'>
-            <div className='space-y-6'>
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between px-1'>
-                  <h3 className='text-text-primary font-semibold text-lg'>Connected Devices</h3>
-                  <div className='px-2 py-0.5 bg-accent-primary/10 text-accent-primary text-[10px] font-bold rounded uppercase tracking-wider border border-accent-primary/20'>
-                    2 Active
-                  </div>
+      <div className='space-y-6'>
+        <div className='space-y-4'>
+          <div className='flex items-center justify-between px-1'>
+            <h3 className='text-text-primary font-bold text-lg flex items-center gap-3'>
+              <div className='w-8 h-8 bg-accent-primary/10 rounded-lg flex items-center justify-center border border-accent-primary/20'>
+                <ShieldCheck className='w-4 h-4 text-accent-primary' />
+              </div>
+              Verified Devices
+            </h3>
+            <span className='text-[10px] font-bold text-text-tertiary uppercase tracking-widest bg-bg-panel-secondary px-2 py-1 rounded-md border border-border-primary'>
+              End-to-End Encrypted
+            </span>
+          </div>
+          
+          <div className='grid gap-4'>
+            {/* Primary Device Card */}
+            <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 transition-all hover:bg-bg-panel-secondary/60 hover:border-border-secondary'>
+              <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
+                <Monitor className='w-7 h-7' />
+                <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success border-2 border-bg-panel-secondary rounded-full shadow-sm' />
+              </div>
+              
+              <div className='flex-1 min-w-0'>
+                <div className='flex items-center gap-3'>
+                  <span className='font-bold text-text-primary text-base truncate'>Primary Device</span>
+                  <span className='px-2 py-0.5 bg-accent-primary/10 text-accent-primary text-[9px] font-extrabold rounded uppercase tracking-tighter border border-accent-primary/20'>
+                    Local
+                  </span>
                 </div>
-
-                <div className='space-y-3'>
-                  <div className='p-4 bg-bg-panel-secondary border border-border-tertiary rounded-xl flex items-center gap-4 group transition-all hover:border-border-secondary'>
-                    <div className='w-10 h-10 bg-bg-panel-tertiary rounded-full flex items-center justify-center text-text-tertiary group-hover:text-accent-primary transition-colors'>
-                      <Monitor className='w-5 h-5' />
-                    </div>
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2'>
-                        <span className='font-medium text-text-primary text-sm'>MacBook Pro (This Device)</span>
-                        <span className='text-[10px] bg-accent-success/20 text-accent-success px-1.5 py-0.5 rounded'>Online</span>
-                      </div>
-                      <p className='text-[11px] text-text-tertiary'>Last sync: Just now</p>
-                    </div>
-                  </div>
-
-                  <div className='p-4 bg-bg-panel-secondary border border-border-tertiary rounded-xl flex items-center gap-4 group transition-all hover:border-border-secondary'>
-                    <div className='w-10 h-10 bg-bg-panel-tertiary rounded-full flex items-center justify-center text-text-tertiary group-hover:text-accent-primary transition-colors'>
-                      <Smartphone className='w-5 h-5' />
-                    </div>
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2'>
-                        <span className='font-medium text-text-primary text-sm'>iPhone 15 Pro</span>
-                        <span className='text-[10px] bg-bg-panel-tertiary text-text-tertiary px-1.5 py-0.5 rounded'>Offline</span>
-                      </div>
-                      <p className='text-[11px] text-text-tertiary'>Last sync: 2 hours ago</p>
-                    </div>
-                  </div>
+                <div className='flex items-center gap-2 mt-1.5'>
+                  <p className='text-[11px] text-text-tertiary font-bold uppercase tracking-tight'>macOS • v2.4.1</p>
+                  <span className='w-1 h-1 bg-text-muted rounded-full' />
+                  <p className='text-[11px] text-accent-success font-bold uppercase tracking-wide'>Active Now</p>
                 </div>
               </div>
+            </div>
 
-              <div className='mt-8 pt-8 border-t border-border-primary'>
-                <div className='flex items-center gap-2 mb-4 text-text-primary'>
-                  <Plus className='w-4 h-4' />
-                  <h4 className='font-medium text-sm'>Link another device</h4>
+            {/* Remote Device Card */}
+            <div className='p-5 bg-bg-panel-secondary/20 border border-border-primary/50 rounded-2xl flex items-center gap-5 opacity-80 hover:opacity-100 transition-all cursor-default'>
+              <div className='w-14 h-14 bg-bg-panel/30 rounded-2xl flex items-center justify-center text-text-muted border border-border-primary/30'>
+                <Smartphone className='w-7 h-7' />
+              </div>
+              
+              <div className='flex-1 min-w-0'>
+                <div className='flex items-center gap-3'>
+                  <span className='font-bold text-text-secondary text-base truncate'>Mobile Vault</span>
                 </div>
-                
-                <div className='flex gap-2 p-1.5 bg-bg-panel-secondary border border-border-tertiary rounded-xl focus-within:border-accent-primary transition-colors shadow-sm'>
-                  <input
-                    type='text'
-                    placeholder='Paste invite code here'
-                    value={pasteCode}
-                    onChange={(e) => setPasteCode(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
-                    className='flex-1 bg-transparent px-4 py-2 text-text-primary text-sm outline-none'
-                  />
-                  <button 
-                    onClick={handleConnect}
-                    disabled={!pasteCode.trim() || isLoading || step !== 'idle'}
-                    className='px-6 py-2 bg-accent-primary text-text-primary rounded-lg hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-sm'
-                  >
-                    Join Sync
-                  </button>
+                <div className='flex items-center gap-2 mt-1.5'>
+                  <p className='text-[11px] text-text-muted font-bold uppercase tracking-tight'>iOS • iPhone 15 Pro</p>
+                  <span className='w-1 h-1 bg-text-muted/30 rounded-full' />
+                  <p className='text-[11px] text-text-muted font-semibold tracking-tight italic'>Last seen 2 hours ago</p>
                 </div>
-                
-                <p className='mt-4 text-[11px] text-text-tertiary leading-relaxed italic'>
-                  To sync with another device, create an invite on that device and paste its code here.
-                </p>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        <div className='Grow border-t border-border-primary'>
-          <div className='bg-bg-panel-tertiary/30 rounded-lg p-4 flex gap-3 text-left border border-border-tertiary/50'>
-            <Monitor className='w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5' />
+      </div>
+    )}
+
+        <div className='pt-4'>
+          <div className='bg-bg-panel-secondary/30 rounded-2xl p-6 border border-border-primary flex gap-4'>
+            <div className='w-10 h-10 bg-accent-primary/5 rounded-full flex items-center justify-center shrink-0 border border-accent-primary/10'>
+              <ShieldCheck className='w-5 h-5 text-accent-primary opacity-80' />
+            </div>
             <div>
-              <h5 className='text-text-primary text-sm font-medium mb-1'>End-to-End Encryption</h5>
-              <p className='text-text-tertiary text-[11px] leading-relaxed'>
-                All data is encrypted before leaving your device. Your notes, attachments, and metadata remain private and can only be decrypted by your verified devices.
+              <h5 className='text-text-primary text-sm font-bold mb-1 tracking-tight'>Peer-to-Peer Privacy</h5>
+              <p className='text-text-tertiary text-xs leading-relaxed opacity-80'>
+                Your data never touches a central server. It moves directly between your devices using encrypted Hypercore logs. Only devices you explicitly verify can access your notes.
               </p>
             </div>
           </div>
