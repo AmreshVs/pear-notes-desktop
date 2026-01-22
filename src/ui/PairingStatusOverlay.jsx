@@ -1,4 +1,4 @@
-import { Check, Loader2, ShieldCheck, Smartphone, Globe, ShieldAlert } from 'lucide-react'
+import { Check, ShieldCheck, Globe, ShieldAlert, Loader2 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
 import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing } from '../store/slices/syncSlice'
 import { getFingerprint } from '../utils'
@@ -45,17 +45,17 @@ export default function PairingStatusOverlay() {
       </div>
     )
     return (
-      <div className="relative mb-2">
+      <div className="relative mb-2 flex items-center justify-center">
         <div className="w-20 h-20 bg-accent-primary/5 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/10 overflow-hidden relative">
           <Globe className="w-10 h-10 text-accent-primary opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-t from-accent-primary/10 to-transparent animate-pulse" />
         </div>
-        {/* Outer Ring */}
-        <Loader2 className="w-24 h-24 text-accent-primary animate-spin absolute -inset-2 opacity-40 blur-[1px]" strokeWidth={1} />
-        {/* Inner Ring - Counter-spinning */}
-        <div className="absolute -inset-1 border-2 border-accent-primary/60 border-t-transparent rounded-full animate-[spin_1.5s_linear_infinite_reverse] opacity-80" />
-        {/* Glow core */}
-        <div className="absolute inset-4 bg-accent-primary/10 blur-xl rounded-full animate-pulse" />
+        
+        {/* Simple, clean, high-fidelity loader */}
+        <Loader2 className="absolute w-24 h-24 text-accent-primary animate-spin opacity-80" strokeWidth={1} />
+
+        {/* Outer Glow */}
+        <div className="absolute inset-4 bg-accent-primary/5 blur-2xl rounded-full animate-pulse" />
       </div>
     )
   }
@@ -75,7 +75,7 @@ export default function PairingStatusOverlay() {
           </div>
           <button
             onClick={handleClose}
-            className="w-full py-4 bg-accent-success text-white rounded-2xl hover:brightness-110 active:scale-95 transition-all font-bold"
+            className="w-full py-3.5 bg-accent-success text-white rounded-lg hover:brightness-110 active:scale-95 transition-all font-medium"
           >
             {isInviter ? 'Return to Notes' : 'Open Workspace'}
           </button>
@@ -83,94 +83,108 @@ export default function PairingStatusOverlay() {
       )
     }
 
-    if (isConfirmation) {
-      const peerFingerprint = getFingerprint(userData)
-      const myFingerprint = getFingerprint(localKey)
-
+    if (isSyncing) {
       return (
-        <div className="flex flex-col items-center text-center space-y-6 animate-in slide-in-from-bottom-4 duration-400">
+        <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in duration-500">
           {renderStatusIcon()}
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-text-primary tracking-tight">Verify Identity</h3>
-            <p className="text-text-tertiary text-sm leading-relaxed">
-              Confirm that this secure fingerprint matches the one displayed on your other device.
-            </p>
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold text-text-primary tracking-tight">Syncing Data</h3>
+            <div className="flex items-center justify-center gap-2 text-text-tertiary">
+              <span className="text-xs font-medium italic animate-pulse">
+                {message || 'Moving data across devices...'}
+              </span>
+            </div>
           </div>
 
-          <div className="w-full space-y-4">
-            <div className="p-5 bg-bg-panel/60 border border-accent-primary/30 rounded-2xl group">
-              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary opacity-80 block mb-3">Remote Device Identity</span>
-              <div className="font-mono text-2xl text-text-primary tracking-widest break-all">
-                {peerFingerprint}
+          <div className="w-full space-y-2">
+            <div className="w-full bg-border-primary/30 h-2 rounded-full overflow-hidden shadow-inner">
+              <div 
+                className="h-full bg-gradient-to-r from-accent-primary to-accent-primary-hover transition-all duration-700 ease-out flex items-center justify-end pr-1 shadow-[0_0_10px_rgba(var(--accent-primary),0.5)]"
+                style={{ width: `${progress || 85}%` }}
+              >
+                 <div className="w-1 h-1 bg-white/40 rounded-full blur-[1px]" />
               </div>
             </div>
-
-            {myFingerprint && (
-              <div className="flex items-center justify-center gap-2 opacity-50">
-                <ShieldAlert className="w-3 h-3" />
-                <span className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[200px]">
-                  My ID: {myFingerprint}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col w-full gap-3 pt-2">
-            <button
-              onClick={handleConfirm}
-              className="w-full py-4 bg-accent-primary text-text-primary rounded-2xl hover:brightness-105 active:scale-95 transition-all font-bold"
-            >
-              Verify & Authorize
-            </button>
-            <button
-              onClick={handleClose}
-              className="w-full py-4 bg-bg-panel-secondary border border-border-primary text-text-secondary rounded-2xl hover:bg-bg-panel-tertiary transition-all font-semibold"
-            >
-              Deny Connection
-            </button>
+            <div className="flex justify-between px-1">
+              <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Progress</span>
+              <span className="text-[10px] font-bold text-accent-primary">{progress || 85}%</span>
+            </div>
           </div>
         </div>
       )
     }
 
+    // Unified Verification / Establishing Layout
+    const peerFingerprint = getFingerprint(userData)
+    const myFingerprint = getFingerprint(localKey)
+    
+    // Choose which ID to show prominently
+    // If we are confirming, show the remote ID (we're verifying them)
+    // If we're establishing/waiting, show our own ID (they're verifying us)
+    const mainIdLabel = isConfirmation ? "REMOTE ID" : "MY ID"
+    const mainIdValue = isConfirmation ? peerFingerprint : myFingerprint
+    const subIdLabel = isConfirmation ? "MY ID" : (peerFingerprint ? "REMOTE ID" : null)
+    const subIdValue = isConfirmation ? myFingerprint : (peerFingerprint ? peerFingerprint : null)
+
     return (
-      <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in duration-500">
-        {renderStatusIcon()}
-        <div className="space-y-3">
+      <div className="flex flex-col items-center text-center space-y-6 animate-in slide-in-from-bottom-4 duration-400">
+        <div className="w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2">
+          <ShieldCheck className="w-10 h-10 text-accent-primary" />
+        </div>
+
+        <div className="space-y-2">
           <h3 className="text-2xl font-bold text-text-primary tracking-tight">
-            {isSyncing ? 'Syncing Data' : 'Establishing Secure Link'}
+            {isConfirmation ? 'Verify Identity' : 'Identity Verification'}
           </h3>
-          <div className="flex items-center justify-center gap-2 text-text-tertiary">
-            <span className="text-xs font-medium italic animate-pulse">
-              {message || (isSyncing ? 'Moving data across devices...' : 'Waiting for connection...')}
-            </span>
-          </div>
+          <p className="text-text-tertiary text-sm leading-relaxed">
+            {isConfirmation 
+              ? 'Confirm that this secure fingerprint matches the one displayed on your other device.'
+              : 'Verifying connection. Please check this fingerprint and authorize on your other device.'}
+          </p>
         </div>
 
-        <div className="w-full space-y-2">
-          <div className="w-full bg-border-primary/30 h-2 rounded-full overflow-hidden shadow-inner">
-            <div 
-              className="h-full bg-gradient-to-r from-accent-primary to-accent-primary-hover transition-all duration-700 ease-out flex items-center justify-end pr-1 shadow-[0_0_10px_rgba(var(--accent-primary),0.5)]"
-              style={{ width: `${progress || (isSyncing ? 85 : 25)}%` }}
+        <div className="w-full space-y-4">
+          <div className="p-5 bg-bg-panel/60 border border-accent-primary/20 rounded-2xl group transition-all hover:border-accent-primary/40">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-3">{mainIdLabel}</span>
+            <div className="font-mono text-base sm:text-lg text-text-primary tracking-tight uppercase leading-none break-all">
+              {mainIdValue.toUpperCase()}
+            </div>
+          </div>
+
+          {subIdValue && (
+            <div className="flex items-center justify-center gap-2 opacity-40">
+              <ShieldAlert className="w-3 h-3" />
+              <span className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[200px]">
+                {subIdLabel}: {subIdValue.toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {isConfirmation ? (
+          <div className="flex flex-col w-full gap-3 pt-2">
+            <button
+              onClick={handleConfirm}
+              className="w-full py-3.5 bg-accent-primary text-text-primary rounded-lg hover:brightness-105 active:scale-95 transition-all font-medium"
             >
-               <div className="w-1 h-1 bg-white/40 rounded-full blur-[1px]" />
-            </div>
+              Verify & Authorize
+            </button>
+            <button
+              onClick={handleClose}
+              className="w-full py-3.5 bg-bg-panel-secondary border border-border-primary text-text-secondary rounded-lg hover:bg-bg-panel-tertiary transition-all font-medium"
+            >
+              Deny Connection
+            </button>
           </div>
-          <div className="flex justify-between px-1">
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Progress</span>
-            <span className="text-[10px] font-bold text-accent-primary">{progress || (isSyncing ? 85 : 25)}%</span>
-          </div>
-        </div>
-
-        {localKey && !isSyncing && (
-          <div className="pt-4 border-t border-border-primary/50 w-full">
-            <div className="flex items-center justify-center gap-2 mb-2 text-text-muted">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Your Device Identity</span>
+        ) : (
+          <div className="w-full space-y-2 pt-4">
+            <div className="w-full bg-border-primary/30 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-accent-primary animate-pulse"
+                style={{ width: `${progress || 25}%` }}
+              />
             </div>
-            <div className="inline-block px-3 py-1 bg-bg-panel-secondary border border-border-primary rounded-lg font-mono text-[11px] text-text-tertiary select-all">
-              {getFingerprint(localKey)}
-            </div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Establishing Link...</p>
           </div>
         )}
       </div>

@@ -87,7 +87,7 @@ export default function SyncSettings() {
                 <button
                   onClick={handleCreateInvite}
                   disabled={isLoading}
-                  className='group relative px-10 py-3.5 bg-accent-primary text-text-primary rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2'
+                  className='group relative px-10 py-3 bg-accent-primary text-text-primary rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2'
                 >
                   <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
                   {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
@@ -128,16 +128,16 @@ export default function SyncSettings() {
 
                   <button
                     onClick={handleCopyInvite}
-                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold transition-all duration-300 ${
+                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
                       copied 
-                        ? 'bg-accent-success text-white scale-[1.02]' 
+                        ? 'bg-accent-success text-white' 
                         : 'bg-accent-primary text-text-primary'
                     }`}
                   >
                     {copied ? (
-                      <><Check className='w-5 h-5' /> Copied Successfully!</>
+                      <><Check className='w-4 h-4' strokeWidth={2.5} /> Code Copied!</>
                     ) : (
-                      <><Link2 className='w-5 h-5' /> Copy Identity Link</>
+                      <><Link2 className='w-4 h-4' /> Copy Invite Code</>
                     )}
                   </button>
                 </div>
@@ -169,7 +169,7 @@ export default function SyncSettings() {
                 <button 
                   onClick={handleConnect}
                   disabled={!pasteCode.trim() || isLoading || step !== 'idle'}
-                  className='px-6 py-3 bg-bg-quaternary text-text-primary rounded-xl hover:bg-bg-panel-tertiary disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-bold border border-border-primary hover:border-border-secondary active:scale-95 flex items-center gap-2'
+                  className='px-6 py-2.5 bg-accent-primary text-text-primary rounded-lg hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-all text-sm font-medium border border-accent-primary active:scale-95 flex items-center gap-2'
                 >
                   {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
                   Link Device
