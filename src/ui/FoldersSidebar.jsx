@@ -7,10 +7,10 @@ import {
   FolderPlus,
   Plus,
   Settings,
-  Moon,
-  Sun,
   Folder,
-  Menu
+  Menu,
+  Pencil,
+  MoreVertical
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
@@ -34,8 +34,6 @@ export default function FoldersSidebar({
   onCreateNote,
   onCreateFolder,
   onSettingsClick,
-  onThemeToggle,
-  theme,
   isCollapsed,
   onToggleCollapse,
   onDeleteFolder
@@ -45,6 +43,9 @@ export default function FoldersSidebar({
   const [editName, setEditName] = useState('')
   const inputRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
+  
+  const [openMenuId, setOpenMenuId] = useState(null)
+  const menuRefs = useRef({})
 
   useEffect(() => {
     if (editingFolderId && inputRef.current) {
@@ -53,8 +54,19 @@ export default function FoldersSidebar({
     }
   }, [editingFolderId])
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (openMenuId && menuRefs.current[openMenuId] && !menuRefs.current[openMenuId].contains(e.target)) {
+        setOpenMenuId(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openMenuId])
+
   const handleStartRename = (e, folder) => {
     e.stopPropagation()
+    setOpenMenuId(null)
     if (folder.isSystem) return
     setEditingFolderId(folder.id)
     setEditName(folder.name)
@@ -81,83 +93,161 @@ export default function FoldersSidebar({
     }
   }
 
+  const handleMenuAction = (action, folder) => {
+    setOpenMenuId(null)
+    
+    switch (action) {
+      case 'new-note':
+        onSelectFolder(folder.id)
+        onCreateNote()
+        break
+      case 'new-folder':
+        onCreateFolder()
+        break
+      case 'rename':
+        setEditingFolderId(folder.id)
+        setEditName(folder.name)
+        break
+      case 'delete':
+        if (window.confirm(`Are you sure you want to delete "${folder.name}"?`)) {
+          onDeleteFolder(folder.id)
+        }
+        break
+    }
+  }
+
   const renderFolder = (folder) => {
     const Icon = ICON_MAP[folder.icon] || Folder
     const isSelected = selectedFolder === folder.id
     const count = getFolderCount(folder.id)
     const isEditing = editingFolderId === folder.id
+    const isMenuOpen = openMenuId === folder.id
 
     return (
-      <button
-        key={folder.id}
-        onClick={() => !isEditing && onSelectFolder(folder.id)}
-        onDoubleClick={(e) => handleStartRename(e, folder)}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-1.5 transition-all duration-200 group relative overflow-hidden
-          ${
-            isSelected
-              ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_0_15px_rgba(var(--accent-primary),0.05)]'
-              : 'bg-transparent text-text-secondary hover:bg-bg-tertiary/50 border border-transparent'
-          }`}
-        title={isCollapsed ? folder.name : (isEditing ? '' : 'Double click to rename')}
-      >
-        <div className={`flex items-center transition-all duration-100 min-w-0 flex-1 ${isCollapsed ? 'gap-0' : 'gap-4'}`}>
-          <Icon
-            className={`w-5 h-5 transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
-          />
-          
-          {isEditing && !isCollapsed ? (
-             <input
-              ref={inputRef}
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={handleSubmitRename}
-              onKeyDown={handleKeyDown}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full bg-transparent border-none outline-none text-[14px] font-medium text-text-primary p-0 m-0"
+      <div key={folder.id} className="relative">
+        <button
+          onClick={() => !isEditing && onSelectFolder(folder.id)}
+          onDoubleClick={(e) => handleStartRename(e, folder)}
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-1.5 transition-all duration-200 group relative overflow-hidden
+            ${
+              isSelected
+                ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_0_15px_rgba(var(--accent-primary),0.05)]'
+                : 'bg-transparent text-text-secondary hover:bg-bg-tertiary/50 border border-transparent'
+            }`}
+          title={isCollapsed ? folder.name : (isEditing ? '' : 'Double click to rename')}
+        >
+          <div className={`flex items-center transition-all duration-100 min-w-0 flex-1 ${isCollapsed ? 'gap-0' : 'gap-4'}`}>
+            <Icon
+              className={`w-5 h-5 transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
             />
-          ) : (
-            <span
-              className={`text-[14px] tracking-tight whitespace-nowrap transition-opacity duration-100 truncate ${
-                isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'
-              } ${isSelected ? 'font-bold' : 'font-medium'}`}
-            >
-              {folder.name || DEFAULT_FOLDER_NAME}
-            </span>
-          )}
-        </div>
-        
-        {!isEditing && (
-          <div className='flex items-center gap-2 flex-shrink-0 ml-2'>
-            {!isCollapsed && !folder.isSystem && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (window.confirm(`Are you sure you want to delete "${folder.name}"?`)) {
-                    onDeleteFolder(folder.id)
-                  }
-                }}
-                className='opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-accent-danger/10 transition-all text-text-tertiary hover:text-accent-danger'
-                title='Delete Folder'
-              >
-                <Trash2 className='w-3.5 h-3.5' />
-              </button>
-            )}
-            {count > 0 && (
+            
+            {isEditing && !isCollapsed ? (
+               <input
+                ref={inputRef}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleSubmitRename}
+                onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full bg-transparent border-none outline-none text-[14px] font-medium text-text-primary p-0 m-0"
+              />
+            ) : (
               <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors duration-150 whitespace-nowrap
-                  ${
-                    isSelected
-                      ? 'text-accent-primary bg-accent-primary/10'
-                      : 'text-text-muted bg-bg-tertiary/50'
-                  } ${isCollapsed ? 'hidden' : 'block'}`}
+                className={`text-[14px] tracking-tight whitespace-nowrap transition-opacity duration-100 truncate ${
+                  isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'
+                } ${isSelected ? 'font-bold' : 'font-medium'}`}
               >
-                {count}
+                {folder.name || DEFAULT_FOLDER_NAME}
               </span>
             )}
           </div>
+          
+          {!isEditing && (
+            <div className='flex items-center gap-2 flex-shrink-0 ml-2 relative'>
+              {!isCollapsed && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setOpenMenuId(isMenuOpen ? null : folder.id)
+                  }}
+                  className={`opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
+                  title='Options'
+                >
+                  <MoreVertical className='w-3.5 h-3.5' />
+                </button>
+              )}
+              {count > 0 && (
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors duration-150 whitespace-nowrap
+                    ${
+                      isSelected
+                        ? 'text-accent-primary bg-accent-primary/10'
+                        : 'text-text-muted bg-bg-tertiary/50'
+                    } ${isCollapsed ? 'hidden' : 'block'}`}
+                >
+                  {count}
+                </span>
+              )}
+            </div>
+          )}
+        </button>
+
+        {isMenuOpen && !isCollapsed && (
+          <div
+            ref={(el) => menuRefs.current[folder.id] = el}
+            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel/90 backdrop-blur-xl border border-white/[0.05] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right"
+          >
+            <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
+            <div className="relative z-10">
+              <button
+                onClick={() => handleMenuAction('new-note', folder)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-all text-left group/item"
+              >
+                <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <span className="font-bold tracking-tight">New Note</span>
+              </button>
+              
+              <button
+                onClick={() => handleMenuAction('new-folder', folder)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-all text-left group/item"
+              >
+                <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
+                  <FolderPlus className="w-4 h-4" />
+                </div>
+                <span className="font-bold tracking-tight">New Folder</span>
+              </button>
+
+              {!folder.isSystem && (
+                <>
+                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
+                  <button
+                    onClick={() => handleMenuAction('rename', folder)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-all text-left group/item"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
+                      <Pencil className="w-4 h-4" />
+                    </div>
+                    <span className="font-bold tracking-tight">Rename</span>
+                  </button>
+                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
+                  <button
+                    onClick={() => handleMenuAction('delete', folder)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-accent-danger/90 hover:bg-accent-danger/10 rounded-xl transition-all text-left group/item"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center text-accent-danger/70 group-hover/item:bg-accent-danger/20 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </div>
+                    <span className="font-black tracking-tight">Delete</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
-      </button>
+      </div>
     )
   }
 
@@ -189,40 +279,14 @@ export default function FoldersSidebar({
       </div>
 
       <div className={`px-3 py-5 space-y-3 border-t border-border-primary bg-bg-primary/50 flex flex-col ${isCollapsed ? 'items-center' : ''}`}>
-        <button
-          onClick={onCreateNote}
-          className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 p-0 rounded-xl' : 'w-full gap-3 px-4 py-3.5 rounded-2xl'} shadow-glow-primary text-[#1c1c1e] transition-all font-bold bg-accent-primary hover:bg-accent-primary-hover hover:scale-[1.02] active:scale-95`}
-          title='New Note'
-        >
-          <Plus className='w-5 h-5 flex-shrink-0' strokeWidth={3} />
-          {!isCollapsed && <span className='text-[15px] whitespace-nowrap animate-in fade-in duration-200'>New Note</span>}
-        </button>
-        
-        <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-10 h-10 p-0 rounded-xl' : 'w-full gap-3 rounded-2xl'}`}>
-          <button
-            onClick={onCreateFolder}
-            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 p-0 rounded-xl' : 'w-full gap-3 px-4 py-3.5 rounded-2xl'} bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:scale-[1.02] hover:border-border-secondary active:scale-95 transition-all`}
-            title='New Folder'
-          >
-            <FolderPlus className='w-4 h-4 flex-shrink-0' />
-            {!isCollapsed && <span className='text-[14px] font-medium whitespace-nowrap animate-in fade-in duration-200'>New Folder</span>}
-          </button>
-        </div>
-
         <div className={`flex ${isCollapsed ? 'flex-col gap-3' : 'gap-3 pt-2'}`}>
           <button
             onClick={onSettingsClick}
-            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 rounded-xl' : 'flex-1 px-3 py-3 rounded-2xl'} transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95`}
+            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 rounded-xl' : 'flex-1 gap-3 px-3 py-3 rounded-2xl'} transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95`}
             title='Settings'
           >
-            <Settings className='w-4 h-4' />
-          </button>
-          <button
-            onClick={onThemeToggle}
-            className={`flex items-center justify-center ${isCollapsed ? 'w-10 h-10 rounded-xl' : 'flex-1 px-3 py-3 rounded-2xl'} transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95`}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {theme === 'dark' ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}
+            <Settings className='w-4 h-4 flex-shrink-0' />
+            {!isCollapsed && <span className='text-[14px] font-medium whitespace-nowrap animate-in fade-in duration-200'>Settings</span>}
           </button>
         </div>
       </div>

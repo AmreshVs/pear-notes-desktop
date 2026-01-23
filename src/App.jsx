@@ -18,7 +18,7 @@ import {
   getShowSettings,
   getShowNewFolderModal
 } from './store/slices/uiSlice'
-import { getTheme, setTheme } from './store/slices/settingsSlice'
+
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
 import NotesList from './ui/NotesList'
@@ -40,7 +40,6 @@ function App() {
   const showSettings = useSelector(getShowSettings)
   const showNewFolderModal = useSelector(getShowNewFolderModal)
   const folders = useSelector(getFolders)
-  const theme = useSelector(getTheme)
 
   useEffect(() => {
     const load = async () => {
@@ -113,11 +112,6 @@ function App() {
             onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
             onDeleteFolder={handleDeleteFolder}
             onSettingsClick={() => dispatch(setShowSettings(true))}
-            onThemeToggle={() => {
-              const newTheme = theme === 'dark' ? 'light' : 'dark'
-              dispatch(setTheme(newTheme))
-            }}
-            theme={theme}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           />
@@ -128,6 +122,7 @@ function App() {
             selectedFolder={selectedFolder} 
             searchQuery={searchQuery}
             onSearchChange={(value) => dispatch(setSearchQuery(value))}
+            onCreateNote={handleCreateNote}
           />
         </ResizablePanel>
 
