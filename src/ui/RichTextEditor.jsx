@@ -40,6 +40,24 @@ import { useSelector } from 'react-redux'
 import { getSelectedNote } from '../store/slices/notesSlice'
 import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
 
+const getFontFamilyValue = (family) => {
+  switch (family) {
+    case 'Serif': return 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
+    case 'Mono': return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+    case 'System': return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    case 'Inter': default: return '"Inter", system-ui, -apple-system, sans-serif'
+  }
+}
+
+const getFontClass = (family) => {
+  switch (family) {
+    case 'Serif': return 'font-serif'
+    case 'Mono': return 'font-mono'
+    case 'System': return 'font-sans'
+    case 'Inter': default: return 'font-sans'
+  }
+}
+
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
     const currentNoteKey = useSelector(getSelectedNote)
@@ -48,15 +66,7 @@ const RichTextEditor = forwardRef(
     const isUpdatingRef = useRef(false)
     const lowlight = createLowlight(all)
 
-    const getFontClass = (family) => {
-      switch (family) {
-        case 'Serif': return 'font-serif'
-        case 'Mono': return 'font-mono'
-        case 'System': return 'font-sans'
-        case 'Inter': default: return 'font-sans'
-      }
-    }
-
+    const editorFontFamily = getFontFamilyValue(fontFamily)
     const editorFontClass = getFontClass(fontFamily)
 
     const editor = useEditor({
@@ -227,7 +237,8 @@ const RichTextEditor = forwardRef(
           return true
         },
         attributes: {
-          class: 'prose prose-invert max-w-none focus:outline-none',
+          class: `prose prose-invert max-w-none focus:outline-none ${editorFontClass}`,
+          style: `font-size: ${editorFontSize}px; font-family: ${editorFontFamily};`,
           'data-placeholder': placeholder,
           spellcheck: 'false'
         }
@@ -238,7 +249,7 @@ const RichTextEditor = forwardRef(
         const text = editor.getText()
         onChange({ html, text })
       }
-    }, [fontFamily])
+    }, [fontFamily, editorFontSize])
 
     useImperativeHandle(
       ref,
@@ -269,8 +280,7 @@ const RichTextEditor = forwardRef(
       <div className='ProseMirror-wrapper'>
         <EditorContent
           editor={editor}
-          className={`flex-1 ${editorFontClass} leading-relaxed text-text-primary transition-all duration-300`}
-          style={{ fontSize: `${editorFontSize}px` }}
+          className="flex-1 leading-relaxed text-text-primary transition-all duration-300"
         />
         
         {editor && (

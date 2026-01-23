@@ -15,12 +15,27 @@ import { useSelector, useDispatch } from 'react-redux'
 import NoteOptionsMenu from './NoteOptionsMenu'
 import { getFolders } from '../store/slices/foldersSlice'
 import { updateNote } from '../store/slices/notesSlice'
+import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
+
+const getFontFamilyValue = (family) => {
+  switch (family) {
+    case 'Serif': return 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
+    case 'Mono': return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+    case 'System': return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    case 'Inter': default: return '"Inter", system-ui, -apple-system, sans-serif'
+  }
+}
+
+
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const dispatch = useDispatch()
   const selectedNoteKey = useSelector(getSelectedNote)
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
   const noteData = useMemo(() => rawNoteData || {}, [rawNoteData])
+  const fontFamily = useSelector(getFontFamily)
+  const editorFontSize = useSelector(getEditorFontSize)
+  const editorFontFamily = getFontFamilyValue(fontFamily)
 
   const title = useSelector(getEditorTitle)
   const content = useSelector(getEditorContent)
@@ -121,7 +136,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
-  if (!noteData) {
+  if (!noteData || !selectedNoteKey) {
     return (
       <div className='flex-1 flex items-center justify-center bg-bg-secondary'>
         <div className='text-center'>
@@ -176,7 +191,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight font-system text-text-primary tracking-tighter'
+            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight text-text-primary tracking-tighter'
+            style={{ 
+              fontSize: `${editorFontSize * 2}px`, 
+              fontFamily: editorFontFamily 
+            }}
           />
           <div className='flex-1'>
             <RichTextEditor
