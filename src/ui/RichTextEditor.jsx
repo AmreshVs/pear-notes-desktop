@@ -38,12 +38,13 @@ import '../styles/tiptap.css'
 import { backendApi } from '../backend/api'
 import { useSelector } from 'react-redux'
 import { getSelectedNote } from '../store/slices/notesSlice'
-import { getFontFamily } from '../store/slices/settingsSlice'
+import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
     const currentNoteKey = useSelector(getSelectedNote)
     const fontFamily = useSelector(getFontFamily)
+    const editorFontSize = useSelector(getEditorFontSize)
     const isUpdatingRef = useRef(false)
     const lowlight = createLowlight(all)
 
@@ -269,6 +270,7 @@ const RichTextEditor = forwardRef(
         <EditorContent
           editor={editor}
           className={`flex-1 ${editorFontClass} leading-relaxed text-text-primary transition-all duration-300`}
+          style={{ fontSize: `${editorFontSize}px` }}
         />
         
         {editor && (
