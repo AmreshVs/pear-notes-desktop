@@ -103,7 +103,7 @@ function App() {
 
       <TitleBar />
       <div className='flex-1 flex overflow-hidden relative z-10'>
-        <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={60}>
+        <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400} collapsed={isSidebarCollapsed} collapsedWidth={64}>
           <FoldersSidebar
             selectedFolder={selectedFolder}
             onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}

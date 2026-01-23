@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 export default function ResizablePanel({
   children,
@@ -8,64 +8,58 @@ export default function ResizablePanel({
   collapsed = false,
   collapsedWidth = 60
 }) {
-  const [width, setWidth] = useState(defaultWidth)
+  const [baseWidth, setBaseWidth] = useState(defaultWidth)
   const [isResizing, setIsResizing] = useState(false)
-  const panelRef = useRef(null)
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
-  const lastWidthRef = useRef(defaultWidth)
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isResizing) return
+    const diff = e.clientX - startXRef.current
+    const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + diff))
+    setBaseWidth(newWidth)
+  }, [isResizing, minWidth, maxWidth])
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false)
+  }, [])
 
   useEffect(() => {
-    if (collapsed) {
-      lastWidthRef.current = width > collapsedWidth ? width : minWidth
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setWidth(collapsedWidth)
-    } else {
-      setWidth(Math.max(minWidth, lastWidthRef.current))
-    }
-  }, [collapsed, collapsedWidth, minWidth, width])
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isResizing) return
-      const diff = e.clientX - startXRef.current
-      const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + diff))
-      setWidth(newWidth)
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-    }
-
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, minWidth, maxWidth])
+  }, [isResizing, handleMouseMove, handleMouseUp])
 
   const handleMouseDown = (e) => {
     if (collapsed) return
     e.preventDefault()
     setIsResizing(true)
     startXRef.current = e.clientX
-    startWidthRef.current = width
+    startWidthRef.current = baseWidth
   }
+
+  const displayWidth = collapsed ? collapsedWidth : baseWidth
 
   return (
     <div
-      ref={panelRef}
       className='relative flex overflow-hidden'
       style={{
-        width: `${width}px`,
+        width: `${displayWidth}px`,
         transition: isResizing ? 'none' : 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
-      {children}
+      <div className="h-full w-full overflow-hidden">
+        {children}
+      </div>
       {!collapsed && (
         <div
           className='absolute right-0 top-0 bottom-0 cursor-col-resize z-10 w-2 -mr-1 group'
