@@ -13,13 +13,12 @@ import {
   setShowSettings,
   setShowNewFolderModal,
   setEditor,
-  toggleTheme,
   appReady,
   getSearchQuery,
   getShowSettings,
-  getShowNewFolderModal,
-  getTheme
+  getShowNewFolderModal
 } from './store/slices/uiSlice'
+import { getTheme, setTheme } from './store/slices/settingsSlice'
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
 import NotesList from './ui/NotesList'
@@ -114,7 +113,10 @@ function App() {
             onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
             onDeleteFolder={handleDeleteFolder}
             onSettingsClick={() => dispatch(setShowSettings(true))}
-            onThemeToggle={() => dispatch(toggleTheme())}
+            onThemeToggle={() => {
+              const newTheme = theme === 'dark' ? 'light' : 'dark'
+              dispatch(setTheme(newTheme))
+            }}
             theme={theme}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}

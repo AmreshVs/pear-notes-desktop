@@ -140,11 +140,7 @@ export default function NotesList({
           <h2 className='font-bold text-[22px] text-text-primary tracking-tight'>
             {currentFolderName}
           </h2>
-          <div className='flex items-center gap-1.5 px-2 py-1 bg-bg-tertiary/50 rounded-lg border border-border-primary/50 text-[11px] font-bold text-text-tertiary hover:text-text-primary transition-all cursor-pointer'>
-            <span>Sort</span>
-            <div className='w-1 h-1 bg-text-muted rounded-full' />
-            <span className='text-accent-primary'>Date</span>
-          </div>
+
         </div>
         <p className='text-[12px] font-medium text-text-tertiary mb-5 ml-0.5 opacity-60 uppercase tracking-widest'>
           {filteredNotes.length} {filteredNotes.length === 1 ? 'recorded item' : 'recorded items'}

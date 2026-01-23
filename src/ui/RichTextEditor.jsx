@@ -38,12 +38,25 @@ import '../styles/tiptap.css'
 import { backendApi } from '../backend/api'
 import { useSelector } from 'react-redux'
 import { getSelectedNote } from '../store/slices/notesSlice'
+import { getFontFamily } from '../store/slices/settingsSlice'
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
     const currentNoteKey = useSelector(getSelectedNote)
+    const fontFamily = useSelector(getFontFamily)
     const isUpdatingRef = useRef(false)
     const lowlight = createLowlight(all)
+
+    const getFontClass = (family) => {
+      switch (family) {
+        case 'Serif': return 'font-serif'
+        case 'Mono': return 'font-mono'
+        case 'System': return 'font-sans'
+        case 'Inter': default: return 'font-sans'
+      }
+    }
+
+    const editorFontClass = getFontClass(fontFamily)
 
     const editor = useEditor({
       extensions: [
@@ -214,7 +227,8 @@ const RichTextEditor = forwardRef(
         },
         attributes: {
           class: 'prose prose-invert max-w-none focus:outline-none',
-          'data-placeholder': placeholder
+          'data-placeholder': placeholder,
+          spellcheck: 'false'
         }
       },
       onUpdate: ({ editor }) => {
@@ -223,7 +237,7 @@ const RichTextEditor = forwardRef(
         const text = editor.getText()
         onChange({ html, text })
       }
-    })
+    }, [fontFamily])
 
     useImperativeHandle(
       ref,
@@ -254,7 +268,7 @@ const RichTextEditor = forwardRef(
       <div className='ProseMirror-wrapper'>
         <EditorContent
           editor={editor}
-          className='flex-1 font-sans text-lg leading-relaxed text-text-primary'
+          className={`flex-1 ${editorFontClass} leading-relaxed text-text-primary transition-all duration-300`}
         />
         
         {editor && (
