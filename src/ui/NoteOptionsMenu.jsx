@@ -13,18 +13,7 @@ export default function NoteOptionsMenu({
   const [showMenu, setShowMenu] = useState(false)
   const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
   const menuRef = useRef(null)
-
-  useEffect(() => {
-    if (showMenu && buttonRef?.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setPosition({
-        top: rect.bottom + 8,
-        left: rect.right - 220
-      })
-    }
-  }, [showMenu, buttonRef])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -44,12 +33,12 @@ export default function NoteOptionsMenu({
   )
 
   return (
-    <div className='relative'>
+    <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit transition-all duration-300 hover:bg-bg-panel/80 hover:border-white/[0.1]'>
       <button
         ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
-        className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 border border-white/[0.05] shadow-sm ${
-          showMenu ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' : 'bg-bg-panel/60 backdrop-blur-xl text-text-secondary hover:bg-bg-panel/80 hover:text-text-primary hover:border-white/[0.1]'
+        className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
+          showMenu ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' : 'text-text-secondary hover:bg-bg-tertiary/60 hover:text-text-primary'
         }`}
         title='More options'
       >
@@ -59,8 +48,7 @@ export default function NoteOptionsMenu({
       {showMenu && (
         <div 
           ref={menuRef}
-          className='fixed z-[120] bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
-          style={{ top: `${position.top}px`, left: `${position.left}px` }}
+          className='absolute top-full right-0 mt-3 z-[120] bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
         >
           <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
           <div className='relative z-10'>
@@ -136,7 +124,7 @@ export default function NoteOptionsMenu({
                 {copied ? <Check className='w-4 h-4' strokeWidth={3} /> : <Copy className='w-4 h-4' />}
               </div>
               <span className={`text-[13px] font-bold tracking-tight ${copied ? 'text-accent-success' : 'text-text-primary'}`}>
-                {copied ? 'Copied URL' : 'Copy link'}
+                {copied ? 'Copied Note' : 'Copy Note'}
               </span>
             </div>
           </div>

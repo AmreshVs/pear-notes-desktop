@@ -156,7 +156,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
         </div>
         
-        <div className='flex items-center gap-1.5 px-1.5 py-1 rounded-lg bg-bg-tertiary border border-border-primary shadow-sm min-h-[34px] pointer-events-auto'>
+        <div className='pointer-events-auto'>
           <NoteOptionsMenu 
             buttonRef={optionsButtonRef}
             folders={folders}
