@@ -22,7 +22,7 @@ appUpdates.on('data', () => {
   location.reload()
 })
 
-// Pear.teardown(() => backendApi.destroy())
+Pear.teardown(() => backendApi.destroy())
 
 window.addEventListener('beforeunload', () => {
   backendApi.destroy()
