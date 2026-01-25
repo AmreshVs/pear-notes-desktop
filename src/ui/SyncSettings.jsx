@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '../store/slices/syncSlice'
 import { setShowSettings } from '../store/slices/uiSlice'
-import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice } from '../store/slices/syncedDevicesSlice'
+import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice, getLocalPreferences } from '../store/slices/syncedDevicesSlice'
 
 const PLATFORM_NAMES = {
   'darwin': 'macOS',
@@ -24,7 +24,8 @@ export default function SyncSettings() {
   const isLoading = useSelector(getSyncIsLoading)
   const { step } = useSelector(getInviterStatus)
   const syncedDevices = useSelector(getSyncedDevices)
-  const isSynced = localStorage.getItem('isSynced') === 'true'
+  const localPreferences = useSelector(getLocalPreferences)
+  const isSynced = localPreferences['isSynced'] === 'true'
   
   const isInviteGenerated = !!inviteCode
   
