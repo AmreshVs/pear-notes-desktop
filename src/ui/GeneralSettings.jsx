@@ -1,6 +1,4 @@
 import { ChevronDown } from 'lucide-react'
-
-
 import { useSelector, useDispatch } from 'react-redux'
 import {
   getTheme,
@@ -51,10 +49,11 @@ export default function GeneralSettings() {
           </div>
         </div>
       </div>
+
       <div className="space-y-6">
         <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Notes List</h3>
         <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
-          <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
+          <div className="p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>Sort notes by</label>
               <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Choose your preferred sorting order.</p>
