@@ -1,4 +1,4 @@
-import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight } from 'lucide-react'
+import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight, PanelLeft } from 'lucide-react'
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -6,6 +6,31 @@ import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelected
 import { getFolders } from '../store/slices/foldersSlice'
 import { getInviterStatus } from '../store/slices/syncSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
+
+const getDayDiff = (timestamp) => {
+  if (!timestamp) return Infinity
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now - date
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+const getGroupTitle = (note) => {
+  const timestamp = note.value?.updatedAt || note.value?.createdAt
+  if (!timestamp) return 'No Date'
+  
+  const diff = getDayDiff(timestamp)
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const currentYear = new Date().getFullYear()
+
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Yesterday'
+  if (diff < 7) return 'Previous 7 Days'
+  if (diff < 30) return 'Previous 30 Days'
+  if (year === currentYear) return date.toLocaleString('default', { month: 'long' })
+  return year.toString()
+}
 
 const formatDate = (timestamp) => {
   if (!timestamp) return ''
@@ -46,7 +71,7 @@ const getPreview = (content, contentHtml) => {
   return text.length > 60 ? text.substring(0, 60) + '...' : text
 }
 
-const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef }) => {
+const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
@@ -57,7 +82,6 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
   const hoverTimeoutRef = useRef(null)
   const [submenuPos, setSubmenuPos] = useState({ x: 0, y: 0 })
 
-  // Filter folders specifically for THIS note
   const availableMoveFolders = allFolders.filter(f => 
     !f.isTrash && 
     f.id !== ALL_NOTES_KEY && 
@@ -121,6 +145,14 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
             >
               {getPreview(noteData?.note, noteData?.note)}
             </p>
+            {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
+              <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
+                <Folder className='w-3 h-3' />
+                <span>
+                  {allFolders.find(f => f.id === noteData.folderKey)?.name || 'Notes'}
+                </span>
+              </div>
+            )}
           </div>
           
           <div className='relative flex flex-col items-end justify-between py-0.5'>
@@ -142,9 +174,8 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
             {isMenuOpen && (
               <div
                 ref={menuRef}
-                className="absolute right-0 top-full mt-2 z-50 w-[220px] bg-bg-panel/90 backdrop-blur-xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
+                className="absolute right-0 top-12 z-50 w-[220px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
               >
-                <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
                 <div className='relative z-10'>
                   <button 
                     type="button"
@@ -166,13 +197,12 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
                     <div 
                       onMouseEnter={handleMouseEnter}
                       onMouseLeave={handleMouseLeave}
-                      className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 animate-in fade-in duration-200 overflow-hidden"
+                      className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
                       style={{ 
                           left: `${submenuPos.x}px`, 
                           top: `${submenuPos.y}px` 
                       }}
                     >
-                      <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
                       <div className='relative z-10'>
                         <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 px-3 opacity-60">Destinations</div>
                         <div className="max-h-60 overflow-y-auto scrollbar-hide">
@@ -251,7 +281,8 @@ export default function NotesList({
   selectedFolder,
   searchQuery,
   onSearchChange,
-  onCreateNote
+  onCreateNote,
+  onToggleSidebar
 }) {
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
@@ -262,16 +293,10 @@ export default function NotesList({
   const [openMenuId, setOpenMenuId] = useState(null)
   const menuRef = useRef(null)
 
-
-
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // Ignore if clicking the toggle button (it has its own toggle logic)
       if (e.target.closest('.menu-toggle-button')) return
-      
-      // Ignore if clicking inside the portalled submenu
       if (e.target.closest('.submenu-portal')) return
-
       if (openMenuId && menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenuId(null)
       }
@@ -329,38 +354,56 @@ export default function NotesList({
         onMenuAction={handleMenuAction}
         allFolders={folders}
         menuRef={menuRef}
+        selectedFolder={selectedFolder}
       />
     )
-  }, [openMenuId, folders, handleMenuToggle, handleMenuAction])
+  }, [openMenuId, folders, handleMenuToggle, handleMenuAction, selectedFolder])
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-secondary/40 backdrop-blur-xl border-r border-border-primary/50'>
-      <div className='px-6 py-5 border-b border-border-primary/30'>
-        <div className='flex items-center justify-between mb-2'>
-          <h2 className='font-bold text-[22px] text-text-primary tracking-tight'>
-            {currentFolderName}
-          </h2>
-          <button
-            onClick={onCreateNote}
-            className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
-            title='Create Note'
-          >
-            <SquarePen className='w-5 h-5' />
-          </button>
+      <div className='px-6 pt-10 pb-4 border-b border-border-primary/30 min-h-[140px] flex flex-col gap-4'>
+        <div className='flex items-center justify-between h-[40px]'>
+          <div className='flex items-center gap-4'>
+            <button
+              onClick={onToggleSidebar}
+              className='p-2 rounded-xl bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
+              title='Toggle Sidebar'
+            >
+              <PanelLeft className='w-5 h-5' />
+            </button>
+            <div className='flex flex-col min-w-0'>
+              <h2 className='font-bold text-[20px] text-text-primary tracking-tight truncate max-w-[150px] leading-tight'>
+                {currentFolderName}
+              </h2>
+              <span className='text-[11px] font-bold text-text-tertiary opacity-50 uppercase tracking-wider'>
+                {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
+              </span>
+            </div>
+          </div>
+          
+          <div className='flex items-center gap-1.5'>
+            <button
+              onClick={onCreateNote}
+              className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
+              title='New Note'
+            >
+              <SquarePen className='w-5 h-5' />
+            </button>
+          </div>
         </div>
-        <p className='text-[12px] font-medium text-text-tertiary mb-5 ml-0.5 opacity-60 uppercase tracking-widest'>
-          {filteredNotes.length} {filteredNotes.length === 1 ? 'recorded item' : 'recorded items'}
-        </p>
-        
-        <div className='relative group'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
-          <input
-            type='text'
-            placeholder='Search notes...'
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] focus:outline-none bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
-          />
+
+        <div className='mt-2'>
+          
+          <div className='relative group'>
+            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
+            <input
+              type='text'
+              placeholder='Search notes...'
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className='w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] focus:outline-none bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
+            />
+          </div>
         </div>
       </div>
 
@@ -374,14 +417,14 @@ export default function NotesList({
                   <p className='text-[15px] text-text-primary font-bold'>
                     Syncing Archive
                   </p>
-                  <p className='text-[12px] text-text-tertiary leading-relaxed px-4'>
+                  <p className='text-[12px] text-text-tertiary leading-relaxed px-4 text-center'>
                     Updating your library with the latest changes from your other devices.
                   </p>
                 </div>
               </div>
             ) : (
               <div className='space-y-2 opacity-40'>
-                <p className='text-[15px] text-text-tertiary font-medium'>
+                <p className='text-[15px] text-text-tertiary font-medium font-bold'>
                   {searchQuery ? 'No matches found' : 'Your vault is empty'}
                 </p>
                 <p className='text-[11px] text-text-tertiary uppercase tracking-widest'>
@@ -391,8 +434,36 @@ export default function NotesList({
             )}
           </div>
         ) : (
-          <div className='animate-in fade-in slide-in-from-bottom-4 duration-500'>
-            {filteredNotes.map(renderNotesList)}
+          <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4'>
+            {(() => {
+              const grouped = filteredNotes.reduce((acc, note) => {
+                const title = getGroupTitle(note)
+                if (!acc[title]) acc[title] = []
+                acc[title].push(note)
+                return acc
+              }, {})
+
+              const groupOrder = ['Today', 'Yesterday', 'Previous 7 Days', 'Previous 30 Days']
+              const sortedGroups = Object.keys(grouped).sort((a, b) => {
+                const idxA = groupOrder.indexOf(a)
+                const idxB = groupOrder.indexOf(b)
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB
+                if (idxA !== -1) return -1
+                if (idxB !== -1) return 1
+                return b.localeCompare(a)
+              })
+
+              return sortedGroups.map(group => (
+                <div key={group} className='mb-6'>
+                  <h3 className='px-6 py-2 text-[10px] font-bold text-text-tertiary uppercase tracking-[0.2em] opacity-80 sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 shadow-sm'>
+                    {group}
+                  </h3>
+                  <div className='mt-1'>
+                    {grouped[group].map(renderNotesList)}
+                  </div>
+                </div>
+              ))
+            })()}
           </div>
         )}
       </div>

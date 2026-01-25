@@ -8,7 +8,6 @@ import {
   Plus,
   Settings,
   Folder,
-  Menu,
   Pencil,
   MoreVertical
 } from 'lucide-react'
@@ -34,8 +33,6 @@ export default function FoldersSidebar({
   onCreateNote,
   onCreateFolder,
   onSettingsClick,
-  isCollapsed,
-  onToggleCollapse,
   onDeleteFolder
 }) {
   const dispatch = useDispatch()
@@ -128,52 +125,40 @@ export default function FoldersSidebar({
         <button
           onClick={() => !isEditing && onSelectFolder(folder.id)}
           onDoubleClick={(e) => handleStartRename(e, folder)}
-          className={`flex items-center transition-all duration-300 group relative mb-4
-            ${isCollapsed ? 'w-12 h-12 mx-auto justify-center rounded-full' : 'w-full px-4 py-3 justify-between rounded-xl'}
+          className={`flex items-center transition-all duration-300 group relative mb-4 w-full px-4 py-3 justify-between rounded-xl
             ${
               isSelected
                 ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
                 : 'bg-transparent text-text-secondary hover:bg-bg-tertiary border border-transparent'
             }`}
-          title={isCollapsed ? folder.name : (isEditing ? '' : 'Double click to rename')}
+          title={isEditing ? '' : 'Double click to rename'}
         >
-          <div className={`flex items-center transition-all duration-200 ${isCollapsed ? 'justify-center w-full h-full relative' : 'gap-4 min-w-0'}`}>
+          <div className="flex items-center transition-all duration-200 gap-4 min-w-0">
             <Icon
-              className={`transition-all duration-300 ${isCollapsed ? 'w-6 h-6' : 'w-5 h-5'} ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
+              className={`transition-all duration-300 w-5 h-5 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
             />
             
-            {isCollapsed && count > 0 && (
-              <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] text-[9px] font-bold flex items-center justify-center rounded-full shadow-md animate-in zoom-in duration-300 z-30 
-                ${isSelected ? 'bg-accent-primary text-white' : 'bg-bg-tertiary/90 text-text-muted'}`}>
-                {count > 9 ? '9+' : count}
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleSubmitRename}
+                onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full bg-transparent border-none outline-none text-[14px] font-medium text-text-primary p-0 m-0"
+              />
+            ) : (
+              <span
+                className={`text-[14px] tracking-tight whitespace-nowrap truncate ${isSelected ? 'font-bold' : 'font-medium'}`}
+              >
+                {folder.name || DEFAULT_FOLDER_NAME}
               </span>
-            )}
-            
-            {!isCollapsed && (
-              <>
-                {isEditing ? (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onBlur={handleSubmitRename}
-                    onKeyDown={handleKeyDown}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full bg-transparent border-none outline-none text-[14px] font-medium text-text-primary p-0 m-0"
-                  />
-                ) : (
-                  <span
-                    className={`text-[14px] tracking-tight whitespace-nowrap truncate ${isSelected ? 'font-bold' : 'font-medium'}`}
-                  >
-                    {folder.name || DEFAULT_FOLDER_NAME}
-                  </span>
-                )}
-              </>
             )}
           </div>
           
-          {!isCollapsed && !isEditing && (
+          {!isEditing && (
             <div className='flex items-center gap-2 flex-shrink-0 ml-2'>
               <button
                 onClick={(e) => {
@@ -201,12 +186,11 @@ export default function FoldersSidebar({
           )}
         </button>
 
-        {isMenuOpen && !isCollapsed && (
+        {isMenuOpen && (
           <div
             ref={(el) => menuRefs.current[folder.id] = el}
-            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel/90 backdrop-blur-xl border border-white/[0.05] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right"
+            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel border border-white/[0.05] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right"
           >
-            <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
             <div className="relative z-10">
               <button
                 onClick={() => handleMenuAction('new-note', folder)}
@@ -264,44 +248,42 @@ export default function FoldersSidebar({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative'>
-      <div className={`h-[64px] border-b border-border-primary/50 flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3.5'}`}>
-        <button
-          onClick={onToggleCollapse}
-          className={`flex items-center justify-center rounded-xl text-text-secondary hover:bg-bg-tertiary transition-all active:scale-95 ${isCollapsed ? 'w-12 h-12' : 'p-2.5'}`}
-          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        >
-          <Menu className={isCollapsed ? 'w-6 h-6' : 'w-5 h-5'} />
-        </button>
+      <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[140px] flex flex-col">
+        <div className='flex items-center justify-between h-[40px]'>
+          <h2 className="text-[20px] font-bold text-text-primary tracking-tight">Folders</h2>
+          <button
+            onClick={onCreateFolder}
+            className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
+            title='New Folder'
+          >
+            <FolderPlus className='w-5 h-5' />
+          </button>
+        </div>
       </div>
 
-      <div className={`flex-1 overflow-y-auto pt-4 pb-2 flex flex-col justify-between scrollbar-hide ${isCollapsed ? 'px-0' : 'px-3'}`}>
-        <div className={isCollapsed ? 'space-y-1' : ''}>
+      <div className="flex-1 overflow-y-auto pt-4 pb-2 flex flex-col justify-between scrollbar-hide px-3">
+        <div>
           {topFolders.map(renderFolder)}
         </div>
         <div className='mt-auto pt-6 flex flex-col'>
-          {isCollapsed ? (
-             <div className="h-px bg-border-primary/50 mx-auto w-8 mb-4 scale-x-150 opacity-50" />
-          ) : (
-            <div className='text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mb-3 px-4'>
-              Library
-            </div>
-          )}
-          <div className={isCollapsed ? 'space-y-1' : ''}>
+          <div className='text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mb-3 px-4'>
+            Archive
+          </div>
+          <div>
             {bottomFolders.map(renderFolder)}
           </div>
         </div>
       </div>
 
-      <div className={`py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center ${isCollapsed ? 'px-0' : 'px-3 space-y-3'}`}>
-        <div className={`w-full flex ${isCollapsed ? 'justify-center' : 'justify-between pt-2'}`}>
+      <div className="py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center px-3 space-y-3">
+        <div className="w-full pt-2">
           <button
             onClick={onSettingsClick}
-            className={`flex items-center justify-center transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95
-              ${isCollapsed ? 'w-12 h-12 rounded-full' : 'flex-1 gap-3 px-3 py-3 rounded-2xl'}`}
+            className="flex items-center justify-center transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl"
             title='Settings'
           >
-            <Settings className={`${isCollapsed ? 'w-6 h-6' : 'w-4 h-4'} flex-shrink-0 transition-all`} />
-            {!isCollapsed && <span className='text-[14px] font-medium whitespace-nowrap animate-in fade-in duration-200'>Settings</span>}
+            <Settings className="w-4 h-4 flex-shrink-0 transition-all" />
+            <span className='text-[14px] font-medium whitespace-nowrap'>Settings</span>
           </button>
         </div>
       </div>
