@@ -155,7 +155,7 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
             )}
           </div>
           
-          <div className='relative flex flex-col items-end justify-between py-0.5'>
+          <div className='relative flex flex-col items-end justify-between py-0.5 flex-shrink-0 ml-4 min-w-[70px] uppercase'>
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -360,7 +360,7 @@ export default function NotesList({
   }, [openMenuId, folders, handleMenuToggle, handleMenuAction, selectedFolder])
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-secondary/40 backdrop-blur-xl border-r border-border-primary/50'>
+    <div className='flex flex-col h-full w-full bg-bg-secondary/40 backdrop-blur-xl border-r border-border-primary/50 relative overflow-hidden'>
       <div className='px-6 pt-10 pb-4 border-b border-border-primary/30 min-h-[140px] flex flex-col gap-4'>
         <div className='flex items-center justify-between h-[40px]'>
           <div className='flex items-center gap-4'>

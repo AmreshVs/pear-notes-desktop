@@ -36,7 +36,7 @@ import { backendApi } from './backend/api'
 
 function App() {
   const dispatch = useDispatch()
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true)
 
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)
@@ -111,7 +111,7 @@ function App() {
       <TitleBar />
       <div className='flex-1 flex overflow-hidden relative z-10'>
         { !isSidebarCollapsed && (
-          <ResizablePanel defaultWidth={240} minWidth={180} maxWidth={400}>
+          <ResizablePanel defaultWidth={260} minWidth={260} maxWidth={400}>
             <FoldersSidebar
               selectedFolder={selectedFolder}
               onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
@@ -125,7 +125,7 @@ function App() {
           </ResizablePanel>
         )}
 
-        <ResizablePanel defaultWidth={280} minWidth={200} maxWidth={500}>
+        <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
           <NotesList 
             selectedFolder={selectedFolder} 
             searchQuery={searchQuery}
