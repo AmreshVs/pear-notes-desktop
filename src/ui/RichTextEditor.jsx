@@ -39,6 +39,8 @@ import { backendApi } from '../backend/api'
 import { useSelector } from 'react-redux'
 import { getSelectedNote } from '../store/slices/notesSlice'
 import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
+import { setEditorFocused } from '../store/slices/editorSlice'
+import { useDispatch } from 'react-redux'
 
 const getFontFamilyValue = (family) => {
   switch (family) {
@@ -60,6 +62,7 @@ const getFontClass = (family) => {
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
+    const dispatch = useDispatch()
     const currentNoteKey = useSelector(getSelectedNote)
     const fontFamily = useSelector(getFontFamily)
     const editorFontSize = useSelector(getEditorFontSize)
@@ -241,6 +244,16 @@ const RichTextEditor = forwardRef(
           style: `font-size: ${editorFontSize}px; font-family: ${editorFontFamily};`,
           'data-placeholder': placeholder,
           spellcheck: 'false'
+        },
+        handleDOMEvents: {
+          focus: () => {
+            dispatch(setEditorFocused(true))
+            return false
+          },
+          blur: () => {
+            dispatch(setEditorFocused(false))
+            return false
+          }
         }
       },
       onUpdate: ({ editor }) => {
