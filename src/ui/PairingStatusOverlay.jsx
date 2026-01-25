@@ -140,7 +140,7 @@ export default function PairingStatusOverlay() {
           </p>
         </div>
 
-        <div className="w-full space-y-4">
+        {mainIdValue && <div className="w-full space-y-4">
           <div className="p-5 bg-bg-panel/60 border border-accent-primary/20 rounded-2xl group transition-all hover:border-accent-primary/40">
             <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-3">{mainIdLabel}</span>
             <div className="font-mono text-base sm:text-lg text-text-primary tracking-tight uppercase leading-none break-all">
@@ -156,7 +156,7 @@ export default function PairingStatusOverlay() {
               </span>
             </div>
           )}
-        </div>
+        </div>}
 
         {isConfirmation ? (
           <div className="flex flex-col w-full gap-3 pt-2">
