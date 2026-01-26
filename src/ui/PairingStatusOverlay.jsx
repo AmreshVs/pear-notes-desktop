@@ -15,11 +15,33 @@ export default function PairingStatusOverlay() {
 
   const activeStatus = isInviterActive ? inviterStatus : receiverStatus
   const isInviter = isInviterActive
-  const { step, message, progress, userData, localKey } = activeStatus
+  const { step, progress, userData, localKey, data } = activeStatus
   
+  const getMessage = () => {
+    switch (step) {
+      case 'clearing_data': return 'Clearing previous data...'
+      case 'searching': return 'Searching for device...'
+      case 'connected': return 'Device connected'
+      case 'authenticating': return 'Authenticating peer...'
+      case 'confirmation': return 'Confirm new device pairing'
+      case 'authorizing': return 'Authorizing device...'
+      case 'initializing_storage': return 'Initializing storage...'
+      case 'replicating_data': return 'Replicating data...'
+      case 'syncing': return 'Starting data replication...'
+      case 'receiving_data': {
+        const notesCount = data || 0
+        return `Receiving data... (${notesCount} notes found)`
+      }
+      case 'done': return 'Sync complete'
+      case 'idle': return isInviter ? 'Waiting for device...' : 'Ready to pair'
+      default: return ''
+    }
+  }
+
+  const message = getMessage()
   const isDone = step === 'done'
-  const isSyncing = step === 'syncing'
-  const isConfirmation = step === 'confirmation' || message === 'Confirm new device pairing'
+  const isSyncing = ['initializing_storage', 'replicating_data', 'syncing', 'receiving_data'].includes(step)
+  const isConfirmation = step === 'confirmation'
   
   const handleClose = () => {
     if (isInviter) {
@@ -111,13 +133,10 @@ export default function PairingStatusOverlay() {
       )
     }
 
-    // Unified Verification / Establishing Layout
     const peerFingerprint = getFingerprint(userData)
     const myFingerprint = getFingerprint(localKey)
     
-    // Choose which ID to show prominently
-    // If we are confirming, show the remote ID (we're verifying them)
-    // If we're establishing/waiting, show our own ID (they're verifying us)
+
     const mainIdLabel = isConfirmation ? "REMOTE ID" : "MY ID"
     const mainIdValue = isConfirmation ? peerFingerprint : myFingerprint
     const subIdLabel = isConfirmation ? "MY ID" : (peerFingerprint ? "REMOTE ID" : null)

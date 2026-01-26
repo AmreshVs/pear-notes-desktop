@@ -35,3 +35,12 @@ npm run build
 ## License
 
 MIT
+
+
+dev key - pear://5r36ucqowh694j348synyh4ur9pqwope9en837xywb5p6yjcib9y
+
+pear stage production
+pear release production
+pear seed production
+
+production key - pear://wx5kczf8htshsmg4mh5cit1g5q5uz5qbb4hq59h3jp3ifmumeqgo
