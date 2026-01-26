@@ -89,6 +89,10 @@ export default function GeneralSettings() {
                 className='appearance-none bg-bg-tertiary/50 border border-white/[0.05] text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
                 <option value="Inter">Inter</option>
+                <option value="Outfit">Outfit</option>
+                <option value="Lora">Lora</option>
+                <option value="Newsreader">Newsreader</option>
+                <option value="IBM Plex Mono">IBM Plex Mono</option>
                 <option value="System">System Default</option>
                 <option value="Serif">Serif</option>
                 <option value="Mono">Monospace</option>
