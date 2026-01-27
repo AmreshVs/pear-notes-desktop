@@ -82,7 +82,7 @@ export default function PairingStatusOverlay() {
   const renderContent = () => {
     if (isDone) {
       return (
-        <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
+        <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 fade-in duration-500 delay-200 fill-mode-both">
           {renderStatusIcon()}
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-text-primary tracking-tight">Device Linked</h3>
@@ -143,7 +143,7 @@ export default function PairingStatusOverlay() {
     const subIdValue = isConfirmation ? myFingerprint : (peerFingerprint ? peerFingerprint : null)
 
     return (
-      <div className="flex flex-col items-center text-center space-y-6 animate-in slide-in-from-bottom-4 duration-400">
+      <div className="flex flex-col items-center text-center space-y-6 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-200 fill-mode-both">
         <div className="w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2">
           <ShieldCheck className="w-10 h-10 text-accent-primary" />
         </div>
@@ -210,11 +210,11 @@ export default function PairingStatusOverlay() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-0">
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-700 cursor-pointer"
+        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-1000 cursor-pointer"
         onClick={isDone ? handleClose : undefined}
       />
       
-      <div className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 overflow-hidden">
+      <div className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out overflow-hidden">
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
         

@@ -31,25 +31,25 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
       onKeyDown={handleKeyDown}
     >
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-700 cursor-pointer"
+        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-1000 cursor-pointer"
         onClick={onClose}
       />
 
       <div
-        className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 overflow-hidden"
+        className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
 
         <div className='relative z-10 text-center space-y-6'>
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 fill-mode-both">
             <h2 className='text-text-primary text-2xl font-bold tracking-tight'>New Folder</h2>
             <p className='text-text-tertiary text-sm max-w-[240px]'>Organize your library with a dedicated workspace.</p>
           </div>
 
           <form onSubmit={handleSubmit} className='space-y-6'>
-            <div className='relative group'>
+            <div className='relative group animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 fill-mode-both'>
               <input
                 ref={inputRef}
                 type='text'
@@ -61,7 +61,7 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
               />
             </div>
 
-            <div className='flex flex-col gap-3 pt-2'>
+            <div className='flex flex-col gap-3 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-600 fill-mode-both'>
               <button
                 type='submit'
                 disabled={!folderName.trim()}

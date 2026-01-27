@@ -200,8 +200,10 @@ export default function SyncSettings() {
                 <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest'>This Device</h4>
               </div>
               <div className='grid gap-4'>
-                {syncedDevices.filter(d => d.isLocal).map(device => (
-                  <DeviceItem key={device.key} device={device} />
+                {syncedDevices.filter(d => d.isLocal).map((device, index) => (
+                  <div key={device.key} style={{ '--delay': `${index * 100}ms` }} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both">
+                    <DeviceItem device={device} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -213,11 +215,13 @@ export default function SyncSettings() {
               </div>
               <div className='grid gap-4'>
                 {syncedDevices.filter(d => !d.isLocal).length > 0 ? (
-                  syncedDevices.filter(d => !d.isLocal).map(device => (
-                    <DeviceItem key={device.key} device={device} isOther />
+                  syncedDevices.filter(d => !d.isLocal).map((device, index) => (
+                    <div key={device.key} style={{ '--delay': `${(syncedDevices.filter(d => d.isLocal).length + index) * 100}ms` }} className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both">
+                      <DeviceItem device={device} isOther />
+                    </div>
                   ))
                 ) : (
-                  <div className='p-6 bg-bg-panel-secondary/20 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
+                  <div className='p-6 bg-bg-panel-secondary/20 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2 animate-in fade-in duration-700 delay-300 fill-mode-both'>
                     <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
                       <Smartphone className='w-5 h-5 opacity-50' />
                     </div>

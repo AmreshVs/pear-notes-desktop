@@ -22,8 +22,12 @@ export default function SyncScreen({ onClose }) {
   }
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm'>
-      <div className='bg-bg-panel border border-border-secondary rounded-xl w-full max-w-2xl mx-4 shadow-xl overflow-hidden'>
+    <div className='fixed inset-0 flex items-center justify-center z-50 p-6'>
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-1000 cursor-pointer"
+        onClick={onClose}
+      />
+      <div className='relative bg-bg-panel border border-border-secondary rounded-xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out'>
         {/* Header */}
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <h2 className='text-text-primary text-xl font-semibold'>Sync Devices</h2>

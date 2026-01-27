@@ -111,20 +111,24 @@ function App() {
 
       <TitleBar />
       <div className='flex-1 flex overflow-hidden relative z-10'>
-        { !isSidebarCollapsed && (
-          <ResizablePanel defaultWidth={260} minWidth={260} maxWidth={400}>
-            <FoldersSidebar
-              selectedFolder={selectedFolder}
-              onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
-              folders={folders}
-              onCreateNote={handleCreateNote}
-              onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
-              onDeleteFolder={handleDeleteFolder}
-              onSettingsClick={() => dispatch(setShowSettings(true))}
-              onToggleCollapse={() => setIsSidebarCollapsed(true)}
-            />
-          </ResizablePanel>
-        )}
+        <ResizablePanel 
+          defaultWidth={260} 
+          minWidth={260} 
+          maxWidth={400} 
+          collapsed={isSidebarCollapsed}
+          collapsedWidth={0}
+        >
+          <FoldersSidebar
+            selectedFolder={selectedFolder}
+            onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
+            folders={folders}
+            onCreateNote={handleCreateNote}
+            onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+            onDeleteFolder={handleDeleteFolder}
+            onSettingsClick={() => dispatch(setShowSettings(true))}
+            onToggleCollapse={() => setIsSidebarCollapsed(true)}
+          />
+        </ResizablePanel>
 
         <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
           <NotesList 
