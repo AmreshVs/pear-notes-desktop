@@ -18,3 +18,11 @@ export function getFingerprint(hex) {
   
   return `${fingerprint} (${hex.slice(0, 5)})`
 }
+
+export function debounce(fn, ms) {
+  let timeoutId
+  return function (...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), ms)
+  }
+}

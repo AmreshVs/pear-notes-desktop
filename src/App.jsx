@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
 import {
@@ -33,6 +33,7 @@ import SettingsScreen from './ui/SettingsScreen'
 import NewFolderModal from './ui/NewFolderModal'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import { backendApi } from './backend/api'
+import { debounce } from './utils'
 
 function App() {
   const dispatch = useDispatch()
@@ -67,8 +68,15 @@ function App() {
     dispatch(setSearchQuery(''))
   }
 
-  const handleUpdateNote = ({ key, title, contentHtml }) => {
-    dispatch(updateNote({ key, title, note: contentHtml }))
+  const debouncedUpdateNote = useMemo(
+    () => debounce(({ key, title, contentHtml }) => {
+      dispatch(updateNote({ key, title, note: contentHtml }))
+    }, 500),
+    [dispatch]
+  )
+
+  const handleUpdateNote = (data) => {
+    debouncedUpdateNote(data)
   }
 
   const handleDeleteNote = async (key) => {
