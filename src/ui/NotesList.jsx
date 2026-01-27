@@ -6,70 +6,7 @@ import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelected
 import { getFolders } from '../store/slices/foldersSlice'
 import { getInviterStatus } from '../store/slices/syncSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
-
-const getDayDiff = (timestamp) => {
-  if (!timestamp) return Infinity
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now - date
-  return Math.floor(diff / (1000 * 60 * 60 * 24))
-}
-
-const getGroupTitle = (note) => {
-  const timestamp = note.value?.updatedAt || note.value?.createdAt
-  if (!timestamp) return 'No Date'
-  
-  const diff = getDayDiff(timestamp)
-  const date = new Date(timestamp)
-  const year = date.getFullYear()
-  const currentYear = new Date().getFullYear()
-
-  if (diff === 0) return 'Today'
-  if (diff === 1) return 'Yesterday'
-  if (diff < 7) return 'Previous 7 Days'
-  if (diff < 30) return 'Previous 30 Days'
-  if (year === currentYear) return date.toLocaleString('default', { month: 'long' })
-  return year.toString()
-}
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now - date
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) {
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    if (hours === 0) {
-      const minutes = Math.floor(diff / (1000 * 60))
-      return minutes <= 1 ? 'Just now' : `${minutes}m ago`
-    }
-    return `${hours}h ago`
-  } else if (days === 1) {
-    return 'Yesterday'
-  } else if (days < 7) {
-    return `${days}d ago`
-  } else {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-}
-
-const getPreview = (content, contentHtml) => {
-  if (!content && !contentHtml) return 'No additional text'
-
-  let text = ''
-  if (contentHtml) {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(contentHtml, 'text/html')
-    text = doc.body.textContent || doc.body.innerText || ''
-  } else {
-    text = content || ''
-  }
-  
-  if (text) text = text.replace(/\n/g, ' ').trim()
-  return text.length > 60 ? text.substring(0, 60) + '...' : text
-}
+import { formatDate, getGroupTitle, getPreview, NOTES_LIST_GROUP } from '../utils'
 
 const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
   const dispatch = useDispatch()
@@ -443,7 +380,7 @@ export default function NotesList({
                 return acc
               }, {})
 
-              const groupOrder = ['Today', 'Yesterday', 'Previous 7 Days', 'Previous 30 Days']
+              const groupOrder = [NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS]
               const sortedGroups = Object.keys(grouped).sort((a, b) => {
                 const idxA = groupOrder.indexOf(a)
                 const idxB = groupOrder.indexOf(b)
