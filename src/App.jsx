@@ -18,11 +18,6 @@ import {
   getShowSettings,
   getShowNewFolderModal
 } from './store/slices/uiSlice'
-import {
-  checkAndInsertLocalDevice,
-  subscribeSyncedDevices
-} from './store/slices/syncedDevicesSlice'
-
 
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
@@ -51,8 +46,6 @@ function App() {
     const load = async () => {
       await backendApi.ready()
       dispatch(appReady())
-      dispatch(checkAndInsertLocalDevice())
-      dispatch(subscribeSyncedDevices())
     }
 
     load()
