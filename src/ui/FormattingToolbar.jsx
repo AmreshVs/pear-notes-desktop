@@ -246,6 +246,23 @@ export default function FormattingToolbar({ editor, noteKey }) {
     }
   }
 
+  const handleToggleCodeBlock = () => {
+    if (!editor) return
+
+    if (editor.isActive('codeBlock')) {
+      editor.chain().focus().toggleCodeBlock().run()
+    } else {
+      const { from, to } = editor.state.selection
+      const text = editor.state.doc.textBetween(from, to, '\n')
+      
+      if (text.trim()) {
+        editor.chain().focus().deleteSelection().setCodeBlock().insertContent(text).run()
+      } else {
+        editor.chain().focus().toggleCodeBlock().run()
+      }
+    }
+  }
+
   if (!editor) {
     return null
   }
@@ -376,7 +393,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <div className='w-px h-5 bg-white/[0.1] mx-1' />
 
         <Button
-          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+          onClick={handleToggleCodeBlock}
           isActive={editorState.isCodeBlock}
           title='Code Block'
           className='w-9 h-9'
