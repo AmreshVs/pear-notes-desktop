@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
 import {
@@ -29,10 +29,21 @@ import NewFolderModal from './ui/NewFolderModal'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import { backendApi } from './backend/api'
 import { debounce } from './utils'
+import { useWindowSize } from './hooks/useWindowSize'
 
 function App() {
   const dispatch = useDispatch()
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true)
+  const { width } = useWindowSize()
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(width < 1000)
+  const prevWidth = useRef(width)
+
+  useEffect(() => {
+    if (width < 1000 && prevWidth.current >= 1000) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSidebarCollapsed(true)
+    }
+    prevWidth.current = width
+  }, [width])
 
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)

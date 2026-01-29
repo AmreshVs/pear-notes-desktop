@@ -51,7 +51,7 @@ export default function ResizablePanel({
 
   return (
     <div
-      className='relative flex'
+      className='relative flex flex-shrink-0'
       style={{
         width: `${displayWidth}px`,
         transition: isResizing ? 'none' : 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -62,7 +62,8 @@ export default function ResizablePanel({
         className="h-full w-full overflow-hidden transition-opacity duration-300"
         style={{ 
           opacity: collapsed ? 0 : 1,
-          minWidth: `${minWidth}px`
+          minWidth: collapsed ? 0 : `${minWidth}px`,
+          pointerEvents: collapsed ? 'none' : 'auto'
         }}
       >
         {children}
