@@ -97,3 +97,13 @@ export const getPreview = (content, contentHtml) => {
   if (text) text = text.replace(/\n/g, ' ').trim()
   return text.length > 60 ? text.substring(0, 60) + '...' : text
 }
+
+export const getFirstImage = (contentHtml) => {
+  if (!contentHtml) return null
+  
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(contentHtml, 'text/html')
+  const img = doc.querySelector('img')
+  
+  return img ? img.src : null
+}

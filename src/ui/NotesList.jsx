@@ -5,13 +5,18 @@ import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '../store/slices/notesSlice'
 import { getFolders } from '../store/slices/foldersSlice'
 import { getInviterStatus } from '../store/slices/syncSlice'
+import { getHyperdriveAddress } from '../store/slices/uiSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
-import { formatDate, getGroupTitle, getPreview, NOTES_LIST_GROUP } from '../utils'
+import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '../utils'
 
 const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
+  
+  const rawImgSrc = getFirstImage(noteData?.note)
+  const imgSrc = useSelector(state => getHyperdriveAddress(state, rawImgSrc))
+  
   const isSelected = selectedNote === key
   const isMenuOpen = openMenuId === key
   const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
@@ -61,7 +66,7 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
       <div
         key={key}
         onClick={() => handleSelectNote(key)}
-        className={`relative px-6 py-3 cursor-pointer transition-all duration-300 group border-b border-white/[0.03]
+        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-all duration-300 group border-b border-white/[0.03]
           ${
             isSelected
               ? 'bg-accent-primary/5 shadow-inner'
@@ -69,7 +74,7 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
           }`}
       >
         <div className='flex items-stretch justify-between gap-3'>
-          <div className='flex-1 min-w-0 flex flex-col'>
+          <div className='flex-1 min-w-0 flex flex-col justify-center'>
             <h3
               className={`text-[15px] truncate tracking-tight mb-0.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
@@ -82,135 +87,151 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
             >
               {getPreview(noteData?.note, noteData?.note)}
             </p>
-            {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
-              <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
-                <Folder className='w-3 h-3' />
-                <span>
-                  {allFolders.find(f => f.id === noteData.folderKey)?.name || 'Notes'}
-                </span>
-              </div>
-            )}
+            <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
+              {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
+                <>
+                  <div className='flex items-center gap-1.5'>
+                    <Folder className='w-3 h-3' />
+                    <span>
+                      {allFolders.find(f => f.id === noteData.folderKey)?.name || 'Notes'}
+                    </span>
+                  </div>
+                  <span>•</span>
+                </>
+              )}
+              <span>
+                {formatDate(noteData?.updatedAt || noteData?.createdAt)}
+              </span>
+            </div>
           </div>
-          
-          <div className='relative flex flex-col items-end justify-between py-0.5 flex-shrink-0 ml-4 min-w-[70px] uppercase'>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onMenuToggle(key)
-              }}
-              className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
-              title='Options'
-            >
-              <MoreVertical className='w-3.5 h-3.5' />
-            </button>
 
-            <span className="text-[10px] font-medium text-text-primary/50 uppercase tracking-wider whitespace-nowrap">
-              {formatDate(noteData?.updatedAt || noteData?.createdAt)}
-            </span>
-
-            {isMenuOpen && (
-              <div
-                ref={menuRef}
-                className="absolute right-0 top-12 z-50 w-[220px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
-              >
-                <div className='relative z-10'>
-                  <button 
-                    type="button"
-                    ref={moveButtonRef}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    className={`w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center justify-between group/item ${showMoveSubmenu ? 'bg-accent-primary/10' : ''}`}
-                  >
-                    <div className='flex items-center gap-3'>
-                      <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
-                        <Folder className='w-4 h-4' />
-                      </div>
-                      <span className='text-[13px] font-bold text-text-primary tracking-tight'>Move to</span>
-                    </div>
-                    <ChevronRight className='w-4 h-4 text-text-tertiary' />
-                  </button>
-
-                  {showMoveSubmenu && createPortal(
-                    <div 
-                      onMouseEnter={handleMouseEnter}
-                      onMouseLeave={handleMouseLeave}
-                      className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
-                      style={{ 
-                          left: `${submenuPos.x}px`, 
-                          top: `${submenuPos.y}px` 
-                      }}
-                    >
-                      <div className='relative z-10'>
-                        <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 px-3 opacity-60">Destinations</div>
-                        <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                          {availableMoveFolders.length > 0 ? (
-                            availableMoveFolders.map(folder => (
-                              <button
-                                type="button"
-                                key={folder.id}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  e.preventDefault()
-                                  onMenuAction('move', key, folder.id)
-                                  setShowMoveSubmenu(false)
-                                }}
-                                className='w-full px-3 py-2.5 rounded-lg hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group/dest text-left'
-                              >
-                                <div className="w-6 h-6 rounded-md bg-bg-tertiary/50 flex items-center justify-center text-accent-primary group-hover/dest:bg-accent-primary/20">
-                                  <Folder className='w-3.5 h-3.5' />
-                                </div>
-                                <span className='text-[12px] font-bold text-text-primary truncate tracking-tight'>{folder.name}</span>
-                              </button>
-                            ))
-                          ) : (
-                            <div className='px-3 py-3 text-[11px] text-text-tertiary italic text-center'>
-                              Target list empty
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>,
-                    document.body
-                  )}
-
-                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
-
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onMenuAction('copy', key)
-                    }}
-                    className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/copy active:scale-95 text-left'
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary text-accent-primary group-hover/copy:bg-accent-primary/20 flex items-center justify-center transition-colors">
-                      <Copy className='w-4 h-4' />
-                    </div>
-                    <span className='text-[13px] font-bold text-text-primary tracking-tight'>Copy Note</span>
-                  </button>
-
-                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
-
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onMenuAction('delete', key)
-                    }}
-                    className='w-full px-4 py-3 rounded-xl hover:bg-accent-danger/10 transition-all cursor-pointer flex items-center gap-3 group/delete active:scale-95 text-left'
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center text-accent-danger/70 group-hover/delete:bg-accent-danger/20 transition-colors">
-                      <Trash2 className='w-4 h-4' />
-                    </div>
-                    <span className='text-[13px] text-accent-danger/90 font-black tracking-tight'>Delete</span>
-                  </button>
-                </div>
-              </div>
+          <div className="flex items-center gap-3 ml-2 flex-shrink-0 relative">
+            {imgSrc && (
+               <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20">
+                  <img 
+                    src={imgSrc} 
+                    alt="Note attachment" 
+                    className="w-full h-full object-cover"
+                  />
+               </div>
             )}
-          </div>
+
+        <div className='relative flex flex-col items-end justify-start py-0.5 h-full self-stretch'>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onMenuToggle(key)
+            }}
+            className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
+            title='Options'
+          >
+            <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
+          </button>
         </div>
+
+        {isMenuOpen && (
+          <div
+            ref={menuRef}
+            className="absolute right-0 top-10 z-50 w-[220px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
+          >
+            <div className='relative z-10'>
+              <button 
+                type="button"
+                ref={moveButtonRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                className={`w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center justify-between group/item ${showMoveSubmenu ? 'bg-accent-primary/10' : ''}`}
+              >
+                <div className='flex items-center gap-3'>
+                  <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
+                    <Folder className='w-4 h-4' />
+                  </div>
+                  <span className='text-[13px] font-bold text-text-primary tracking-tight'>Move to</span>
+                </div>
+                <ChevronRight className='w-4 h-4 text-text-tertiary' />
+              </button>
+
+              {showMoveSubmenu && createPortal(
+                <div 
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
+                  style={{ 
+                      left: `${submenuPos.x}px`, 
+                      top: `${submenuPos.y}px` 
+                  }}
+                >
+                  <div className='relative z-10'>
+                    <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 px-3 opacity-60">Destinations</div>
+                    <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                      {availableMoveFolders.length > 0 ? (
+                        availableMoveFolders.map(folder => (
+                          <button
+                            type="button"
+                            key={folder.id}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              onMenuAction('move', key, folder.id)
+                              setShowMoveSubmenu(false)
+                            }}
+                            className='w-full px-3 py-2.5 rounded-lg hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group/dest text-left'
+                          >
+                            <div className="w-6 h-6 rounded-md bg-bg-tertiary/50 flex items-center justify-center text-accent-primary group-hover/dest:bg-accent-primary/20">
+                              <Folder className='w-3.5 h-3.5' />
+                            </div>
+                            <span className='text-[12px] font-bold text-text-primary truncate tracking-tight'>{folder.name}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className='px-3 py-3 text-[11px] text-text-tertiary italic text-center'>
+                          Target list empty
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>,
+                document.body
+              )}
+
+              <div className="h-px bg-white/[0.05] my-1 mx-2" />
+
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenuAction('copy', key)
+                }}
+                className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/copy active:scale-95 text-left'
+              >
+                <div className="w-7 h-7 rounded-lg bg-bg-tertiary text-accent-primary group-hover/copy:bg-accent-primary/20 flex items-center justify-center transition-colors">
+                  <Copy className='w-4 h-4' />
+                </div>
+                <span className='text-[13px] font-bold text-text-primary tracking-tight'>Copy Note</span>
+              </button>
+
+              <div className="h-px bg-white/[0.05] my-1 mx-2" />
+
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenuAction('delete', key)
+                }}
+                className='w-full px-4 py-3 rounded-xl hover:bg-accent-danger/10 transition-all cursor-pointer flex items-center gap-3 group/delete active:scale-95 text-left'
+              >
+                <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center text-accent-danger/70 group-hover/delete:bg-accent-danger/20 transition-colors">
+                  <Trash2 className='w-4 h-4' />
+                </div>
+                <span className='text-[13px] text-accent-danger/90 font-black tracking-tight'>Delete</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  </div>
+</div>
   )
 }
 
