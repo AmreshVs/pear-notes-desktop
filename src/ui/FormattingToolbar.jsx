@@ -161,6 +161,9 @@ export default function FormattingToolbar({ editor, noteKey }) {
     if (!editor || !files) return
     const fileList = Array.isArray(files) ? files : [files]
     
+    const { to } = editor.state.selection
+    editor.commands.setTextSelection(to)
+    
     for (const file of fileList) {
       try {
         const buffer = await file.arrayBuffer()
@@ -184,6 +187,9 @@ export default function FormattingToolbar({ editor, noteKey }) {
   const handleInsertFile = async (files) => {
     if (!editor || !files) return
     const fileList = Array.isArray(files) ? files : [files]
+
+    const { to } = editor.state.selection
+    editor.commands.setTextSelection(to)
 
     for (const file of fileList) {
       try {

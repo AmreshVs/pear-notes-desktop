@@ -28,7 +28,15 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
   const handleImageSelect = (event) => {
     const files = Array.from(event.target.files || [])
     if (files.length > 0) {
-      onInsertImage(files)
+      const imageFiles = files.filter(file => file.type.startsWith('image/'))
+      const videoFiles = files.filter(file => file.type.startsWith('video/'))
+      
+      if (imageFiles.length > 0) {
+        onInsertImage(imageFiles)
+      }
+      if (videoFiles.length > 0) {
+        onInsertFile(videoFiles)
+      }
       onClose()
     }
   }
@@ -53,7 +61,7 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
           <label className='block group'>
             <input
               type='file'
-              accept='image/*'
+              accept='image/*,video/*'
               onChange={handleImageSelect}
               className='hidden'
               multiple
