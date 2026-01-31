@@ -1,5 +1,5 @@
 import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight, PanelLeft } from 'lucide-react'
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { useCallback, useState, useRef, useEffect, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '../store/slices/notesSlice'
@@ -9,13 +9,15 @@ import { getHyperdriveAddress } from '../store/slices/uiSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '../utils'
 
-const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
+const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
   
-  const rawImgSrc = getFirstImage(noteData?.note)
+  const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
   const imgSrc = useSelector(state => getHyperdriveAddress(state, rawImgSrc))
+
+  const previewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
   
   const isSelected = selectedNote === key
   const isMenuOpen = openMenuId === key
@@ -85,7 +87,7 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
               className={`text-[12px] line-clamp-2 leading-relaxed opacity-80
                 ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
             >
-              {getPreview(noteData?.note, noteData?.note)}
+              {previewText}
             </p>
             <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
               {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
@@ -105,29 +107,44 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
             </div>
           </div>
 
-          <div className="flex items-center gap-3 ml-2 flex-shrink-0 relative">
-            {imgSrc && (
-               <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20">
-                  <img 
-                    src={imgSrc} 
-                    alt="Note attachment" 
-                    className="w-full h-full object-cover"
-                  />
-               </div>
-            )}
+          <div className={imgSrc ? "flex items-center gap-3 ml-2 flex-shrink-0 relative" : "contents"}>
+            {imgSrc ? (
+              <>
+                <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20">
+                   <img 
+                     src={imgSrc} 
+                     alt="Note attachment" 
+                     className="w-full h-full object-cover"
+                   />
+                </div>
 
-        <div className='relative flex flex-col items-end justify-start py-0.5 h-full self-stretch'>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onMenuToggle(key)
-            }}
-            className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
-            title='Options'
-          >
-            <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
-          </button>
-        </div>
+                <div className='relative flex flex-col items-end justify-start h-full self-stretch'>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onMenuToggle(key)
+                    }}
+                    className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
+                    title='Options'
+                  >
+                    <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className='absolute top-3 right-2 z-10'>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMenuToggle(key)
+                  }}
+                  className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
+                  title='Options'
+                >
+                  <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
+                </button>
+              </div>
+            )}
 
         {isMenuOpen && (
           <div
@@ -233,7 +250,9 @@ const NotesItem = ({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFo
   </div>
 </div>
   )
-}
+})
+
+NotesItem.displayName = 'NotesItem'
 
 export default function NotesList({
   selectedFolder,

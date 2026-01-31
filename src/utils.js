@@ -87,9 +87,8 @@ export const getPreview = (content, contentHtml) => {
 
   let text = ''
   if (contentHtml) {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(contentHtml, 'text/html')
-    text = doc.body.textContent || doc.body.innerText || ''
+    // Regex to strip HTML tags
+    text = contentHtml.replace(/<[^>]*>/g, '') || ''
   } else {
     text = content || ''
   }
