@@ -248,7 +248,7 @@ export default function FoldersSidebar({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative'>
-      <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[140px] flex flex-col">
+      <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col">
         <div className='flex items-center justify-between h-[40px]'>
           <h2 className="text-[20px] font-bold text-text-primary tracking-tight">Library</h2>
           <button
