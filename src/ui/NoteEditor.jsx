@@ -166,7 +166,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
-      <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-30 gap-4'>
+      <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
         <div className='flex-1 min-w-0 max-w-[calc(100%-60px)] pointer-events-auto'>
           <div className='pb-2'>
             <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
@@ -193,7 +193,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight text-text-primary tracking-tighter'
+            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
             style={{ 
               fontSize: `${editorFontSize * 2}px`, 
               fontFamily: editorFontFamily 

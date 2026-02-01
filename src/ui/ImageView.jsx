@@ -75,7 +75,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
         {selected && (
           <button
             onClick={handleDelete}
-            className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-accent-danger hover:bg-accent-danger/10 transition-colors z-50 pointer-events-auto"
+            className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-accent-danger hover:bg-accent-danger hover:text-white transition-colors z-30 pointer-events-auto"
             title="Delete Image"
           >
             <Trash2 className="w-4 h-4" />

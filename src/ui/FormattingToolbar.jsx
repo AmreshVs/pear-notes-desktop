@@ -276,7 +276,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
 
   return (
     <>
-      <div className='flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit relative z-20 transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
+      <div className='flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit relative z-50 transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
         <div className='relative' ref={formatMenuRef}>
           <button
             onClick={() => setShowFormatMenu(!showFormatMenu)}

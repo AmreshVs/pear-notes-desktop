@@ -30,8 +30,7 @@ import {
   ChevronUp, 
   ChevronLeft, 
   ChevronRight,
-  Split,
-  Table as TableIcon
+  Split
 } from 'lucide-react'
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import '../styles/tiptap.css'
@@ -365,9 +364,9 @@ const RichTextEditor = forwardRef(
             <BubbleButton
               onClick={() => editor.chain().focus().deleteTable().run()}
               title='Delete Table'
-              className='hover:bg-accent-danger/10 hover:text-accent-danger'
+              className='hover:bg-accent-danger/10 text-accent-danger'
             >
-              <TableIcon className='w-4 h-4' />
+              <Trash2 className='w-4 h-4' />
             </BubbleButton>
           </BubbleMenu>
         )}
