@@ -4,8 +4,9 @@ import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '../store/slices/notesSlice'
 import { getFolders } from '../store/slices/foldersSlice'
-import { getInviterStatus } from '../store/slices/syncSlice'
+import { getInviterStatus, setShowPairingInput } from '../store/slices/syncSlice'
 import { getHyperdriveAddress } from '../store/slices/uiSlice'
+import { getLocalPreferences } from '../store/slices/syncedDevicesSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '../utils'
 
@@ -260,7 +261,6 @@ export default function NotesList({
   searchQuery,
   onSearchChange,
   onCreateNote,
-  onCreateFolder,
   onToggleSidebar,
   isSidebarCollapsed
 }) {
@@ -268,10 +268,16 @@ export default function NotesList({
   const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
   const { step } = useSelector(getInviterStatus)
+  const localPreferences = useSelector(getLocalPreferences)
+  const isSynced = localPreferences['isSynced'] === 'true'
   const syncing = step === 'syncing'
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
   const [openMenuId, setOpenMenuId] = useState(null)
   const menuRef = useRef(null)
+
+  const handleLinkDevice = useCallback(() => {
+    dispatch(setShowPairingInput(true))
+  }, [dispatch])
 
   const groupOrder = useMemo(() => [NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS], [])
 
@@ -431,43 +437,52 @@ export default function NotesList({
 
       <div className='flex-1 overflow-y-auto py-2 scrollbar-hide'>
         {filteredNotes.length === 0 ? (
-          <div className='p-12 text-center'>
+          <div className='flex-1 flex flex-col items-center justify-center -mt-10'>
             {syncing ? (
               <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
                 <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
-                <div className='space-y-1'>
+                <div className='space-y-1 text-center'>
                   <p className='text-[15px] text-text-primary font-bold'>
-                    Syncing Archive
+                    Syncing Library
                   </p>
-                  <p className='text-[12px] text-text-tertiary leading-relaxed px-4 text-center'>
-                    Updating your library with the latest changes from your other devices.
+                  <p className='text-[12px] text-text-tertiary leading-relaxed px-10'>
+                    Fetching your notes and folders from your other devices...
                   </p>
                 </div>
               </div>
             ) : (
-              <div className='flex flex-col items-center gap-2'>
-                <div className='space-y-2 opacity-40'>
-                  <p className='text-[15px] text-text-tertiary font-medium font-bold'>
-                    {searchQuery ? 'No matches found' : 'Your vault is empty'}
-                  </p>
-                  <p className='text-[11px] text-text-tertiary uppercase tracking-widest text-center'>
-                    {searchQuery ? 'Try a different query' : 'Create a note to start'}
-                  </p>
-                </div>
-                {!searchQuery && (
-                   <div className='flex items-center justify-center gap-3 mt-4'>
+              <div className='w-full px-8 space-y-12'>
+                <div className='flex flex-col items-center gap-2'>
+                  <div className='space-y-2 text-center'>
+                    <p className='text-[15px] text-text-primary font-bold'>
+                      {searchQuery ? 'No matches found' : 'Your vault is empty'}
+                    </p>
+                    <p className='text-[11px] text-text-tertiary uppercase tracking-widest'>
+                      {searchQuery ? 'Try a different query' : 'Create a note to start'}
+                    </p>
+                  </div>
+                  {!searchQuery && (
                     <button
                       onClick={onCreateNote}
-                      className='text-[11px] font-bold text-accent-primary hover:text-accent-primary/80 uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-accent-primary/5 transition-all'
+                      className='mt-6 px-8 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-[13px] hover:bg-accent-primary-hover active:scale-95 transition-all shadow-[0_8px_20px_rgba(var(--accent-primary-rgb),0.2)]'
                     >
                       New Note
                     </button>
-                    <span className='w-px h-3 bg-white/10' />
-                    <button
-                      onClick={onCreateFolder}
-                      className='text-[11px] font-bold text-text-tertiary hover:text-text-primary uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all'
+                  )}
+                </div>
+
+                {!searchQuery && !isSynced && (
+                  <div className='pt-12 border-t border-white/[0.03] space-y-6'>
+                    <div className='text-center space-y-1'>
+                      <p className='text-[11px] font-bold text-text-primary uppercase tracking-[0.2em]'>Link Existing Device</p>
+                      <p className='text-[10px] text-text-tertiary uppercase tracking-widest'>Already have notes elsewhere?</p>
+                    </div>
+                    
+                    <button 
+                      onClick={handleLinkDevice}
+                      className='w-full py-3 bg-white/[0.03] border border-white/5 text-text-secondary rounded-xl text-[12px] font-bold uppercase tracking-widest hover:bg-white/[0.08] hover:text-text-primary hover:border-accent-primary/30 transition-all active:scale-95'
                     >
-                      New Folder
+                      Connect Devices
                     </button>
                   </div>
                 )}

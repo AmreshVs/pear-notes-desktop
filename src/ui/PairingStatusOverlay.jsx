@@ -1,20 +1,22 @@
-import { Check, ShieldCheck, Globe, Loader2 } from 'lucide-react'
+import { Check, ShieldCheck, Globe, Loader2, Link2 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing } from '../store/slices/syncSlice'
+import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, subscribePairUser, getShowPairingInput, setShowPairingInput } from '../store/slices/syncSlice'
 import { getFingerprint } from '../utils'
 import { useState } from 'react'
 
 export default function PairingStatusOverlay() {
   const dispatch = useDispatch()
   const [isExiting, setIsExiting] = useState(false)
+  const [pasteCode, setPasteCode] = useState('')
   
   const inviterStatus = useSelector(getInviterStatus)
   const receiverStatus = useSelector(getReceiverStatus)
+  const showPairingInput = useSelector(getShowPairingInput)
 
   const isInviterActive = inviterStatus.step !== 'idle'
   const isReceiverActive = receiverStatus.step !== 'idle'
 
-  if (!isInviterActive && !isReceiverActive && !isExiting) return null
+  if (!isInviterActive && !isReceiverActive && !showPairingInput && !isExiting) return null
 
   const activeStatus = isInviterActive ? inviterStatus : receiverStatus
   const isInviter = isInviterActive
@@ -60,6 +62,23 @@ export default function PairingStatusOverlay() {
 
   const handleConfirm = () => {
     dispatch(confirmPairing())
+  }
+
+  const handleConnect = () => {
+    if (pasteCode.trim()) {
+      dispatch(subscribePairUser({ invite: pasteCode.trim() }))
+      dispatch(setShowPairingInput(false))
+      setPasteCode('')
+    }
+  }
+
+  const handleCloseInput = () => {
+    setIsExiting(true)
+    setTimeout(() => {
+      dispatch(setShowPairingInput(false))
+      setPasteCode('')
+      setIsExiting(false)
+    }, 300)
   }
 
   const renderStatusIcon = () => {
@@ -121,15 +140,14 @@ export default function PairingStatusOverlay() {
           </div>
           
           <div className="w-full space-y-3">
+            <div className="flex justify-center items-center text-[11px] font-bold tracking-widest uppercase opacity-60">
+              <span className="text-text-tertiary">{message} • {progress}% Complete</span>
+            </div>
             <div className="relative h-2 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.05]">
               <div 
                 className="absolute top-0 left-0 h-full bg-accent-primary shadow-[0_0_15px_rgba(var(--accent-primary-rgb),0.5)] transition-all duration-500 rounded-full"
                 style={{ width: `${progress}%` }}
               />
-            </div>
-            <div className="flex justify-between items-center text-[11px] font-bold tracking-widest uppercase opacity-40">
-              <span className="text-text-tertiary">{progress}% Complete</span>
-              <span className="text-accent-primary animate-pulse">{message}</span>
             </div>
           </div>
         </div>
@@ -208,6 +226,70 @@ export default function PairingStatusOverlay() {
             </div>
           </div>
         )}
+      </div>
+    )
+  }
+
+  if (showPairingInput && !isInviterActive && !isReceiverActive) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-0">
+        <div 
+          className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
+          onClick={handleCloseInput}
+        />
+        
+        <div className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
+          
+          <div className="relative z-10 transition-opacity duration-500">
+            <div className='flex flex-col items-center text-center space-y-6 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-200 fill-mode-both'>
+              <div className="w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2">
+                <Link2 className="w-10 h-10 text-accent-primary" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-text-primary tracking-tight">Link Your Device</h3>
+                <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
+                  Enter the invite code from your other device to sync your notes securely.
+                </p>
+              </div>
+
+              <div className='w-full space-y-4'>
+                <div className='space-y-2'>
+                  <label className='text-[10px] uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
+                    Invite Code
+                  </label>
+                  <input
+                    type='text'
+                    value={pasteCode}
+                    onChange={(e) => setPasteCode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
+                    placeholder='Paste your code here...'
+                    className='w-full px-4 py-3 bg-bg-panel/40 border border-white/5 rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex gap-3 w-full pt-2">
+                  <button
+                    onClick={handleCloseInput}
+                    className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConnect}
+                    disabled={!pasteCode.trim()}
+                    className="flex-1 py-4 bg-accent-primary text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Connect
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

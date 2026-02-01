@@ -138,11 +138,15 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   if (!noteData || !selectedNoteKey) {
     return (
-      <div className='flex-1 flex items-center justify-center bg-bg-secondary'>
-        <div className='text-center'>
-          <div className='mb-4'>
+      <div className='flex-1 flex items-center justify-center bg-bg-primary relative overflow-hidden'>
+        {/* Subtle background glow */}
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+        
+        <div className='relative z-10 flex flex-col items-center text-center px-8 animate-in fade-in zoom-in-95 duration-700'>
+          <div className='w-24 h-24 bg-bg-panel border border-white/[0.05] rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl relative group'>
+            <div className='absolute inset-0 bg-accent-primary/10 blur-xl rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700' />
             <svg
-              className='w-16 h-16 mx-auto text-text-tertiary'
+              className='w-10 h-10 text-accent-primary relative z-10 opacity-80'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -155,10 +159,19 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               />
             </svg>
           </div>
-          <p className='text-lg font-medium text-text-primary mb-1'>No Note Selected</p>
-          <p className='text-base text-text-tertiary'>
-            Select a note from the sidebar or create a new one
-          </p>
+          
+          <div className='space-y-3 max-w-[320px]'>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>No Note Selected</h3>
+            <p className='text-[15px] text-text-tertiary leading-relaxed'>
+              Select a thought from the list or <span className='text-accent-primary font-bold'>create a new note</span> to begin your session.
+            </p>
+          </div>
+
+          <div className='mt-10 flex items-center gap-2 opacity-30'>
+            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
+            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
+            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
+          </div>
         </div>
       </div>
     )

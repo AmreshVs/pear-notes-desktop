@@ -11,7 +11,6 @@ import {
 import {
   setSearchQuery,
   setShowSettings,
-  setShouldAutoRenameNextFolder,
   setEditor,
   appReady,
   getSearchQuery,
@@ -132,11 +131,6 @@ function App() {
           searchQuery={searchQuery}
           onSearchChange={(value) => dispatch(setSearchQuery(value))}
           onCreateNote={handleCreateNote}
-          onCreateFolder={() => {
-            setIsSidebarCollapsed(false)
-            dispatch(setShouldAutoRenameNextFolder(true))
-            handleCreateFolder('Untitled')
-          }}
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           isSidebarCollapsed={isSidebarCollapsed}
         />
