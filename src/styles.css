@@ -136,11 +136,18 @@
     background-clip: padding-box;
   }
 
-  /* Smooth transitions */
+  /* Smoother transitions for visual properties only */
   * {
-    transition-property: background-color, border-color, color, opacity;
+    transition-property: background-color, border-color, color, opacity, box-shadow;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    transition-duration: 200ms;
+  }
+
+  /* Force hardware acceleration for animated panels */
+  .hardware-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
 
   /* Hide scrollbar but keep functionality */

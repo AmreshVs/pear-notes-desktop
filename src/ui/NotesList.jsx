@@ -1,4 +1,4 @@
-import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight, PanelLeft } from 'lucide-react'
+import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight } from 'lucide-react'
 import { useCallback, useState, useRef, useEffect, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,7 +9,7 @@ import { getHyperdriveAddress } from '../store/slices/uiSlice'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '../utils'
 
-const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder }) => {
+const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder, isLast }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
@@ -68,7 +68,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
       <div
         key={key}
         onClick={() => handleSelectNote(key)}
-        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-all duration-300 group border-b border-white/[0.03]
+        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-all duration-300 group ${!isLast ? 'border-b border-white/[0.03]' : ''}
           ${
             isSelected
               ? 'bg-accent-primary/5 shadow-inner'
@@ -107,14 +107,15 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
             </div>
           </div>
 
-          <div className={imgSrc ? "flex items-center gap-3 ml-2 flex-shrink-0 relative" : "contents"}>
+          <div className={imgSrc ? "flex items-center gap-1 ml-2 flex-shrink-0 relative" : "contents"}>
             {imgSrc ? (
               <>
-                <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20">
+                <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated">
                    <img 
                      src={imgSrc} 
                      alt="Note attachment" 
                      className="w-full h-full object-cover"
+                     decoding="async"
                    />
                 </div>
 
@@ -259,7 +260,8 @@ export default function NotesList({
   searchQuery,
   onSearchChange,
   onCreateNote,
-  onToggleSidebar
+  onToggleSidebar,
+  isSidebarCollapsed
 }) {
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
@@ -269,6 +271,28 @@ export default function NotesList({
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
   const [openMenuId, setOpenMenuId] = useState(null)
   const menuRef = useRef(null)
+
+  const groupOrder = useMemo(() => [NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS], [])
+
+  const groupedNotes = useMemo(() => {
+    return filteredNotes.reduce((acc, note) => {
+      const title = getGroupTitle(note)
+      if (!acc[title]) acc[title] = []
+      acc[title].push(note)
+      return acc
+    }, {})
+  }, [filteredNotes])
+
+  const sortedGroups = useMemo(() => {
+    return Object.keys(groupedNotes).sort((a, b) => {
+      const idxA = groupOrder.indexOf(a)
+      const idxB = groupOrder.indexOf(b)
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+      return b.localeCompare(a)
+    })
+  }, [groupedNotes, groupOrder])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -321,7 +345,8 @@ export default function NotesList({
     }
   }, [dispatch, filteredNotes, selectedFolder])
 
-  const renderNotesList = useCallback((note) => {
+  const renderNotesList = useCallback((note, index, array) => {
+    const isLast = index === array.length - 1
     return (
       <NotesItem 
         key={note.key} 
@@ -332,12 +357,13 @@ export default function NotesList({
         allFolders={folders}
         menuRef={menuRef}
         selectedFolder={selectedFolder}
+        isLast={isLast}
       />
     )
   }, [openMenuId, folders, handleMenuToggle, handleMenuAction, selectedFolder])
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-secondary/40 backdrop-blur-xl border-r border-border-primary/50 relative overflow-hidden'>
+    <div className='flex flex-col h-full w-full bg-bg-secondary/95 backdrop-blur-xl border-r border-border-primary/50 relative overflow-hidden hardware-accelerated'>
       <div className='px-6 pt-10 pb-4 border-b border-border-primary/30 min-h-[140px] flex flex-col gap-4'>
         <div className='flex items-center justify-between h-[40px]'>
           <div className='flex items-center gap-4'>
@@ -346,7 +372,25 @@ export default function NotesList({
               className='p-2 rounded-xl bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
               title='Toggle Sidebar'
             >
-              <PanelLeft className='w-5 h-5' />
+              <svg 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className='w-5 h-5'
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+                {!isSidebarCollapsed && (
+                  <path 
+                    d="M5 3h4v18H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2z" 
+                    fill="currentColor" 
+                    className="animate-in fade-in duration-300"
+                  />
+                )}
+              </svg>
             </button>
             <div className='flex flex-col min-w-0'>
               <h2 className='font-bold text-[20px] text-text-primary tracking-tight truncate max-w-[150px] leading-tight'>
@@ -412,35 +456,16 @@ export default function NotesList({
           </div>
         ) : (
           <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4'>
-            {(() => {
-              const grouped = filteredNotes.reduce((acc, note) => {
-                const title = getGroupTitle(note)
-                if (!acc[title]) acc[title] = []
-                acc[title].push(note)
-                return acc
-              }, {})
-
-              const groupOrder = [NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS]
-              const sortedGroups = Object.keys(grouped).sort((a, b) => {
-                const idxA = groupOrder.indexOf(a)
-                const idxB = groupOrder.indexOf(b)
-                if (idxA !== -1 && idxB !== -1) return idxA - idxB
-                if (idxA !== -1) return -1
-                if (idxB !== -1) return 1
-                return b.localeCompare(a)
-              })
-
-              return sortedGroups.map(group => (
-                <div key={group} className='mb-6'>
-                  <h3 className='px-6 py-2 text-[10px] font-bold text-text-tertiary uppercase tracking-[0.2em] opacity-80 sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 shadow-sm'>
-                    {group}
-                  </h3>
-                  <div className='mt-1'>
-                    {grouped[group].map(renderNotesList)}
-                  </div>
+            {sortedGroups.map(group => (
+              <div key={group} className='mb-6'>
+                <h3 className='px-6 py-2 text-[10px] font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-white/[0.03] transform-cpu hardware-accelerated'>
+                  {group}
+                </h3>
+                <div>
+                  {groupedNotes[group].map((note, index) => renderNotesList(note, index, groupedNotes[group]))}
                 </div>
-              ))
-            })()}
+              </div>
+            ))}
           </div>
         )}
       </div>

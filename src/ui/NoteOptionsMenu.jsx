@@ -38,7 +38,7 @@ export default function NoteOptionsMenu({
         ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
         className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
-          showMenu ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' : 'text-text-secondary hover:bg-bg-tertiary/60 hover:text-text-primary'
+          showMenu ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
         }`}
         title='More options'
       >

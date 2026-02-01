@@ -282,7 +282,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 duration-200 ${
               showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic 
                 ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' 
-                : 'text-text-secondary hover:bg-bg-tertiary/50 hover:text-text-primary'
+                : 'text-text-primary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
             title='Formatting'
           >
@@ -450,7 +450,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <button
             onClick={() => editor?.chain().focus().undo().run()}
             disabled={!editorState.canUndo}
-            className='p-2 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
+            className='p-2 text-text-primary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             title='Undo'
           >
             <Undo className='w-4 h-4' />
@@ -458,7 +458,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <button
             onClick={() => editor?.chain().focus().redo().run()}
             disabled={!editorState.canRedo}
-            className='p-2 text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
+            className='p-2 text-text-primary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             title='Redo'
           >
             <Redo className='w-4 h-4' />
@@ -502,7 +502,7 @@ const Button = forwardRef(({ onClick, isActive, disabled, title, children, class
         ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
         : disabled
           ? 'text-text-tertiary opacity-30 cursor-not-allowed'
-          : 'text-text-secondary hover:bg-bg-tertiary/60 hover:text-text-primary'
+          : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
     } ${className}`}
     title={title}
     disabled={disabled}
@@ -518,7 +518,7 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
     className={`p-1.5 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
       isActive
         ? 'bg-accent-primary text-text-primary shadow-[0_0_10px_rgba(var(--accent-primary),0.2)]'
-        : 'text-text-secondary hover:bg-white/[0.05] hover:text-text-primary'
+        : 'text-text-primary hover:bg-white/[0.05] hover:text-text-primary'
     }`}
     title={title}
   >

@@ -125,7 +125,7 @@ export default function FoldersSidebar({
         <button
           onClick={() => !isEditing && onSelectFolder(folder.id)}
           onDoubleClick={(e) => handleStartRename(e, folder)}
-          className={`flex items-center transition-all duration-300 group relative mb-4 w-full px-4 py-3 justify-between rounded-xl
+          className={`flex items-center transition-all duration-300 group relative mb-2 w-full px-4 py-3 justify-between rounded-xl
             ${
               isSelected
                 ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
@@ -247,7 +247,7 @@ export default function FoldersSidebar({
   const bottomFolders = folders.filter((f) => f.isTrash)
 
   return (
-    <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative'>
+    <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative hardware-accelerated'>
       <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col">
         <div className='flex items-center justify-between h-[40px]'>
           <h2 className="text-[20px] font-bold text-text-primary tracking-tight">Folders</h2>
@@ -276,7 +276,7 @@ export default function FoldersSidebar({
       </div>
 
       <div className="py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center px-3 space-y-3">
-        <div className="w-full pt-2">
+        <div className="w-full">
           <button
             onClick={onSettingsClick}
             className="flex items-center justify-center transition-all font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl"

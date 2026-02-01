@@ -54,16 +54,18 @@ export default function ResizablePanel({
       className='relative flex flex-shrink-0'
       style={{
         width: `${displayWidth}px`,
-        transition: isResizing ? 'none' : 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden'
+        transition: isResizing ? 'none' : 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden',
+        willChange: 'width'
       }}
     >
       <div 
-        className="h-full w-full overflow-hidden transition-opacity duration-300"
+        className="h-full w-full overflow-hidden transition-opacity duration-300 ease-in-out"
         style={{ 
           opacity: collapsed ? 0 : 1,
           minWidth: collapsed ? 0 : `${minWidth}px`,
-          pointerEvents: collapsed ? 'none' : 'auto'
+          pointerEvents: collapsed ? 'none' : 'auto',
+          transform: 'translateZ(0)'
         }}
       >
         {children}

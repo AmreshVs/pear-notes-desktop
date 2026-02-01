@@ -165,7 +165,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   }
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0'>
+    <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
       <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-30 gap-4'>
         <div className='flex-1 min-w-0 max-w-[calc(100%-60px)] pointer-events-auto'>
           <div className='pb-2'>
