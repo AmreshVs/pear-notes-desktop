@@ -260,6 +260,7 @@ export default function NotesList({
   searchQuery,
   onSearchChange,
   onCreateNote,
+  onCreateFolder,
   onToggleSidebar,
   isSidebarCollapsed
 }) {
@@ -444,13 +445,32 @@ export default function NotesList({
                 </div>
               </div>
             ) : (
-              <div className='space-y-2 opacity-40'>
-                <p className='text-[15px] text-text-tertiary font-medium font-bold'>
-                  {searchQuery ? 'No matches found' : 'Your vault is empty'}
-                </p>
-                <p className='text-[11px] text-text-tertiary uppercase tracking-widest'>
-                  {searchQuery ? 'Try a different query' : 'Create a note to start'}
-                </p>
+              <div className='flex flex-col items-center gap-2'>
+                <div className='space-y-2 opacity-40'>
+                  <p className='text-[15px] text-text-tertiary font-medium font-bold'>
+                    {searchQuery ? 'No matches found' : 'Your vault is empty'}
+                  </p>
+                  <p className='text-[11px] text-text-tertiary uppercase tracking-widest text-center'>
+                    {searchQuery ? 'Try a different query' : 'Create a note to start'}
+                  </p>
+                </div>
+                {!searchQuery && (
+                   <div className='flex items-center justify-center gap-3 mt-4'>
+                    <button
+                      onClick={onCreateNote}
+                      className='text-[11px] font-bold text-accent-primary hover:text-accent-primary/80 uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-accent-primary/5 transition-all'
+                    >
+                      New Note
+                    </button>
+                    <span className='w-px h-3 bg-white/10' />
+                    <button
+                      onClick={onCreateFolder}
+                      className='text-[11px] font-bold text-text-tertiary hover:text-text-primary uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all'
+                    >
+                      New Folder
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

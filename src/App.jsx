@@ -11,12 +11,11 @@ import {
 import {
   setSearchQuery,
   setShowSettings,
-  setShowNewFolderModal,
+  setShouldAutoRenameNextFolder,
   setEditor,
   appReady,
   getSearchQuery,
-  getShowSettings,
-  getShowNewFolderModal
+  getShowSettings
 } from './store/slices/uiSlice'
 
 import TitleBar from './ui/TitleBar'
@@ -25,7 +24,6 @@ import NotesList from './ui/NotesList'
 import NoteEditor from './ui/NoteEditor'
 import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
-import NewFolderModal from './ui/NewFolderModal'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import { backendApi } from './backend/api'
 import { debounce } from './utils'
@@ -50,7 +48,6 @@ function App() {
   const selectedFolder = useSelector(getSelectedFolder)
   const searchQuery = useSelector(getSearchQuery)
   const showSettings = useSelector(getShowSettings)
-  const showNewFolderModal = useSelector(getShowNewFolderModal)
   const folders = useSelector(getFolders)
 
   useEffect(() => {
@@ -134,7 +131,7 @@ function App() {
             onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
             folders={folders}
             onCreateNote={handleCreateNote}
-            onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+            onCreateFolder={handleCreateFolder}
             onDeleteFolder={handleDeleteFolder}
             onSettingsClick={() => dispatch(setShowSettings(true))}
             onToggleCollapse={() => setIsSidebarCollapsed(true)}
@@ -147,7 +144,11 @@ function App() {
             searchQuery={searchQuery}
             onSearchChange={(value) => dispatch(setSearchQuery(value))}
             onCreateNote={handleCreateNote}
-            onCreateFolder={() => dispatch(setShowNewFolderModal(true))}
+            onCreateFolder={() => {
+              setIsSidebarCollapsed(false)
+              dispatch(setShouldAutoRenameNextFolder(true))
+              handleCreateFolder('Untitled')
+            }}
             onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             isSidebarCollapsed={isSidebarCollapsed}
           />
@@ -162,12 +163,6 @@ function App() {
       </div>
 
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
-      {showNewFolderModal && (
-        <NewFolderModal
-          onClose={() => dispatch(setShowNewFolderModal(false))}
-          onCreateFolder={handleCreateFolder}
-        />
-      )}
       <PairingStatusOverlay />
     </main>
   )
