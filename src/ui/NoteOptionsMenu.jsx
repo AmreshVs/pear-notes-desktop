@@ -33,7 +33,7 @@ export default function NoteOptionsMenu({
   )
 
   return (
-    <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit transition-all duration-300 hover:bg-bg-panel/80 hover:border-white/[0.1]'>
+    <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
       <button
         ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
@@ -102,6 +102,7 @@ export default function NoteOptionsMenu({
           <div className="h-px bg-white/[0.05] my-1 mx-2" />
 
           <div 
+            onMouseEnter={() => setShowMoveSubmenu(false)}
             onClick={async () => {
               const textToCopy = onCopy()
               if (!textToCopy) return
@@ -132,6 +133,7 @@ export default function NoteOptionsMenu({
           <div className="h-px bg-white/[0.05] my-1 mx-2" />
 
           <div 
+            onMouseEnter={() => setShowMoveSubmenu(false)}
             onClick={() => {
               onDelete()
               setShowMenu(false)

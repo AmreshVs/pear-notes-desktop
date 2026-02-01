@@ -21,11 +21,11 @@ export default function GeneralSettings() {
   }
 
   return (
-    <div className='space-y-12 animate-in fade-in duration-700 max-w-2xl mx-auto'>
-      <div className="space-y-6">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Interface</h3>
+    <div className='space-y-12 max-w-2xl mx-auto'>
+      <div className="space-y-1">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Interface</h3>
         
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
+        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>App Theme</label>
@@ -50,9 +50,9 @@ export default function GeneralSettings() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Notes List</h3>
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
+      <div className="space-y-1">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Notes List</h3>
+        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>Sort notes by</label>
@@ -74,9 +74,9 @@ export default function GeneralSettings() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2'>Editor</h3>
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md">
+      <div className="space-y-1">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Editor</h3>
+        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>Font Family</label>

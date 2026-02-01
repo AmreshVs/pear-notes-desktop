@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 export default function NewFolderModal({ onClose, onCreateFolder }) {
   const [folderName, setFolderName] = useState('')
+  const [isExiting, setIsExiting] = useState(false)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -10,18 +11,23 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
     }
   }, [])
 
+  const handleAnimatedClose = () => {
+    setIsExiting(true)
+    setTimeout(onClose, 300)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (folderName.trim()) {
       onCreateFolder(folderName.trim())
       setFolderName('')
-      onClose()
+      handleAnimatedClose()
     }
   }
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
-      onClose()
+      handleAnimatedClose()
     }
   }
 
@@ -31,25 +37,25 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
       onKeyDown={handleKeyDown}
     >
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-in fade-in duration-1000 cursor-pointer"
-        onClick={onClose}
+        className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300 cursor-pointer`}
+        onClick={handleAnimatedClose}
       />
 
       <div
-        className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out overflow-hidden"
+        className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
 
         <div className='relative z-10 text-center space-y-6'>
-          <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 fill-mode-both">
+          <div className="flex flex-col items-center gap-2">
             <h2 className='text-text-primary text-2xl font-bold tracking-tight'>New Folder</h2>
             <p className='text-text-tertiary text-sm max-w-[240px]'>Organize your library with a dedicated workspace.</p>
           </div>
 
           <form onSubmit={handleSubmit} className='space-y-6'>
-            <div className='relative group animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400 fill-mode-both'>
+            <div className='relative group'>
               <input
                 ref={inputRef}
                 type='text'
@@ -61,7 +67,7 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
               />
             </div>
 
-            <div className='flex flex-col gap-3 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-600 fill-mode-both'>
+            <div className='flex flex-col gap-3 pt-2'>
               <button
                 type='submit'
                 disabled={!folderName.trim()}
@@ -71,7 +77,7 @@ export default function NewFolderModal({ onClose, onCreateFolder }) {
               </button>
               <button
                 type='button'
-                onClick={onClose}
+                onClick={handleAnimatedClose}
                 className='w-full py-3.5 bg-bg-panel-secondary/50 border border-border-primary text-text-secondary rounded-xl hover:bg-bg-panel-tertiary transition-all font-medium active:scale-95'
               >
                 Cancel

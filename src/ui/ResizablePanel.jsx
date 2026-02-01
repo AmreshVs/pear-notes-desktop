@@ -54,7 +54,7 @@ export default function ResizablePanel({
       className='relative flex flex-shrink-0'
       style={{
         width: `${displayWidth}px`,
-        transition: isResizing ? 'none' : 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: isResizing ? 'none' : 'width var(--animation-duration-standard) var(--animation-timing-standard)',
         overflow: 'hidden',
         willChange: 'width'
       }}
