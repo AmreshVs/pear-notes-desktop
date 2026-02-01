@@ -145,7 +145,7 @@
   * {
     transition-property: background-color, border-color, color, opacity, box-shadow;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
+    transition-duration: 50ms;
   }
 
   /* Force hardware acceleration for animated panels */

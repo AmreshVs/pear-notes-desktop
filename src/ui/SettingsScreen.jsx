@@ -46,7 +46,7 @@ export default function SettingsScreen({ onClose }) {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-300 relative group
+                  className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
                     ${
                       isActive
                         ? 'bg-accent-primary/10 text-accent-primary'
@@ -54,7 +54,7 @@ export default function SettingsScreen({ onClose }) {
                     }`}
                 >
                   <Icon
-                    className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
+                    className={`w-5 h-5 flex-shrink-0 transition-all duration-0 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
                   />
                   <span className={`text-[15px] tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{section.name}</span>
                 </button>

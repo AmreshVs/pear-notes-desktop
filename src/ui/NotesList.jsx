@@ -68,7 +68,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
       <div
         key={key}
         onClick={() => handleSelectNote(key)}
-        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-all duration-300 group ${!isLast ? 'border-b border-white/[0.03]' : ''}
+        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-white/[0.03]' : ''}
           ${
             isSelected
               ? 'bg-accent-primary/5 shadow-inner'

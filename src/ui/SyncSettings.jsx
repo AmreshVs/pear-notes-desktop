@@ -66,23 +66,23 @@ export default function SyncSettings({ onClose }) {
 
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='flex p-1 bg-bg-panel-secondary rounded-xl border border-border-primary w-fit mx-auto'>
+      <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-white/[0.05] w-fit mx-auto'>
         <button
           onClick={() => setSyncTab('invite')}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-6 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
             syncTab === 'invite'
-              ? 'bg-bg-quaternary text-text-primary'
-              : 'text-text-tertiary hover:text-text-secondary'
+              ? 'bg-accent-primary text-text-primary shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
           }`}
         >
           Link Device
         </button>
         <button
           onClick={() => setSyncTab('manage')}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          className={`px-6 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
             syncTab === 'manage'
-              ? 'bg-bg-quaternary text-text-primary'
-              : 'text-text-tertiary hover:text-text-secondary'
+              ? 'bg-accent-primary text-text-primary shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
           }`}
         >
           My Devices
@@ -139,7 +139,7 @@ export default function SyncSettings({ onClose }) {
                         type='text'
                         readOnly
                         value={inviteCode}
-                        className='w-full px-5 py-4 bg-bg-panel/50 border border-border-secondary rounded-xl text-text-primary font-mono text-base tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
+                        className='w-full px-4 py-3 bg-bg-panel/40 border border-white/5 rounded-xl text-text-primary font-mono text-[14px] tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
                       />
                     </div>
                   </div>

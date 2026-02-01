@@ -125,7 +125,7 @@ export default function FoldersSidebar({
         <button
           onClick={() => !isEditing && onSelectFolder(folder.id)}
           onDoubleClick={(e) => handleStartRename(e, folder)}
-          className={`flex items-center transition-all duration-300 group relative mb-2 w-full px-4 py-3 justify-between rounded-xl
+          className={`flex items-center transition-colors duration-0 group relative mb-2 w-full px-4 py-3 justify-between rounded-xl
             ${
               isSelected
                 ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
@@ -133,9 +133,9 @@ export default function FoldersSidebar({
             }`}
           title={isEditing ? '' : 'Double click to rename'}
         >
-          <div className="flex items-center transition-all duration-200 gap-4 min-w-0">
+          <div className="flex items-center gap-4 min-w-0">
             <Icon
-              className={`transition-all duration-300 w-5 h-5 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
+              className={`transition-all duration-0 w-5 h-5 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
             />
             
             {isEditing ? (

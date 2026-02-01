@@ -435,14 +435,27 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <TableIcon className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        <Button
-          ref={attachmentButtonRef}
-          onClick={() => setShowAttachmentMenu(true)}
-          title='Attachments'
-          className='w-9 h-9'
-        >
-          <Paperclip className='w-4 h-4' strokeWidth={2.5} />
-        </Button>
+        <div className='relative'>
+          <Button
+            ref={attachmentButtonRef}
+            onClick={() => setShowAttachmentMenu(true)}
+            isActive={showAttachmentMenu}
+            title='Attachments'
+            className='w-9 h-9'
+          >
+            <Paperclip className='w-4 h-4' strokeWidth={2.5} />
+          </Button>
+
+          {showAttachmentMenu && (
+            <AttachmentMenu
+              onClose={() => setShowAttachmentMenu(false)}
+              onInsertImage={handleInsertImage}
+              onInsertFile={handleInsertFile}
+              onRecordAudio={() => setShowAudioRecorder(true)}
+              buttonRef={attachmentButtonRef}
+            />
+          )}
+        </div>
 
         <div className='w-px h-5 bg-white/[0.1] mx-1' />
 
@@ -474,15 +487,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           currentText={getCurrentLink().text}
         />
       )}
-      {showAttachmentMenu && (
-        <AttachmentMenu
-          onClose={() => setShowAttachmentMenu(false)}
-          onInsertImage={handleInsertImage}
-          onInsertFile={handleInsertFile}
-          onRecordAudio={() => setShowAudioRecorder(true)}
-          buttonRef={attachmentButtonRef}
-        />
-      )}
+
       {showAudioRecorder && (
         <AudioRecorderModal
           onClose={() => setShowAudioRecorder(false)}
