@@ -103,7 +103,7 @@ export default function PairingStatusOverlay() {
             onClick={handleAnimatedClose}
             className="w-full py-4 bg-accent-success/10 border border-accent-success/20 text-accent-success rounded-xl font-bold text-[15px] hover:bg-accent-success/20 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            Get Started
+            {isInviter ? 'Return to Notes' : 'Open Workspace'}
           </button>
         </div>
       )
@@ -136,31 +136,55 @@ export default function PairingStatusOverlay() {
       )
     }
 
-    if (isConfirmation) {
-      const myFingerprintFriendly = getFingerprint(userData?.fingerprint || localKey)
-      
-      return (
-        <div className="flex flex-col items-center text-center space-y-6">
-          <div className="w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2">
-            <ShieldCheck className="w-10 h-10 text-accent-primary" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-text-primary tracking-tight">Verify Secure Code</h3>
-            <p className="text-text-tertiary text-sm max-w-[280px] leading-relaxed">
-              Ensure both devices display the same identification code.
-            </p>
-          </div>
+    const peerFingerprint = getFingerprint(userData)
+    const myFingerprint = getFingerprint(localKey)
+    
+    const mainIdLabel = isConfirmation ? "REMOTE ID" : "MY ID"
+    const mainIdValue = isConfirmation ? peerFingerprint : myFingerprint
+    const subIdLabel = isConfirmation ? "MY ID" : (peerFingerprint ? "REMOTE ID" : null)
+    const subIdValue = isConfirmation ? myFingerprint : (peerFingerprint ? peerFingerprint : null)
 
-          <div className="px-6 py-4 bg-white/[0.03] border border-white/[0.08] rounded-2xl">
-            <span className="text-2xl font-black text-text-primary tracking-[0.3em] font-mono">
-              {myFingerprintFriendly}
-            </span>
-          </div>
+    return (
+      <div className="flex flex-col items-center text-center space-y-6">
+        <div className="w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2">
+          <ShieldCheck className="w-10 h-10 text-accent-primary" />
+        </div>
 
+        <div className="space-y-2">
+          <h3 className="text-2xl font-bold text-text-primary tracking-tight">
+            {isConfirmation ? 'Verify Secure Code' : 'Identity Verification'}
+          </h3>
+          <p className="text-text-tertiary text-sm max-w-[280px] leading-relaxed">
+            {isConfirmation 
+              ? 'Ensure both devices display the same identification code.'
+              : 'Verifying connection. Please authorize on your other device.'}
+          </p>
+        </div>
+
+        {mainIdValue && (
+          <div className="w-full space-y-4">
+            <div className="px-6 py-4 bg-white/[0.03] border border-white/[0.08] rounded-2xl">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-1">{mainIdLabel}</span>
+              <span className="text-2xl font-black text-text-primary tracking-[0.3em] font-mono block">
+                {mainIdValue.toUpperCase()}
+              </span>
+            </div>
+
+            {subIdValue && (
+              <div className="flex items-center justify-center gap-2 opacity-40">
+                <span className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[200px]">
+                  {subIdLabel}: {subIdValue.toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isConfirmation ? (
           <div className="flex gap-3 w-full pt-2">
             <button
               onClick={handleAnimatedClose}
-              className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] hover:text-text-secondary transition-all active:scale-95"
+              className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -171,24 +195,19 @@ export default function PairingStatusOverlay() {
               Verify Code
             </button>
           </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="flex flex-col items-center text-center space-y-8 py-4">
-        {renderStatusIcon()}
-        <div className="space-y-3">
-          <h3 className="text-2xl font-bold text-text-primary tracking-tight">Linking Devices</h3>
-          <p className="text-text-tertiary text-sm max-w-[240px] leading-relaxed">
-            {message}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] border border-white/[0.05] rounded-full">
-          <div className="w-1.5 h-1.5 bg-accent-primary rounded-full animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-tertiary opacity-50">Secure Peer-to-Peer</span>
-        </div>
+        ) : (
+          <div className="w-full space-y-3 pt-2">
+            <div className="relative h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.05]">
+              <div 
+                className="absolute top-0 left-0 h-full bg-accent-primary animate-pulse"
+                style={{ width: `${progress || 25}%` }}
+              />
+            </div>
+            <div className="flex justify-center items-center text-[10px] font-bold tracking-widest uppercase opacity-40">
+              <span className="text-text-tertiary">{message || 'Establishing Link...'}</span>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -196,15 +215,15 @@ export default function PairingStatusOverlay() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-0">
       <div 
-        className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300 cursor-pointer`}
+        className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
         onClick={isDone ? handleAnimatedClose : undefined}
       />
       
-      <div className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden`}>
+      <div className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
         
-        <div className="relative z-10">
+        <div className="relative z-10 transition-opacity duration-500">
           {renderContent()}
         </div>
       </div>

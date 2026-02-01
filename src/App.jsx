@@ -96,21 +96,60 @@ function App() {
     dispatch(deleteFolder(key))
   }
 
-  if (isLoading) {
-    return (
-      <main className='h-screen flex flex-col bg-bg-primary overflow-hidden'>
-        <TitleBar />
-        <div className='flex-1 flex items-center justify-center'>
-          <div className='text-center'>
-            <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
-            <p className='text-[15px] text-text-tertiary'>
-              Loading...
-            </p>
-          </div>
-        </div>
-      </main>
-    )
-  }
+  const content = isLoading ? (
+    <div className='flex-1 flex items-center justify-center'>
+      <div className='text-center'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
+        <p className='text-[15px] text-text-tertiary'>
+          Loading...
+        </p>
+      </div>
+    </div>
+  ) : (
+    <div className='flex-1 flex overflow-hidden relative z-10'>
+      <ResizablePanel 
+        defaultWidth={260} 
+        minWidth={260} 
+        maxWidth={400} 
+        collapsed={isSidebarCollapsed}
+        collapsedWidth={0}
+      >
+        <FoldersSidebar
+          selectedFolder={selectedFolder}
+          onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
+          folders={folders}
+          onCreateNote={handleCreateNote}
+          onCreateFolder={handleCreateFolder}
+          onDeleteFolder={handleDeleteFolder}
+          onSettingsClick={() => dispatch(setShowSettings(true))}
+          onToggleCollapse={() => setIsSidebarCollapsed(true)}
+        />
+      </ResizablePanel>
+
+      <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
+        <NotesList 
+          selectedFolder={selectedFolder} 
+          searchQuery={searchQuery}
+          onSearchChange={(value) => dispatch(setSearchQuery(value))}
+          onCreateNote={handleCreateNote}
+          onCreateFolder={() => {
+            setIsSidebarCollapsed(false)
+            dispatch(setShouldAutoRenameNextFolder(true))
+            handleCreateFolder('Untitled')
+          }}
+          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
+      </ResizablePanel>
+
+      <NoteEditor
+        key={selectedNote}
+        onUpdate={handleUpdateNote}
+        onDelete={handleDeleteNote}
+        onEditorReady={handleEditorReady}
+      />
+    </div>
+  )
 
   return (
     <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
@@ -118,49 +157,7 @@ function App() {
       <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
 
       <TitleBar />
-      <div className='flex-1 flex overflow-hidden relative z-10'>
-        <ResizablePanel 
-          defaultWidth={260} 
-          minWidth={260} 
-          maxWidth={400} 
-          collapsed={isSidebarCollapsed}
-          collapsedWidth={0}
-        >
-          <FoldersSidebar
-            selectedFolder={selectedFolder}
-            onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
-            folders={folders}
-            onCreateNote={handleCreateNote}
-            onCreateFolder={handleCreateFolder}
-            onDeleteFolder={handleDeleteFolder}
-            onSettingsClick={() => dispatch(setShowSettings(true))}
-            onToggleCollapse={() => setIsSidebarCollapsed(true)}
-          />
-        </ResizablePanel>
-
-        <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
-          <NotesList 
-            selectedFolder={selectedFolder} 
-            searchQuery={searchQuery}
-            onSearchChange={(value) => dispatch(setSearchQuery(value))}
-            onCreateNote={handleCreateNote}
-            onCreateFolder={() => {
-              setIsSidebarCollapsed(false)
-              dispatch(setShouldAutoRenameNextFolder(true))
-              handleCreateFolder('Untitled')
-            }}
-            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            isSidebarCollapsed={isSidebarCollapsed}
-          />
-        </ResizablePanel>
-
-        <NoteEditor
-          key={selectedNote}
-          onUpdate={handleUpdateNote}
-          onDelete={handleDeleteNote}
-          onEditorReady={handleEditorReady}
-        />
-      </div>
+      {content}
 
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
       <PairingStatusOverlay />
