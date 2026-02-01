@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Mic, Square, X, Check } from 'lucide-react'
+import { Mic, Square, X } from 'lucide-react'
 import AudioPlayer from './AudioPlayer'
 
 export default function AudioRecorderModal({ onClose, onSaveAudio }) {
@@ -12,7 +12,6 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
   const timerRef = useRef(null)
 
   useEffect(() => {
-    // Cleanup on unmount
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -42,7 +41,6 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
       setIsRecording(true)
       setRecordingTime(0)
 
-      // Start timer
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1)
       }, 1000)
@@ -88,63 +86,55 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
-        className='fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200'
-        onClick={!isRecording ? onClose : undefined}
-      />
-
-      {/* Modal */}
-      <div className='fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none'>
-        <div className='bg-bg-panel border border-border-secondary rounded-2xl w-full max-w-md pointer-events-auto animate-in zoom-in-95 fade-in duration-200'>
-          {/* Header */}
-          <div className='flex items-center justify-between p-5 border-b border-border-secondary'>
-            <h2 className='text-lg font-semibold text-text-primary'>Record Audio</h2>
+        className='fixed inset-0 flex items-center justify-center z-[110] p-6'
+      >
+        <div 
+          className='absolute inset-0 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300'
+          onClick={!isRecording ? onClose : undefined}
+        />
+        <div className='relative bg-bg-panel/70 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] w-full max-w-sm shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col'>
+          <div className="absolute -top-32 -left-32 w-64 h-64 bg-accent-primary/10 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-accent-primary/5 blur-[80px] rounded-full pointer-events-none" />
+          <div className='bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between px-6 py-5 relative z-10'>
+            <div className='flex items-center gap-3'>
+              <div className='w-9 h-9 rounded-xl bg-accent-primary/10 flex items-center justify-center text-accent-primary border border-accent-primary/20'>
+                <Mic className='w-4 h-4' />
+              </div>
+              <div className='flex flex-col'>
+                <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>Record Audio</h2>
+                <span className='text-[10px] font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>Voice Capture</span>
+              </div>
+            </div>
             <button
               onClick={onClose}
               disabled={isRecording}
-              className={`p-1.5 rounded-lg transition-colors ${
-                isRecording 
-                  ? 'opacity-30 cursor-not-allowed' 
-                  : 'hover:bg-bg-tertiary'
+              className={`w-8 h-8 flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.08] text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-white/[0.05] ${
+                isRecording ? 'opacity-30 cursor-not-allowed' : ''
               }`}
               title='Close'
             >
-              <X className='w-5 h-5 text-text-secondary' />
+              <X className='w-4 h-4' />
             </button>
           </div>
-
-          {/* Recording Interface */}
-          <div className='p-8'>
-            <div className='flex flex-col items-center gap-8'>
-              {/* Recording Time */}
-              <div className='text-center relative'>
-                <div className='relative z-10'>
-                  <div className='text-5xl font-mono font-bold text-text-primary mb-3 tracking-tight'>
-                    {formatTime(recordingTime)}
-                  </div>
-                  <div className='flex items-center justify-center gap-2'>
-                    {isRecording && (
-                      <div className='w-2 h-2 rounded-full bg-accent-danger' />
-                    )}
-                    <p className='text-sm font-medium text-text-secondary'>
-                      {isRecording ? 'Recording...' : audioBlob ? 'Recording complete!' : 'Ready to record'}
-                    </p>
-                  </div>
+          <div className='p-8 relative z-10'>
+            <div className='flex flex-col items-center gap-2'>
+              <div className='text-center'>
+                <div className='text-5xl font-mono font-black text-text-primary mb-3 tracking-tighter'>
+                  {formatTime(recordingTime)}
                 </div>
               </div>
-
-              {/* Record Button with enhanced styling */}
               {!audioBlob && (
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 ${
+                  className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-500 group ${
                     isRecording
-                      ? 'bg-accent-danger hover:bg-accent-danger/90'
-                      : 'bg-accent-primary hover:bg-accent-primary/90 hover:scale-105'
+                      ? 'bg-accent-danger shadow-[0_0_30px_rgba(239,68,68,0.3)]'
+                      : 'bg-accent-primary shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgba(220,163,35,0.3)] hover:scale-105 active:scale-95'
                   }`}
                   title={isRecording ? 'Stop Recording' : 'Start Recording'}
                 >
+                  <div className={`absolute inset-0 rounded-full ${isRecording ? 'animate-soft-ping' : 'group-hover:animate-soft-ping'}`} />
                   <div className='relative z-10'>
                     {isRecording ? (
                       <Square className='w-7 h-7 text-white fill-white' />
@@ -154,10 +144,8 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                   </div>
                 </button>
               )}
-
-              {/* Audio Preview with custom player */}
               {audioBlob && (
-                <div className='w-full'>
+                <div className='w-full animate-in slide-in-from-bottom-4 duration-300'>
                   <AudioPlayer 
                     src={URL.createObjectURL(audioBlob)} 
                     duration={recordingTime}
@@ -167,38 +155,35 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
               )}
             </div>
           </div>
-
-          {/* Actions with enhanced buttons */}
           {audioBlob && (
-            <div className='flex gap-3 p-5 border-t border-border-secondary bg-bg-secondary/50'>
+            <div className='flex gap-3 p-5 border-t border-white/[0.05] bg-white/[0.02] relative z-10'>
               <button
                 onClick={() => {
                   setAudioBlob(null)
                   setRecordingTime(0)
                 }}
                 disabled={isSaving}
-                className='flex-1 px-5 py-3 rounded-xl bg-bg-tertiary hover:bg-bg-panel text-text-secondary hover:text-text-primary transition-all font-medium border border-border-primary disabled:opacity-50 disabled:cursor-not-allowed'
+                className='flex-1 px-4 py-3 rounded-xl bg-bg-tertiary/40 hover:bg-bg-tertiary/60 text-text-secondary hover:text-text-primary transition-all font-bold text-sm tracking-tight border border-white/[0.05] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95'
               >
                 Re-record
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`flex-1 px-5 py-3 rounded-xl transition-all font-medium disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                className={`flex-1 px-4 py-3 rounded-xl transition-all font-bold text-sm tracking-tight disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
                   isSaving
                     ? 'bg-accent-primary/70 text-white cursor-wait'
-                    : 'bg-accent-primary hover:bg-accent-primary/90 text-white hover:scale-105 active:scale-95'
+                    : 'bg-accent-primary hover:bg-accent-primary/90 text-white shadow-accent-primary/20 hover:scale-[1.02]'
                 }`}
               >
                 {isSaving ? (
                   <>
-                    <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-                    Inserting...
+                    <div className='w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <Check className='w-4 h-4' />
-                    Insert Audio
+                    Insert
                   </>
                 )}
               </button>

@@ -267,6 +267,17 @@
     }
   }
 
+  @keyframes soft-ping {
+    75%, 100% {
+      transform: scale(1.4);
+      opacity: 0;
+    }
+  }
+
+  .animate-soft-ping {
+    animation: soft-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
   @keyframes folder-exit {
     from { 
       opacity: 1; 

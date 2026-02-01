@@ -69,10 +69,8 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
     }
   }
 
-  // Calculate the percentage for the slider handle position, ensuring it stays within bounds
+  // Calculate the percentage for the slider handle position
   const handlePositionPercentage = displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0;
-  // Adjust handle position to account for its width (12px) so it doesn't go off the edge
-  const clampedHandlePosition = `calc(${handlePositionPercentage}% - ${handlePositionPercentage / 100 * 12}px + 6px)`;
 
 
   return (
@@ -114,12 +112,16 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
             onClick={(e) => e.stopPropagation()}
           />
           <div
-            className='absolute top-0 left-0 h-full bg-accent-primary rounded-full transition-all duration-100 ease-out pointer-events-none'
+            className='absolute top-0 left-0 h-full bg-accent-primary rounded-full pointer-events-none'
             style={{ width: `${displayDuration > 0 ? (currentTime / displayDuration) * 100 : 0}%` }}
           />
           <div 
-            className='absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
-            style={{ left: clampedHandlePosition }}
+            className='absolute w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
+            style={{ 
+              left: `${handlePositionPercentage}%`, 
+              top: '50%', 
+              transform: 'translate(-50%, -50%)' 
+            }}
           />
         </div>
       </div>

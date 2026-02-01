@@ -241,7 +241,8 @@ export default function FormattingToolbar({ editor, noteKey }) {
             attrs: {
               audioData: null,
               url: link,
-              duration: duration
+              duration: duration,
+              fileName: fileName
             }
           },
           { type: 'paragraph' }

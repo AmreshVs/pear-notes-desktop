@@ -16,6 +16,12 @@ export default Node.create({
       },
       duration: {
         default: 0
+      },
+      url: {
+        default: null
+      },
+      fileName: {
+        default: null
       }
     }
   },

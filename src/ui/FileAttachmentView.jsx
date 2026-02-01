@@ -255,12 +255,15 @@ export default function FileAttachmentView({ node, deleteNode }) {
                   onClick={(e) => e.stopPropagation()}
                 />
                 <div
-                  className='absolute top-0 left-0 h-full bg-accent-primary rounded-full transition-all duration-100 ease-out pointer-events-none'
+                  className='absolute top-0 left-0 h-full bg-accent-primary rounded-full pointer-events-none'
                   style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                 />
                 <div 
-                  className='absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
-                  style={{ left: `calc(${duration > 0 ? (currentTime / duration) * 100 : 0}% - 6px)` }}
+                  className='absolute top-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
+                  style={{ 
+                    left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, 
+                    transform: 'translate(-50%, -50%)' 
+                  }}
                 />
               </div>
             </div>
