@@ -451,42 +451,46 @@ export default function NotesList({
                 </div>
               </div>
             ) : (
-              <div className='w-full px-8 space-y-12'>
-                <div className='flex flex-col items-center gap-2'>
-                  <div className='space-y-2 text-center'>
-                    <p className='text-[15px] text-text-primary font-bold'>
-                      {searchQuery ? 'No matches found' : 'Your vault is empty'}
-                    </p>
-                    <p className='text-[11px] text-text-tertiary uppercase tracking-widest'>
-                      {searchQuery ? 'Try a different query' : 'Create a note to start'}
-                    </p>
-                  </div>
-                  {!searchQuery && (
-                    <button
-                      onClick={onCreateNote}
-                      className='mt-6 px-8 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-[13px] hover:bg-accent-primary-hover active:scale-95 transition-all shadow-[0_8px_20px_rgba(var(--accent-primary-rgb),0.2)]'
-                    >
-                      New Note
-                    </button>
-                  )}
-                </div>
-
-                {!searchQuery && !isSynced && (
-                  <div className='pt-12 border-t border-white/[0.03] space-y-6'>
-                    <div className='text-center space-y-1'>
-                      <p className='text-[11px] font-bold text-text-primary uppercase tracking-[0.2em]'>Link Existing Device</p>
-                      <p className='text-[10px] text-text-tertiary uppercase tracking-widest'>Already have notes elsewhere?</p>
+              <>
+                {searchQuery ? (
+                  <div className='w-full px-8 flex flex-col items-center justify-center gap-4 py-12'>
+                    <div className='space-y-3 text-center'>
+                      <p className='text-[17px] text-text-primary font-bold tracking-tight'>
+                        No matches found
+                      </p>
+                      <p className='text-[13px] text-text-tertiary/80 font-medium'>
+                        Try a different search term
+                      </p>
                     </div>
-                    
-                    <button 
-                      onClick={handleLinkDevice}
-                      className='w-full py-3 bg-white/[0.03] border border-white/5 text-text-secondary rounded-xl text-[12px] font-bold uppercase tracking-widest hover:bg-white/[0.08] hover:text-text-primary hover:border-accent-primary/30 transition-all active:scale-95'
-                    >
-                      Connect Devices
-                    </button>
+                  </div>
+                ) : (
+                  <div className='w-full px-8 space-y-16'>
+                    <div className='flex flex-col items-center gap-4'>
+                      <div className='space-y-2.5 text-center'>
+                        <p className='text-[13px] text-text-tertiary/60 font-bold uppercase tracking-[0.15em]'>
+                          Create a note to start
+                        </p>
+                      </div>
+                    </div>
+
+                    {!isSynced && (
+                      <div className='pt-4 space-y-5'>
+                        <div className='text-center space-y-2'>
+                          <p className='text-[13px] font-bold text-text-primary uppercase tracking-[0.15em]'>Link Existing Device</p>
+                          <p className='text-[11px] text-text-tertiary/60 uppercase tracking-[0.12em]'>Already have notes elsewhere?</p>
+                        </div>
+                        
+                        <button 
+                          onClick={handleLinkDevice}
+                          className='w-full py-4 bg-accent-primary text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+                        >
+                          Connect Device
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         ) : (

@@ -32,6 +32,42 @@ export default function NoteOptionsMenu({
     !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== currentFolderKey
   )
 
+  const processHtmlImages = async (html) => {
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(html, 'text/html')
+      const images = doc.querySelectorAll('img')
+      
+      await Promise.all(Array.from(images).map(async (img) => {
+        try {
+          const src = img.getAttribute('src')
+          // Skip if already base64 or not a valid URL
+          if (!src || src.startsWith('data:')) return
+
+          const response = await fetch(src)
+          const blob = await response.blob()
+          
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              img.setAttribute('src', reader.result)
+              resolve()
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          })
+        } catch (err) {
+          console.error('Failed to process image:', err)
+        }
+      }))
+      
+      return doc.body.innerHTML
+    } catch (error) {
+      console.error('Error processing HTML images:', error)
+      return html
+    }
+  }
+
   return (
     <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
       <button
@@ -104,18 +140,62 @@ export default function NoteOptionsMenu({
           <div 
             onMouseEnter={() => setShowMoveSubmenu(false)}
             onClick={async () => {
-              const textToCopy = onCopy()
-              if (!textToCopy) return
+              const copyData = onCopy()
+              if (!copyData) return
+              
+              setCopied(true)
               
               try {
-                await navigator.clipboard.writeText(textToCopy)
-                setCopied(true)
+                if (typeof copyData === 'object' && copyData.html && copyData.text) {
+                  // Process images to be base64 for HTML representation
+                  const processedHtml = await processHtmlImages(copyData.html)
+                  
+                  const clipboardData = {
+                    'text/html': new Blob([processedHtml], { type: 'text/html' }),
+                    'text/plain': new Blob([copyData.text], { type: 'text/plain' })
+                  }
+
+                  // Try to attach the first image as a binary blob for better compatibility
+                  try {
+                    const parser = new DOMParser()
+                    const doc = parser.parseFromString(copyData.html, 'text/html')
+                    const firstImg = doc.querySelector('img')
+                    if (firstImg) {
+                      const src = firstImg.getAttribute('src')
+                      if (src && !src.startsWith('data:')) {
+                        const response = await fetch(src)
+                        let blob = await response.blob()
+                        
+                        // Force mime type to image/png if it's octet-stream or unknown
+                        // Browsers are strict about MIME types in ClipboardItem
+                        if (blob.type === 'application/octet-stream' || !blob.type) {
+                          blob = new Blob([blob], { type: 'image/png' })
+                        }
+
+                        // Only write if it's a supported image type
+                        if (blob.type.startsWith('image/')) {
+                            clipboardData[blob.type] = blob
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('Failed to attach binary image to clipboard:', e)
+                  }
+
+                  const list = new ClipboardItem(clipboardData)
+                  await navigator.clipboard.write([list])
+                } else {
+                  // Fallback for string or legacy return
+                  await navigator.clipboard.writeText(typeof copyData === 'string' ? copyData : '')
+                }
+
                 setTimeout(() => {
                   setCopied(false)
                   setShowMenu(false)
                 }, 1500)
               } catch (err) {
                 console.error('Failed to copy text: ', err)
+                setCopied(false)
               }
             }}
             className='px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center justify-between group/copy active:scale-95'

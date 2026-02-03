@@ -106,7 +106,7 @@ export default function SyncSettings({ onClose }) {
                 <button
                   onClick={handleCreateInvite}
                   disabled={isLoading}
-                  className='group relative px-10 py-3 bg-accent-primary text-text-primary rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2'
+                  className='group relative px-10 py-4 bg-accent-primary text-text-primary rounded-xl font-bold text-[15px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95'
                 >
                   <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
                   {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
@@ -146,7 +146,7 @@ export default function SyncSettings({ onClose }) {
 
                   <button
                     onClick={handleCopyInvite}
-                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-3 rounded-lg font-medium transition-colors duration-300 ${
+                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold text-[15px] transition-colors duration-300 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 ${
                       copied 
                         ? 'bg-accent-success text-white' 
                         : 'bg-accent-primary text-text-primary'
@@ -187,7 +187,7 @@ export default function SyncSettings({ onClose }) {
                   <button 
                     onClick={handleConnect}
                     disabled={!pasteCode.trim() || isLoading || step !== 'idle'}
-                    className='px-6 py-2.5 bg-accent-primary text-text-primary rounded-lg hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-sm font-medium border border-accent-primary active:scale-95 flex items-center gap-2'
+                    className='px-6 py-4 bg-accent-primary text-text-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-[15px] font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
                   >
                     {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
                     Link Device

@@ -98,9 +98,19 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   }
 
   const handleCopy = () => {
-    if (!noteData) return ''
+    if (!noteData) return null
     const currentText = editorInstance?.getText() || contentText
-    return `${title || 'Untitled Note'}\n\n${currentText || ''}`
+    const safeTitle = title || 'Untitled Note'
+    
+    // Construct HTML with title
+    // Determine title element based on size - using h1 to be standard
+    const titleHtml = `<h1 style="font-size: 2em; font-weight: 800; margin-bottom: 0.5em;">${safeTitle}</h1>`
+    const fullHtml = `${titleHtml}${content || ''}`
+    
+    return {
+      text: `${safeTitle}\n\n${currentText || ''}`,
+      html: fullHtml
+    }
   }
 
   const formatDate = (timestamp) => {
@@ -160,10 +170,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             </svg>
           </div>
           
-          <div className='space-y-3 max-w-[320px]'>
+          <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>No Note Selected</h3>
             <p className='text-[15px] text-text-tertiary leading-relaxed'>
-              Select a thought from the list or <span className='text-accent-primary font-bold'>create a new note</span> to begin your session.
+              Select a note from the list or <span className='text-accent-primary font-bold'>create a new note</span> to begin.
             </p>
           </div>
 
