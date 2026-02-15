@@ -24,6 +24,7 @@ import NoteEditor from './ui/NoteEditor'
 import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
+import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import { backendApi } from './backend/api'
 import { debounce } from './utils'
 import { useWindowSize } from './hooks/useWindowSize'
@@ -155,6 +156,7 @@ function App() {
 
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
       <PairingStatusOverlay />
+      <DeviceRemovedModal />
     </main>
   )
 }
