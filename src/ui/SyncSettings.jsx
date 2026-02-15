@@ -1,4 +1,4 @@
-import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2, Trash2 } from 'lucide-react'
+import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2, Trash2, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '../store/slices/syncSlice'
@@ -242,7 +242,17 @@ function DeviceItem({ device, isOther }) {
   const dispatch = useDispatch()
   const Icon = device.deviceType === 'desktop' ? Monitor : Smartphone
   const [isEditing, setIsEditing] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   const [editedTitle, setEditedTitle] = useState(device.title || '')
+
+  const handleCloseDelete = () => {
+    setIsExiting(true)
+    setTimeout(() => {
+      setIsConfirmingDelete(false)
+      setIsExiting(false)
+    }, 300)
+  }
   
   const handleDoubleClick = () => {
     if (!isOther) {
@@ -268,49 +278,96 @@ function DeviceItem({ device, isOther }) {
   }
   
   return (
-    <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-panel-secondary/60 hover:border-border-secondary transition-colors hardware-accelerated'>
-      <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
-        <Icon className='w-7 h-7' />
-        {device.isLocal && (
-          <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success border-2 border-bg-panel-secondary rounded-full shadow-sm' />
-        )}
-      </div>
-      
-      <div className='flex-1 min-w-0'>
-        {isEditing ? (
-          <input
-            type='text'
-            value={editedTitle}
-            onChange={(e) => setEditedTitle(e.target.value)}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className='w-full font-bold text-text-primary text-base bg-bg-panel border border-accent-primary rounded px-3 py-2 outline-none'
-          />
-        ) : (
-          <div>
-            <span 
-              className='font-bold text-text-primary text-base truncate cursor-pointer block'
-              onDoubleClick={handleDoubleClick}
-              title={device.isLocal ? 'Double-click to rename' : device.title}
-            >
-              {device.title || 'Unnamed Device'}
-            </span>
-            <p className='text-[11px] text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
-              {getPlatformName(device.platform)}
-            </p>
-          </div>
+    <>
+      <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-panel-secondary/60 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
+        <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
+          <Icon className='w-7 h-7' />
+          {device.isLocal && (
+            <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success border-2 border-bg-panel-secondary rounded-full shadow-sm' />
+          )}
+        </div>
+        
+        <div className='flex-1 min-w-0'>
+          {isEditing ? (
+            <input
+              type='text'
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              className='w-full font-bold text-text-primary text-base bg-bg-panel border border-accent-primary rounded px-3 py-2 outline-none'
+            />
+          ) : (
+            <div>
+              <span 
+                className='font-bold text-text-primary text-base truncate cursor-pointer block'
+                onDoubleClick={handleDoubleClick}
+                title={device.isLocal ? 'Double-click to rename' : device.title}
+              >
+                {device.title || 'Unnamed Device'}
+              </span>
+              <p className='text-[11px] text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
+                {getPlatformName(device.platform)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {isOther && (
+          <button 
+            onClick={() => setIsConfirmingDelete(true)}
+            className='opacity-0 group-hover:opacity-100 p-2 hover:bg-accent-destructive/10 rounded-lg text-accent-destructive hover:text-accent-destructive transition-all flex items-center gap-2'
+          >
+            <Trash2 className='w-4 h-4 text-accent-destructive' />
+          </button>
         )}
       </div>
 
-      {isOther && (
-        <button 
-          onClick={() => dispatch(deleteSyncedDevice({ key: device.key }))}
-          className='opacity-0 group-hover:opacity-100 p-2 hover:bg-bg-panel-tertiary rounded-lg text-text-tertiary hover:text-accent-destructive transition-all flex items-center gap-2'
-        >
-          <Trash2 className='w-4 h-4' />
-        </button>
+      {isConfirmingDelete && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0">
+          <div 
+            className={`absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300`}
+            onClick={handleCloseDelete}
+          />
+          
+          <div className={`relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}>
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full" />
+            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full" />
+            
+            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+              <div className="w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2 shadow-[0_0_30px_rgba(var(--accent-danger-rgb),0.2)]">
+                <ShieldAlert className="w-10 h-10 text-accent-danger" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-text-primary tracking-tight">Remove Device?</h3>
+                <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
+                  The device will lose the data sync and will remove all the data from the device.
+                </p>
+              </div>
+
+              <div className="flex gap-3 w-full pt-2">
+                <button
+                  onClick={handleCloseDelete}
+                  className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    dispatch(deleteSyncedDevice({ key: device.key }))
+                    setIsConfirmingDelete(false)
+                  }}
+                  className="flex-1 py-4 bg-accent-danger text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   )
 }

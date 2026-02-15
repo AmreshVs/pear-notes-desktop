@@ -13,7 +13,7 @@ export default function DeviceRemovedModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-0">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xl animate-in fade-in duration-500" />
       
       <div className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
@@ -36,7 +36,7 @@ export default function DeviceRemovedModal() {
             onClick={handleRestart}
             className="w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95"
           >
-            Okay, Verification Required
+            Okay
           </button>
         </div>
       </div>

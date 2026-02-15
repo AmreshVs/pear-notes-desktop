@@ -153,7 +153,6 @@ function App() {
 
       <TitleBar />
       {content}
-
       {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
       <PairingStatusOverlay />
       <DeviceRemovedModal />
