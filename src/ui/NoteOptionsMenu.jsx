@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { MoreHorizontal, Folder, Trash2, ChevronRight, Copy, Check } from 'lucide-react'
-import { ALL_NOTES_KEY } from '../constant'
+import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 
 export default function NoteOptionsMenu({ 
   folders, 

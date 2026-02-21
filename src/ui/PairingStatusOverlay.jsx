@@ -1,7 +1,7 @@
 import { Check, ShieldCheck, Globe, Loader2, Link2 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, subscribePairUser, getShowPairingInput, setShowPairingInput } from '../store/slices/syncSlice'
-import { getFingerprint } from '../utils'
+import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, subscribePairUser, getShowPairingInput, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
+import { getFingerprint } from '@pear-notes/core/utils.js'
 import { useState } from 'react'
 
 export default function PairingStatusOverlay() {

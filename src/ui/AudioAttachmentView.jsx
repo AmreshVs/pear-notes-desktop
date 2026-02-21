@@ -2,9 +2,9 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { Trash2, Download } from 'lucide-react'
 import AudioPlayer from './AudioPlayer'
 import { useSelector } from 'react-redux'
-import { HYPERDRIVE_URL_PREFIX } from '../constant'
-import { getHyperdriveAddress } from '../store/slices/uiSlice'
-import { backendApi } from '../backend/api'
+import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 
 export default function AudioAttachmentView({ node, deleteNode }) {
   const { audioData, duration, url, fileName } = node.attrs

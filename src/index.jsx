@@ -6,10 +6,11 @@ import run from 'pear-run'
 
 import App from './App.jsx'
 import './styles.css'
-import { store } from './store/store.js'
+import { store } from '@pear-notes/core/store/store.js'
 import FramedStream from 'framed-stream'
-import HRPC from './spec/hrpc/'
-import { backendApi } from './backend/api.js'
+import HRPC from '@pear-notes/core/spec/hrpc/index.js'
+import { backendApi } from '@pear-notes/core/backend/api.js'
+
 
 const worker = run(`${Pear.config.link}/src/backend/main.js`, ['amr'])
 const stream = new FramedStream(worker)

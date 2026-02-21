@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from './store/slices/notesSlice'
+import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   setSelectedFolder,
   getFolders,
   createFolder,
   deleteFolder,
   getSelectedFolder
-} from './store/slices/foldersSlice'
+} from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
   setSearchQuery,
   setShowSettings,
@@ -15,7 +15,7 @@ import {
   appReady,
   getSearchQuery,
   getShowSettings
-} from './store/slices/uiSlice'
+} from '@pear-notes/core/store/slices/uiSlice.js'
 
 import TitleBar from './ui/TitleBar'
 import FoldersSidebar from './ui/FoldersSidebar'
@@ -25,8 +25,8 @@ import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import DeviceRemovedModal from './ui/DeviceRemovedModal'
-import { backendApi } from './backend/api'
-import { debounce } from './utils'
+import { backendApi } from '@pear-notes/core/backend/api.js'
+import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
 
 function App() {

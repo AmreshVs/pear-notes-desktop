@@ -13,10 +13,10 @@ import {
 } from 'lucide-react'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { updateFolder } from '../store/slices/foldersSlice'
-import { getNoteCountsPerFolder } from '../store/slices/notesSlice'
-import { getShouldAutoRenameNextFolder, setShouldAutoRenameNextFolder } from '../store/slices/uiSlice'
-import { DEFAULT_FOLDER_NAME } from '../constant'
+import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { getNoteCountsPerFolder } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getShouldAutoRenameNextFolder, setShouldAutoRenameNextFolder } from '@pear-notes/core/store/slices/uiSlice.js'
+import { DEFAULT_FOLDER_NAME } from '@pear-notes/core/constant.js'
 
 const ICON_MAP = {
   FileText,

@@ -1,6 +1,6 @@
 import { ShieldAlert } from 'lucide-react'
 import { useSelector } from 'react-redux'
-import { getDeviceRemoved } from '../store/slices/syncSlice'
+import { getDeviceRemoved } from '@pear-notes/core/store/slices/syncSlice.js'
 
 export default function DeviceRemovedModal() {
   const deviceRemoved = useSelector(getDeviceRemoved)

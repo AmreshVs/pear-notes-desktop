@@ -2,13 +2,13 @@ import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, Chevron
 import { useCallback, useState, useRef, useEffect, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '../store/slices/notesSlice'
-import { getFolders } from '../store/slices/foldersSlice'
-import { getInviterStatus, setShowPairingInput } from '../store/slices/syncSlice'
-import { getHyperdriveAddress } from '../store/slices/uiSlice'
-import { getLocalPreferences } from '../store/slices/syncedDevicesSlice'
-import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '../constant'
-import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '../utils'
+import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
+import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
+import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
 
 const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder, isLast }) => {
   const dispatch = useDispatch()

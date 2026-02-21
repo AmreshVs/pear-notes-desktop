@@ -13,7 +13,7 @@ import {
   Paperclip
 } from 'lucide-react'
 import { useState, useEffect, useRef, forwardRef } from 'react'
-import { backendApi } from '../backend/api'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import LinkModal from './LinkModal'
 import AttachmentMenu from './AttachmentMenu'
 import AudioRecorderModal from './AudioRecorderModal'

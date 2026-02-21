@@ -34,11 +34,11 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import '../styles/tiptap.css'
-import { backendApi } from '../backend/api'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import { useSelector } from 'react-redux'
-import { getSelectedNote } from '../store/slices/notesSlice'
-import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
-import { setEditorFocused } from '../store/slices/editorSlice'
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
 import { useDispatch } from 'react-redux'
 
 const getFontFamilyValue = (family) => {

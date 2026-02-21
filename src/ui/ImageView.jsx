@@ -1,11 +1,11 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import { useSelector } from 'react-redux'
-import { getHyperdriveAddress } from '../store/slices/uiSlice'
-import { HYPERDRIVE_URL_PREFIX } from '../constant'
+import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { Resizable } from 'react-resizable'
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { backendApi } from '../backend/api'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import 'react-resizable/css/styles.css'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {

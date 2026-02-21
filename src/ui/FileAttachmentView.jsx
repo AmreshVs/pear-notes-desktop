@@ -2,10 +2,10 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
-import { backendApi } from '../backend/api'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import { useSelector } from 'react-redux'
-import { getHyperdriveAddress } from '../store/slices/uiSlice'
-import { HYPERDRIVE_URL_PREFIX } from '../constant'
+import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { fileName, fileSize, fileType, fileData, url } = node.attrs

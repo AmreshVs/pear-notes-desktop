@@ -7,7 +7,7 @@ import {
   updateSetting,
   getEditorFontSize,
   getSortBy
-} from '../store/slices/settingsSlice'
+} from '@pear-notes/core/store/slices/settingsSlice.js'
 
 export default function GeneralSettings() {
   const dispatch = useDispatch()

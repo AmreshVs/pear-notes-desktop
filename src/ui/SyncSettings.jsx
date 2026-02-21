@@ -1,9 +1,9 @@
 import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2, Trash2, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '../store/slices/syncSlice'
-import { setShowSettings } from '../store/slices/uiSlice'
-import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice, getLocalPreferences } from '../store/slices/syncedDevicesSlice'
+import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '@pear-notes/core/store/slices/syncSlice.js'
+import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
+import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice, getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
 const PLATFORM_NAMES = {
   'darwin': 'macOS',

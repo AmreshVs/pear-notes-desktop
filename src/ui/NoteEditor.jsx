@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
-import { getNoteData, getSelectedNote } from '../store/slices/notesSlice'
+import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getEditorTitle,
   getEditorContent,
@@ -10,12 +10,12 @@ import {
   setEditorTitle,
   setEditorContent,
   setEditorInstance
-} from '../store/slices/editorSlice'
+} from '@pear-notes/core/store/slices/editorSlice.js'
 import { useSelector, useDispatch } from 'react-redux'
 import NoteOptionsMenu from './NoteOptionsMenu'
-import { getFolders } from '../store/slices/foldersSlice'
-import { updateNote } from '../store/slices/notesSlice'
-import { getFontFamily, getEditorFontSize } from '../store/slices/settingsSlice'
+import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
 
 const getFontFamilyValue = (family) => {
   switch (family) {
