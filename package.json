@@ -1,8 +1,8 @@
 {
-  "name": "pear-notes",
+  "name": "pear-notes-desktop",
   "main": "index.js",
   "pear": {
-    "name": "pear-notes",
+    "name": "pear-notes-desktop",
     "type": "desktop",
     "pre": "pear-electron/pre",
     "gui": {
