@@ -10,12 +10,18 @@ import { store } from '@pear-notes/core/store/store.js'
 import FramedStream from 'framed-stream'
 import HRPC from '@pear-notes/core/spec/hrpc/index.js'
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { setRPC } from '@pear-notes/core/rpc.js'
 
 
 const worker = run(`${Pear.config.link}/src/backend/main.js`, ['amr'])
 const stream = new FramedStream(worker)
 const rpc = new HRPC(stream)
-globalThis.__rpc = rpc
+setRPC(rpc)
+
+if (import.meta.env.DEV || globalThis.Pear?.config?.dev) {
+  globalThis.store = store
+  console.log('redux store exposed as globalThis.store')
+}
 
 const appUpdates = updates({ app: true })
 

@@ -1,3 +1,4 @@
+/* global Pear */
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -28,6 +29,9 @@ import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
+import { loadEnv } from './utils.js'
+
+const env = loadEnv()
 
 function App() {
   const dispatch = useDispatch()
@@ -52,7 +56,7 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
-      await backendApi.ready()
+      await backendApi.ready({ storage: Pear.app.storage, encryption: env.PEAR_NOTES_ENCRYPTION_KEY })
       dispatch(appReady())
     }
 
