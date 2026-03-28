@@ -1,4 +1,5 @@
 import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2, Trash2, ShieldAlert } from 'lucide-react'
+import { QRCodeCanvas } from 'qrcode.react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '@pear-notes/core/store/slices/syncSlice.js'
@@ -126,6 +127,23 @@ export default function SyncSettings({ onClose }) {
                       <h4 className='text-text-primary font-semibold'>Invitation Ready</h4>
                       <p className='text-xs text-text-tertiary font-medium bg-bg-panel-tertiary/50 px-2 py-0.5 rounded-full inline-block mt-1'>
                         {expiresAt ? formatExpiration(expiresAt) : 'Permanent Link'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-col items-center mb-6 space-y-4'>
+                    <div className='p-3 bg-white rounded-2xl shadow-sm'>
+                      <QRCodeCanvas 
+                        value={inviteCode} 
+                        size={160}
+                        level={"H"}
+                        includeMargin={false}
+                      />
+                    </div>
+                    <div className='text-center space-y-1'>
+                      <h5 className='text-text-primary font-bold text-[14px]'>Scan to link faster</h5>
+                      <p className='text-text-tertiary text-[12px] leading-relaxed max-w-[280px]'>
+                        Open the link screen on your other device and scan this QR code to paste the invite instantly.
                       </p>
                     </div>
                   </div>
