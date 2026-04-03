@@ -1,14 +1,15 @@
 import { ShieldAlert } from 'lucide-react'
-import { useSelector } from 'react-redux'
-import { getDeviceRemoved } from '@pear-notes/core/store/slices/syncSlice.js'
+import { useDispatch, useSelector } from 'react-redux'
+import { getDeviceRemoved, clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 
 export default function DeviceRemovedModal() {
+  const dispatch = useDispatch()
   const deviceRemoved = useSelector(getDeviceRemoved)
 
   if (!deviceRemoved) return null
 
   const handleRestart = () => {
-    // Reloading the app to ensure clean state after device removal
+    dispatch(clearStorage())
     location.reload()
   }
 
