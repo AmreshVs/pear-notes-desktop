@@ -1,26 +1,42 @@
-import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Loader2, Trash2, ShieldAlert } from 'lucide-react'
-import { QRCodeCanvas } from 'qrcode.react'
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import {
+  deleteSyncedDevice,
+  getLocalPreferences,
+  getSyncedDevices,
+  updateSyncedDevice
+} from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import {
   createInvite,
   getInvite,
   getInviteExpiresAt,
-  getSyncIsLoading,
-  subscribePairUser,
   getInviterStatus,
-  isValidInvite,
-  extractInvite
-} from '@pear-notes/core'
+  getSyncIsLoading,
+  subscribePairUser
+} from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
-import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice, getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
+import {
+  Check,
+  Globe,
+  Info,
+  Link2,
+  Loader2,
+  Monitor,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Trash2
+} from 'lucide-react'
+import { QRCodeCanvas } from 'qrcode.react'
+import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 
 const PLATFORM_NAMES = {
-  'darwin': 'macOS',
-  'win32': 'Windows',
-  'linux': 'Linux',
-  'android': 'Android',
-  'ios': 'iOS'
+  darwin: 'macOS',
+  win32: 'Windows',
+  linux: 'Linux',
+  android: 'Android',
+  ios: 'iOS'
 }
 
 function getPlatformName(platform) {
@@ -36,9 +52,9 @@ export default function SyncSettings({ onClose }) {
   const syncedDevices = useSelector(getSyncedDevices)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
-  
+
   const isInviteGenerated = !!inviteCode
-  
+
   const [syncTab, setSyncTab] = useState('invite')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
@@ -112,7 +128,8 @@ export default function SyncSettings({ onClose }) {
                 <div className='space-y-2'>
                   <h3 className='text-text-primary font-bold text-xl'>Link Your Devices</h3>
                   <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-                    Create a secure, end-to-end encrypted connection to sync your notes across devices instantly.
+                    Create a secure, end-to-end encrypted connection to sync your notes across
+                    devices instantly.
                   </p>
                 </div>
                 <button
@@ -129,7 +146,7 @@ export default function SyncSettings({ onClose }) {
               <div className='space-y-5'>
                 <div className='bg-bg-panel-secondary/60 backdrop-blur-lg border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
                   <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
-                  
+
                   <div className='flex items-center gap-3 mb-6'>
                     <div className='w-10 h-10 bg-accent-primary/10 rounded-full flex items-center justify-center border border-accent-primary/20'>
                       <ShieldCheck className='w-5 h-5 text-accent-primary' />
@@ -144,17 +161,20 @@ export default function SyncSettings({ onClose }) {
 
                   <div className='flex flex-col items-center mb-6 space-y-4'>
                     <div className='p-3 bg-white rounded-2xl shadow-sm'>
-                      <QRCodeCanvas 
-                        value={inviteCode} 
+                      <QRCodeCanvas
+                        value={inviteCode}
                         size={160}
-                        level={"H"}
+                        level={'H'}
                         includeMargin={false}
                       />
                     </div>
                     <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-[14px]'>Scan to link faster</h5>
+                      <h5 className='text-text-primary font-bold text-[14px]'>
+                        Scan to link faster
+                      </h5>
                       <p className='text-text-tertiary text-[12px] leading-relaxed max-w-[280px]'>
-                        Open the link screen on your other device and scan this QR code to paste the invite instantly.
+                        Open the link screen on your other device and scan this QR code to paste the
+                        invite instantly.
                       </p>
                     </div>
                   </div>
@@ -176,15 +196,19 @@ export default function SyncSettings({ onClose }) {
                   <button
                     onClick={handleCopyInvite}
                     className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold text-[15px] transition-colors duration-300 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 ${
-                      copied 
-                        ? 'bg-accent-success text-white' 
+                      copied
+                        ? 'bg-accent-success text-white'
                         : 'bg-accent-primary text-text-primary'
                     }`}
                   >
                     {copied ? (
-                      <><Check className='w-4 h-4' strokeWidth={2.5} /> Code Copied!</>
+                      <>
+                        <Check className='w-4 h-4' strokeWidth={2.5} /> Code Copied!
+                      </>
                     ) : (
-                      <><Link2 className='w-4 h-4' /> Copy Invite Code</>
+                      <>
+                        <Link2 className='w-4 h-4' /> Copy Invite Code
+                      </>
                     )}
                   </button>
                 </div>
@@ -192,7 +216,8 @@ export default function SyncSettings({ onClose }) {
                 <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-start'>
                   <Info className='w-5 h-5 text-accent-primary shrink-0' />
                   <p className='text-xs text-text-tertiary leading-relaxed'>
-                    For security, don&apos;t share this code in public channels as it grants full access to your notes.
+                    For security, don&apos;t share this code in public channels as it grants full
+                    access to your notes.
                   </p>
                 </div>
               </div>
@@ -204,7 +229,7 @@ export default function SyncSettings({ onClose }) {
                   <Plus className='w-4 h-4 text-accent-primary' />
                   <h4 className='font-bold text-sm text-text-primary'>Already have an invite?</h4>
                 </div>
-                
+
                 <div className='relative flex gap-2'>
                   <input
                     type='text'
@@ -213,7 +238,7 @@ export default function SyncSettings({ onClose }) {
                     placeholder='Paste invite code here...'
                     className='flex-1 px-4 py-3 rounded-xl bg-bg-panel-secondary/50 border border-border-primary text-text-primary text-sm focus:outline-none focus:border-accent-primary transition-colors placeholder:text-text-tertiary/50'
                   />
-                  <button 
+                  <button
                     onClick={handleConnect}
                     disabled={!isValidInvite(pasteCode) || isLoading || step !== 'idle'}
                     className='px-6 py-4 bg-accent-primary text-text-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-[15px] font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
@@ -228,27 +253,35 @@ export default function SyncSettings({ onClose }) {
         ) : (
           <div className='space-y-6'>
             <div className='space-y-1'>
-              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>This Device</h4>
+              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
+                This Device
+              </h4>
               <div className='grid gap-4'>
-                {syncedDevices.filter(d => d.isLocal).map((device) => (
-                  <DeviceItem key={device.key} device={device} />
-                ))}
+                {syncedDevices
+                  .filter((d) => d.isLocal)
+                  .map((device) => (
+                    <DeviceItem key={device.key} device={device} />
+                  ))}
               </div>
             </div>
 
             <div className='space-y-1'>
-              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>Other Devices</h4>
+              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
+                Other Devices
+              </h4>
               <div className='grid gap-4'>
-                {syncedDevices.filter(d => !d.isLocal).length > 0 ? (
-                  syncedDevices.filter(d => !d.isLocal).map((device) => (
-                    <DeviceItem key={device.key} device={device} isOther />
-                  ))
+                {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
+                  syncedDevices
+                    .filter((d) => !d.isLocal)
+                    .map((device) => <DeviceItem key={device.key} device={device} isOther />)
                 ) : (
                   <div className='p-6 bg-bg-panel-secondary/20 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
                     <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
                       <Smartphone className='w-5 h-5 opacity-50' />
                     </div>
-                    <p className='text-xs text-text-tertiary italic'>No other devices connected yet.</p>
+                    <p className='text-xs text-text-tertiary italic'>
+                      No other devices connected yet.
+                    </p>
                   </div>
                 )}
               </div>
@@ -259,7 +292,8 @@ export default function SyncSettings({ onClose }) {
         <div className='pt-2'>
           <p className='text-center text-xs text-text-tertiary px-4'>
             <ShieldCheck className='w-3.5 h-3.5 text-accent-primary inline mr-1.5 opacity-60' />
-            Your data moves directly between devices using encrypted Hypercore logs. No central server involved.
+            Your data moves directly between devices using encrypted Hypercore logs. No central
+            server involved.
           </p>
         </div>
       </div>
@@ -282,7 +316,7 @@ function DeviceItem({ device, isOther }) {
       setIsExiting(false)
     }, 300)
   }
-  
+
   const handleDoubleClick = () => {
     if (!isOther) {
       setIsEditing(true)
@@ -305,7 +339,7 @@ function DeviceItem({ device, isOther }) {
       setEditedTitle(device.title || '')
     }
   }
-  
+
   return (
     <>
       <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-panel-secondary/60 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
@@ -315,7 +349,7 @@ function DeviceItem({ device, isOther }) {
             <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success border-2 border-bg-panel-secondary rounded-full shadow-sm' />
           )}
         </div>
-        
+
         <div className='flex-1 min-w-0'>
           {isEditing ? (
             <input
@@ -329,7 +363,7 @@ function DeviceItem({ device, isOther }) {
             />
           ) : (
             <div>
-              <span 
+              <span
                 className='font-bold text-text-primary text-base truncate cursor-pointer block'
                 onDoubleClick={handleDoubleClick}
                 title={device.isLocal ? 'Double-click to rename' : device.title}
@@ -344,7 +378,7 @@ function DeviceItem({ device, isOther }) {
         </div>
 
         {isOther && (
-          <button 
+          <button
             onClick={() => setIsConfirmingDelete(true)}
             className='opacity-0 group-hover:opacity-100 p-2 hover:bg-accent-destructive/10 rounded-lg text-accent-destructive hover:text-accent-destructive transition-all flex items-center gap-2'
           >
@@ -354,32 +388,36 @@ function DeviceItem({ device, isOther }) {
       </div>
 
       {isConfirmingDelete && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0">
-          <div 
+        <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
+          <div
             className={`absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300`}
             onClick={handleCloseDelete}
           />
-          
-          <div className={`relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}>
-            <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full" />
-            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full" />
-            
-            <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-              <div className="w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2 shadow-[0_0_30px_rgba(var(--accent-danger-rgb),0.2)]">
-                <ShieldAlert className="w-10 h-10 text-accent-danger" />
+
+          <div
+            className={`relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}
+          >
+            <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full' />
+            <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full' />
+
+            <div className='relative z-10 flex flex-col items-center text-center space-y-6'>
+              <div className='w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2 shadow-[0_0_30px_rgba(var(--accent-danger-rgb),0.2)]'>
+                <ShieldAlert className='w-10 h-10 text-accent-danger' />
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-text-primary tracking-tight">Remove Device?</h3>
-                <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
+              <div className='space-y-2'>
+                <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+                  Remove Device?
+                </h3>
+                <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
                   The device will lose the data sync and will remove all the data from the device.
                 </p>
               </div>
 
-              <div className="flex gap-3 w-full pt-2">
+              <div className='flex gap-3 w-full pt-2'>
                 <button
                   onClick={handleCloseDelete}
-                  className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
+                  className='flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95'
                 >
                   Cancel
                 </button>
@@ -388,7 +426,7 @@ function DeviceItem({ device, isOther }) {
                     dispatch(deleteSyncedDevice({ key: device.key }))
                     setIsConfirmingDelete(false)
                   }}
-                  className="flex-1 py-4 bg-accent-danger text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95"
+                  className='flex-1 py-4 bg-accent-danger text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
                 >
                   Confirm
                 </button>
