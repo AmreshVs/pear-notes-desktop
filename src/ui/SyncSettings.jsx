@@ -2,7 +2,16 @@ import { Link2, Check, Info, Monitor, Smartphone, Plus, ShieldCheck, Globe, Load
 import { QRCodeCanvas } from 'qrcode.react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createInvite, getInvite, getInviteExpiresAt, getSyncIsLoading, subscribePairUser, getInviterStatus } from '@pear-notes/core/store/slices/syncSlice.js'
+import {
+  createInvite,
+  getInvite,
+  getInviteExpiresAt,
+  getSyncIsLoading,
+  subscribePairUser,
+  getInviterStatus,
+  isValidInvite,
+  extractInvite
+} from '@pear-notes/core'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getSyncedDevices, deleteSyncedDevice, updateSyncedDevice, getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
@@ -46,8 +55,9 @@ export default function SyncSettings({ onClose }) {
   }
 
   const handleConnect = () => {
-    if (pasteCode.trim()) {
-      dispatch(subscribePairUser({ invite: pasteCode.trim() }))
+    if (isValidInvite(pasteCode)) {
+      const rawInvite = extractInvite(pasteCode)
+      dispatch(subscribePairUser({ invite: rawInvite }))
       setPasteCode('')
       if (onClose) {
         onClose()
@@ -58,6 +68,7 @@ export default function SyncSettings({ onClose }) {
   }
 
   const formatExpiration = (timestamp) => {
+    // Desktop validation test
     if (!timestamp) return ''
     const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp
     const date = new Date(ms)
@@ -204,7 +215,7 @@ export default function SyncSettings({ onClose }) {
                   />
                   <button 
                     onClick={handleConnect}
-                    disabled={!pasteCode.trim() || isLoading || step !== 'idle'}
+                    disabled={!isValidInvite(pasteCode) || isLoading || step !== 'idle'}
                     className='px-6 py-4 bg-accent-primary text-text-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-[15px] font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
                   >
                     {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
