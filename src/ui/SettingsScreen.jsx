@@ -1,11 +1,13 @@
 import {
   Settings as SettingsIcon,
   RefreshCw,
+  HardDrive,
   X
 } from 'lucide-react'
 import { useState } from 'react'
 import GeneralSettings from './GeneralSettings'
 import SyncSettings from './SyncSettings'
+import BackupSettings from './BackupSettings'
 
 export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
@@ -18,7 +20,8 @@ export default function SettingsScreen({ onClose }) {
 
   const sections = [
     { id: 'general', name: 'General', icon: SettingsIcon },
-    { id: 'sync', name: 'Link and Sync', icon: RefreshCw }
+    { id: 'sync', name: 'Link and Sync', icon: RefreshCw },
+    { id: 'backup', name: 'Backup & Restore', icon: HardDrive }
   ]
 
   return (
@@ -75,6 +78,7 @@ export default function SettingsScreen({ onClose }) {
                 {activeSection === 'general' &&
                   'Customize your personal workspace experience, from aesthetics to native language supports.'}
                 {activeSection === 'sync' && 'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
+                {activeSection === 'backup' && 'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
               </p>
             </div>
             <button
@@ -88,6 +92,7 @@ export default function SettingsScreen({ onClose }) {
           <div className='flex-1 overflow-y-auto px-10 pb-10 scrollbar-hide'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
+            {activeSection === 'backup' && <BackupSettings />}
           </div>
         </div>
       </div>
