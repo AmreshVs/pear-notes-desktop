@@ -8,7 +8,6 @@ import {
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
-import { initApp } from '@pear-notes/core/store/slices/uiSlice.js'
 import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -36,6 +35,7 @@ export default function BackupSettings() {
 
   const fileInputRef = useRef(null)
   const [lastBackup, setLastBackup] = useState(null)
+  const [modalState, setModalState] = useState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
 
   useEffect(() => {
     const stored = localStorage.getItem(LAST_BACKUP_KEY)
@@ -43,44 +43,58 @@ export default function BackupSettings() {
   }, [])
 
   useEffect(() => {
-    if (exportStatus.step !== 'done' || !exportBuffer) return
-    try {
-      const uint8 = toUint8Array(exportBuffer)
-      const blob = new Blob([uint8], { type: 'application/octet-stream' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      const date = new Date().toISOString().split('T')[0]
-      a.href = url
-      a.download = `pear-notes-backup-${date}.pnbk`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      const now = new Date()
-      localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
-      setLastBackup(now)
-    } catch {}
-  }, [exportStatus.step, exportBuffer])
+    if (exportStatus.step === 'idle') return
+    if (exportStatus.step === 'error') {
+      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: exportStatus.message })
+      return
+    }
+    if (exportStatus.step === 'done' && exportBuffer) {
+      try {
+        const uint8 = toUint8Array(exportBuffer)
+        const blob = new Blob([uint8], { type: 'application/octet-stream' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        const date = new Date().toISOString().split('T')[0]
+        a.href = url
+        a.download = `pear-notes-backup-${date}.pnbk`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        const now = new Date()
+        localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
+        setLastBackup(now)
+      } catch {}
+      setModalState({ visible: true, done: true, doneType: 'export', error: false, errorMessage: '' })
+      dispatch(resetExport())
+      return
+    }
+    setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+  }, [exportStatus.step, exportStatus.message, exportBuffer])
 
   useEffect(() => {
-    if (importStatus.step !== 'done') return
-    dispatch(initApp())
-  }, [importStatus.step, dispatch])
+    if (importStatus.step === 'idle') return
+    if (importStatus.step === 'error') {
+      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: importStatus.message })
+      return
+    }
+    if (importStatus.step === 'done') {
+      setModalState({ visible: true, done: true, doneType: 'import', error: false, errorMessage: '' })
+      dispatch(resetImport())
+      return
+    }
+    setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+  }, [importStatus.step, importStatus.message, dispatch])
 
-  const activeStatus =
-    exportStatus.step !== 'idle'
-      ? exportStatus
-      : importStatus.step !== 'idle'
-      ? importStatus
-      : null
-
-  const isExporting = exportStatus.step !== 'idle' && exportStatus.step !== 'error'
-  const isImporting = importStatus.step !== 'idle' && importStatus.step !== 'error'
-  const showModal = activeStatus !== null
-  const isDone = exportStatus.step === 'done' || importStatus.step === 'done'
-  const isError = exportStatus.step === 'error' || importStatus.step === 'error'
+  const isExporting = exportStatus.step !== 'idle' && exportStatus.step !== 'done' && exportStatus.step !== 'error'
+  const isImporting = importStatus.step !== 'idle' && importStatus.step !== 'done' && importStatus.step !== 'error'
+  const showModal = modalState.visible
+  const isDone = modalState.done
+  const isError = modalState.error
+  const activeProgressStatus = isExporting ? exportStatus : importStatus
 
   const handleExport = () => {
+    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
     dispatch(resetExport())
     dispatch(startExportBackup())
   }
@@ -94,23 +108,32 @@ export default function BackupSettings() {
     if (!file) return
     e.target.value = ''
     const buffer = await file.arrayBuffer()
+    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
     dispatch(resetImport())
     dispatch(startImportBackup({ buffer: new Uint8Array(buffer) }))
   }
 
   const handleDismiss = () => {
-    if (exportStatus.step === 'done' || exportStatus.step === 'error') dispatch(resetExport())
-    if (importStatus.step === 'done' || importStatus.step === 'error') dispatch(resetImport())
+    if (modalState.doneType === 'import') {
+      location.reload()
+      return
+    }
+    if (modalState.error) {
+      dispatch(resetExport())
+      dispatch(resetImport())
+    }
+    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
   }
 
   const handleCancel = () => {
     dispatch(resetExport())
     dispatch(resetImport())
+    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
   }
 
-  const progressValue = activeStatus?.progress ?? 0
-  const progressMessage = activeStatus?.message ?? ''
-  const progressStep = activeStatus?.step ?? ''
+  const progressValue = activeProgressStatus?.progress ?? 0
+  const progressMessage = activeProgressStatus?.message ?? ''
+  const progressStep = activeProgressStatus?.step ?? ''
 
   const formatLastBackup = (date) =>
     date?.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
@@ -229,12 +252,12 @@ export default function BackupSettings() {
                     ? 'Something went wrong'
                     : isDone
                     ? 'All done!'
-                    : isExporting
+                    : modalState.doneType === 'export' || isExporting
                     ? 'Creating Backup...'
                     : 'Restoring Data...'}
                 </h3>
-                {progressMessage ? (
-                  <p className='text-text-tertiary text-sm leading-relaxed'>{progressMessage}</p>
+                {(isError ? modalState.errorMessage : progressMessage) ? (
+                  <p className='text-text-tertiary text-sm leading-relaxed'>{isError ? modalState.errorMessage : progressMessage}</p>
                 ) : null}
               </div>
 
