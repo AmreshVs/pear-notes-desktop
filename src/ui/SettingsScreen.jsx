@@ -2,12 +2,14 @@ import {
   Settings as SettingsIcon,
   RefreshCw,
   HardDrive,
+  Database,
   X
 } from 'lucide-react'
 import { useState } from 'react'
 import GeneralSettings from './GeneralSettings'
 import SyncSettings from './SyncSettings'
 import BackupSettings from './BackupSettings'
+import StorageSettings from './StorageSettings'
 
 export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
@@ -20,8 +22,9 @@ export default function SettingsScreen({ onClose }) {
 
   const sections = [
     { id: 'general', name: 'General', icon: SettingsIcon },
-    { id: 'sync', name: 'Link and Sync', icon: RefreshCw },
-    { id: 'backup', name: 'Backup & Restore', icon: HardDrive }
+    { id: 'sync', name: 'Link & Sync', icon: RefreshCw },
+    { id: 'backup', name: 'Backup & Restore', icon: HardDrive },
+    { id: 'storage', name: 'Storage', icon: Database }
   ]
 
   return (
@@ -79,6 +82,7 @@ export default function SettingsScreen({ onClose }) {
                   'Customize your personal workspace experience, from aesthetics to native language supports.'}
                 {activeSection === 'sync' && 'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
                 {activeSection === 'backup' && 'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
+                {activeSection === 'storage' && 'Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.'}
               </p>
             </div>
             <button
@@ -93,6 +97,7 @@ export default function SettingsScreen({ onClose }) {
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
             {activeSection === 'backup' && <BackupSettings />}
+            {activeSection === 'storage' && <StorageSettings />}
           </div>
         </div>
       </div>
