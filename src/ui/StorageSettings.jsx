@@ -1,3 +1,4 @@
+/* global Pear */
 import {
   subscribeStorageInfo,
   getNotesStorageInfo,
@@ -11,6 +12,8 @@ import {
   mediaKind
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
+import { deleteSyncedDevice, getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+import { deleteDbEncryptionKey } from '../utils.js'
 import { AlertTriangle, ChevronDown, ChevronRight, Database, HardDrive, Info, Trash2, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -114,6 +117,9 @@ export default function StorageSettings() {
   const isLoading = useSelector(getStorageIsLoading)
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
+  const syncedDevices = useSelector(getSyncedDevices)
+  const localDevice = syncedDevices.find((d) => d.isLocal)
+  const localDeviceKey = localDevice?.key
 
   const [confirmClear, setConfirmClear] = useState(false)
 
@@ -133,8 +139,14 @@ export default function StorageSettings() {
 
   const handleClearStorage = () => {
     setConfirmClear(false)
-    dispatch(clearStorage())
+    if (syncedDevices.length > 1 && localDeviceKey) {
+      dispatch(deleteSyncedDevice({ key: localDeviceKey }))
+    } else {
+      deleteDbEncryptionKey()
+      dispatch(clearStorage())
+    }
   }
+
 
   const blobPct = totalOnDiskBytes > 0 ? Math.round((totalBlobBytes / totalOnDiskBytes) * 100) : 100
 
@@ -288,7 +300,6 @@ export default function StorageSettings() {
             </div>
             <button
               onClick={() => setConfirmClear(true)}
-              disabled={totalOnDiskBytes === 0}
               className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-[13px] font-bold hover:bg-accent-danger/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             >
               <Trash2 className='w-3.5 h-3.5' />

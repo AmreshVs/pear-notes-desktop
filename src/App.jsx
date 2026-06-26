@@ -29,9 +29,8 @@ import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
-import { loadEnv } from './utils.js'
+import { getDbEncryptionKey } from './utils.js'
 
-const env = loadEnv()
 
 function App() {
   const dispatch = useDispatch()
@@ -56,7 +55,8 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
-      await backendApi.ready({ storage: Pear.app.storage, encryption: env.PEAR_NOTES_ENCRYPTION_KEY })
+      const key = getDbEncryptionKey()
+      await backendApi.ready({ storage: Pear.app.storage, encryption: key })
       dispatch(appReady())
     }
 

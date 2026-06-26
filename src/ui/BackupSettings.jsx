@@ -8,9 +8,10 @@ import {
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
-import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
+import { CloudDownload, Database, HardDrive, Lock, Shield, Upload, Eye, EyeOff, Key } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { getDbEncryptionKey } from '../utils.js'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
@@ -34,18 +35,32 @@ export default function BackupSettings() {
   const totalSize = useSelector(getTotalStorageSize) ?? 0
 
   const fileInputRef = useRef(null)
-  const [lastBackup, setLastBackup] = useState(null)
-  const [modalState, setModalState] = useState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
-
-  useEffect(() => {
+  const [lastBackup, setLastBackup] = useState(() => {
     const stored = localStorage.getItem(LAST_BACKUP_KEY)
-    if (stored) setLastBackup(new Date(stored))
-  }, [])
+    return stored ? new Date(stored) : null
+  })
+  const [modalState, setModalState] = useState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
+  const [deviceRecoveryKey] = useState(() => getDbEncryptionKey())
+  const [isKeyVisible, setIsKeyVisible] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [showPromptModal, setShowPromptModal] = useState(false)
+  const [enteredKey, setEnteredKey] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
+
+  const handleCopyRecoveryKey = async () => {
+    if (deviceRecoveryKey) {
+      await navigator.clipboard.writeText(deviceRecoveryKey)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   useEffect(() => {
     if (exportStatus.step === 'idle') return
     if (exportStatus.step === 'error') {
-      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: exportStatus.message })
+      setTimeout(() => {
+        setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: exportStatus.message })
+      }, 0)
       return
     }
     if (exportStatus.step === 'done' && exportBuffer) {
@@ -63,27 +78,40 @@ export default function BackupSettings() {
         URL.revokeObjectURL(url)
         const now = new Date()
         localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
-        setLastBackup(now)
-      } catch {}
-      setModalState({ visible: true, done: true, doneType: 'export', error: false, errorMessage: '' })
+        setTimeout(() => setLastBackup(now), 0)
+      } catch (err) {
+        console.error(err)
+      }
+
+      setTimeout(() => {
+        setModalState({ visible: true, done: true, doneType: 'export', error: false, errorMessage: '' })
+      }, 0)
       dispatch(resetExport())
       return
     }
-    setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
-  }, [exportStatus.step, exportStatus.message, exportBuffer])
+    setTimeout(() => {
+      setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+    }, 0)
+  }, [exportStatus.step, exportStatus.message, exportBuffer, dispatch])
 
   useEffect(() => {
     if (importStatus.step === 'idle') return
     if (importStatus.step === 'error') {
-      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: importStatus.message })
+      setTimeout(() => {
+        setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: importStatus.message })
+      }, 0)
       return
     }
     if (importStatus.step === 'done') {
-      setModalState({ visible: true, done: true, doneType: 'import', error: false, errorMessage: '' })
+      setTimeout(() => {
+        setModalState({ visible: true, done: true, doneType: 'import', error: false, errorMessage: '' })
+      }, 0)
       dispatch(resetImport())
       return
     }
-    setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+    setTimeout(() => {
+      setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+    }, 0)
   }, [importStatus.step, importStatus.message, dispatch])
 
   const isExporting = exportStatus.step !== 'idle' && exportStatus.step !== 'done' && exportStatus.step !== 'error'
@@ -94,7 +122,12 @@ export default function BackupSettings() {
   const activeProgressStatus = isExporting ? exportStatus : importStatus
 
   const handleExport = () => {
-    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
+    const confirmed = window.confirm(
+      "Backup Recovery Key\n\nPlease make sure you have copied your Recovery Key securely. You will need it to restore this backup on other devices.\n\nContinue to create backup?"
+    )
+    if (!confirmed) return
+
+    setModalState({ visible: true, done: false, doneType: 'export', error: false, errorMessage: '' })
     dispatch(resetExport())
     dispatch(startExportBackup())
   }
@@ -103,15 +136,34 @@ export default function BackupSettings() {
     fileInputRef.current?.click()
   }
 
-  const handleFileSelected = async (e) => {
+  const handleFileSelected = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    const buffer = await file.arrayBuffer()
-    setModalState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
-    dispatch(resetImport())
-    dispatch(startImportBackup({ buffer: new Uint8Array(buffer) }))
+
+    if (!file.name.endsWith('.pnbk') && !file.name.endsWith('.pearnotes')) {
+      alert('Please select a valid backup file (.pnbk or .pearnotes)')
+      return
+    }
+
+    setSelectedFile(file)
+    setEnteredKey('')
+    setShowPromptModal(true)
   }
+
+  const handleConfirmRestore = async () => {
+    if (!selectedFile || enteredKey.trim().length !== 64) return
+    const key = enteredKey.trim()
+    const file = selectedFile
+    setShowPromptModal(false)
+    setSelectedFile(null)
+
+    const buffer = await file.arrayBuffer()
+    setModalState({ visible: true, done: false, doneType: 'import', error: false, errorMessage: '' })
+    dispatch(resetImport())
+    dispatch(startImportBackup({ buffer: new Uint8Array(buffer), recoveryKey: key }))
+  }
+
 
   const handleDismiss = () => {
     if (modalState.doneType === 'import') {
@@ -178,7 +230,7 @@ export default function BackupSettings() {
         <input
           ref={fileInputRef}
           type='file'
-          accept='.pnbk'
+          accept='.pnbk,.pearnotes'
           className='hidden'
           onChange={handleFileSelected}
         />
@@ -210,6 +262,33 @@ export default function BackupSettings() {
         </div>
       </div>
 
+      <div className='bg-bg-panel-secondary/40 border border-border-primary rounded-2xl p-6 space-y-4 relative overflow-hidden hover:border-border-secondary transition-colors'>
+        <div className='flex items-center gap-3'>
+          <Key className='w-5 h-5 text-accent-primary' />
+          <h4 className='text-text-primary font-bold text-[15px]'>Recovery Key</h4>
+        </div>
+        <p className='text-text-tertiary text-xs leading-relaxed'>
+          Save this key securely. You will need it to restore this backup on a new device.
+        </p>
+        <div className='flex items-center bg-white/[0.02] border border-white/[0.08] rounded-xl p-1 h-12 pl-4'>
+          <p className='flex-1 text-sm font-mono text-text-secondary select-all truncate mr-2'>
+            {isKeyVisible ? deviceRecoveryKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+          </p>
+          <button
+            onClick={() => setIsKeyVisible(!isKeyVisible)}
+            className='w-10 h-10 flex items-center justify-center text-text-tertiary hover:text-text-primary transition-colors'
+          >
+            {isKeyVisible ? <EyeOff className='w-4.5 h-4.5' /> : <Eye className='w-4.5 h-4.5' />}
+          </button>
+          <button
+            onClick={handleCopyRecoveryKey}
+            className='h-10 px-4 bg-accent-primary text-text-primary rounded-lg font-bold text-xs hover:bg-accent-primary-hover active:scale-95 transition-all'
+          >
+            {copied ? 'Copied!' : 'Copy Key'}
+          </button>
+        </div>
+      </div>
+
       {lastBackup && (
         <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-center'>
           <Shield className='w-5 h-5 text-accent-primary shrink-0' />
@@ -217,6 +296,67 @@ export default function BackupSettings() {
             Last backup:{' '}
             <span className='text-text-primary font-semibold'>{formatLastBackup(lastBackup)}</span>
           </p>
+        </div>
+      )}
+
+      {showPromptModal && (
+        <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
+          <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in fade-in duration-300' onClick={() => {
+            setShowPromptModal(false)
+            setSelectedFile(null)
+          }} />
+
+          <div className='relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
+            <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full' />
+            <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full' />
+
+            <div className='relative z-10 flex flex-col space-y-6'>
+              <div className='flex flex-col items-center text-center space-y-2'>
+                <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
+                  <Key className='w-6 h-6 text-accent-primary' />
+                </div>
+                <h3 className='text-lg font-bold text-text-primary'>Enter Recovery Key</h3>
+                <p className='text-text-tertiary text-xs leading-relaxed max-w-[280px]'>
+                  Please enter the 64-character Recovery Key of the device that created this backup to decrypt your data.
+                </p>
+              </div>
+
+              <div className='space-y-1.5'>
+                <input
+                  type='text'
+                  value={enteredKey}
+                  onChange={(e) => setEnteredKey(e.target.value)}
+                  placeholder='Enter 64-character hex key'
+                  className='w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] focus:border-accent-primary/30 rounded-xl text-sm font-mono text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
+                  maxLength={64}
+                />
+                {enteredKey.trim() && enteredKey.trim().length !== 64 && (
+                  <p className='text-[11px] text-accent-danger/80 ml-1'>
+                    Must be exactly 64 characters (currently {enteredKey.trim().length})
+                  </p>
+                )}
+              </div>
+
+              <div className='flex gap-3 w-full pt-2'>
+                <button
+                  onClick={() => {
+                    setShowPromptModal(false)
+                    setSelectedFile(null)
+                  }}
+                  className='flex-1 py-3 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmRestore}
+                  disabled={enteredKey.trim().length !== 64}
+                  className='flex-1 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
+                >
+                  Restore
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
