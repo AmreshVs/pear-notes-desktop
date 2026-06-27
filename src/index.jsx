@@ -1,35 +1,47 @@
-/* global Pear */
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
-import updates from 'pear-updates'
-import run from 'pear-run'
+import { Duplex } from 'stream'
 
 import App from './App.jsx'
 import './styles.css'
 import { store } from '@pear-notes/core/store/store.js'
 import FramedStream from 'framed-stream'
 import HRPC from '@pear-notes/core/spec/hrpc/index.js'
-import { backendApi } from '@pear-notes/core/backend/api.js'
 import { setRPC } from '@pear-notes/core/rpc.js'
+import { backendApi } from '@pear-notes/core/backend/api.js'
 
+const { ipcRenderer } = window.require('electron')
 
-const worker = run(`${Pear.config.link}/src/backend/main.js`, ['amr'])
-const stream = new FramedStream(worker)
+class WorkerIPCStream extends Duplex {
+  constructor () {
+    super()
+    this._cleanup = window.electronBridge.onWorkerData((chunk) => {
+      this.push(Buffer.from(chunk))
+    })
+  }
+
+  _read () {}
+
+  _write (chunk, encoding, callback) {
+    ipcRenderer.send('worker-data', Buffer.from(chunk))
+    callback()
+  }
+
+  _destroy (err, callback) {
+    if (this._cleanup) this._cleanup()
+    callback(err)
+  }
+}
+
+const workerStream = new WorkerIPCStream()
+const stream = new FramedStream(workerStream)
 const rpc = new HRPC(stream)
 setRPC(rpc)
 
-if (import.meta.env.DEV || globalThis.Pear?.config?.dev) {
+if (!globalThis.production) {
   globalThis.store = store
   console.log('redux store exposed as globalThis.store')
 }
-
-const appUpdates = updates({ app: true })
-
-appUpdates.on('data', () => {
-  location.reload()
-})
-
-// Pear.teardown(() => backendApi.destroy())
 
 window.addEventListener('beforeunload', () => {
   backendApi.destroy()

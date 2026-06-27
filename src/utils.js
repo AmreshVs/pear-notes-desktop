@@ -1,11 +1,10 @@
-/** @typedef {import('pear-interface')} */ /* global Pear */
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 
-export function loadEnv() {
+export function loadEnv () {
   try {
-    const appDir = window.bridge.getAppDir()
+    const appDir = window.electronBridge.getAppDir()
     const envPath = path.join(appDir, '.env')
     if (!fs.existsSync(envPath)) return {}
     const content = fs.readFileSync(envPath, 'utf-8')
@@ -22,9 +21,9 @@ export function loadEnv() {
   }
 }
 
-export function getDbEncryptionKey() {
+export function getDbEncryptionKey () {
   try {
-    const storageDir = Pear.app.storage
+    const storageDir = window.electronBridge.getStoragePath()
     const configFile = path.join(storageDir, 'desktop-config.json')
 
     if (fs.existsSync(configFile)) {
@@ -36,7 +35,7 @@ export function getDbEncryptionKey() {
 
     let key = ''
     try {
-      const appDir = Pear?.app?.dir || (window.bridge ? window.bridge.getAppDir() : '')
+      const appDir = window.electronBridge.getAppDir()
       const envPath = path.join(appDir, '.env')
       if (fs.existsSync(envPath)) {
         const content = fs.readFileSync(envPath, 'utf-8')
@@ -64,9 +63,9 @@ export function getDbEncryptionKey() {
   }
 }
 
-export function deleteDbEncryptionKey() {
+export function deleteDbEncryptionKey () {
   try {
-    const storageDir = Pear.app.storage
+    const storageDir = window.electronBridge.getStoragePath()
     const configFile = path.join(storageDir, 'desktop-config.json')
     if (fs.existsSync(configFile)) {
       fs.unlinkSync(configFile)
@@ -75,4 +74,3 @@ export function deleteDbEncryptionKey() {
     console.error('Error in deleteDbEncryptionKey', e)
   }
 }
-

@@ -3,6 +3,7 @@ node_modules
 storage/*
 package-lock.json
 dist/*
+out/
 src/styles/*.md
 src/store/*.md
 .env
