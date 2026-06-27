@@ -1,4 +1,3 @@
-/* global Pear */
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -56,7 +55,8 @@ function App() {
   useEffect(() => {
     const load = async () => {
       const key = getDbEncryptionKey()
-      await backendApi.ready({ storage: Pear.app.storage, encryption: key })
+      const storagePath = window.electronBridge.getStoragePath()
+      await backendApi.ready({ storage: storagePath, encryption: key })
       dispatch(appReady())
     }
 

@@ -129,7 +129,7 @@ export default function StorageSettings() {
 
   useEffect(() => {
     if (needsReload) {
-      Pear.reload()
+      window.electronBridge.reload()
     }
   }, [needsReload])
 
