@@ -26,10 +26,9 @@ function getWindowsKitVersion () {
 
 let packagerConfig = {
   name: appName,
-  icon: 'build/icon',
+  icon: path.join(__dirname, 'build', 'icon'),
   protocols: [{ name: appName, schemes: [pkg.name] }],
-  derefSymlinks: true,
-  asar: true
+  derefSymlinks: true
 }
 
 if (process.env.MAC_CODESIGN_IDENTITY) {
@@ -100,10 +99,6 @@ module.exports = {
   },
 
   plugins: [
-    {
-      name: 'electron-forge-plugin-universal-prebuilds',
-      config: {}
-    },
     {
       name: 'electron-forge-plugin-prune-prebuilds',
       config: {}
