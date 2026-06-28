@@ -7,3 +7,4 @@ out/
 src/styles/*.md
 src/store/*.md
 .env
+.claude
