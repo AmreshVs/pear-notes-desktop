@@ -30,15 +30,15 @@ export default function SettingsScreen({ onClose }) {
   return (
     <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
       <div 
-        className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300 cursor-pointer`}
+        className={`absolute inset-0 bg-backdrop-light backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300 cursor-pointer`}
         onClick={handleAnimatedClose}
       />
 
-      <div className={`relative bg-bg-panel/60 backdrop-blur-3xl border border-white/[0.08] rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}>
+      <div className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}>
         <div className="absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
-        <div className='w-72 bg-white/[0.02] border-r border-white/[0.05] flex flex-col relative z-10'>
+        <div className='w-72 bg-overlay-faint border-r border-border-primary flex flex-col relative z-10'>
           <div className='p-8'>
             <h2 className='text-text-primary font-black text-2xl tracking-tighter'>Settings</h2>
             <p className='text-text-tertiary text-[11px] font-bold uppercase tracking-[0.2em] mt-1 opacity-50'>Preference Hub</p>
@@ -56,7 +56,7 @@ export default function SettingsScreen({ onClose }) {
                     ${
                       isActive
                         ? 'bg-accent-primary/10 text-accent-primary'
-                        : 'text-text-secondary hover:bg-white/[0.04] hover:text-text-primary'
+                        : 'text-text-secondary hover:bg-overlay-light hover:text-text-primary'
                     }`}
                 >
                   <Icon
@@ -87,7 +87,7 @@ export default function SettingsScreen({ onClose }) {
             </div>
             <button
               onClick={handleAnimatedClose}
-              className='p-3 bg-white/[0.03] hover:bg-white/[0.08] text-text-tertiary hover:text-text-primary rounded-xl transition-all active:scale-90 border border-white/[0.05] align-self-start'
+              className='p-3 bg-overlay-subtle hover:bg-overlay-medium text-text-tertiary hover:text-text-primary rounded-xl transition-all active:scale-90 border border-overlay-soft align-self-start'
             >
               <X className='w-5 h-5' />
             </button>

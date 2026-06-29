@@ -1,15 +1,27 @@
 import { useState, useRef, useEffect } from 'react'
 import { Mic, Square, X } from 'lucide-react'
 import AudioPlayer from './AudioPlayer'
+import { formatTime } from '../utils/formatters'
 
 export default function AudioRecorderModal({ onClose, onSaveAudio }) {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [audioBlob, setAudioBlob] = useState(null)
+  const [audioDataUrl, setAudioDataUrl] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const timerRef = useRef(null)
+
+  useEffect(() => {
+    if (!audioBlob) {
+      setAudioDataUrl(null)
+      return
+    }
+    const reader = new FileReader()
+    reader.onloadend = () => setAudioDataUrl(reader.result)
+    reader.readAsDataURL(audioBlob)
+  }, [audioBlob])
 
   useEffect(() => {
     return () => {
@@ -62,26 +74,16 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
   }
 
   const handleSave = () => {
-    if (audioBlob) {
+    if (audioDataUrl) {
       setIsSaving(true)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        onSaveAudio({
-          data: e.target.result,
-          duration: recordingTime
-        })
-        setTimeout(() => {
-          onClose()
-        }, 300)
-      }
-      reader.readAsDataURL(audioBlob)
+      onSaveAudio({
+        data: audioDataUrl,
+        duration: recordingTime
+      })
+      setTimeout(() => {
+        onClose()
+      }, 300)
     }
-  }
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   return (
@@ -90,13 +92,13 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
         className='fixed inset-0 flex items-center justify-center z-[110] p-6'
       >
         <div 
-          className='absolute inset-0 bg-black/60 backdrop-blur-xl animate-in fade-in duration-300'
+          className='absolute inset-0 bg-backdrop-medium backdrop-blur-xl animate-in fade-in duration-300'
           onClick={!isRecording ? onClose : undefined}
         />
-        <div className='relative bg-bg-panel/70 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] w-full max-w-sm shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col'>
+        <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] w-full max-w-sm shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col'>
           <div className="absolute -top-32 -left-32 w-64 h-64 bg-accent-primary/10 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-accent-primary/5 blur-[80px] rounded-full pointer-events-none" />
-          <div className='bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between px-6 py-5 relative z-10'>
+          <div className='bg-overlay-faint border-b border-overlay-soft flex items-center justify-between px-6 py-5 relative z-10'>
             <div className='flex items-center gap-3'>
               <div className='w-9 h-9 rounded-xl bg-accent-primary/10 flex items-center justify-center text-accent-primary border border-accent-primary/20'>
                 <Mic className='w-4 h-4' />
@@ -109,7 +111,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
             <button
               onClick={onClose}
               disabled={isRecording}
-              className={`w-8 h-8 flex items-center justify-center bg-white/[0.03] hover:bg-white/[0.08] text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-white/[0.05] ${
+              className={`w-8 h-8 flex items-center justify-center bg-overlay-subtle hover:bg-overlay-medium text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-overlay-soft ${
                 isRecording ? 'opacity-30 cursor-not-allowed' : ''
               }`}
               title='Close'
@@ -146,8 +148,8 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
               )}
               {audioBlob && (
                 <div className='w-full animate-in slide-in-from-bottom-4 duration-300'>
-                  <AudioPlayer 
-                    src={URL.createObjectURL(audioBlob)} 
+                  <AudioPlayer
+                    src={audioDataUrl}
                     duration={recordingTime}
                     title="Preview Recording"
                   />
@@ -156,14 +158,14 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
             </div>
           </div>
           {audioBlob && (
-            <div className='flex gap-3 p-5 border-t border-white/[0.05] bg-white/[0.02] relative z-10'>
+            <div className='flex gap-3 p-5 border-t border-overlay-soft bg-overlay-faint relative z-10'>
               <button
                 onClick={() => {
                   setAudioBlob(null)
                   setRecordingTime(0)
                 }}
                 disabled={isSaving}
-                className='flex-1 px-4 py-3 rounded-xl bg-bg-tertiary/40 hover:bg-bg-tertiary/60 text-text-secondary hover:text-text-primary transition-all font-bold text-sm tracking-tight border border-white/[0.05] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95'
+                className='flex-1 px-4 py-3 rounded-xl bg-bg-tertiary/40 hover:bg-bg-tertiary/60 text-text-secondary hover:text-text-primary transition-all font-bold text-sm tracking-tight border border-overlay-soft disabled:opacity-50 disabled:cursor-not-allowed active:scale-95'
               >
                 Re-record
               </button>

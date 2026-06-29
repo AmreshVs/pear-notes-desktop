@@ -28,7 +28,10 @@ let packagerConfig = {
   name: appName,
   icon: path.join(__dirname, 'build', 'icon'),
   protocols: [{ name: appName, schemes: [pkg.name] }],
-  derefSymlinks: true
+  derefSymlinks: true,
+  extendInfo: {
+    NSMicrophoneUsageDescription: `${appName} needs access to your microphone to record voice notes.`
+  }
 }
 
 if (process.env.MAC_CODESIGN_IDENTITY) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react'
+import { formatRelativeDate } from '../utils/formatters'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -16,15 +17,7 @@ import NoteOptionsMenu from './NoteOptionsMenu'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
-
-const getFontFamilyValue = (family) => {
-  switch (family) {
-    case 'Serif': return 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
-    case 'Mono': return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
-    case 'System': return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    case 'Inter': default: return '"Inter", system-ui, -apple-system, sans-serif'
-  }
-}
+import { getFontFamilyValue } from '../utils/fonts'
 
 
 
@@ -101,9 +94,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     if (!noteData) return null
     const currentText = editorInstance?.getText() || contentText
     const safeTitle = title || 'Untitled Note'
-    
-    // Construct HTML with title
-    // Determine title element based on size - using h1 to be standard
     const titleHtml = `<h1 style="font-size: 2em; font-weight: 800; margin-bottom: 0.5em;">${safeTitle}</h1>`
     const fullHtml = `${titleHtml}${content || ''}`
     
@@ -113,47 +103,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
-  const formatDate = (timestamp) => {
-    if (!timestamp) return ''
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diff = now - date
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-    if (days === 0) {
-      const timeStr = date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-      return `Today at ${timeStr}`
-    } else if (days === 1) {
-      const timeStr = date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-      return `Yesterday at ${timeStr}`
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-    }
-  }
 
   if (!noteData || !selectedNoteKey) {
     return (
       <div className='flex-1 flex items-center justify-center bg-bg-primary relative overflow-hidden'>
-        {/* Subtle background glow */}
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
         
         <div className='relative z-10 flex flex-col items-center text-center px-8 animate-in fade-in zoom-in-95 duration-700'>
-          <div className='w-24 h-24 bg-bg-panel border border-white/[0.05] rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl relative group'>
+          <div className='w-24 h-24 bg-bg-secondary border border-border-primary rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl relative group'>
             <div className='absolute inset-0 bg-accent-primary/10 blur-xl rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700' />
             <svg
               className='w-10 h-10 text-accent-primary relative z-10 opacity-80'
@@ -234,7 +191,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       </div>
       <div className='absolute bottom-6 right-8 pointer-events-none z-30 opacity-40 hover:opacity-100 transition-opacity duration-500'>
         <span className='text-[10px] font-bold text-text-tertiary uppercase tracking-widest'>
-          edited {formatDate(noteData?.updatedAt || noteData?.createdAt)}
+          edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>
     </div>

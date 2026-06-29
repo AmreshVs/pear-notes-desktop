@@ -15,9 +15,9 @@ export default function DeviceRemovedModal() {
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl animate-in fade-in duration-500" />
+      <div className="absolute inset-0 bg-backdrop-medium backdrop-blur-xl animate-in fade-in duration-500" />
       
-      <div className="relative bg-bg-panel/80 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
+      <div className="relative bg-bg-panel/95 backdrop-blur-2xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full" />
         

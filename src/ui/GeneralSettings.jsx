@@ -25,13 +25,13 @@ export default function GeneralSettings() {
       <div className="space-y-1">
         <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Interface</h3>
         
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
-          <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
+        <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
+          <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>App Theme</label>
               <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Select your preferred aesthetic.</p>
             </div>
-            <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-white/[0.05]'>
+            <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary'>
               {['System', 'Light', 'Dark'].map((option) => (
                 <button
                   key={option}
@@ -39,7 +39,7 @@ export default function GeneralSettings() {
                   className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
                     theme === option.toLowerCase()
                       ? 'bg-accent-primary text-text-primary shadow-sm'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
                   }`}
                 >
                   {option}
@@ -52,8 +52,8 @@ export default function GeneralSettings() {
 
       <div className="space-y-1">
         <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Notes List</h3>
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
-          <div className="p-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors">
+        <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
+          <div className="p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>Sort notes by</label>
               <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Choose your preferred sorting order.</p>
@@ -62,7 +62,7 @@ export default function GeneralSettings() {
               <select 
                 value={sortBy}
                 onChange={(e) => handleUpdateSetting('sortBy', e.target.value)}
-                className='appearance-none bg-bg-tertiary/50 border border-white/[0.05] text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
+                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
                 <option value="updatedAt">Date Edited</option>
                 <option value="createdAt">Date Created</option>
@@ -76,8 +76,8 @@ export default function GeneralSettings() {
 
       <div className="space-y-1">
         <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Editor</h3>
-        <div className="bg-bg-panel/20 border border-white/[0.05] rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
-          <div className="p-6 flex items-center justify-between border-b border-white/[0.05] group hover:bg-white/[0.02] transition-colors">
+        <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
+          <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
               <label className='block text-text-primary text-[15px] font-bold'>Font Family</label>
               <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Primary typeface for notes.</p>
@@ -86,7 +86,7 @@ export default function GeneralSettings() {
               <select 
                 value={fontFamily}
                 onChange={(e) => handleUpdateSetting('fontFamily', e.target.value)}
-                className='appearance-none bg-bg-tertiary/50 border border-white/[0.05] text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
+                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
                 <option value="Inter">Inter</option>
                 <option value="Outfit">Outfit</option>
@@ -101,7 +101,7 @@ export default function GeneralSettings() {
             </div>
           </div>
 
-          <div className="p-6 space-y-4 group hover:bg-white/[0.02] transition-colors">
+          <div className="p-6 space-y-4 group hover:bg-overlay-faint transition-colors">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <label className='block text-text-primary text-[15px] font-bold'>Default text size</label>
@@ -129,7 +129,7 @@ export default function GeneralSettings() {
                 />
                 <div className="absolute inset-0 flex justify-between items-center px-1 pointer-events-none">
                   {[12, 14, 16, 18, 20, 22, 24].map((tick) => (
-                    <div key={tick} className={`w-1 h-1 rounded-full ${editorFontSize === tick ? 'bg-accent-primary' : 'bg-white/10'}`} />
+                    <div key={tick} className={`w-1 h-1 rounded-full ${editorFontSize === tick ? 'bg-accent-primary' : 'bg-overlay-strong'}`} />
                   ))}
                 </div>
               </div>

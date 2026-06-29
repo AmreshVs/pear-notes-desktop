@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { MoreHorizontal, Folder, Trash2, ChevronRight, Copy, Check } from 'lucide-react'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
+import { processHtmlImages } from '../lib/fileManager'
 
 export default function NoteOptionsMenu({ 
   folders, 
@@ -32,44 +33,8 @@ export default function NoteOptionsMenu({
     !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== currentFolderKey
   )
 
-  const processHtmlImages = async (html) => {
-    try {
-      const parser = new DOMParser()
-      const doc = parser.parseFromString(html, 'text/html')
-      const images = doc.querySelectorAll('img')
-      
-      await Promise.all(Array.from(images).map(async (img) => {
-        try {
-          const src = img.getAttribute('src')
-          // Skip if already base64 or not a valid URL
-          if (!src || src.startsWith('data:')) return
-
-          const response = await fetch(src)
-          const blob = await response.blob()
-          
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              img.setAttribute('src', reader.result)
-              resolve()
-            }
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-          })
-        } catch (err) {
-          console.error('Failed to process image:', err)
-        }
-      }))
-      
-      return doc.body.innerHTML
-    } catch (error) {
-      console.error('Error processing HTML images:', error)
-      return html
-    }
-  }
-
   return (
-    <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
+    <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/90 backdrop-blur-xl border border-border-primary shadow-md w-fit transition-all duration-300 hover:bg-bg-panel/95 hover:border-border-secondary'>
       <button
         ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
@@ -84,7 +49,7 @@ export default function NoteOptionsMenu({
       {showMenu && (
         <div 
           ref={menuRef}
-          className='absolute top-full right-0 mt-3 z-[120] bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
+          className='absolute top-full right-0 mt-3 z-[120] bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
         >
           <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
           <div className='relative z-10'>
@@ -103,7 +68,7 @@ export default function NoteOptionsMenu({
 
             {showMoveSubmenu && (
               <div 
-                className='absolute top-0 right-full mr-2 bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[180px] p-2 animate-in slide-in-from-right-2 fade-in duration-300 overflow-hidden'
+                className='absolute top-0 right-full mr-2 bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[180px] p-2 animate-in slide-in-from-right-2 fade-in duration-300 overflow-hidden'
                 onMouseLeave={() => setShowMoveSubmenu(false)}
               >
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
@@ -135,7 +100,7 @@ export default function NoteOptionsMenu({
             )}
           </div>
 
-          <div className="h-px bg-white/[0.05] my-1 mx-2" />
+          <div className="h-px bg-overlay-soft my-1 mx-2" />
 
           <div 
             onMouseEnter={() => setShowMoveSubmenu(false)}
@@ -147,7 +112,6 @@ export default function NoteOptionsMenu({
               
               try {
                 if (typeof copyData === 'object' && copyData.html && copyData.text) {
-                  // Process images to be base64 for HTML representation
                   const processedHtml = await processHtmlImages(copyData.html)
                   
                   const clipboardData = {
@@ -155,7 +119,6 @@ export default function NoteOptionsMenu({
                     'text/plain': new Blob([copyData.text], { type: 'text/plain' })
                   }
 
-                  // Try to attach the first image as a binary blob for better compatibility
                   try {
                     const parser = new DOMParser()
                     const doc = parser.parseFromString(copyData.html, 'text/html')
@@ -166,13 +129,10 @@ export default function NoteOptionsMenu({
                         const response = await fetch(src)
                         let blob = await response.blob()
                         
-                        // Force mime type to image/png if it's octet-stream or unknown
-                        // Browsers are strict about MIME types in ClipboardItem
                         if (blob.type === 'application/octet-stream' || !blob.type) {
                           blob = new Blob([blob], { type: 'image/png' })
                         }
 
-                        // Only write if it's a supported image type
                         if (blob.type.startsWith('image/')) {
                             clipboardData[blob.type] = blob
                         }
@@ -185,7 +145,6 @@ export default function NoteOptionsMenu({
                   const list = new ClipboardItem(clipboardData)
                   await navigator.clipboard.write([list])
                 } else {
-                  // Fallback for string or legacy return
                   await navigator.clipboard.writeText(typeof copyData === 'string' ? copyData : '')
                 }
 
@@ -210,7 +169,7 @@ export default function NoteOptionsMenu({
             </div>
           </div>
 
-          <div className="h-px bg-white/[0.05] my-1 mx-2" />
+          <div className="h-px bg-overlay-soft my-1 mx-2" />
 
           <div 
             onMouseEnter={() => setShowMoveSubmenu(false)}

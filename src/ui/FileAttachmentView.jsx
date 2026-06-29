@@ -2,10 +2,10 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
-import { backendApi } from '@pear-notes/core/backend/api.js'
 import { useSelector } from 'react-redux'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { deleteHyperdriveFile, downloadAsBlob, createDownloadLink, base64ToBlob } from '../lib/fileManager'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { fileName, fileSize, fileType, fileData, url } = node.attrs
@@ -81,44 +81,21 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const handleDownload = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    // Handle URL download
+
     if (resolvedUrl) {
       try {
-        const response = await fetch(resolvedUrl)
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        a.download = fileName || 'download'
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        const blob = await downloadAsBlob(resolvedUrl)
+        createDownloadLink(blob, fileName || 'download')
       } catch (error) {
         console.error('Download failed:', error)
       }
       return
     }
 
-    // Handle legacy base64 download
     if (!fileData) return
     try {
-      const byteString = atob(fileData.split(',')[1])
-      const mimeString = fileData.split(',')[0].split(':')[1].split(';')[0]
-      const ab = new ArrayBuffer(byteString.length)
-      const ia = new Uint8Array(ab)
-      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-      const blob = new Blob([ab], { type: mimeString })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = fileName || 'download'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const blob = base64ToBlob(fileData)
+      createDownloadLink(blob, fileName || 'download')
     } catch (error) {
       console.error('Error downloading file:', error)
     }
@@ -126,15 +103,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
   const handleDelete = async (e) => {
     e.stopPropagation()
-    
-    // Call backend API to delete from Hyperdrive if we have a URL
-    if (url && url.startsWith(HYPERDRIVE_URL_PREFIX)) {
-      try {
-        const key = url.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
-        await backendApi.deleteFile(key)
-      } catch (error) {
-        console.error('Error deleting file from backend:', error)
-      }
+
+    try {
+      await deleteHyperdriveFile(url)
+    } catch (error) {
+      console.error('Error deleting file from backend:', error)
     }
 
     if (deleteNode) deleteNode()
@@ -143,7 +116,6 @@ export default function FileAttachmentView({ node, deleteNode }) {
   return (
     <NodeViewWrapper className='file-attachment-wrapper'>
       {isAudio ? (
-        /* SPECIAL HANDLING FOR AUDIO: Use local relative container to avoid double borders from AudioPlayer */
         <div className='relative my-3 group'>
           <AudioPlayer 
             src={resolvedUrl || fileData} 
@@ -151,7 +123,6 @@ export default function FileAttachmentView({ node, deleteNode }) {
             title={fileName || 'Audio Attachment'} 
           />
           
-          {/* Hover actions for audio files */}
           <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
             {(resolvedUrl || fileData) && (
               <button
@@ -172,9 +143,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
           </div>
         </div>
       ) : (
-        /* HANDLING FOR VIDEO AND OTHER FILES: Use the standard bordered wrapper */
         <div className='flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden'>
-          {/* Playback Area for Video */}
           {isVideo && (resolvedUrl || fileData) && (
             <div className='relative aspect-video bg-black'>
               <video
@@ -197,7 +166,6 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
           )}
 
-          {/* Info Area */}
           <div className={`relative flex items-center gap-4 p-${isVideo ? 6 : 4}`}>
             <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-secondary border border-border-primary'>
               {getFileIcon()}
@@ -214,7 +182,6 @@ export default function FileAttachmentView({ node, deleteNode }) {
               </div>
             </div>
 
-            {/* Hover Actions for non-audio files */}
             <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
               {(resolvedUrl || fileData) && (
                 <button
@@ -235,7 +202,6 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
           </div>
 
-          {/* Progress bar for video */}
           {isVideo && (
             <div className='px-4 pb-4'>
               <div className='relative h-1.5 bg-bg-tertiary w-full rounded-full group/slider'>

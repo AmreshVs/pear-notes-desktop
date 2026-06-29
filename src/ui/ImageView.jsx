@@ -5,7 +5,7 @@ import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { Resizable } from 'react-resizable'
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { backendApi } from '@pear-notes/core/backend/api.js'
+import { deleteHyperdriveFile } from '../lib/fileManager'
 import 'react-resizable/css/styles.css'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
@@ -21,7 +21,6 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
     const ratio = naturalWidth / naturalHeight
     setAspectRatio(ratio)
     
-    // If we have nothing, default to 300 width and calc height
     if (!initialWidth && !initialHeight) {
       setWidth(300)
       setHeight(300 / ratio)
@@ -50,14 +49,11 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
   const handleDelete = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    if (src && src.startsWith(HYPERDRIVE_URL_PREFIX)) {
-      try {
-        const key = src.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
-        await backendApi.deleteFile(key)
-      } catch (error) {
-        console.error('Error deleting image from backend:', error)
-      }
+
+    try {
+      await deleteHyperdriveFile(src)
+    } catch (error) {
+      console.error('Error deleting image from backend:', error)
     }
 
     if (deleteNode) deleteNode()

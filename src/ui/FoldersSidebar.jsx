@@ -57,8 +57,6 @@ export default function FoldersSidebar({
         onSelectFolder(newFolder.id)
         setNewFolderId(newFolder.id)
         dispatch(setShouldAutoRenameNextFolder(false))
-        
-        // Clear new folder highlight after animation
         setTimeout(() => setNewFolderId(null), 1000)
       }
     }
@@ -208,7 +206,7 @@ export default function FoldersSidebar({
         {isMenuOpen && (
           <div
             ref={(el) => (menuRefs.current[folder.id] = el)}
-            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel border border-white/[0.05] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 transition-none duration-0"
+            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel border border-overlay-soft rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 transition-none duration-0"
           >
             <div className="relative z-10">
               <button
@@ -231,7 +229,7 @@ export default function FoldersSidebar({
               </button>
               {!folder.isSystem && (
                 <>
-                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
+                  <div className="h-px bg-overlay-soft my-1 mx-2" />
                   <button
                     onClick={() => handleMenuAction('rename', folder)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-none duration-0 text-left group/item"
@@ -241,7 +239,7 @@ export default function FoldersSidebar({
                     </div>
                     <span className="font-bold tracking-tight">Rename</span>
                   </button>
-                  <div className="h-px bg-white/[0.05] my-1 mx-2" />
+                  <div className="h-px bg-overlay-soft my-1 mx-2" />
                   <button
                     onClick={() => handleMenuAction('delete', folder)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-accent-danger/90 hover:bg-accent-danger/10 rounded-xl transition-none duration-0 text-left group/item"
@@ -267,7 +265,7 @@ export default function FoldersSidebar({
           <h2 className="text-[20px] font-bold text-text-primary tracking-tight transition-none">Folders</h2>
           <button
             onClick={handleCreateNewFolder}
-            className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-0'
+            className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
             title='New Folder'
           >
             <FolderPlus className='w-5 h-5 transition-none' />

@@ -45,7 +45,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
 
   return (
     <div
-      className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm'
+      className='fixed inset-0 bg-backdrop-light flex items-center justify-center z-50 backdrop-blur-sm'
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >

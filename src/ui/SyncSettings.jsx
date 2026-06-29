@@ -84,7 +84,6 @@ export default function SyncSettings({ onClose }) {
   }
 
   const formatExpiration = (timestamp) => {
-    // Desktop validation test
     if (!timestamp) return ''
     const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp
     const date = new Date(ms)
@@ -94,13 +93,13 @@ export default function SyncSettings({ onClose }) {
 
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-white/[0.05] w-fit mx-auto'>
+      <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-overlay-soft w-fit mx-auto'>
         <button
           onClick={() => setSyncTab('invite')}
           className={`px-6 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
             syncTab === 'invite'
               ? 'bg-accent-primary text-text-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
+              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
           }`}
         >
           Link Device
@@ -110,7 +109,7 @@ export default function SyncSettings({ onClose }) {
           className={`px-6 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
             syncTab === 'manage'
               ? 'bg-accent-primary text-text-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.05]'
+              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
           }`}
         >
           My Devices
@@ -121,7 +120,7 @@ export default function SyncSettings({ onClose }) {
         {syncTab === 'invite' ? (
           <div className='space-y-6'>
             {!isInviteGenerated ? (
-              <div className='bg-bg-panel-secondary/40 backdrop-blur-md border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 hover:border-border-secondary transition-colors'>
+              <div className='bg-bg-secondary border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 hover:border-border-secondary transition-colors'>
                 <div className='w-20 h-20 bg-accent-primary/5 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/10 shadow-inner'>
                   <Globe className='w-10 h-10 text-accent-primary' />
                 </div>
@@ -144,7 +143,7 @@ export default function SyncSettings({ onClose }) {
               </div>
             ) : (
               <div className='space-y-5'>
-                <div className='bg-bg-panel-secondary/60 backdrop-blur-lg border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
+                <div className='bg-bg-secondary border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
                   <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
 
                   <div className='flex items-center gap-3 mb-6'>
@@ -188,7 +187,7 @@ export default function SyncSettings({ onClose }) {
                         type='text'
                         readOnly
                         value={inviteCode}
-                        className='w-full px-4 py-3 bg-bg-panel/40 border border-white/5 rounded-xl text-text-primary font-mono text-[14px] tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
+                        className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-text-primary font-mono text-[14px] tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
                       />
                     </div>
                   </div>
@@ -275,7 +274,7 @@ export default function SyncSettings({ onClose }) {
                     .filter((d) => !d.isLocal)
                     .map((device) => <DeviceItem key={device.key} device={device} isOther />)
                 ) : (
-                  <div className='p-6 bg-bg-panel-secondary/20 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
+                  <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
                     <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
                       <Smartphone className='w-5 h-5 opacity-50' />
                     </div>
@@ -342,7 +341,7 @@ function DeviceItem({ device, isOther }) {
 
   return (
     <>
-      <div className='group relative p-5 bg-bg-panel-secondary/40 border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-panel-secondary/60 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
+      <div className='group relative p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
         <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
           <Icon className='w-7 h-7' />
           {device.isLocal && (
@@ -390,12 +389,12 @@ function DeviceItem({ device, isOther }) {
       {isConfirmingDelete && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
           <div
-            className={`absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300`}
+            className={`absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300`}
             onClick={handleCloseDelete}
           />
 
           <div
-            className={`relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}
+            className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}
           >
             <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full' />
             <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full' />
@@ -417,7 +416,7 @@ function DeviceItem({ device, isOther }) {
               <div className='flex gap-3 w-full pt-2'>
                 <button
                   onClick={handleCloseDelete}
-                  className='flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95'
+                  className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
                 >
                   Cancel
                 </button>

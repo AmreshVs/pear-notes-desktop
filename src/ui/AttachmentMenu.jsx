@@ -42,7 +42,7 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
   return (
     <div 
       ref={menuRef} 
-      className='absolute top-full left-0 mt-3 bg-bg-panel backdrop-blur-2xl border border-white/[0.08] rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-56 animate-in zoom-in-95 fade-in duration-300 origin-top-left overflow-hidden z-[120]'
+      className='absolute top-full left-0 mt-3 bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-56 animate-in zoom-in-95 fade-in duration-300 origin-top-left overflow-hidden z-[120]'
     >
       <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
       
@@ -73,7 +73,7 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
           </div>
         </label>
 
-        <div className="h-px bg-white/[0.05] my-1 mx-2" />
+        <div className="h-px bg-overlay-soft my-1 mx-2" />
 
         <div 
           onClick={() => {

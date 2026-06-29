@@ -36,6 +36,24 @@
   --color-accent-danger: var(--accent-danger);
   --color-accent-warning: var(--accent-warning);
 
+  /* Overlay Colors (theme-aware white/black overlays) */
+  --color-overlay-faint: var(--overlay-faint);
+  --color-overlay-subtle: var(--overlay-subtle);
+  --color-overlay-light: var(--overlay-light);
+  --color-overlay-soft: var(--overlay-soft);
+  --color-overlay-medium: var(--overlay-medium);
+  --color-overlay-strong: var(--overlay-strong);
+
+  /* Divider Colors */
+  --color-divider-faint: var(--divider-faint);
+  --color-divider-subtle: var(--divider-subtle);
+  --color-divider-light: var(--divider-light);
+  --color-divider-medium: var(--divider-medium);
+
+  /* Backdrop Colors */
+  --color-backdrop-light: var(--backdrop-light);
+  --color-backdrop-medium: var(--backdrop-medium);
+
   /* Shadows */
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);

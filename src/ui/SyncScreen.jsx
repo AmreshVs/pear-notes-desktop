@@ -15,7 +15,6 @@ export default function SyncScreen({ onClose }) {
 
   const handleConnect = () => {
     if (pasteCode.trim()) {
-      // Mock connection logic
       alert('Connecting to device...')
       onClose()
     }
@@ -24,11 +23,11 @@ export default function SyncScreen({ onClose }) {
   return (
     <div className='fixed inset-0 flex items-center justify-center z-50 p-6'>
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-1000 cursor-pointer"
+        className="absolute inset-0 bg-backdrop-light backdrop-blur-sm animate-in fade-in duration-1000 cursor-pointer"
         onClick={onClose}
       />
       <div className='relative bg-bg-panel border border-border-secondary rounded-xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out'>
-        {/* Header */}
+
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <h2 className='text-text-primary text-xl font-semibold'>Sync Devices</h2>
           <button
@@ -39,7 +38,7 @@ export default function SyncScreen({ onClose }) {
           </button>
         </div>
 
-        {/* Tabs */}
+
         <div className='flex border-b border-border-primary px-6 bg-bg-panel'>
           <button
             onClick={() => setActiveTab('invite')}
@@ -63,7 +62,7 @@ export default function SyncScreen({ onClose }) {
           </button>
         </div>
 
-        {/* Content */}
+
         <div className='p-6 bg-bg-panel'>
           {activeTab === 'invite' ? (
             <div>
@@ -76,7 +75,7 @@ export default function SyncScreen({ onClose }) {
               </p>
 
               <div className='flex gap-6'>
-                {/* QR Code Placeholder */}
+
                 <div className='w-48 h-48 bg-bg-panel-secondary rounded-lg flex items-center justify-center border border-border-tertiary'>
                   <div className='text-xs text-center text-text-tertiary'>
                     QR Code
@@ -86,7 +85,7 @@ export default function SyncScreen({ onClose }) {
                 </div>
 
                 <div className='flex-1'>
-                  {/* Security Message */}
+
                   <div className='bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4'>
                     <div className='flex items-start gap-3'>
                       <Check className='w-5 h-5 text-green-500 flex-shrink-0 mt-0.5' />
@@ -96,7 +95,7 @@ export default function SyncScreen({ onClose }) {
                     </div>
                   </div>
 
-                  {/* Copy Invite Link */}
+
                   <button
                     onClick={handleCopyInvite}
                     className='w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl transition-colors font-bold text-[15px] bg-accent-primary text-text-primary hover:bg-accent-primary-hover shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
@@ -116,7 +115,7 @@ export default function SyncScreen({ onClose }) {
                 </div>
               </div>
 
-              {/* Have an invite section */}
+
               <div className='mt-8 pt-8 border-t border-border-primary'>
                 <h3 className='text-text-primary font-semibold text-lg mb-2'>Have an invite?</h3>
                 <p className='text-sm mb-4 text-text-tertiary'>

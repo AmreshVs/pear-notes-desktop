@@ -12,263 +12,33 @@ import {
   Code as CodeIcon,
   Paperclip
 } from 'lucide-react'
-import { useState, useEffect, useRef, forwardRef } from 'react'
-import { backendApi } from '@pear-notes/core/backend/api.js'
+import { forwardRef } from 'react'
 import LinkModal from './LinkModal'
 import AttachmentMenu from './AttachmentMenu'
 import AudioRecorderModal from './AudioRecorderModal'
+import { useFormattingToolbar } from '../hooks/useFormattingToolbar'
 
 export default function FormattingToolbar({ editor, noteKey }) {
-  const [editorState, setEditorState] = useState({
-    isBold: false,
-    isItalic: false,
-    isUnderline: false,
-    isStrike: false,
-    isHighlight: false,
-    isBulletList: false,
-    isOrderedList: false,
-    isTaskList: false,
-    isCodeBlock: false,
-    isCode: false,
-    isBlockquote: false,
-    isLink: false,
-    headingLevel: 0,
-    textAlign: 'left',
-    canUndo: false,
-    canRedo: false
-  })
-  const [showFormatMenu, setShowFormatMenu] = useState(false)
-  const [showLinkModal, setShowLinkModal] = useState(false)
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false)
-  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
-  const formatMenuRef = useRef(null)
-  const attachmentButtonRef = useRef(null)
-
-  useEffect(() => {
-    if (!editor) return
-
-    const updateState = () => {
-      const headingLevel = editor.isActive('heading', { level: 1 })
-        ? 1
-        : editor.isActive('heading', { level: 2 })
-          ? 2
-          : editor.isActive('heading', { level: 3 })
-            ? 3
-            : 0
-
-      const textAlign = editor.isActive({ textAlign: 'left' })
-        ? 'left'
-        : editor.isActive({ textAlign: 'center' })
-          ? 'center'
-          : editor.isActive({ textAlign: 'right' })
-            ? 'right'
-            : editor.isActive({ textAlign: 'justify' })
-              ? 'justify'
-              : 'left'
-
-      setEditorState({
-        isBold: editor.isActive('bold'),
-        isItalic: editor.isActive('italic'),
-        isUnderline: editor.isActive('underline'),
-        isStrike: editor.isActive('strike'),
-        isHighlight: editor.isActive('highlight'),
-        isBulletList: editor.isActive('bulletList'),
-        isOrderedList: editor.isActive('orderedList'),
-        isTaskList: editor.isActive('taskList'),
-        isCodeBlock: editor.isActive('codeBlock'),
-        isCode: editor.isActive('code'),
-        isBlockquote: editor.isActive('blockquote'),
-        isLink: editor.isActive('link'),
-        headingLevel,
-        textAlign,
-        canUndo: editor.can().undo(),
-        canRedo: editor.can().redo()
-      })
-    }
-
-    updateState()
-
-    editor.on('selectionUpdate', updateState)
-    editor.on('transaction', updateState)
-    editor.on('update', updateState)
-
-    return () => {
-      editor.off('selectionUpdate', updateState)
-      editor.off('transaction', updateState)
-      editor.off('update', updateState)
-    }
-  }, [editor])
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (formatMenuRef.current && !formatMenuRef.current.contains(event.target)) {
-        setShowFormatMenu(false)
-      }
-    }
-    if (showFormatMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showFormatMenu])
-
-  const handleSetLink = ({ url, text }) => {
-    if (!editor) return
-
-    if (url) {
-      const { from, to } = editor.state.selection
-      const selectedText = editor.state.doc.textBetween(from, to)
-
-      if (selectedText && text) {
-        editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run()
-      } else if (selectedText) {
-        editor.chain().focus().setLink({ href: url }).run()
-      } else if (text) {
-        editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run()
-      } else {
-        editor.chain().focus().setLink({ href: url }).run()
-      }
-    } else {
-      editor.chain().focus().unsetLink().run()
-    }
-    setShowLinkModal(false)
-  }
-
-
-  const handleHeadingClick = (level) => {
-    if (!editor) return
-    if (level === 0) {
-      editor.chain().focus().setParagraph().run()
-    } else {
-      editor.chain().focus().toggleHeading({ level }).run()
-    }
-    setShowFormatMenu(false)
-  }
-
-  const getCurrentLink = () => {
-    if (!editor) return { url: '', text: '' }
-    const attrs = editor.getAttributes('link')
-    const selectedText = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    )
-    return {
-      url: attrs.href || '',
-      text: selectedText || attrs.href || ''
-    }
-  }
-
-  const handleInsertImage = async (files) => {
-    if (!editor || !files) return
-    const fileList = Array.isArray(files) ? files : [files]
-    
-    const { to } = editor.state.selection
-    editor.commands.setTextSelection(to)
-    
-    for (const file of fileList) {
-      try {
-        const buffer = await file.arrayBuffer()
-        const { link } = await backendApi.insertFile({ 
-          key: noteKey, 
-          fileName: file.name, 
-          buffer 
-        })
-        if (link) {
-          editor.chain().focus().insertContent([
-            { type: 'image', attrs: { src: link } },
-            { type: 'paragraph' }
-          ]).run()
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error)
-      }
-    }
-  }
-
-  const handleInsertFile = async (files) => {
-    if (!editor || !files) return
-    const fileList = Array.isArray(files) ? files : [files]
-
-    const { to } = editor.state.selection
-    editor.commands.setTextSelection(to)
-
-    for (const file of fileList) {
-      try {
-        const buffer = await file.arrayBuffer()
-        const { link } = await backendApi.insertFile({ 
-          key: noteKey, 
-          fileName: file.name, 
-          buffer 
-        })
-
-        if (link) {
-          editor.chain().focus().insertContent([
-            {
-              type: 'fileAttachment',
-              attrs: {
-                fileName: file.name,
-                fileSize: file.size,
-                fileType: file.type,
-                url: link
-              }
-            },
-            { type: 'paragraph' }
-          ]).run()
-        }
-      } catch (error) {
-        console.error('Error uploading file:', error)
-      }
-    }
-  }
-
-  const handleInsertAudio = async ({ data, duration }) => {
-    if (!editor) return
-    try {
-      const response = await fetch(data)
-      const blob = await response.blob()
-      const buffer = await blob.arrayBuffer()
-      const fileName = `Audio Recording ${new Date().toLocaleString()}.webm`
-
-      const { link } = await backendApi.insertFile({ 
-        key: noteKey, 
-        fileName,
-        buffer 
-      })
-
-      if (link) {
-        editor.chain().focus().insertContent([
-          {
-            type: 'audioAttachment',
-            attrs: {
-              audioData: null,
-              url: link,
-              duration: duration,
-              fileName: fileName
-            }
-          },
-          { type: 'paragraph' }
-        ]).run()
-      }
-    } catch (error) {
-      console.error('Error uploading audio:', error)
-    }
-  }
-
-  const handleToggleCodeBlock = () => {
-    if (!editor) return
-
-    if (editor.isActive('codeBlock')) {
-      editor.chain().focus().toggleCodeBlock().run()
-    } else {
-      const { from, to } = editor.state.selection
-      const text = editor.state.doc.textBetween(from, to, '\n')
-      
-      if (text.trim()) {
-        editor.chain().focus().deleteSelection().setCodeBlock().insertContent(text).run()
-      } else {
-        editor.chain().focus().toggleCodeBlock().run()
-      }
-    }
-  }
+  const {
+    editorState,
+    showFormatMenu,
+    setShowFormatMenu,
+    showLinkModal,
+    setShowLinkModal,
+    showAttachmentMenu,
+    setShowAttachmentMenu,
+    showAudioRecorder,
+    setShowAudioRecorder,
+    formatMenuRef,
+    attachmentButtonRef,
+    handleSetLink,
+    handleHeadingClick,
+    getCurrentLink,
+    handleInsertImage,
+    handleInsertFile,
+    handleInsertAudio,
+    handleToggleCodeBlock
+  } = useFormattingToolbar(editor, noteKey)
 
   if (!editor) {
     return null
@@ -276,13 +46,13 @@ export default function FormattingToolbar({ editor, noteKey }) {
 
   return (
     <>
-      <div className='flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/60 backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-fit relative z-50 transition-all duration-300 hover:bg-bg-panel/60 hover:border-white/[0.1]'>
+      <div className='flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/90 backdrop-blur-xl border border-border-primary shadow-md w-fit relative z-50 transition-all duration-300 hover:bg-bg-panel/95 hover:border-border-secondary'>
         <div className='relative' ref={formatMenuRef}>
           <button
             onClick={() => setShowFormatMenu(!showFormatMenu)}
             className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 duration-200 ${
-              showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic 
-                ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' 
+              showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic
+                ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
                 : 'text-text-primary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
             title='Formatting'
@@ -291,10 +61,10 @@ export default function FormattingToolbar({ editor, noteKey }) {
           </button>
 
           {showFormatMenu && (
-            <div className='absolute top-full left-0 mt-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 bg-bg-panel backdrop-blur-2xl border border-white/[0.08] min-w-[280px] overflow-hidden animate-in zoom-in-95 fade-in duration-200 origin-top-left'>
+            <div className='absolute top-full left-0 mt-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 bg-bg-panel backdrop-blur-2xl border border-overlay-medium min-w-[280px] overflow-hidden animate-in zoom-in-95 fade-in duration-200 origin-top-left'>
               <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
-              
-              <div className='flex items-center justify-between p-2 border-b border-white/[0.06] relative z-10'>
+
+              <div className='flex items-center justify-between p-2 border-b border-divider-light relative z-10'>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleBold().run()}
                   isActive={editorState.isBold}
@@ -323,7 +93,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 >
                   <Strikethrough className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
-                <div className='w-px h-5 bg-white/[0.1] mx-1' />
+                <div className='w-px h-5 bg-overlay-strong mx-1' />
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleHighlight().run()}
                   isActive={editorState.isHighlight}
@@ -368,9 +138,9 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   label='Monospaced'
                   style="font-mono text-sm opacity-80"
                 />
-                
-                <div className='h-px bg-white/[0.06] my-2 mx-1' />
-                
+
+                <div className='h-px bg-divider-light my-2 mx-1' />
+
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBulletList().run()}
                   isActive={editorState.isBulletList}
@@ -384,7 +154,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   icon={<span className='text-[10px] font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>1.</span>}
                 />
 
-                <div className='h-px bg-white/[0.06] my-2 mx-1' />
+                <div className='h-px bg-divider-light my-2 mx-1' />
 
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBlockquote().run()}
@@ -397,7 +167,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           )}
         </div>
 
-        <div className='w-px h-5 bg-white/[0.1] mx-1' />
+        <div className='w-px h-5 bg-overlay-strong mx-1' />
 
         <Button
           onClick={handleToggleCodeBlock}
@@ -408,7 +178,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <CodeIcon className='w-4 h-4' strokeWidth={2.5} />
         </Button>
 
-        <div className='w-px h-5 bg-white/[0.1] mx-1' />
+        <div className='w-px h-5 bg-overlay-strong mx-1' />
 
         <Button
           onClick={() => editor?.chain().focus().toggleTaskList().run()}
@@ -458,7 +228,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           )}
         </div>
 
-        <div className='w-px h-5 bg-white/[0.1] mx-1' />
+        <div className='w-px h-5 bg-overlay-strong mx-1' />
 
         <div className='flex items-center gap-1'>
           <button
@@ -524,7 +294,7 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
     className={`p-1.5 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
       isActive
         ? 'bg-accent-primary text-text-primary shadow-[0_0_10px_rgba(var(--accent-primary),0.2)]'
-        : 'text-text-primary hover:bg-white/[0.05] hover:text-text-primary'
+        : 'text-text-primary hover:bg-overlay-soft hover:text-text-primary'
     }`}
     title={title}
   >

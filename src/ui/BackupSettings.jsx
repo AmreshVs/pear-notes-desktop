@@ -12,19 +12,13 @@ import { CloudDownload, Database, HardDrive, Lock, Shield, Upload, Eye, EyeOff, 
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getDbEncryptionKey } from '../utils.js'
+import { formatBytes } from '../utils/formatters'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
 function toUint8Array(data) {
   if (data instanceof Uint8Array) return data
   return new Uint8Array(Object.values(data))
-}
-
-function formatBytes(bytes) {
-  if (!bytes) return '0 B'
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
 }
 
 export default function BackupSettings() {
@@ -192,7 +186,7 @@ export default function BackupSettings() {
 
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='relative bg-bg-panel-secondary/40 backdrop-blur-md border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 overflow-hidden hover:border-border-secondary transition-colors'>
+      <div className='relative bg-bg-secondary border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 overflow-hidden hover:border-border-secondary transition-colors'>
         <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
 
         <div className='w-20 h-20 bg-accent-primary/10 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/20 shadow-inner'>
@@ -220,7 +214,7 @@ export default function BackupSettings() {
           <button
             onClick={handleImport}
             disabled={isExporting || isImporting}
-            className='px-8 py-3.5 bg-white/[0.04] border border-white/[0.08] text-text-secondary rounded-xl font-bold text-[15px] hover:bg-white/[0.08] hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+            className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-[15px] hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
           >
             <Upload className='w-4 h-4' />
             Restore Data
@@ -237,7 +231,7 @@ export default function BackupSettings() {
       </div>
 
       <div className='grid grid-cols-2 gap-4'>
-        <div className='bg-bg-panel-secondary/30 border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
+        <div className='bg-bg-secondary border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
           <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20'>
             <Database className='w-5 h-5 text-accent-primary' />
           </div>
@@ -249,7 +243,7 @@ export default function BackupSettings() {
           </div>
         </div>
 
-        <div className='bg-bg-panel-secondary/30 border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
+        <div className='bg-bg-secondary border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
           <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20'>
             <Lock className='w-5 h-5 text-accent-primary' />
           </div>
@@ -270,7 +264,7 @@ export default function BackupSettings() {
         <p className='text-text-tertiary text-xs leading-relaxed'>
           Save this key securely. You will need it to restore this backup on a new device.
         </p>
-        <div className='flex items-center bg-white/[0.02] border border-white/[0.08] rounded-xl p-1 h-12 pl-4'>
+        <div className='flex items-center bg-overlay-faint border border-overlay-medium rounded-xl p-1 h-12 pl-4'>
           <p className='flex-1 text-sm font-mono text-text-secondary select-all truncate mr-2'>
             {isKeyVisible ? deviceRecoveryKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
           </p>
@@ -301,12 +295,12 @@ export default function BackupSettings() {
 
       {showPromptModal && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
-          <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in fade-in duration-300' onClick={() => {
+          <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300' onClick={() => {
             setShowPromptModal(false)
             setSelectedFile(null)
           }} />
 
-          <div className='relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
+          <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
             <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full' />
             <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full' />
 
@@ -327,7 +321,7 @@ export default function BackupSettings() {
                   value={enteredKey}
                   onChange={(e) => setEnteredKey(e.target.value)}
                   placeholder='Enter 64-character hex key'
-                  className='w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] focus:border-accent-primary/30 rounded-xl text-sm font-mono text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
+                  className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm font-mono text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
                   maxLength={64}
                 />
                 {enteredKey.trim() && enteredKey.trim().length !== 64 && (
@@ -343,7 +337,7 @@ export default function BackupSettings() {
                     setShowPromptModal(false)
                     setSelectedFile(null)
                   }}
-                  className='flex-1 py-3 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95'
+                  className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
                 >
                   Cancel
                 </button>
@@ -362,9 +356,9 @@ export default function BackupSettings() {
 
       {showModal && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
-          <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl animate-in fade-in duration-300' />
+          <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300' />
 
-          <div className='relative bg-bg-panel/80 backdrop-blur-3xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
+          <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
             <div
               className={`absolute -top-24 -left-24 w-48 h-48 blur-[80px] rounded-full ${isError ? 'bg-accent-danger/20' : 'bg-accent-primary/10'}`}
             />
@@ -407,7 +401,7 @@ export default function BackupSettings() {
                     <span>{progressStep.replace(/_/g, ' ')}</span>
                     <span>{Math.round(progressValue)}%</span>
                   </div>
-                  <div className='w-full h-2 bg-white/[0.06] rounded-full overflow-hidden'>
+                  <div className='w-full h-2 bg-divider-light rounded-full overflow-hidden'>
                     <div
                       className='h-full bg-accent-primary rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(var(--accent-primary-rgb),0.5)]'
                       style={{ width: `${progressValue}%` }}
@@ -427,7 +421,7 @@ export default function BackupSettings() {
                 ) : (
                   <button
                     onClick={handleCancel}
-                    className='flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95'
+                    className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
                   >
                     Cancel
                   </button>

@@ -69,11 +69,11 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
       <div
         key={key}
         onClick={() => handleSelectNote(key)}
-        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-white/[0.03]' : ''}
+        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
           ${
             isSelected
               ? 'bg-accent-primary/5 shadow-inner'
-              : 'bg-transparent hover:bg-white/[0.02]'
+              : 'bg-transparent hover:bg-overlay-faint'
           }`}
       >
         <div className='flex items-stretch justify-between gap-3'>
@@ -151,7 +151,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
         {isMenuOpen && (
           <div
             ref={menuRef}
-            className="absolute right-0 top-10 z-50 w-[220px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
+            className="absolute right-0 top-10 z-50 w-[220px] bg-bg-panel border border-overlay-medium rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
           >
             <div className='relative z-10'>
               <button 
@@ -174,7 +174,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
                 <div 
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
-                  className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-white/[0.08] rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
+                  className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-overlay-medium rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
                   style={{ 
                       left: `${submenuPos.x}px`, 
                       top: `${submenuPos.y}px` 
@@ -213,7 +213,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
                 document.body
               )}
 
-              <div className="h-px bg-white/[0.05] my-1 mx-2" />
+              <div className="h-px bg-overlay-soft my-1 mx-2" />
 
               <button 
                 type="button"
@@ -229,7 +229,7 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
                 <span className='text-[13px] font-bold text-text-primary tracking-tight'>Copy Note</span>
               </button>
 
-              <div className="h-px bg-white/[0.05] my-1 mx-2" />
+              <div className="h-px bg-overlay-soft my-1 mx-2" />
 
               <button 
                 type="button"
@@ -376,7 +376,7 @@ export default function NotesList({
           <div className='flex items-center gap-4'>
             <button
               onClick={onToggleSidebar}
-              className='p-2 rounded-xl bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
+              className='p-2 rounded-xl bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
               title='Toggle Sidebar'
             >
               <svg 
@@ -412,7 +412,7 @@ export default function NotesList({
           <div className='flex items-center gap-1.5'>
             <button
               onClick={onCreateNote}
-              className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-white/5 text-text-primary active:scale-95 transition-all duration-200'
+              className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
               title='New Note'
             >
               <SquarePen className='w-5 h-5' />
@@ -497,7 +497,7 @@ export default function NotesList({
           <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4'>
             {sortedGroups.map(group => (
               <div key={group} className='mb-6'>
-                <h3 className='px-6 py-2 text-[10px] font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-white/[0.03] transform-cpu hardware-accelerated'>
+                <h3 className='px-6 py-2 text-[10px] font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
                   {group}
                 </h3>
                 <div>

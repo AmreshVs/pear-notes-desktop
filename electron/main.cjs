@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -129,7 +129,28 @@ if (!lock) {
     }
   })
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
+    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+      if (permission === 'media' || permission === 'microphone') {
+        callback(true)
+        return
+      }
+      callback(false)
+    })
+
+    session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+      if (permission === 'media' || permission === 'microphone') return true
+      return false
+    })
+
+    if (process.platform === 'darwin') {
+      try {
+        await systemPreferences.askForMediaAccess('microphone')
+      } catch (err) {
+        console.error('Microphone access request failed:', err)
+      }
+    }
+
     setupIPC()
     createWindow()
     startWorker()

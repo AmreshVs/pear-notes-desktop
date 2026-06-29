@@ -143,7 +143,7 @@ export default function PairingStatusOverlay() {
             <div className="flex justify-center items-center text-[11px] font-bold tracking-widest uppercase opacity-60">
               <span className="text-text-tertiary">{message} • {progress}% Complete</span>
             </div>
-            <div className="relative h-2 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.05]">
+            <div className="relative h-2 w-full bg-overlay-subtle rounded-full overflow-hidden border border-overlay-soft">
               <div 
                 className="absolute top-0 left-0 h-full bg-accent-primary shadow-[0_0_15px_rgba(var(--accent-primary-rgb),0.5)] transition-all duration-500 rounded-full"
                 style={{ width: `${progress}%` }}
@@ -181,7 +181,7 @@ export default function PairingStatusOverlay() {
 
         {mainIdValue && (
           <div className="w-full space-y-4">
-            <div className="px-6 py-4 bg-white/[0.03] border border-white/[0.08] rounded-2xl">
+            <div className="px-6 py-4 bg-overlay-subtle border border-overlay-medium rounded-2xl">
               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-1">{mainIdLabel}</span>
               <span className="text-2xl font-black text-text-primary tracking-[0.3em] font-mono block">
                 {mainIdValue.toUpperCase()}
@@ -202,7 +202,7 @@ export default function PairingStatusOverlay() {
           <div className="flex gap-3 w-full pt-2">
             <button
               onClick={handleAnimatedClose}
-              className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
+              className="flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -215,7 +215,7 @@ export default function PairingStatusOverlay() {
           </div>
         ) : (
           <div className="w-full space-y-3 pt-2">
-            <div className="relative h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden border border-white/[0.05]">
+            <div className="relative h-1.5 w-full bg-overlay-subtle rounded-full overflow-hidden border border-overlay-soft">
               <div 
                 className="absolute top-0 left-0 h-full bg-accent-primary animate-pulse"
                 style={{ width: `${progress || 25}%` }}
@@ -234,11 +234,11 @@ export default function PairingStatusOverlay() {
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-0">
         <div 
-          className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
+          className={`absolute inset-0 bg-backdrop-light backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
           onClick={handleCloseInput}
         />
         
-        <div className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
+        <div className={`relative bg-bg-panel/95 backdrop-blur-2xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
           <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
           
@@ -266,7 +266,7 @@ export default function PairingStatusOverlay() {
                     onChange={(e) => setPasteCode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
                     placeholder='Paste your code here...'
-                    className='w-full px-4 py-3 bg-bg-panel/40 border border-white/5 rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
+                    className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
                     autoFocus
                   />
                 </div>
@@ -274,7 +274,7 @@ export default function PairingStatusOverlay() {
                 <div className="flex gap-3 w-full pt-2">
                   <button
                     onClick={handleCloseInput}
-                    className="flex-1 py-4 bg-white/[0.03] border border-white/[0.05] text-text-tertiary rounded-xl font-bold text-sm hover:bg-white/[0.08] transition-all active:scale-95"
+                    className="flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95"
                   >
                     Cancel
                   </button>
@@ -297,11 +297,11 @@ export default function PairingStatusOverlay() {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-0">
       <div 
-        className={`absolute inset-0 bg-black/50 backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
+        className={`absolute inset-0 bg-backdrop-light backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-500 cursor-pointer`}
         onClick={isDone ? handleAnimatedClose : undefined}
       />
       
-      <div className={`relative bg-bg-panel/60 backdrop-blur-2xl border border-white/[0.08] rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
+      <div className={`relative bg-bg-panel/95 backdrop-blur-2xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-500 ease-out overflow-hidden`}>
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full" />
         

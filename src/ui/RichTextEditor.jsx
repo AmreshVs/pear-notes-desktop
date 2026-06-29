@@ -41,31 +41,7 @@ import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/
 import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
 import { useDispatch } from 'react-redux'
 
-const getFontFamilyValue = (family) => {
-  switch (family) {
-    case 'Outfit': return '"Outfit", system-ui, -apple-system, sans-serif'
-    case 'Lora': return '"Lora", serif'
-    case 'Newsreader': return '"Newsreader", serif'
-    case 'IBM Plex Mono': return '"IBM Plex Mono", monospace'
-    case 'Serif': return 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
-    case 'Mono': return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
-    case 'System': return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-    case 'Inter': default: return '"Inter", system-ui, -apple-system, sans-serif'
-  }
-}
-
-const getFontClass = (family) => {
-  switch (family) {
-    case 'Outfit': return 'font-sans'
-    case 'Lora':
-    case 'Newsreader':
-    case 'Serif': return 'font-serif'
-    case 'IBM Plex Mono':
-    case 'Mono': return 'font-mono'
-    case 'System':
-    case 'Inter': default: return 'font-sans'
-  }
-}
+import { getFontFamilyValue, getFontClass } from '../utils/fonts'
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
@@ -163,7 +139,6 @@ const RichTextEditor = forwardRef(
               const file = item.getAsFile()
               if (!file) return
 
-              // Upload file
               try {
                 const buffer = await file.arrayBuffer()
                 const { link } = await backendApi.insertFile({ 
@@ -171,7 +146,6 @@ const RichTextEditor = forwardRef(
                   fileName: file.name, 
                   buffer 
                 })
-                console.log({link})
                 if (!link) return
 
                 const { schema } = view.state
@@ -198,7 +172,6 @@ const RichTextEditor = forwardRef(
             }
           })
           
-          // Return false to let default handler handle text
           return items.some(item => item.kind === 'file')
         },
         handleDrop: (view, event, slice, moved) => {
@@ -211,7 +184,6 @@ const RichTextEditor = forwardRef(
 
           files.forEach(async (file) => {
             try {
-              // Upload file
               const buffer = await file.arrayBuffer()
               const { link } = await backendApi.insertFile({ 
                 key: currentNoteKey, 
