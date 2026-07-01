@@ -6,6 +6,7 @@ import {
   X
 } from 'lucide-react'
 import { useState } from 'react'
+import { version as appVersion } from '../../package.json'
 import GeneralSettings from './GeneralSettings'
 import SyncSettings from './SyncSettings'
 import BackupSettings from './BackupSettings'
@@ -68,7 +69,9 @@ export default function SettingsScreen({ onClose }) {
             })}
           </div>
 
-          
+          <div className='px-6 pb-6'>
+            <p className='text-text-tertiary text-[11px] text-center opacity-50'>v{appVersion}</p>
+          </div>
         </div>
 
         <div className='flex-1 flex flex-col overflow-hidden bg-transparent relative z-10'>

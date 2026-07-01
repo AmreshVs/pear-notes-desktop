@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreHorizontal, Folder, Trash2, ChevronRight, Copy, Check } from 'lucide-react'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { processHtmlImages } from '../lib/fileManager'
@@ -14,6 +15,7 @@ export default function NoteOptionsMenu({
   const [showMenu, setShowMenu] = useState(false)
   const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -29,6 +31,14 @@ export default function NoteOptionsMenu({
     }
   }, [showMenu, buttonRef])
 
+  const handleToggleMenu = () => {
+    if (!showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setMenuPos({ x: rect.right, y: rect.bottom + 12 })
+    }
+    setShowMenu(!showMenu)
+  }
+
   const availableFolders = folders.filter(f => 
     !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== currentFolderKey
   )
@@ -37,7 +47,7 @@ export default function NoteOptionsMenu({
     <div className='relative flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 rounded-xl bg-bg-panel/90 backdrop-blur-xl border border-border-primary shadow-md w-fit transition-all duration-300 hover:bg-bg-panel/95 hover:border-border-secondary'>
       <button
         ref={buttonRef}
-        onClick={() => setShowMenu(!showMenu)}
+        onClick={handleToggleMenu}
         className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
           showMenu ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]' : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
         }`}
@@ -46,10 +56,11 @@ export default function NoteOptionsMenu({
         <MoreHorizontal className='w-5 h-5' strokeWidth={2.5} />
       </button>
 
-      {showMenu && (
-        <div 
+      {showMenu && createPortal(
+        <div
           ref={menuRef}
-          className='absolute top-full right-0 mt-3 z-[120] bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
+          className='fixed z-[9999] bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-[220px] p-2 animate-in zoom-in-95 fade-in duration-300 origin-top-right overflow-visible'
+          style={{ top: `${menuPos.y}px`, left: `${menuPos.x - 220}px` }}
         >
           <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
           <div className='relative z-10'>
@@ -184,7 +195,8 @@ export default function NoteOptionsMenu({
             </div>
             <span className='text-[13px] text-accent-danger/90 font-black tracking-tight'>Delete</span>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

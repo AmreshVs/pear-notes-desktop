@@ -1,6 +1,6 @@
 import { Check, ShieldCheck, Globe, Loader2, Link2 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, subscribePairUser, getShowPairingInput, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
+import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, rejectPairing, subscribePairUser, getShowPairingInput, setShowPairingInput, clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getFingerprint } from '@pear-notes/core/utils.js'
 import { useState } from 'react'
 
@@ -45,6 +45,8 @@ export default function PairingStatusOverlay() {
 
   const message = getMessage()
   const isDone = step === 'done'
+  const isError = step === 'error'
+  const isRejected = step === 'rejected'
   const isStepSyncing = ['initializing_storage', 'replicating_data', 'syncing', 'receiving_data'].includes(step)
   const isConfirmation = step === 'confirmation'
   
@@ -62,6 +64,15 @@ export default function PairingStatusOverlay() {
 
   const handleConfirm = () => {
     dispatch(confirmPairing())
+  }
+
+  const handleReject = () => {
+    dispatch(rejectPairing())
+  }
+
+  const handleResetAfterFailedPairing = () => {
+    dispatch(clearStorage())
+    location.reload()
   }
 
   const handleConnect = () => {
@@ -106,6 +117,32 @@ export default function PairingStatusOverlay() {
   }
 
   const renderContent = () => {
+    if (isError || isRejected) {
+      return (
+        <div className="flex flex-col items-center text-center space-y-6">
+          <div className="w-20 h-20 bg-red-500/15 rounded-3xl flex items-center justify-center ring-1 ring-red-500/30 mb-2">
+            <span className="text-4xl">✕</span>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold text-text-primary tracking-tight">
+              {isRejected ? 'Pairing Declined' : 'Pairing Failed'}
+            </h3>
+            <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
+              {isRejected
+                ? 'The other device declined this pairing request. This device will reset and restart.'
+                : 'Sync timed out. This device will reset and restart.'}
+            </p>
+          </div>
+          <button
+            onClick={handleResetAfterFailedPairing}
+            className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold text-[15px] hover:bg-red-500/20 transition-all active:scale-95"
+          >
+            Okay
+          </button>
+        </div>
+      )
+    }
+
     if (isDone) {
       return (
         <div className="flex flex-col items-center text-center space-y-6">
@@ -201,10 +238,10 @@ export default function PairingStatusOverlay() {
         {isConfirmation ? (
           <div className="flex gap-3 w-full pt-2">
             <button
-              onClick={handleAnimatedClose}
-              className="flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95"
+              onClick={handleReject}
+              className="flex-1 py-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-all active:scale-95"
             >
-              Cancel
+              Reject
             </button>
             <button
               onClick={handleConfirm}
