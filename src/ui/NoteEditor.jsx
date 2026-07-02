@@ -3,7 +3,9 @@ import { Lock } from 'lucide-react'
 import { formatRelativeDate } from '../utils/formatters'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
-import { unlockNote, relockNote, isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
+import { unlockNote, isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
+import { toggleNoteLock } from '../lib/noteLockActions'
+import { isDeviceAuthSupported } from '../lib/deviceAuth'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getEditorTitle,
@@ -15,11 +17,12 @@ import {
   setEditorInstance
 } from '@pear-notes/core/store/slices/editorSlice.js'
 import { useSelector, useDispatch } from 'react-redux'
-import NoteOptionsMenu from './NoteOptionsMenu'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { getFontFamilyValue } from '../utils/fonts'
+import { showContextMenu } from '../lib/contextMenu'
 
 
 
@@ -39,13 +42,23 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
-  const optionsButtonRef = useRef(null)
   const folders = useSelector(getFolders)
 
   useNoteLockVersion()
   const [unlocking, setUnlocking] = useState(false)
+  const [authSupported, setAuthSupported] = useState(true)
   const isLocked = noteData?.locked === true
   const showLockScreen = isLocked && !isNoteUnlocked(selectedNoteKey)
+
+  useEffect(() => {
+    let active = true
+    isDeviceAuthSupported().then((supported) => {
+      if (active) setAuthSupported(supported)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleUnlock = async () => {
     setUnlocking(true)
@@ -56,14 +69,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
-  const handleToggleLock = () => {
-    if (!selectedNoteKey) return
-    if (isLocked) {
-      dispatch(updateNote({ key: selectedNoteKey, locked: false }))
-      relockNote(selectedNoteKey)
-    } else {
-      dispatch(updateNote({ key: selectedNoteKey, locked: true }))
-    }
+  const handleToggleLock = async () => {
+    await toggleNoteLock({
+      key: selectedNoteKey,
+      currentlyLocked: isLocked,
+      dispatch
+    })
   }
 
   useEffect(() => {
@@ -129,6 +140,57 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
+  const copyNoteToClipboard = async () => {
+    const data = handleCopy()
+    if (!data) return
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([data.html], { type: 'text/html' }),
+          'text/plain': new Blob([data.text], { type: 'text/plain' })
+        })
+      ])
+    } catch {
+      try {
+        await navigator.clipboard.writeText(data.text)
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const handleEditorContextMenu = async (e) => {
+    e.preventDefault()
+    const moveTargets = folders.filter(
+      (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
+    )
+    const moveSubmenu = moveTargets.length > 0
+      ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
+      : [{ label: 'No other lists', enabled: false }]
+    const result = await showContextMenu([
+      { role: 'cut', label: 'Cut' },
+      { role: 'copy', label: 'Copy' },
+      { role: 'paste', label: 'Paste' },
+      { role: 'selectAll', label: 'Select All' },
+      { type: 'separator' },
+      { label: 'Move to', submenu: moveSubmenu },
+      { id: 'copyNote', label: 'Copy Note' },
+      { id: 'toggleLock', label: isLocked ? 'Remove Lock' : 'Lock Note' },
+      { type: 'separator' },
+      { id: 'delete', label: 'Delete' }
+    ])
+    if (!result) return
+    if (result.startsWith('move:')) {
+      handleMoveTo(result.slice(5))
+    } else if (result === 'copyNote') {
+      copyNoteToClipboard()
+    } else if (result === 'toggleLock') {
+      handleToggleLock()
+    } else if (result === 'delete') {
+      onDelete(selectedNoteKey)
+    }
+  }
+
 
   if (!noteData || !selectedNoteKey) {
     return (
@@ -181,17 +243,21 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>Locked Note</h3>
             <p className='text-[15px] text-text-tertiary leading-relaxed'>
-              This note is protected. Authenticate with your device to view it.
+              {authSupported
+                ? 'This note is protected. Use Touch ID or your login password to authenticate and view it.'
+                : "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."}
             </p>
           </div>
-          <button
-            onClick={handleUnlock}
-            disabled={unlocking}
-            className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            <Lock className='w-4 h-4' />
-            {unlocking ? 'Authenticating…' : 'Unlock'}
-          </button>
+          {authSupported && (
+            <button
+              onClick={handleUnlock}
+              disabled={unlocking}
+              className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              <Lock className='w-4 h-4' />
+              {unlocking ? 'Authenticating…' : 'Unlock'}
+            </button>
+          )}
         </div>
       </div>
     )
@@ -200,27 +266,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
       <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
-        <div className='flex-1 min-w-0 max-w-[calc(100%-60px)] pointer-events-auto'>
+        <div className='flex-1 min-w-0 pointer-events-auto'>
           <div className='pb-2'>
             <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
           </div>
         </div>
-        
-        <div className='flex-shrink-0 pointer-events-auto flex items-center gap-4'>
-          <NoteOptionsMenu
-            buttonRef={optionsButtonRef}
-            folders={folders}
-            currentFolderKey={noteData?.folderKey}
-            isLocked={isLocked}
-            onToggleLock={handleToggleLock}
-            onMoveTo={handleMoveTo}
-            onCopy={handleCopy}
-            onDelete={() => onDelete(selectedNoteKey)}
-          />
-        </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto custom-scrollbar pt-16'>
+      <div className='flex-1 overflow-y-auto custom-scrollbar pt-16' onContextMenu={handleEditorContextMenu}>
         <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
           <input
             ref={titleRef}

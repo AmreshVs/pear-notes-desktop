@@ -5,11 +5,8 @@ import {
   Lightbulb,
   Trash2,
   FolderPlus,
-  Plus,
   Settings,
-  Folder,
-  Pencil,
-  MoreVertical
+  Folder
 } from 'lucide-react'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
@@ -17,6 +14,7 @@ import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { getNoteCountsPerFolder } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getShouldAutoRenameNextFolder, setShouldAutoRenameNextFolder } from '@pear-notes/core/store/slices/uiSlice.js'
 import { DEFAULT_FOLDER_NAME } from '@pear-notes/core/constant.js'
+import { showContextMenu } from '../lib/contextMenu'
 
 const ICON_MAP = {
   FileText,
@@ -44,8 +42,6 @@ export default function FoldersSidebar({
   const [editName, setEditName] = useState('')
   const inputRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
-  const [openMenuId, setOpenMenuId] = useState(null)
-  const menuRefs = useRef({})
   const foldersRef = useRef(folders)
 
   useEffect(() => {
@@ -70,19 +66,8 @@ export default function FoldersSidebar({
     }
   }, [editingFolderId])
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (openMenuId && menuRefs.current[openMenuId] && !menuRefs.current[openMenuId].contains(e.target)) {
-        setOpenMenuId(null)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [openMenuId])
-
   const handleStartRename = (e, folder) => {
     e.stopPropagation()
-    setOpenMenuId(null)
     if (folder.isSystem) return
     setEditingFolderId(folder.id)
     setEditName(folder.name)
@@ -108,7 +93,6 @@ export default function FoldersSidebar({
   }
 
   const handleMenuAction = (action, folder) => {
-    setOpenMenuId(null)
     switch (action) {
       case 'new-note':
         onSelectFolder(folder.id)
@@ -132,6 +116,24 @@ export default function FoldersSidebar({
     }
   }
 
+  const handleContextMenu = async (e, folder) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const items = [
+      { id: 'new-note', label: 'New Note' },
+      { id: 'new-folder', label: 'New Folder' }
+    ]
+    if (!folder.isSystem) {
+      items.push(
+        { type: 'separator' },
+        { id: 'rename', label: 'Rename' },
+        { id: 'delete', label: 'Delete' }
+      )
+    }
+    const result = await showContextMenu(items)
+    if (result) handleMenuAction(result, folder)
+  }
+
   const topFolders = useMemo(() => folders.filter((f) => !f.isTrash), [folders])
   const bottomFolders = useMemo(() => folders.filter((f) => f.isTrash), [folders])
 
@@ -140,7 +142,6 @@ export default function FoldersSidebar({
     const isSelected = selectedFolder === folder.id
     const count = noteCounts[folder.id] || 0
     const isEditing = editingFolderId === folder.id
-    const isMenuOpen = openMenuId === folder.id
     const isNew = newFolderId === folder.id
     const isDeleting = deletingFolderId === folder.id
 
@@ -152,6 +153,7 @@ export default function FoldersSidebar({
         <button
           onClick={() => !isEditing && onSelectFolder(folder.id)}
           onDoubleClick={(e) => handleStartRename(e, folder)}
+          onContextMenu={(e) => handleContextMenu(e, folder)}
           className={`flex items-center group relative mb-2 w-full px-4 py-3 justify-between rounded-xl transition-colors duration-0
             ${
               isSelected
@@ -184,76 +186,14 @@ export default function FoldersSidebar({
             </div>
           </div>
           
-          <div className={`flex items-center gap-2 flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setOpenMenuId(isMenuOpen ? null : folder.id)
-              }}
-              className={`p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-none duration-0 ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : 'opacity-0 group-hover:opacity-100'}`}
-              title='Options'
-            >
-              <MoreVertical className='w-3.5 h-3.5' />
-            </button>
-            {count > 0 && (
+          {count > 0 && (
+            <div className={`flex items-center flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}>
               <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-muted bg-bg-tertiary/50'}`}>
                 {count}
               </span>
-            )}
-          </div>
-        </button>
-
-        {isMenuOpen && (
-          <div
-            ref={(el) => (menuRefs.current[folder.id] = el)}
-            className="absolute right-2 top-12 z-50 w-52 bg-bg-panel border border-overlay-soft rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 transition-none duration-0"
-          >
-            <div className="relative z-10">
-              <button
-                onClick={() => handleMenuAction('new-note', folder)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-none duration-0 text-left group/item"
-              >
-                <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-none duration-0">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-bold tracking-tight">New Note</span>
-              </button>
-              <button
-                onClick={() => handleMenuAction('new-folder', folder)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-none duration-0 text-left group/item"
-              >
-                <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-none duration-0">
-                  <FolderPlus className="w-4 h-4" />
-                </div>
-                <span className="font-bold tracking-tight">New Folder</span>
-              </button>
-              {!folder.isSystem && (
-                <>
-                  <div className="h-px bg-overlay-soft my-1 mx-2" />
-                  <button
-                    onClick={() => handleMenuAction('rename', folder)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-text-primary hover:bg-accent-primary/10 rounded-xl transition-none duration-0 text-left group/item"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-none duration-0">
-                      <Pencil className="w-4 h-4" />
-                    </div>
-                    <span className="font-bold tracking-tight">Rename</span>
-                  </button>
-                  <div className="h-px bg-overlay-soft my-1 mx-2" />
-                  <button
-                    onClick={() => handleMenuAction('delete', folder)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-accent-danger/90 hover:bg-accent-danger/10 rounded-xl transition-none duration-0 text-left group/item"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center text-accent-danger/70 group-hover/item:bg-accent-danger/20 transition-none duration-0">
-                      <Trash2 className="w-4 h-4" />
-                    </div>
-                    <span className="font-black tracking-tight">Delete</span>
-                  </button>
-                </>
-              )}
             </div>
-          </div>
-        )}
+          )}
+        </button>
       </div>
     )
   }

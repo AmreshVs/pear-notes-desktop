@@ -1,6 +1,5 @@
-import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight, Lock, LockOpen } from 'lucide-react'
-import { useCallback, useState, useRef, useEffect, useMemo, memo } from 'react'
-import { createPortal } from 'react-dom'
+import { Search, Loader2, SquarePen, Folder, Lock, LockOpen } from 'lucide-react'
+import { useCallback, useMemo, memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
@@ -9,10 +8,11 @@ import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
-import { isNoteUnlocked, relockNote, useNoteLockVersion } from '../lib/noteLock'
-import { authenticate } from '../lib/deviceAuth'
+import { isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
+import { toggleNoteLock } from '../lib/noteLockActions'
+import { showContextMenu } from '../lib/contextMenu'
 
-const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder, isLast }) => {
+const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder, isLast }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
@@ -25,18 +25,13 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
   const imgSrc = isMasked ? null : resolvedImgSrc
 
   const rawPreviewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
-  const previewText = isMasked ? 'Locked note' : rawPreviewText
+  const previewText = isMasked ? 'Authenticate to view this note' : rawPreviewText
 
   const isSelected = selectedNote === key
-  const isMenuOpen = openMenuId === key
-  const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
-  const moveButtonRef = useRef(null)
-  const hoverTimeoutRef = useRef(null)
-  const [submenuPos, setSubmenuPos] = useState({ x: 0, y: 0 })
 
-  const availableMoveFolders = allFolders.filter(f => 
-    !f.isTrash && 
-    f.id !== ALL_NOTES_KEY && 
+  const availableMoveFolders = allFolders.filter(f =>
+    !f.isTrash &&
+    f.id !== ALL_NOTES_KEY &&
     f.id !== noteData?.folderKey
   )
 
@@ -44,38 +39,32 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
     dispatch(setSelectedNote(key))
   }, [dispatch])
 
-  const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
-    setShowMoveSubmenu(true)
-  }
-
-  const handleMouseLeave = () => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setShowMoveSubmenu(false)
-    }, 150)
-  }
-
-  useEffect(() => {
-    if (showMoveSubmenu && moveButtonRef.current) {
-      const rect = moveButtonRef.current.getBoundingClientRect()
-      setSubmenuPos({
-        x: rect.right - 4, 
-        y: rect.top - 8
-      })
-    }
-  }, [showMoveSubmenu])
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
-    }
-  }, [])
+  const handleContextMenu = useCallback(async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const locked = noteData?.locked === true
+    const moveSubmenu = availableMoveFolders.length > 0
+      ? availableMoveFolders.map(f => ({ id: `move:${f.id}`, label: f.name }))
+      : [{ label: 'No other lists', enabled: false }]
+    const result = await showContextMenu([
+      { label: 'Move to', submenu: moveSubmenu },
+      { type: 'separator' },
+      { id: 'copy', label: 'Copy Note' },
+      { id: 'toggleLock', label: locked ? 'Remove Lock' : 'Lock Note' },
+      { type: 'separator' },
+      { id: 'delete', label: 'Delete' }
+    ])
+    if (!result) return
+    if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
+    else onMenuAction(result, key)
+  }, [availableMoveFolders, noteData?.locked, onMenuAction, key])
 
   return (
     <div className="relative">
       <div
         key={key}
         onClick={() => handleSelectNote(key)}
+        onContextMenu={handleContextMenu}
         className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
           ${
             isSelected
@@ -90,7 +79,9 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
             >
               {noteData?.locked && (
-                <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
+                isMasked
+                  ? <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
+                  : <LockOpen className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
               )}
               <span className='truncate'>
                 {noteData?.title || 'Untitled'}
@@ -120,164 +111,19 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
             </div>
           </div>
 
-          <div className={imgSrc ? "flex items-center gap-1 ml-2 flex-shrink-0 relative" : "contents"}>
-            {imgSrc ? (
-              <>
-                <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated">
-                   <img 
-                     src={imgSrc} 
-                     alt="Note attachment" 
-                     className="w-full h-full object-cover"
-                     decoding="async"
-                   />
-                </div>
-
-                <div className='relative flex flex-col items-end justify-start h-full self-stretch'>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onMenuToggle(key)
-                    }}
-                    className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
-                    title='Options'
-                  >
-                    <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className='absolute top-3 right-2 z-10'>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMenuToggle(key)
-                  }}
-                  className={`menu-toggle-button opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-bg-tertiary/60 transition-all ${isMenuOpen ? 'opacity-100 bg-bg-tertiary/60' : ''}`}
-                  title='Options'
-                >
-                  <MoreVertical className='w-4 h-4 text-text-tertiary hover:text-text-primary transition-colors' />
-                </button>
+          {imgSrc && (
+            <div className="flex items-center gap-1 ml-2 flex-shrink-0 relative">
+              <div className="relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated">
+                <img
+                  src={imgSrc}
+                  alt="Note attachment"
+                  className="w-full h-full object-cover"
+                  decoding="async"
+                />
               </div>
-            )}
-
-        {isMenuOpen && (
-          <div
-            ref={menuRef}
-            className="absolute right-0 top-10 z-50 w-[220px] bg-bg-panel border border-overlay-medium rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in zoom-in-95 fade-in duration-200 origin-top-right overflow-hidden"
-          >
-            <div className='relative z-10'>
-              <button 
-                type="button"
-                ref={moveButtonRef}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                className={`w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center justify-between group/item ${showMoveSubmenu ? 'bg-accent-primary/10' : ''}`}
-              >
-                <div className='flex items-center gap-3'>
-                  <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/item:bg-accent-primary/20 transition-colors">
-                    <Folder className='w-4 h-4' />
-                  </div>
-                  <span className='text-[13px] font-bold text-text-primary tracking-tight'>Move to</span>
-                </div>
-                <ChevronRight className='w-4 h-4 text-text-tertiary' />
-              </button>
-
-              {showMoveSubmenu && createPortal(
-                <div 
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                  className="submenu-portal fixed z-[9999] w-[180px] bg-bg-panel border border-overlay-medium rounded-[1.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.6)] p-2 animate-in fade-in duration-200 overflow-hidden"
-                  style={{ 
-                      left: `${submenuPos.x}px`, 
-                      top: `${submenuPos.y}px` 
-                  }}
-                >
-                  <div className='relative z-10'>
-                    <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 px-3 opacity-60">Destinations</div>
-                    <div className="max-h-60 overflow-y-auto scrollbar-hide">
-                      {availableMoveFolders.length > 0 ? (
-                        availableMoveFolders.map(folder => (
-                          <button
-                            type="button"
-                            key={folder.id}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              e.preventDefault()
-                              onMenuAction('move', key, folder.id)
-                              setShowMoveSubmenu(false)
-                            }}
-                            className='w-full px-3 py-2.5 rounded-lg hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group/dest text-left'
-                          >
-                            <div className="w-6 h-6 rounded-md bg-bg-tertiary/50 flex items-center justify-center text-accent-primary group-hover/dest:bg-accent-primary/20">
-                              <Folder className='w-3.5 h-3.5' />
-                            </div>
-                            <span className='text-[12px] font-bold text-text-primary truncate tracking-tight'>{folder.name}</span>
-                          </button>
-                        ))
-                      ) : (
-                        <div className='px-3 py-3 text-[11px] text-text-tertiary italic text-center'>
-                          Target list empty
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>,
-                document.body
-              )}
-
-              <div className="h-px bg-overlay-soft my-1 mx-2" />
-
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMenuAction('copy', key)
-                }}
-                className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/copy active:scale-95 text-left'
-              >
-                <div className="w-7 h-7 rounded-lg bg-bg-tertiary text-accent-primary group-hover/copy:bg-accent-primary/20 flex items-center justify-center transition-colors">
-                  <Copy className='w-4 h-4' />
-                </div>
-                <span className='text-[13px] font-bold text-text-primary tracking-tight'>Copy Note</span>
-              </button>
-
-              <div className="h-px bg-overlay-soft my-1 mx-2" />
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMenuAction('toggleLock', key)
-                }}
-                className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/lock active:scale-95 text-left'
-              >
-                <div className="w-7 h-7 rounded-lg bg-bg-tertiary text-accent-primary group-hover/lock:bg-accent-primary/20 flex items-center justify-center transition-colors">
-                  {noteData?.locked ? <LockOpen className='w-4 h-4' /> : <Lock className='w-4 h-4' />}
-                </div>
-                <span className='text-[13px] font-bold text-text-primary tracking-tight'>
-                  {noteData?.locked ? 'Remove Lock' : 'Lock Note'}
-                </span>
-              </button>
-
-              <div className="h-px bg-overlay-soft my-1 mx-2" />
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMenuAction('delete', key)
-                }}
-                className='w-full px-4 py-3 rounded-xl hover:bg-accent-danger/10 transition-all cursor-pointer flex items-center gap-3 group/delete active:scale-95 text-left'
-              >
-                <div className="w-7 h-7 rounded-lg bg-bg-tertiary/50 flex items-center justify-center text-accent-danger/70 group-hover/delete:bg-accent-danger/20 transition-colors">
-                  <Trash2 className='w-4 h-4' />
-                </div>
-                <span className='text-[13px] text-accent-danger/90 font-black tracking-tight'>Delete</span>
-              </button>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
     </div>
   </div>
 </div>
@@ -302,8 +148,6 @@ export default function NotesList({
   const isSynced = localPreferences['isSynced'] === 'true'
   const syncing = step === 'syncing'
   const currentFolderName = folders.find(f => f.id === selectedFolder)?.name || 'All Notes'
-  const [openMenuId, setOpenMenuId] = useState(null)
-  const menuRef = useRef(null)
 
   const handleLinkDevice = useCallback(() => {
     dispatch(setShowPairingInput(true))
@@ -331,24 +175,7 @@ export default function NotesList({
     })
   }, [groupedNotes, groupOrder])
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (e.target.closest('.menu-toggle-button')) return
-      if (e.target.closest('.submenu-portal')) return
-      if (openMenuId && menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpenMenuId(null)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [openMenuId])
-
-  const handleMenuToggle = useCallback((noteKey) => {
-    setOpenMenuId(prev => prev === noteKey ? null : noteKey)
-  }, [])
-
   const handleMenuAction = useCallback(async (action, noteKey, folderId) => {
-    setOpenMenuId(null)
     const noteData = filteredNotes.find(n => n.key === noteKey)
     
     switch (action) {
@@ -370,18 +197,13 @@ export default function NotesList({
         }
         break
       }
-      case 'toggleLock': {
-        const locked = noteData?.value?.locked === true
-        if (locked) {
-          const ok = await authenticate('Unlock this note')
-          if (!ok) break
-          dispatch(updateNote({ key: noteKey, locked: false }))
-          relockNote(noteKey)
-        } else {
-          dispatch(updateNote({ key: noteKey, locked: true }))
-        }
+      case 'toggleLock':
+        await toggleNoteLock({
+          key: noteKey,
+          currentlyLocked: noteData?.value?.locked === true,
+          dispatch
+        })
         break
-      }
       case 'delete':
         if (selectedFolder === RECENTLY_DELETED_KEY) {
           if (window.confirm('Are you sure you want to permanently delete this note?')) {
@@ -397,19 +219,16 @@ export default function NotesList({
   const renderNotesList = useCallback((note, index, array) => {
     const isLast = index === array.length - 1
     return (
-      <NotesItem 
-        key={note.key} 
-        noteKey={note.key} 
-        openMenuId={openMenuId}
-        onMenuToggle={handleMenuToggle}
+      <NotesItem
+        key={note.key}
+        noteKey={note.key}
         onMenuAction={handleMenuAction}
         allFolders={folders}
-        menuRef={menuRef}
         selectedFolder={selectedFolder}
         isLast={isLast}
       />
     )
-  }, [openMenuId, folders, handleMenuToggle, handleMenuAction, selectedFolder])
+  }, [folders, handleMenuAction, selectedFolder])
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-secondary/95 backdrop-blur-xl border-r border-border-primary/50 relative overflow-hidden hardware-accelerated'>
