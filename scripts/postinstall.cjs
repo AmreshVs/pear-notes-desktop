@@ -23,3 +23,16 @@ if (process.platform === 'darwin') {
     }
   }
 }
+
+// Rebuild the device-auth addon against Electron's ABI (it loads in the main process)
+const deviceAuthDir = path.join('native', 'pear-device-auth')
+if (fs.existsSync(path.join(deviceAuthDir, 'binding.gyp'))) {
+  try {
+    const electronVersion = require('electron/package.json').version
+    run(
+      `npx node-gyp rebuild --directory=${deviceAuthDir} --target=${electronVersion} --dist-url=https://electronjs.org/headers --arch=${process.arch}`
+    )
+  } catch (e) {
+    console.warn('Warning: could not rebuild pear-device-auth for Electron:', e.message)
+  }
+}

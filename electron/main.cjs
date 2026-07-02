@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -8,6 +8,13 @@ const { isMac, isLinux } = require('which-runtime')
 const pkg = require('../package.json')
 const appName = pkg.productName ?? pkg.name
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+
+let deviceAuth = null
+try {
+  deviceAuth = require('../native/pear-device-auth')
+} catch (e) {
+  console.warn('pear-device-auth native module unavailable:', e.message)
+}
 
 let mainWindow = null
 let worker = null
@@ -114,6 +121,54 @@ function setupIPC () {
 
   ipcMain.on('app-quit', () => {
     app.quit()
+  })
+
+  ipcMain.handle('device-auth:authenticate', async (event, reason) => {
+    if (!deviceAuth) return false
+    try {
+      const windowHandle =
+        mainWindow && !mainWindow.isDestroyed() ? mainWindow.getNativeWindowHandle() : null
+      return await deviceAuth.authenticate(reason, windowHandle)
+    } catch (e) {
+      console.error('device-auth:authenticate failed', e)
+      return false
+    }
+  })
+
+  ipcMain.handle('device-auth:is-supported', () => {
+    return deviceAuth ? deviceAuth.isSupported() : false
+  })
+
+  ipcMain.handle('ui:context-menu', (event, items) => {
+    return new Promise((resolve) => {
+      let settled = false
+      const done = (value) => {
+        if (settled) return
+        settled = true
+        resolve(value)
+      }
+      const template = buildContextMenuTemplate(Array.isArray(items) ? items : [], done)
+      const menu = Menu.buildFromTemplate(template)
+      const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
+      menu.popup({ window: win, callback: () => done(null) })
+    })
+  })
+}
+
+function buildContextMenuTemplate (items, onSelect) {
+  return items.map((item) => {
+    if (item.type === 'separator') return { type: 'separator' }
+    const entry = {
+      label: item.label,
+      enabled: item.enabled !== false,
+    }
+    if (item.role) entry.role = item.role
+    if (Array.isArray(item.submenu)) {
+      entry.submenu = buildContextMenuTemplate(item.submenu, onSelect)
+    } else if (item.id) {
+      entry.click = () => onSelect(item.id)
+    }
+    return entry
   })
 }
 

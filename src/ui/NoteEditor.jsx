@@ -1,7 +1,9 @@
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { formatRelativeDate } from '../utils/formatters'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
+import { unlockNote, relockNote, isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getEditorTitle,
@@ -39,6 +41,30 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const richTextEditorRef = useRef(null)
   const optionsButtonRef = useRef(null)
   const folders = useSelector(getFolders)
+
+  useNoteLockVersion()
+  const [unlocking, setUnlocking] = useState(false)
+  const isLocked = noteData?.locked === true
+  const showLockScreen = isLocked && !isNoteUnlocked(selectedNoteKey)
+
+  const handleUnlock = async () => {
+    setUnlocking(true)
+    try {
+      await unlockNote(selectedNoteKey)
+    } finally {
+      setUnlocking(false)
+    }
+  }
+
+  const handleToggleLock = () => {
+    if (!selectedNoteKey) return
+    if (isLocked) {
+      dispatch(updateNote({ key: selectedNoteKey, locked: false }))
+      relockNote(selectedNoteKey)
+    } else {
+      dispatch(updateNote({ key: selectedNoteKey, locked: true }))
+    }
+  }
 
   useEffect(() => {
     if (noteData && !noteData?.title && !noteData?.note) {
@@ -144,6 +170,33 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     )
   }
 
+  if (showLockScreen) {
+    return (
+      <div className='flex-1 flex items-center justify-center bg-bg-primary relative overflow-hidden'>
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+        <div className='relative z-10 flex flex-col items-center text-center px-8 animate-in fade-in zoom-in-95 duration-500'>
+          <div className='w-24 h-24 bg-bg-secondary border border-border-primary rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl'>
+            <Lock className='w-10 h-10 text-accent-primary' />
+          </div>
+          <div className='space-y-3 max-w-[390px]'>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>Locked Note</h3>
+            <p className='text-[15px] text-text-tertiary leading-relaxed'>
+              This note is protected. Authenticate with your device to view it.
+            </p>
+          </div>
+          <button
+            onClick={handleUnlock}
+            disabled={unlocking}
+            className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            <Lock className='w-4 h-4' />
+            {unlocking ? 'Authenticating…' : 'Unlock'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
       <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
@@ -154,10 +207,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         </div>
         
         <div className='flex-shrink-0 pointer-events-auto flex items-center gap-4'>
-          <NoteOptionsMenu 
+          <NoteOptionsMenu
             buttonRef={optionsButtonRef}
             folders={folders}
             currentFolderKey={noteData?.folderKey}
+            isLocked={isLocked}
+            onToggleLock={handleToggleLock}
             onMoveTo={handleMoveTo}
             onCopy={handleCopy}
             onDelete={() => onDelete(selectedNoteKey)}

@@ -11,5 +11,10 @@ window.electronBridge = {
     const handler = (event, data) => callback(data)
     ipcRenderer.on('worker-data', handler)
     return () => ipcRenderer.removeListener('worker-data', handler)
-  }
+  },
+
+  authenticate: (reason) => ipcRenderer.invoke('device-auth:authenticate', reason),
+  isDeviceAuthSupported: () => ipcRenderer.invoke('device-auth:is-supported'),
+
+  showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items)
 }

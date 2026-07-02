@@ -1,4 +1,4 @@
-import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight } from 'lucide-react'
+import { Trash2, Search, Loader2, SquarePen, Folder, Copy, MoreVertical, ChevronRight, Lock, LockOpen } from 'lucide-react'
 import { useCallback, useState, useRef, useEffect, useMemo, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,17 +9,24 @@ import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
+import { isNoteUnlocked, relockNote, useNoteLockVersion } from '../lib/noteLock'
+import { authenticate } from '../lib/deviceAuth'
 
 const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, allFolders, menuRef, selectedFolder, isLast }) => {
   const dispatch = useDispatch()
   const noteData = useSelector(getNoteData(key))
   const selectedNote = useSelector(getSelectedNote)
   
-  const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
-  const imgSrc = useSelector(state => getHyperdriveAddress(state, rawImgSrc))
+  useNoteLockVersion()
+  const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
 
-  const previewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
-  
+  const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
+  const resolvedImgSrc = useSelector(state => getHyperdriveAddress(state, rawImgSrc))
+  const imgSrc = isMasked ? null : resolvedImgSrc
+
+  const rawPreviewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
+  const previewText = isMasked ? 'Locked note' : rawPreviewText
+
   const isSelected = selectedNote === key
   const isMenuOpen = openMenuId === key
   const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
@@ -79,10 +86,15 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
         <div className='flex items-stretch justify-between gap-3'>
           <div className='flex-1 min-w-0 flex flex-col justify-center'>
             <h3
-              className={`text-[15px] truncate tracking-tight mb-0.5
+              className={`text-[15px] tracking-tight mb-0.5 flex items-center gap-1.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
             >
-              {noteData?.title || 'Untitled'}
+              {noteData?.locked && (
+                <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
+              )}
+              <span className='truncate'>
+                {noteData?.title || 'Untitled'}
+              </span>
             </h3>
             <p
               className={`text-[12px] line-clamp-2 leading-relaxed opacity-80
@@ -231,7 +243,25 @@ const NotesItem = memo(({ noteKey: key, openMenuId, onMenuToggle, onMenuAction, 
 
               <div className="h-px bg-overlay-soft my-1 mx-2" />
 
-              <button 
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMenuAction('toggleLock', key)
+                }}
+                className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/lock active:scale-95 text-left'
+              >
+                <div className="w-7 h-7 rounded-lg bg-bg-tertiary text-accent-primary group-hover/lock:bg-accent-primary/20 flex items-center justify-center transition-colors">
+                  {noteData?.locked ? <LockOpen className='w-4 h-4' /> : <Lock className='w-4 h-4' />}
+                </div>
+                <span className='text-[13px] font-bold text-text-primary tracking-tight'>
+                  {noteData?.locked ? 'Remove Lock' : 'Lock Note'}
+                </span>
+              </button>
+
+              <div className="h-px bg-overlay-soft my-1 mx-2" />
+
+              <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -337,6 +367,18 @@ export default function NotesList({
           await navigator.clipboard.writeText(cleanText)
         } catch (e) {
           console.error('Failed to copy', e)
+        }
+        break
+      }
+      case 'toggleLock': {
+        const locked = noteData?.value?.locked === true
+        if (locked) {
+          const ok = await authenticate('Unlock this note')
+          if (!ok) break
+          dispatch(updateNote({ key: noteKey, locked: false }))
+          relockNote(noteKey)
+        } else {
+          dispatch(updateNote({ key: noteKey, locked: true }))
         }
         break
       }

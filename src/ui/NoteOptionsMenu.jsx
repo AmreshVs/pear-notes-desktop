@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { MoreHorizontal, Folder, Trash2, ChevronRight, Copy, Check } from 'lucide-react'
+import { MoreHorizontal, Folder, Trash2, ChevronRight, Copy, Check, Lock, LockOpen } from 'lucide-react'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { processHtmlImages } from '../lib/fileManager'
 
-export default function NoteOptionsMenu({ 
-  folders, 
-  currentFolderKey, 
-  onMoveTo, 
+export default function NoteOptionsMenu({
+  folders,
+  currentFolderKey,
+  isLocked,
+  onToggleLock,
+  onMoveTo,
   onCopy,
-  onDelete, 
-  buttonRef 
+  onDelete,
+  buttonRef
 }) {
   const [showMenu, setShowMenu] = useState(false)
   const [showMoveSubmenu, setShowMoveSubmenu] = useState(false)
@@ -182,7 +184,25 @@ export default function NoteOptionsMenu({
 
           <div className="h-px bg-overlay-soft my-1 mx-2" />
 
-          <div 
+          <div
+            onMouseEnter={() => setShowMoveSubmenu(false)}
+            onClick={() => {
+              onToggleLock()
+              setShowMenu(false)
+            }}
+            className='px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 group/lock active:scale-95'
+          >
+            <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover/lock:bg-accent-primary/20 transition-colors">
+              {isLocked ? <LockOpen className='w-4 h-4' /> : <Lock className='w-4 h-4' />}
+            </div>
+            <span className='text-[13px] font-bold text-text-primary tracking-tight'>
+              {isLocked ? 'Remove Lock' : 'Lock Note'}
+            </span>
+          </div>
+
+          <div className="h-px bg-overlay-soft my-1 mx-2" />
+
+          <div
             onMouseEnter={() => setShowMoveSubmenu(false)}
             onClick={() => {
               onDelete()
