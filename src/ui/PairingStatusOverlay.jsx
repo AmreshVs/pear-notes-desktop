@@ -3,11 +3,13 @@ import { useSelector, useDispatch } from 'react-redux'
 import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, rejectPairing, subscribePairUser, getShowPairingInput, setShowPairingInput, clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getFingerprint } from '@pear-notes/core/utils.js'
 import { useState } from 'react'
+import MergeConfirmModal from './MergeConfirmModal'
 
 export default function PairingStatusOverlay() {
   const dispatch = useDispatch()
   const [isExiting, setIsExiting] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
+  const [pendingInvite, setPendingInvite] = useState(null)
   
   const inviterStatus = useSelector(getInviterStatus)
   const receiverStatus = useSelector(getReceiverStatus)
@@ -77,10 +79,20 @@ export default function PairingStatusOverlay() {
 
   const handleConnect = () => {
     if (pasteCode.trim()) {
-      dispatch(subscribePairUser({ invite: pasteCode.trim() }))
-      dispatch(setShowPairingInput(false))
-      setPasteCode('')
+      setPendingInvite(pasteCode.trim())
     }
+  }
+
+  const handleConfirmMerge = () => {
+    if (!pendingInvite) return
+    dispatch(subscribePairUser({ invite: pendingInvite }))
+    dispatch(setShowPairingInput(false))
+    setPendingInvite(null)
+    setPasteCode('')
+  }
+
+  const handleCancelMerge = () => {
+    setPendingInvite(null)
   }
 
   const handleCloseInput = () => {
@@ -327,6 +339,12 @@ export default function PairingStatusOverlay() {
             </div>
           </div>
         </div>
+
+        <MergeConfirmModal
+          open={!!pendingInvite}
+          onConfirm={handleConfirmMerge}
+          onCancel={handleCancelMerge}
+        />
       </div>
     )
   }

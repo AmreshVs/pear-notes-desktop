@@ -30,6 +30,7 @@ import {
 import { QRCodeCanvas } from 'qrcode.react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import MergeConfirmModal from './MergeConfirmModal'
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -58,6 +59,7 @@ export default function SyncSettings({ onClose }) {
   const [syncTab, setSyncTab] = useState('invite')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
+  const [pendingInvite, setPendingInvite] = useState(null)
 
   const handleCopyInvite = () => {
     if (!isInviteGenerated) return
@@ -72,15 +74,24 @@ export default function SyncSettings({ onClose }) {
 
   const handleConnect = () => {
     if (isValidInvite(pasteCode)) {
-      const rawInvite = extractInvite(pasteCode)
-      dispatch(subscribePairUser({ invite: rawInvite }))
-      setPasteCode('')
-      if (onClose) {
-        onClose()
-      } else {
-        dispatch(setShowSettings(false))
-      }
+      setPendingInvite(extractInvite(pasteCode))
     }
+  }
+
+  const handleConfirmMerge = () => {
+    if (!pendingInvite) return
+    dispatch(subscribePairUser({ invite: pendingInvite }))
+    setPendingInvite(null)
+    setPasteCode('')
+    if (onClose) {
+      onClose()
+    } else {
+      dispatch(setShowSettings(false))
+    }
+  }
+
+  const handleCancelMerge = () => {
+    setPendingInvite(null)
   }
 
   const formatExpiration = (timestamp) => {
@@ -296,6 +307,12 @@ export default function SyncSettings({ onClose }) {
           </p>
         </div>
       </div>
+
+      <MergeConfirmModal
+        open={!!pendingInvite}
+        onConfirm={handleConfirmMerge}
+        onCancel={handleCancelMerge}
+      />
     </div>
   )
 }

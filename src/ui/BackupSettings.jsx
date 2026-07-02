@@ -4,6 +4,7 @@ import {
   getImportStatus,
   resetExport,
   resetImport,
+  setImportStatus,
   startExportBackup,
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
@@ -13,6 +14,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getDbEncryptionKey } from '../utils.js'
 import { formatBytes } from '../utils/formatters'
+import { isValidRecoveryKey, RECOVERY_KEY_LENGTH } from '../utils/recoveryKey'
+import { getBackupErrorMessage } from '../utils/backupErrors'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
@@ -146,16 +149,22 @@ export default function BackupSettings() {
   }
 
   const handleConfirmRestore = async () => {
-    if (!selectedFile || enteredKey.trim().length !== 64) return
+    if (!selectedFile || !isValidRecoveryKey(enteredKey)) return
     const key = enteredKey.trim()
     const file = selectedFile
     setShowPromptModal(false)
     setSelectedFile(null)
 
-    const buffer = await file.arrayBuffer()
     setModalState({ visible: true, done: false, doneType: 'import', error: false, errorMessage: '' })
-    dispatch(resetImport())
-    dispatch(startImportBackup({ buffer: new Uint8Array(buffer), recoveryKey: key }))
+    dispatch(setImportStatus({ step: 'reading', progress: 5, message: 'Reading backup file...' }))
+    try {
+      const buffer = await file.arrayBuffer()
+      dispatch(resetImport())
+      dispatch(startImportBackup({ buffer: new Uint8Array(buffer), recoveryKey: key }))
+    } catch (err) {
+      dispatch(resetImport())
+      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: String(err) })
+    }
   }
 
 
@@ -324,9 +333,11 @@ export default function BackupSettings() {
                   className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm font-mono text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
                   maxLength={64}
                 />
-                {enteredKey.trim() && enteredKey.trim().length !== 64 && (
+                {enteredKey.trim() && !isValidRecoveryKey(enteredKey) && (
                   <p className='text-[11px] text-accent-danger/80 ml-1'>
-                    Must be exactly 64 characters (currently {enteredKey.trim().length})
+                    {enteredKey.trim().length !== RECOVERY_KEY_LENGTH
+                      ? `Must be exactly ${RECOVERY_KEY_LENGTH} characters (currently ${enteredKey.trim().length})`
+                      : 'Key must contain only hex characters (0-9, a-f)'}
                   </p>
                 )}
               </div>
@@ -343,7 +354,7 @@ export default function BackupSettings() {
                 </button>
                 <button
                   onClick={handleConfirmRestore}
-                  disabled={enteredKey.trim().length !== 64}
+                  disabled={!isValidRecoveryKey(enteredKey)}
                   className='flex-1 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
                 >
                   Restore
@@ -391,7 +402,7 @@ export default function BackupSettings() {
                     : 'Restoring Data...'}
                 </h3>
                 {(isError ? modalState.errorMessage : progressMessage) ? (
-                  <p className='text-text-tertiary text-sm leading-relaxed'>{isError ? modalState.errorMessage : progressMessage}</p>
+                  <p className='text-text-tertiary text-sm leading-relaxed'>{isError ? getBackupErrorMessage(modalState.errorMessage) : progressMessage}</p>
                 ) : null}
               </div>
 

@@ -1,7 +1,8 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause } from 'lucide-react'
+import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause, Maximize2 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import AudioPlayer from './AudioPlayer'
+import MediaPreviewModal from './MediaPreviewModal'
 import { useSelector } from 'react-redux'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
@@ -12,6 +13,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const mediaRef = useRef(null)
   
   const resolvedUrl = useSelector((state) => (url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url))
@@ -55,6 +57,18 @@ export default function FileAttachmentView({ node, deleteNode }) {
     }
     setIsPlaying(!isPlaying)
   }
+
+  const enterFullscreen = (e) => {
+    e.stopPropagation()
+    mediaRef.current?.requestFullscreen?.()
+  }
+
+  const openPreview = () => {
+    if (isVideo || isAudio) return
+    setIsPreviewOpen(true)
+  }
+
+  const closePreview = () => setIsPreviewOpen(false)
 
   const getFileIcon = () => {
     if (!fileType) return <File className='w-6 h-6' />
@@ -156,17 +170,27 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 }}
               />
               <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 pointer-events-none'>
-                <button 
+                <button
                   onClick={togglePlayPause}
                   className='w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-white pointer-events-auto'
                 >
                   {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
                 </button>
               </div>
+              <button
+                onClick={enterFullscreen}
+                className='absolute top-2 right-2 p-2 rounded-lg bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-20'
+                title='Fullscreen'
+              >
+                <Maximize2 className='w-4 h-4' />
+              </button>
             </div>
           )}
 
-          <div className={`relative flex items-center gap-4 p-${isVideo ? 6 : 4}`}>
+          <div
+            className={`relative flex items-center gap-4 p-${isVideo ? 6 : 4} ${!isVideo ? 'cursor-zoom-in' : ''}`}
+            onDoubleClick={openPreview}
+          >
             <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-secondary border border-border-primary'>
               {getFileIcon()}
             </div>
@@ -235,6 +259,15 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
           )}
         </div>
+      )}
+      {isPreviewOpen && (
+        <MediaPreviewModal
+          url={resolvedUrl || fileData}
+          fileName={fileName || 'File'}
+          fileType={fileType}
+          onClose={closePreview}
+          onDownload={handleDownload}
+        />
       )}
     </NodeViewWrapper>
   )

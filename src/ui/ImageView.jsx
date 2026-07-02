@@ -6,6 +6,7 @@ import { Resizable } from 'react-resizable'
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { deleteHyperdriveFile } from '../lib/fileManager'
+import MediaPreviewModal from './MediaPreviewModal'
 import 'react-resizable/css/styles.css'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
@@ -15,6 +16,10 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
   const [width, setWidth] = useState(initialWidth || 300)
   const [height, setHeight] = useState(initialHeight || 'auto')
   const [aspectRatio, setAspectRatio] = useState(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
+  const openPreview = () => setIsPreviewOpen(true)
+  const closePreview = () => setIsPreviewOpen(false)
 
   const onImageLoad = (e) => {
     const { naturalWidth, naturalHeight } = e.target
@@ -102,12 +107,21 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
               alt={alt}
               title={title}
               onLoad={onImageLoad}
+              onDoubleClick={openPreview}
               draggable={false}
-              className={`rounded-lg border border-border-primary w-full h-full block object-contain pointer-events-auto ${selected ? 'brightness-110' : ''}`}
+              className={`rounded-lg border border-border-primary w-full h-full block object-contain pointer-events-auto cursor-zoom-in ${selected ? 'brightness-110' : ''}`}
             />
           </div>
         </Resizable>
       </div>
+      {isPreviewOpen && (
+        <MediaPreviewModal
+          url={resolvedUrl}
+          fileName={title || alt || 'Image'}
+          fileType='image/*'
+          onClose={closePreview}
+        />
+      )}
     </NodeViewWrapper>
   )
 }
