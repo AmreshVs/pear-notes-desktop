@@ -1,4 +1,5 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, LockKeyhole } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   getTheme,
@@ -8,6 +9,20 @@ import {
   getEditorFontSize,
   getSortBy
 } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { isDeviceAuthSupported } from '../lib/deviceAuth'
+
+const AUTH_METHOD_LABELS = {
+  mac: 'Touch ID or your macOS password',
+  win: 'Windows Hello or your Windows PIN',
+  linux: 'your system authentication'
+}
+
+function getAuthMethodLabel () {
+  const platform = (typeof navigator !== 'undefined' ? navigator.platform : '').toLowerCase()
+  if (platform.includes('mac')) return AUTH_METHOD_LABELS.mac
+  if (platform.includes('win')) return AUTH_METHOD_LABELS.win
+  return AUTH_METHOD_LABELS.linux
+}
 
 export default function GeneralSettings() {
   const dispatch = useDispatch()
@@ -15,6 +30,17 @@ export default function GeneralSettings() {
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
   const sortBy = useSelector(getSortBy)
+  const [lockAvailable, setLockAvailable] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    isDeviceAuthSupported().then((supported) => {
+      if (active) setLockAvailable(supported)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleUpdateSetting = (key, value) => {
     dispatch(updateSetting({ key, value }))
@@ -137,6 +163,30 @@ export default function GeneralSettings() {
           </div>
         </div>
       </div>
+
+      {lockAvailable && (
+        <div className="space-y-1">
+          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Privacy</h3>
+          <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
+            <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center">
+                  <LockKeyhole className="w-5 h-5 text-accent-primary" />
+                </div>
+                <div className="space-y-1 min-w-0">
+                  <label className='block text-text-primary text-[15px] font-bold'>Note Lock</label>
+                  <p className='text-[13px] text-text-tertiary font-medium opacity-60'>
+                    Lock individual notes via &ldquo;Lock Note&rdquo; in the note&apos;s context menu. Unlocks with {getAuthMethodLabel()}.
+                  </p>
+                </div>
+              </div>
+              <span className="flex-shrink-0 text-[12px] font-bold text-accent-success bg-accent-success/10 border border-accent-success/20 px-3 py-1 rounded-lg">
+                Available
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

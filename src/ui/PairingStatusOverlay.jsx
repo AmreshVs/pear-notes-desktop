@@ -1,6 +1,6 @@
 import { Check, ShieldCheck, Globe, Loader2, Link2 } from 'lucide-react'
 import { useSelector, useDispatch } from 'react-redux'
-import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, rejectPairing, subscribePairUser, getShowPairingInput, setShowPairingInput, clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
+import { getInviterStatus, getReceiverStatus, resetInvite, resetReceiverStatus, confirmPairing, rejectPairing, subscribePairUser, getShowPairingInput, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getFingerprint } from '@pear-notes/core/utils.js'
 import { useState } from 'react'
 import MergeConfirmModal from './MergeConfirmModal'
@@ -73,8 +73,7 @@ export default function PairingStatusOverlay() {
   }
 
   const handleResetAfterFailedPairing = () => {
-    dispatch(clearStorage())
-    location.reload()
+    dispatch(resetReceiverStatus())
   }
 
   const handleConnect = () => {
@@ -141,8 +140,8 @@ export default function PairingStatusOverlay() {
             </h3>
             <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
               {isRejected
-                ? 'The other device declined this pairing request. This device will reset and restart.'
-                : 'Sync timed out. This device will reset and restart.'}
+                ? 'The other device declined this pairing request. Your notes on this device have been kept.'
+                : 'Pairing timed out or failed. Your notes on this device have been kept. You can try pairing again.'}
             </p>
           </div>
           <button

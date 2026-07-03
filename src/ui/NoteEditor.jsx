@@ -48,6 +48,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const [unlocking, setUnlocking] = useState(false)
   const [authSupported, setAuthSupported] = useState(true)
   const isLocked = noteData?.locked === true
+  const isPinned = noteData?.pinned === true
   const showLockScreen = isLocked && !isNoteUnlocked(selectedNoteKey)
 
   useEffect(() => {
@@ -75,6 +76,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       currentlyLocked: isLocked,
       dispatch
     })
+  }
+
+  const handleTogglePin = () => {
+    dispatch(updateNote({ key: selectedNoteKey, pinned: !isPinned }))
   }
 
   useEffect(() => {
@@ -175,6 +180,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { type: 'separator' },
       { label: 'Move to', submenu: moveSubmenu },
       { id: 'copyNote', label: 'Copy Note' },
+      { id: 'togglePin', label: isPinned ? 'Unpin Note' : 'Pin Note' },
       { id: 'toggleLock', label: isLocked ? 'Remove Lock' : 'Lock Note' },
       { type: 'separator' },
       { id: 'delete', label: 'Delete' }
@@ -184,6 +190,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       handleMoveTo(result.slice(5))
     } else if (result === 'copyNote') {
       copyNoteToClipboard()
+    } else if (result === 'togglePin') {
+      handleTogglePin()
     } else if (result === 'toggleLock') {
       handleToggleLock()
     } else if (result === 'delete') {

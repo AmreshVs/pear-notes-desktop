@@ -1,4 +1,4 @@
-import { Search, Loader2, SquarePen, Folder, Lock, LockOpen } from 'lucide-react'
+import { Search, Loader2, SquarePen, Folder, Lock, LockOpen, Pin } from 'lucide-react'
 import { useCallback, useMemo, memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -39,14 +39,18 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
     dispatch(setSelectedNote(key))
   }, [dispatch])
 
+  const isTrash = selectedFolder === RECENTLY_DELETED_KEY
+
   const handleContextMenu = useCallback(async (e) => {
     e.preventDefault()
     e.stopPropagation()
     const locked = noteData?.locked === true
+    const pinned = noteData?.pinned === true
     const moveSubmenu = availableMoveFolders.length > 0
       ? availableMoveFolders.map(f => ({ id: `move:${f.id}`, label: f.name }))
       : [{ label: 'No other lists', enabled: false }]
     const result = await showContextMenu([
+      ...(isTrash ? [] : [{ id: 'togglePin', label: pinned ? 'Unpin Note' : 'Pin Note' }, { type: 'separator' }]),
       { label: 'Move to', submenu: moveSubmenu },
       { type: 'separator' },
       { id: 'copy', label: 'Copy Note' },
@@ -57,7 +61,7 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
     if (!result) return
     if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
     else onMenuAction(result, key)
-  }, [availableMoveFolders, noteData?.locked, onMenuAction, key])
+  }, [availableMoveFolders, noteData?.locked, noteData?.pinned, isTrash, onMenuAction, key])
 
   return (
     <div className="relative">
@@ -78,6 +82,9 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
               className={`text-[15px] tracking-tight mb-0.5 flex items-center gap-1.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
             >
+              {noteData?.pinned && !isTrash && (
+                <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
+              )}
               {noteData?.locked && (
                 isMasked
                   ? <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
@@ -153,16 +160,18 @@ export default function NotesList({
     dispatch(setShowPairingInput(true))
   }, [dispatch])
 
-  const groupOrder = useMemo(() => [NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS], [])
+  const groupOrder = useMemo(() => [NOTES_LIST_GROUP.PINNED, NOTES_LIST_GROUP.TODAY, NOTES_LIST_GROUP.YESTERDAY, NOTES_LIST_GROUP.L7DAYS, NOTES_LIST_GROUP.L30DAYS], [])
+
+  const isTrash = selectedFolder === RECENTLY_DELETED_KEY
 
   const groupedNotes = useMemo(() => {
     return filteredNotes.reduce((acc, note) => {
-      const title = getGroupTitle(note)
+      const title = !isTrash && note.value?.pinned === true ? NOTES_LIST_GROUP.PINNED : getGroupTitle(note)
       if (!acc[title]) acc[title] = []
       acc[title].push(note)
       return acc
     }, {})
-  }, [filteredNotes])
+  }, [filteredNotes, isTrash])
 
   const sortedGroups = useMemo(() => {
     return Object.keys(groupedNotes).sort((a, b) => {
@@ -203,6 +212,12 @@ export default function NotesList({
           currentlyLocked: noteData?.value?.locked === true,
           dispatch
         })
+        break
+      case 'togglePin':
+        dispatch(updateNote({
+          key: noteKey,
+          pinned: !(noteData?.value?.pinned === true)
+        }))
         break
       case 'delete':
         if (selectedFolder === RECENTLY_DELETED_KEY) {
