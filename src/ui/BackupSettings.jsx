@@ -9,13 +9,12 @@ import {
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
-import { CloudDownload, Database, HardDrive, Lock, Shield, Upload, Eye, EyeOff, Key } from 'lucide-react'
+import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { getDbEncryptionKey } from '../utils.js'
 import { formatBytes } from '../utils/formatters'
-import { isValidRecoveryKey, RECOVERY_KEY_LENGTH } from '../utils/recoveryKey'
 import { getBackupErrorMessage } from '../utils/backupErrors'
+import BackupPasswordModal from './BackupPasswordModal'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
@@ -37,20 +36,9 @@ export default function BackupSettings() {
     return stored ? new Date(stored) : null
   })
   const [modalState, setModalState] = useState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
-  const [deviceRecoveryKey] = useState(() => getDbEncryptionKey())
-  const [isKeyVisible, setIsKeyVisible] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [showPromptModal, setShowPromptModal] = useState(false)
-  const [enteredKey, setEnteredKey] = useState('')
+  const [showExportPasswordModal, setShowExportPasswordModal] = useState(false)
+  const [showRestorePasswordModal, setShowRestorePasswordModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
-
-  const handleCopyRecoveryKey = async () => {
-    if (deviceRecoveryKey) {
-      await navigator.clipboard.writeText(deviceRecoveryKey)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
 
   useEffect(() => {
     if (exportStatus.step === 'idle') return
@@ -119,14 +107,14 @@ export default function BackupSettings() {
   const activeProgressStatus = isExporting ? exportStatus : importStatus
 
   const handleExport = () => {
-    const confirmed = window.confirm(
-      "Backup Recovery Key\n\nPlease make sure you have copied your Recovery Key securely. You will need it to restore this backup on other devices.\n\nContinue to create backup?"
-    )
-    if (!confirmed) return
+    setShowExportPasswordModal(true)
+  }
 
+  const handleConfirmExport = (password) => {
+    setShowExportPasswordModal(false)
     setModalState({ visible: true, done: false, doneType: 'export', error: false, errorMessage: '' })
     dispatch(resetExport())
-    dispatch(startExportBackup())
+    dispatch(startExportBackup({ password }))
   }
 
   const handleImport = () => {
@@ -144,15 +132,13 @@ export default function BackupSettings() {
     }
 
     setSelectedFile(file)
-    setEnteredKey('')
-    setShowPromptModal(true)
+    setShowRestorePasswordModal(true)
   }
 
-  const handleConfirmRestore = async () => {
-    if (!selectedFile || !isValidRecoveryKey(enteredKey)) return
-    const key = enteredKey.trim()
+  const handleConfirmRestore = async (password) => {
+    if (!selectedFile) return
     const file = selectedFile
-    setShowPromptModal(false)
+    setShowRestorePasswordModal(false)
     setSelectedFile(null)
 
     setModalState({ visible: true, done: false, doneType: 'import', error: false, errorMessage: '' })
@@ -160,11 +146,20 @@ export default function BackupSettings() {
     try {
       const buffer = await file.arrayBuffer()
       dispatch(resetImport())
-      dispatch(startImportBackup({ buffer: new Uint8Array(buffer), recoveryKey: key }))
+      dispatch(startImportBackup({ buffer: new Uint8Array(buffer), password }))
     } catch (err) {
       dispatch(resetImport())
       setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: String(err) })
     }
+  }
+
+  const handleCancelExportPassword = () => {
+    setShowExportPasswordModal(false)
+  }
+
+  const handleCancelRestorePassword = () => {
+    setShowRestorePasswordModal(false)
+    setSelectedFile(null)
   }
 
 
@@ -265,31 +260,14 @@ export default function BackupSettings() {
         </div>
       </div>
 
-      <div className='bg-bg-panel-secondary/40 border border-border-primary rounded-2xl p-6 space-y-4 relative overflow-hidden hover:border-border-secondary transition-colors'>
+      <div className='bg-bg-panel-secondary/40 border border-border-primary rounded-2xl p-6 space-y-3 relative overflow-hidden hover:border-border-secondary transition-colors'>
         <div className='flex items-center gap-3'>
-          <Key className='w-5 h-5 text-accent-primary' />
-          <h4 className='text-text-primary font-bold text-[15px]'>Recovery Key</h4>
+          <Lock className='w-5 h-5 text-accent-primary' />
+          <h4 className='text-text-primary font-bold text-[15px]'>Password Protected</h4>
         </div>
         <p className='text-text-tertiary text-xs leading-relaxed'>
-          Save this key securely. You will need it to restore this backup on a new device.
+          You choose a password when creating a backup, and it encrypts the file. You&apos;ll need that same password to restore — it is never stored, so keep it somewhere safe.
         </p>
-        <div className='flex items-center bg-overlay-faint border border-overlay-medium rounded-xl p-1 h-12 pl-4'>
-          <p className='flex-1 text-sm font-mono text-text-secondary select-all truncate mr-2'>
-            {isKeyVisible ? deviceRecoveryKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
-          </p>
-          <button
-            onClick={() => setIsKeyVisible(!isKeyVisible)}
-            className='w-10 h-10 flex items-center justify-center text-text-tertiary hover:text-text-primary transition-colors'
-          >
-            {isKeyVisible ? <EyeOff className='w-4.5 h-4.5' /> : <Eye className='w-4.5 h-4.5' />}
-          </button>
-          <button
-            onClick={handleCopyRecoveryKey}
-            className='h-10 px-4 bg-accent-primary text-text-primary rounded-lg font-bold text-xs hover:bg-accent-primary-hover active:scale-95 transition-all'
-          >
-            {copied ? 'Copied!' : 'Copy Key'}
-          </button>
-        </div>
       </div>
 
       {lastBackup && (
@@ -302,68 +280,19 @@ export default function BackupSettings() {
         </div>
       )}
 
-      {showPromptModal && (
-        <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
-          <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300' onClick={() => {
-            setShowPromptModal(false)
-            setSelectedFile(null)
-          }} />
+      <BackupPasswordModal
+        open={showExportPasswordModal}
+        mode='create'
+        onSubmit={handleConfirmExport}
+        onCancel={handleCancelExportPassword}
+      />
 
-          <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
-            <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full' />
-            <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full' />
-
-            <div className='relative z-10 flex flex-col space-y-6'>
-              <div className='flex flex-col items-center text-center space-y-2'>
-                <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
-                  <Key className='w-6 h-6 text-accent-primary' />
-                </div>
-                <h3 className='text-lg font-bold text-text-primary'>Enter Recovery Key</h3>
-                <p className='text-text-tertiary text-xs leading-relaxed max-w-[280px]'>
-                  Please enter the 64-character Recovery Key of the device that created this backup to decrypt your data.
-                </p>
-              </div>
-
-              <div className='space-y-1.5'>
-                <input
-                  type='text'
-                  value={enteredKey}
-                  onChange={(e) => setEnteredKey(e.target.value)}
-                  placeholder='Enter 64-character hex key'
-                  className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm font-mono text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
-                  maxLength={64}
-                />
-                {enteredKey.trim() && !isValidRecoveryKey(enteredKey) && (
-                  <p className='text-[11px] text-accent-danger/80 ml-1'>
-                    {enteredKey.trim().length !== RECOVERY_KEY_LENGTH
-                      ? `Must be exactly ${RECOVERY_KEY_LENGTH} characters (currently ${enteredKey.trim().length})`
-                      : 'Key must contain only hex characters (0-9, a-f)'}
-                  </p>
-                )}
-              </div>
-
-              <div className='flex gap-3 w-full pt-2'>
-                <button
-                  onClick={() => {
-                    setShowPromptModal(false)
-                    setSelectedFile(null)
-                  }}
-                  className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmRestore}
-                  disabled={!isValidRecoveryKey(enteredKey)}
-                  className='flex-1 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
-                >
-                  Restore
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <BackupPasswordModal
+        open={showRestorePasswordModal}
+        mode='enter'
+        onSubmit={handleConfirmRestore}
+        onCancel={handleCancelRestorePassword}
+      />
 
       {showModal && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
