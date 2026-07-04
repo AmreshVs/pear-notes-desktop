@@ -64,11 +64,14 @@ export default function PrivacySettings() {
     if (ok) dispatch(clearLockPassword())
   }
 
+  const passwordDisabled = lockMethod !== 'password' && !lockAvailable
+
   const handleSelectPassword = async () => {
     if (lockMethod === 'password') {
       const ok = await requestUnlockPassword()
       if (!ok) return
-    } else if (lockAvailable) {
+    } else {
+      if (!lockAvailable) return
       const ok = await authenticate(CHANGE_METHOD_REASON)
       if (!ok) return
     }
@@ -110,7 +113,7 @@ export default function PrivacySettings() {
                     ? 'Locked notes unlock with your custom password on all synced devices.'
                     : lockAvailable
                       ? `Locked notes unlock with ${getAuthMethodLabel()}.`
-                      : 'Set a custom password to lock notes on this device.'}
+                      : 'Device authentication isn’t set up on this device. Change the lock method from another synced device.'}
                 </p>
               </div>
             </div>
@@ -136,7 +139,8 @@ export default function PrivacySettings() {
               </button>
               <button
                 onClick={handleSelectPassword}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
+                disabled={passwordDisabled}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
                   lockMethod === 'password'
                     ? 'bg-accent-primary text-text-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'

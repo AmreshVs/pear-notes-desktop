@@ -1,6 +1,6 @@
-import { KeyRound } from 'lucide-react'
+import { Fingerprint } from 'lucide-react'
 
-export default function LockUnavailableModal({ open, onSetPassword, onCancel }) {
+export default function LockUnavailableModal({ open, onCancel }) {
   if (!open) return null
 
   return (
@@ -14,28 +14,20 @@ export default function LockUnavailableModal({ open, onSetPassword, onCancel }) 
         <div className='relative z-10 flex flex-col space-y-6'>
           <div className='flex flex-col items-center text-center space-y-2'>
             <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
-              <KeyRound className='w-6 h-6 text-accent-primary' />
+              <Fingerprint className='w-6 h-6 text-accent-primary' />
             </div>
-            <h3 className='text-lg font-bold text-text-primary'>Set a Note Lock Password</h3>
+            <h3 className='text-lg font-bold text-text-primary'>Device Lock Unavailable</h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              This device has no biometric authentication or login password set up. Set a custom password to lock your notes.
+              This device has no biometric authentication or login password set up, so notes can&apos;t be locked or unlocked here. Set up device security, or change the lock method from another synced device.
             </p>
           </div>
 
-          <div className='flex gap-3 w-full'>
-            <button
-              onClick={onCancel}
-              className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onSetPassword}
-              className='flex-1 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
-            >
-              Set Password
-            </button>
-          </div>
+          <button
+            onClick={onCancel}
+            className='w-full py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+          >
+            OK
+          </button>
         </div>
       </div>
     </div>

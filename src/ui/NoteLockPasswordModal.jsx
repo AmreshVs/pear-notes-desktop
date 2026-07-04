@@ -67,7 +67,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
             <div className='flex items-start gap-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-3'>
               <TriangleAlert className='w-4 h-4 text-yellow-500 shrink-0 mt-0.5' />
               <p className='text-[11px] text-yellow-500/90 leading-relaxed'>
-                The app does not store this password. If you forget it, locked notes cannot be opened. Please write it down and keep it safe.
+                Your password itself is never stored — only a secure verification hash. It cannot be recovered, so if you forget it, locked notes cannot be opened. Write it down and keep it safe.
               </p>
             </div>
           )}

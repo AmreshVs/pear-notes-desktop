@@ -8,6 +8,7 @@ import { toggleNoteLock } from '../lib/noteLockActions'
 import { isDeviceAuthSupported } from '../lib/deviceAuth'
 import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
 import { useLockedNoteProtection } from '../hooks/useLockedNoteProtection'
+import LockedNoteShield from './LockedNoteShield'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getEditorTitle,
@@ -327,6 +328,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>
+
+      <LockedNoteShield active={isLocked && noteUnlocked} />
     </div>
   )
 }
