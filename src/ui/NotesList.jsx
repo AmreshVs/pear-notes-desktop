@@ -8,9 +8,11 @@ import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
+import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
 import { toggleNoteLock } from '../lib/noteLockActions'
 import { showContextMenu } from '../lib/contextMenu'
+import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
 
 const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder, isLast }) => {
   const dispatch = useDispatch()
@@ -150,6 +152,8 @@ export default function NotesList({
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
+  const lockMethod = useSelector(getLockMethod)
+  const { requestUnlockPassword, showLockUnavailable } = useNoteLockPassword()
   const { step } = useSelector(getInviterStatus)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
@@ -210,7 +214,10 @@ export default function NotesList({
         await toggleNoteLock({
           key: noteKey,
           currentlyLocked: noteData?.value?.locked === true,
-          dispatch
+          dispatch,
+          lockMethod,
+          requestPassword: requestUnlockPassword,
+          onUnavailable: showLockUnavailable
         })
         break
       case 'togglePin':
@@ -229,7 +236,7 @@ export default function NotesList({
         }
         break
     }
-  }, [dispatch, filteredNotes, selectedFolder])
+  }, [dispatch, filteredNotes, selectedFolder, lockMethod, requestUnlockPassword, showLockUnavailable])
 
   const renderNotesList = useCallback((note, index, array) => {
     const isLast = index === array.length - 1

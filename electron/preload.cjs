@@ -16,5 +16,7 @@ window.electronBridge = {
   authenticate: (reason) => ipcRenderer.invoke('device-auth:authenticate', reason),
   isDeviceAuthSupported: () => ipcRenderer.invoke('device-auth:is-supported'),
 
+  setContentProtection: (enabled) => ipcRenderer.invoke('content-protection:set', enabled),
+
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items)
 }

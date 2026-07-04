@@ -70,6 +70,8 @@ const RichTextEditor = forwardRef(
             keepAttributes: false
           },
           strike: false,
+          underline: false,
+          link: false,
           codeBlock: false
         }),
         Underline,

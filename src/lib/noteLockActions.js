@@ -3,21 +3,25 @@ import { authenticate, isDeviceAuthSupported } from './deviceAuth'
 import { relockNote } from './noteLock'
 
 const UNLOCK_REASON = 'Unlock this note'
-const AUTH_UNAVAILABLE_MESSAGE = 'Set up device authentication (Touch ID or a login password) to lock notes.'
 
-export async function toggleNoteLock ({ key, currentlyLocked, dispatch }) {
+export async function toggleNoteLock ({ key, currentlyLocked, dispatch, lockMethod = 'biometric', requestPassword, onUnavailable }) {
   if (!key) return
+  const usePassword = lockMethod === 'password'
   if (currentlyLocked) {
-    const ok = await authenticate(UNLOCK_REASON)
+    const ok = usePassword
+      ? await requestPassword?.()
+      : await authenticate(UNLOCK_REASON)
     if (!ok) return
     dispatch(updateNote({ key, locked: false }))
     relockNote(key)
     return
   }
-  const supported = await isDeviceAuthSupported()
-  if (!supported) {
-    window.alert(AUTH_UNAVAILABLE_MESSAGE)
-    return
+  if (!usePassword) {
+    const supported = await isDeviceAuthSupported()
+    if (!supported) {
+      onUnavailable?.()
+      return
+    }
   }
   dispatch(updateNote({ key, locked: true }))
   relockNote(key)

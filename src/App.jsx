@@ -25,6 +25,7 @@ import ResizablePanel from './ui/ResizablePanel'
 import SettingsScreen from './ui/SettingsScreen'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import DeviceRemovedModal from './ui/DeviceRemovedModal'
+import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
@@ -151,16 +152,18 @@ function App() {
   )
 
   return (
-    <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
-      <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
-      <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+    <NoteLockPasswordProvider>
+      <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
+        <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+        <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
 
-      <TitleBar />
-      {content}
-      {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
-      <PairingStatusOverlay />
-      <DeviceRemovedModal />
-    </main>
+        <TitleBar />
+        {content}
+        {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
+        <PairingStatusOverlay />
+        <DeviceRemovedModal />
+      </main>
+    </NoteLockPasswordProvider>
   )
 }
 

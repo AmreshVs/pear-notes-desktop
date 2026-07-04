@@ -20,18 +20,16 @@ let mainWindow = null
 let worker = null
 
 function getStoragePath () {
-  if (isDev) {
-    return path.join(os.tmpdir(), 'pear', appName)
-  }
+  const dirName = isDev ? `${appName}-dev` : appName
   const isSnap = !!process.env.SNAP_USER_COMMON
   const linuxConfigHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
   return isMac
-    ? path.join(os.homedir(), 'Library', 'Application Support', appName)
+    ? path.join(os.homedir(), 'Library', 'Application Support', dirName)
     : isLinux
       ? isSnap
-        ? path.join(process.env.SNAP_USER_COMMON, appName)
-        : path.join(linuxConfigHome, appName)
-      : path.join(os.homedir(), 'AppData', 'Roaming', appName)
+        ? path.join(process.env.SNAP_USER_COMMON, dirName)
+        : path.join(linuxConfigHome, dirName)
+      : path.join(os.homedir(), 'AppData', 'Roaming', dirName)
 }
 
 function getAppDir () {
@@ -137,6 +135,13 @@ function setupIPC () {
 
   ipcMain.handle('device-auth:is-supported', () => {
     return deviceAuth ? deviceAuth.isSupported() : false
+  })
+
+  ipcMain.handle('content-protection:set', (event, enabled) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setContentProtection(enabled === true)
+    }
+    return true
   })
 
   ipcMain.handle('ui:context-menu', (event, items) => {

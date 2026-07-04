@@ -3,6 +3,7 @@ import {
   RefreshCw,
   HardDrive,
   Database,
+  ShieldCheck,
   X
 } from 'lucide-react'
 import { useState } from 'react'
@@ -11,6 +12,7 @@ import GeneralSettings from './GeneralSettings'
 import SyncSettings from './SyncSettings'
 import BackupSettings from './BackupSettings'
 import StorageSettings from './StorageSettings'
+import PrivacySettings from './PrivacySettings'
 
 export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
@@ -23,6 +25,7 @@ export default function SettingsScreen({ onClose }) {
 
   const sections = [
     { id: 'general', name: 'General', icon: SettingsIcon },
+    { id: 'privacy', name: 'Privacy & Security', icon: ShieldCheck },
     { id: 'sync', name: 'Link & Sync', icon: RefreshCw },
     { id: 'backup', name: 'Backup & Restore', icon: HardDrive },
     { id: 'storage', name: 'Storage', icon: Database }
@@ -42,7 +45,6 @@ export default function SettingsScreen({ onClose }) {
         <div className='w-72 bg-overlay-faint border-r border-border-primary flex flex-col relative z-10'>
           <div className='p-8'>
             <h2 className='text-text-primary font-black text-2xl tracking-tighter'>Settings</h2>
-            <p className='text-text-tertiary text-[11px] font-bold uppercase tracking-[0.2em] mt-1 opacity-50'>Preference Hub</p>
           </div>
           
           <div className='flex-1 overflow-y-auto px-4 space-y-2'>
@@ -83,6 +85,7 @@ export default function SettingsScreen({ onClose }) {
               <p className='text-[13px] mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' &&
                   'Customize your personal workspace experience, from aesthetics to native language supports.'}
+                {activeSection === 'privacy' && 'Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.'}
                 {activeSection === 'sync' && 'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
                 {activeSection === 'backup' && 'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
                 {activeSection === 'storage' && 'Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.'}
@@ -98,6 +101,7 @@ export default function SettingsScreen({ onClose }) {
 
           <div className='flex-1 overflow-y-auto px-10 pb-10 scrollbar-hide'>
             {activeSection === 'general' && <GeneralSettings />}
+            {activeSection === 'privacy' && <PrivacySettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && <StorageSettings />}

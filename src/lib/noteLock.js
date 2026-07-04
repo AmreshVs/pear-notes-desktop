@@ -27,6 +27,14 @@ export function relockNote (key) {
   if (unlockedKeys.delete(key)) emit()
 }
 
+export function markNoteUnlocked (key) {
+  if (!key) return
+  if (!unlockedKeys.has(key)) {
+    unlockedKeys.add(key)
+    emit()
+  }
+}
+
 export async function unlockNote (key, reason = 'Unlock this note') {
   if (!key) return false
   if (unlockedKeys.has(key)) return true

@@ -3,9 +3,11 @@ import { Lock } from 'lucide-react'
 import { formatRelativeDate } from '../utils/formatters'
 import RichTextEditor from './RichTextEditor'
 import FormattingToolbar from './FormattingToolbar'
-import { unlockNote, isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
+import { unlockNote, isNoteUnlocked, markNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
 import { toggleNoteLock } from '../lib/noteLockActions'
 import { isDeviceAuthSupported } from '../lib/deviceAuth'
+import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
+import { useLockedNoteProtection } from '../hooks/useLockedNoteProtection'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getEditorTitle,
@@ -19,7 +21,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
-import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { getFontFamily, getEditorFontSize, getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { getFontFamilyValue } from '../utils/fonts'
 import { showContextMenu } from '../lib/contextMenu'
@@ -47,9 +49,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   useNoteLockVersion()
   const [unlocking, setUnlocking] = useState(false)
   const [authSupported, setAuthSupported] = useState(true)
+  const lockMethod = useSelector(getLockMethod)
+  const { requestUnlockPassword, showLockUnavailable } = useNoteLockPassword()
   const isLocked = noteData?.locked === true
   const isPinned = noteData?.pinned === true
-  const showLockScreen = isLocked && !isNoteUnlocked(selectedNoteKey)
+  const noteUnlocked = isNoteUnlocked(selectedNoteKey)
+  const showLockScreen = isLocked && !noteUnlocked
+
+  useLockedNoteProtection(isLocked && noteUnlocked)
 
   useEffect(() => {
     let active = true
@@ -64,7 +71,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const handleUnlock = async () => {
     setUnlocking(true)
     try {
-      await unlockNote(selectedNoteKey)
+      if (lockMethod === 'password') {
+        const ok = await requestUnlockPassword()
+        if (ok) markNoteUnlocked(selectedNoteKey)
+      } else {
+        await unlockNote(selectedNoteKey)
+      }
     } finally {
       setUnlocking(false)
     }
@@ -74,7 +86,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     await toggleNoteLock({
       key: selectedNoteKey,
       currentlyLocked: isLocked,
-      dispatch
+      dispatch,
+      lockMethod,
+      requestPassword: requestUnlockPassword,
+      onUnavailable: showLockUnavailable
     })
   }
 
@@ -251,12 +266,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>Locked Note</h3>
             <p className='text-[15px] text-text-tertiary leading-relaxed'>
-              {authSupported
-                ? 'This note is protected. Use Touch ID or your login password to authenticate and view it.'
-                : "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."}
+              {lockMethod === 'password'
+                ? 'This note is protected. Enter your note lock password to view it.'
+                : authSupported
+                  ? 'This note is protected. Use Touch ID or your login password to authenticate and view it.'
+                  : "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."}
             </p>
           </div>
-          {authSupported && (
+          {(lockMethod === 'password' || authSupported) && (
             <button
               onClick={handleUnlock}
               disabled={unlocking}
