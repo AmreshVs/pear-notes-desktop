@@ -27,9 +27,11 @@ export default function NoteLockPasswordProvider({ children }) {
   }, [])
 
   const handleSubmit = useCallback(async (password) => {
-    const valid = await backendApi.verifyNoteLockPassword({ password })
+    const { valid, retryAfter } = await backendApi.verifyNoteLockPassword({ password })
     if (valid) {
       settle(true)
+    } else if (retryAfter > 0) {
+      setError(`Too many attempts. Try again in ${retryAfter}s.`)
     } else {
       setError('Incorrect password')
     }
