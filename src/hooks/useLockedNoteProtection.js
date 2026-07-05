@@ -2,8 +2,7 @@ import { useEffect } from 'react'
 import {
   setContentProtection,
   getLockPrivacyPreference,
-  LOCK_SCREENSHOT_PROTECTION_KEY,
-  LOCK_SWITCHER_HIDE_KEY
+  LOCK_SCREENSHOT_PROTECTION_KEY
 } from '../lib/contentProtection'
 
 export function useLockedNoteProtection (active) {
@@ -13,12 +12,9 @@ export function useLockedNoteProtection (active) {
       setContentProtection(false)
       return () => {}
     }
-    Promise.all([
-      getLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY),
-      getLockPrivacyPreference(LOCK_SWITCHER_HIDE_KEY)
-    ]).then(([screenshot, switcher]) => {
+    getLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY).then((enabled) => {
       if (cancelled) return
-      setContentProtection(screenshot || switcher)
+      setContentProtection(enabled)
     })
     return () => {
       cancelled = true

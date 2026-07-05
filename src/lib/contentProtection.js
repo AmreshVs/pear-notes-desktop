@@ -1,7 +1,6 @@
 import { backendApi } from '@pear-notes/core/backend/api.js'
 
 export const LOCK_SCREENSHOT_PROTECTION_KEY = 'lockScreenshotProtection'
-export const LOCK_SWITCHER_HIDE_KEY = 'lockSwitcherHide'
 
 export function setContentProtection (enabled) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null

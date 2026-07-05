@@ -13,8 +13,7 @@ import NoteLockPasswordModal from './NoteLockPasswordModal'
 import {
   getLockPrivacyPreference,
   setLockPrivacyPreference,
-  LOCK_SCREENSHOT_PROTECTION_KEY,
-  LOCK_SWITCHER_HIDE_KEY
+  LOCK_SCREENSHOT_PROTECTION_KEY
 } from '../lib/contentProtection'
 
 const AUTH_METHOD_LABELS = {
@@ -39,7 +38,6 @@ export default function PrivacySettings() {
   const [lockAvailable, setLockAvailable] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [screenshotProtection, setScreenshotProtection] = useState(true)
-  const [switcherHide, setSwitcherHide] = useState(true)
 
   useEffect(() => {
     let active = true
@@ -48,9 +46,6 @@ export default function PrivacySettings() {
     })
     getLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY).then((v) => {
       if (active) setScreenshotProtection(v)
-    })
-    getLockPrivacyPreference(LOCK_SWITCHER_HIDE_KEY).then((v) => {
-      if (active) setSwitcherHide(v)
     })
     return () => {
       active = false
@@ -88,12 +83,6 @@ export default function PrivacySettings() {
     const next = !screenshotProtection
     setScreenshotProtection(next)
     setLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY, next)
-  }
-
-  const handleToggleSwitcherHide = () => {
-    const next = !switcherHide
-    setSwitcherHide(next)
-    setLockPrivacyPreference(LOCK_SWITCHER_HIDE_KEY, next)
   }
 
   return (
@@ -152,29 +141,16 @@ export default function PrivacySettings() {
             </div>
           </div>
 
-          <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary">
+          <div className="p-6 flex items-center justify-between gap-6">
             <div className="space-y-1 min-w-0">
               <label className='block text-text-primary text-[15px] font-bold'>Block Screenshots</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Prevent screenshots and screen capture while viewing a locked note.</p>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Exclude the window from screenshots, screen recordings, and window previews while viewing a locked note.</p>
             </div>
             <button
               onClick={handleToggleScreenshotProtection}
               className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${screenshotProtection ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
             >
               <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${screenshotProtection ? 'translate-x-5' : ''}`} />
-            </button>
-          </div>
-
-          <div className="p-6 flex items-center justify-between gap-6">
-            <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Hide in App Switcher</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Blank the window preview and thumbnails while viewing a locked note.</p>
-            </div>
-            <button
-              onClick={handleToggleSwitcherHide}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${switcherHide ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-            >
-              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${switcherHide ? 'translate-x-5' : ''}`} />
             </button>
           </div>
         </div>
