@@ -11,7 +11,6 @@ import {
   mediaKind
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
-import { deleteSyncedDevice, getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { deleteDbEncryptionKey } from '../utils.js'
 import { AlertTriangle, ChevronDown, ChevronRight, Database, HardDrive, Info, Trash2, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -108,10 +107,6 @@ export default function StorageSettings() {
   const isLoading = useSelector(getStorageIsLoading)
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
-  const syncedDevices = useSelector(getSyncedDevices)
-  const localDevice = syncedDevices.find((d) => d.isLocal)
-  const localDeviceKey = localDevice?.key
-
   const [confirmClear, setConfirmClear] = useState(false)
 
   useEffect(() => {
@@ -130,12 +125,8 @@ export default function StorageSettings() {
 
   const handleClearStorage = () => {
     setConfirmClear(false)
-    if (syncedDevices.length > 1 && localDeviceKey) {
-      dispatch(deleteSyncedDevice({ key: localDeviceKey }))
-    } else {
-      deleteDbEncryptionKey()
-      dispatch(clearStorage())
-    }
+    deleteDbEncryptionKey()
+    dispatch(clearStorage())
   }
 
 

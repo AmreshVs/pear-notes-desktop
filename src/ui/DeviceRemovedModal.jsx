@@ -29,7 +29,7 @@ export default function DeviceRemovedModal() {
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-text-primary tracking-tight">Device Removed</h3>
             <p className="text-text-tertiary text-sm leading-relaxed max-w-[280px]">
-              This device has been removed from the synced cluster by another device. The application will now restart.
+              This device has been removed from the synced cluster. Press Okay to clear local synced data and reset common storage.
             </p>
           </div>
 

@@ -35,6 +35,13 @@ export function markNoteUnlocked (key) {
   }
 }
 
+export function clearUnlockedNotes () {
+  if (unlockedKeys.size > 0) {
+    unlockedKeys.clear()
+    emit()
+  }
+}
+
 export async function unlockNote (key, reason = 'Unlock this note') {
   if (!key) return false
   if (unlockedKeys.has(key)) return true

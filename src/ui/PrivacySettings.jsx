@@ -10,6 +10,7 @@ import { backendApi } from '@pear-notes/core/backend/api.js'
 import { authenticate, isDeviceAuthSupported } from '../lib/deviceAuth'
 import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
 import NoteLockPasswordModal from './NoteLockPasswordModal'
+import { clearUnlockedNotes } from '../lib/noteLock'
 import {
   getLockPrivacyPreference,
   setLockPrivacyPreference,
@@ -83,6 +84,7 @@ export default function PrivacySettings() {
     const next = !screenshotProtection
     setScreenshotProtection(next)
     setLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY, next)
+    clearUnlockedNotes()
   }
 
   return (
