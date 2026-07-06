@@ -4,6 +4,7 @@ import { X, Download, FileQuestion } from 'lucide-react'
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'heic', 'avif']
 const TEXT_EXTENSIONS = ['txt', 'md', 'json', 'csv', 'log', 'xml', 'html']
+const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'mkv', 'avi']
 
 function getExtension(fileName) {
   if (!fileName) return ''
@@ -15,6 +16,7 @@ function resolveKind(fileType, fileName) {
   const ext = getExtension(fileName)
   if (fileType?.startsWith('image/') || IMAGE_EXTENSIONS.includes(ext)) return 'image'
   if (fileType === 'application/pdf' || ext === 'pdf') return 'pdf'
+  if (fileType?.startsWith('video/') || VIDEO_EXTENSIONS.includes(ext)) return 'video'
   if (fileType?.startsWith('audio/')) return 'audio'
   if (fileType?.startsWith('text/') || TEXT_EXTENSIONS.includes(ext)) return 'text'
   return 'unsupported'
@@ -58,6 +60,12 @@ export default function MediaPreviewModal({ url, fileName, fileType, onClose, on
             <audio src={url} controls autoPlay className='w-96 max-w-full' />
           </div>
         )
+      case 'video':
+        return (
+          <div className='relative w-full max-w-4xl aspect-video bg-black rounded-lg shadow-xl overflow-hidden'>
+            <video src={url} controls autoPlay className='w-full h-full object-contain' />
+          </div>
+        )
       default:
         return (
           <div className='flex flex-col items-center gap-4 bg-bg-secondary border border-border-primary rounded-xl p-10 shadow-xl'>
@@ -84,16 +92,16 @@ export default function MediaPreviewModal({ url, fileName, fileType, onClose, on
       className='fixed inset-0 z-[9999] flex flex-col bg-black/80 backdrop-blur-sm'
       onClick={onClose}
     >
-      <div className='flex items-center justify-between px-6 py-4 flex-shrink-0'>
-        <p className='text-sm font-medium text-white/90 truncate pr-4'>{fileName || 'Preview'}</p>
-        <div className='flex items-center gap-2'>
+      <div className='flex items-center justify-between px-8 py-5 flex-shrink-0 z-30'>
+        <p className='text-base font-bold text-white/95 truncate pr-8 select-none'>{fileName || 'Preview'}</p>
+        <div className='flex items-center gap-3'>
           {onDownload && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onDownload(e)
               }}
-              className='p-2 rounded-lg text-white/80 hover:bg-white/10 transition-colors'
+              className='w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer shadow-md'
               title='Download'
             >
               <Download className='w-5 h-5' />
@@ -101,7 +109,7 @@ export default function MediaPreviewModal({ url, fileName, fileType, onClose, on
           )}
           <button
             onClick={onClose}
-            className='p-2 rounded-lg text-white/80 hover:bg-white/10 transition-colors'
+            className='w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer shadow-md'
             title='Close'
           >
             <X className='w-5 h-5' />

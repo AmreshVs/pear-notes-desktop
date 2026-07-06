@@ -81,7 +81,9 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: true,
       contextIsolation: false,
-      webSecurity: !isDev
+      webSecurity: !isDev,
+      plugins: true,
+      pdfViewer: true
     }
   })
 
