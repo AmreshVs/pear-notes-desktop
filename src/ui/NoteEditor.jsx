@@ -21,6 +21,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getFontFamily, getEditorFontSize, getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { getFontFamilyValue } from '../utils/fonts'
@@ -45,6 +46,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
   const folders = useSelector(getFolders)
+  const syncedDevices = useSelector(getSyncedDevices)
+  const localDevice = useMemo(() => syncedDevices.find((d) => d.isLocal), [syncedDevices])
 
   useNoteLockVersion()
   const [unlocking, setUnlocking] = useState(false)
@@ -314,10 +317,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           />
           <div className='flex-1'>
             <RichTextEditor
+              key={selectedNoteKey}
               ref={richTextEditorRef}
               content={content}
               onChange={handleContentChange}
               placeholder='Start writing...'
+              localDevice={localDevice}
             />
           </div>
         </div>

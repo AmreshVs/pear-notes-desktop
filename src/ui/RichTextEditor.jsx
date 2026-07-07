@@ -24,18 +24,40 @@ import FileAttachment from './FileAttachment'
 
 import ImageView from './ImageView'
 import AudioAttachment from './AudioAttachment'
-import { 
-  Trash2, 
-  ChevronDown, 
-  ChevronUp, 
-  ChevronLeft, 
+import * as Y from 'yjs'
+import * as encoding from 'lib0/encoding'
+import * as decoding from 'lib0/decoding'
+import { DOMParser as PMDOMParser } from '@tiptap/pm/model'
+import { prosemirrorToYXmlFragment } from 'y-prosemirror'
+import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import {
+  Awareness,
+  encodeAwarenessUpdate,
+  applyAwarenessUpdate,
+  removeAwarenessStates
+} from 'y-protocols/awareness'
+import {
+  messageYjsSyncStep1,
+  messageYjsSyncStep2,
+  messageYjsUpdate,
+  readSyncStep1,
+  writeSyncStep1
+} from 'y-protocols/sync'
+import {
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
   ChevronRight,
   Split
 } from 'lucide-react'
-import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
+import { useEffect, useRef, useImperativeHandle, forwardRef, useMemo } from 'react'
 import '../styles/tiptap.css'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { useSelector } from 'react-redux'
+import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
+import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
@@ -43,14 +65,47 @@ import { useDispatch } from 'react-redux'
 
 import { getFontFamilyValue, getFontClass } from '../utils/fonts'
 
+const MESSAGE_SYNC = 0
+const MESSAGE_AWARENESS = 1
+const SYNC_RETRY_INTERVAL_MS = 1500
+const MAX_SYNC_RETRY_ATTEMPTS = 10
+const GENESIS_CLIENT_ID = 0
+const YJS_FRAGMENT = 'default'
+
+function seedGenesisFromHtml(ydoc, schema, html) {
+  const fragment = ydoc.getXmlFragment(YJS_FRAGMENT)
+  if (fragment.length > 0) return
+  if (!html) return
+  const container = document.createElement('div')
+  container.innerHTML = html
+  const pmDoc = PMDOMParser.fromSchema(schema).parse(container)
+  const seedDoc = new Y.Doc()
+  seedDoc.clientID = GENESIS_CLIENT_ID
+  prosemirrorToYXmlFragment(pmDoc, seedDoc.getXmlFragment(YJS_FRAGMENT))
+  Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(seedDoc), 'seed')
+}
+
 const RichTextEditor = forwardRef(
-  ({ content, onChange, placeholder = 'Start writing...' }, ref) => {
+  ({ content, onChange, placeholder = 'Start writing...', localDevice }, ref) => {
     const dispatch = useDispatch()
     const currentNoteKey = useSelector(getSelectedNote)
     const fontFamily = useSelector(getFontFamily)
     const editorFontSize = useSelector(getEditorFontSize)
     const isUpdatingRef = useRef(false)
+    const hasReceivedSyncRef = useRef(false)
     const lowlight = createLowlight(all)
+
+    const { ydoc, awareness } = useMemo(() => {
+      if (!COLLABORATION_ENABLED) return { ydoc: null, awareness: null }
+      const y = new Y.Doc()
+      const a = new Awareness(y)
+      return { ydoc: y, awareness: a }
+    }, [])
+
+    const collaborator = useMemo(
+      () => getCollaboratorIdentity(localDevice, 'Desktop'),
+      [localDevice]
+    )
 
     const editorFontFamily = getFontFamilyValue(fontFamily)
     const editorFontClass = getFontClass(fontFamily)
@@ -72,7 +127,8 @@ const RichTextEditor = forwardRef(
           strike: false,
           underline: false,
           link: false,
-          codeBlock: false
+          codeBlock: false,
+          undoRedo: !COLLABORATION_ENABLED
         }),
         Underline,
         Strike,
@@ -129,9 +185,20 @@ const RichTextEditor = forwardRef(
           lowlight
         }),
         FileAttachment,
-        AudioAttachment
+        AudioAttachment,
+        ...(COLLABORATION_ENABLED
+          ? [
+              Collaboration.configure({
+                document: ydoc
+              }),
+              CollaborationCursor.configure({
+                provider: { awareness },
+                user: collaborator,
+              })
+            ]
+          : [])
       ],
-      content: content || '',
+      content: COLLABORATION_ENABLED ? undefined : content || '',
       editorProps: {
         handlePaste: (view, event) => {
           const items = Array.from(event.clipboardData?.items || [])
@@ -243,7 +310,14 @@ const RichTextEditor = forwardRef(
         const text = editor.getText()
         onChange({ html, text })
       }
-    }, [fontFamily, editorFontSize])
+    }, [fontFamily, editorFontSize, ydoc, awareness])
+
+    useEffect(() => {
+      if (!COLLABORATION_ENABLED) return
+      if (editor && !editor.isDestroyed) {
+        editor.commands.updateUser(collaborator)
+      }
+    }, [editor, collaborator])
 
     useImperativeHandle(
       ref,
@@ -254,17 +328,123 @@ const RichTextEditor = forwardRef(
     )
 
     useEffect(() => {
-      if (editor && content !== undefined) {
-        const currentContent = editor.getHTML()
-        if (content !== currentContent) {
-          isUpdatingRef.current = true
-          editor.commands.setContent(content || '', false)
-          setTimeout(() => {
-            isUpdatingRef.current = false
-          }, 0)
+      if (COLLABORATION_ENABLED || !editor || content === undefined) return
+      const currentContent = editor.getHTML()
+      if (content === currentContent) return
+      const isInitialLoad = currentContent === '<p></p>'
+      if (!isInitialLoad && editor.isFocused) return
+      isUpdatingRef.current = true
+      const { from, to } = editor.state.selection
+      editor.commands.setContent(content || '', false)
+      const size = editor.state.doc.content.size
+      if (!isInitialLoad) {
+        editor.commands.setTextSelection({ from: Math.min(from, size), to: Math.min(to, size) })
+      }
+      isUpdatingRef.current = false
+    }, [content, editor])
+
+    useEffect(() => {
+      if (!COLLABORATION_ENABLED || !editor || !ydoc) return
+      seedGenesisFromHtml(ydoc, editor.schema, content)
+    }, [editor, ydoc, content])
+
+    useEffect(() => {
+      if (!COLLABORATION_ENABLED || !editor || !ydoc || !currentNoteKey) return
+
+      hasReceivedSyncRef.current = false
+
+      let active = true
+      let stream = null
+
+      const sendEncoder = (encoder) => {
+        if (encoding.length(encoder) === 0) return
+        backendApi.broadcastYjsUpdate({ noteId: currentNoteKey, data: encoding.toUint8Array(encoder) })
+      }
+
+      const handleDocUpdate = (update, origin) => {
+        if (origin === 'remote' || origin === 'seed' || !active) return
+        const encoder = encoding.createEncoder()
+        encoding.writeVarUint(encoder, MESSAGE_SYNC)
+        encoding.writeVarUint(encoder, messageYjsUpdate)
+        encoding.writeVarUint8Array(encoder, update)
+        sendEncoder(encoder)
+      }
+
+      const handleAwarenessUpdate = ({ added, updated, removed }, origin) => {
+        if (origin === 'remote' || !active) return
+        const changedClients = added.concat(updated, removed)
+        const encoder = encoding.createEncoder()
+        encoding.writeVarUint(encoder, MESSAGE_AWARENESS)
+        encoding.writeVarUint8Array(encoder, encodeAwarenessUpdate(awareness, changedClients))
+        sendEncoder(encoder)
+      }
+
+      ydoc.on('update', handleDocUpdate)
+      awareness.on('update', handleAwarenessUpdate)
+
+      const sendSyncStep1 = () => {
+        const encoder = encoding.createEncoder()
+        encoding.writeVarUint(encoder, MESSAGE_SYNC)
+        writeSyncStep1(encoder, ydoc)
+        sendEncoder(encoder)
+      }
+
+      let syncRetryAttempts = 0
+      let syncRetryInterval = setInterval(() => {
+        if (hasReceivedSyncRef.current || syncRetryAttempts >= MAX_SYNC_RETRY_ATTEMPTS) {
+          clearInterval(syncRetryInterval)
+          syncRetryInterval = null
+          return
+        }
+        syncRetryAttempts += 1
+        sendSyncStep1()
+      }, SYNC_RETRY_INTERVAL_MS)
+
+      const setup = async () => {
+        try {
+          stream = await backendApi.subscribeYjsUpdate({ noteId: currentNoteKey })
+          sendSyncStep1()
+
+          for await (const msg of stream) {
+            if (!active) break
+            const data = msg.data?.data
+            if (!data || data.byteLength === 0) continue
+
+            const decoder = decoding.createDecoder(data)
+            const messageType = decoding.readVarUint(decoder)
+
+            if (messageType === MESSAGE_SYNC) {
+              const syncMessageType = decoding.readVarUint(decoder)
+              if (syncMessageType === messageYjsSyncStep1) {
+                const replyEncoder = encoding.createEncoder()
+                encoding.writeVarUint(replyEncoder, MESSAGE_SYNC)
+                readSyncStep1(decoder, replyEncoder, ydoc)
+                sendEncoder(replyEncoder)
+              } else if (syncMessageType === messageYjsSyncStep2 || syncMessageType === messageYjsUpdate) {
+                hasReceivedSyncRef.current = true
+                Y.applyUpdate(ydoc, decoding.readVarUint8Array(decoder), 'remote')
+              }
+            } else if (messageType === MESSAGE_AWARENESS) {
+              applyAwarenessUpdate(awareness, decoding.readVarUint8Array(decoder), 'remote')
+            }
+          }
+        } catch (e) {
+          console.error('subscribeYjsUpdate error', e)
         }
       }
-    }, [content, editor])
+      setup()
+
+      return () => {
+        active = false
+        if (syncRetryInterval) clearInterval(syncRetryInterval)
+        ydoc.off('update', handleDocUpdate)
+        awareness.off('update', handleAwarenessUpdate)
+        removeAwarenessStates(awareness, [awareness.clientID], 'unmount')
+        if (stream && typeof stream.destroy === 'function') {
+          stream.destroy()
+        }
+      }
+    }, [currentNoteKey, editor, ydoc, awareness])
 
     if (!editor) {
       return null
