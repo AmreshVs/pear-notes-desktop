@@ -8,3 +8,5 @@ src/styles/*.md
 src/store/*.md
 .env
 .claude
+native/pear-device-auth/build/*
+native/pear-device-auth/bin/*
