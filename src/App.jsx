@@ -26,6 +26,7 @@ import SettingsScreen from './ui/SettingsScreen'
 import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
+import BackupProgressBanner from './ui/BackupProgressBanner'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
@@ -162,6 +163,7 @@ function App() {
         {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
         <PairingStatusOverlay />
         <DeviceRemovedModal />
+        <BackupProgressBanner />
       </main>
     </NoteLockPasswordProvider>
   )

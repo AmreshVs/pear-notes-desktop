@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -159,6 +159,16 @@ function setupIPC () {
       const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
       menu.popup({ window: win, callback: () => done(null) })
     })
+  })
+
+  ipcMain.handle('dialog:showSaveDialog', async (event, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
+    return await dialog.showSaveDialog(win, options)
+  })
+
+  ipcMain.handle('dialog:showOpenDialog', async (event, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
+    return await dialog.showOpenDialog(win, options)
   })
 }
 

@@ -18,5 +18,8 @@ window.electronBridge = {
 
   setContentProtection: (enabled) => ipcRenderer.invoke('content-protection:set', enabled),
 
-  showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items)
+  showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),
+
+  showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
+  showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options)
 }

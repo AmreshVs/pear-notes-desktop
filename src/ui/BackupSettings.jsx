@@ -1,5 +1,4 @@
 import {
-  getExportBuffer,
   getExportStatus,
   getImportStatus,
   resetExport,
@@ -10,7 +9,7 @@ import {
 } from '@pear-notes/core/store/slices/backupSlice.js'
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
 import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes } from '../utils/formatters'
 import { getBackupErrorMessage } from '../utils/backupErrors'
@@ -18,19 +17,13 @@ import BackupPasswordModal from './BackupPasswordModal'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
-function toUint8Array(data) {
-  if (data instanceof Uint8Array) return data
-  return new Uint8Array(Object.values(data))
-}
 
 export default function BackupSettings() {
   const dispatch = useDispatch()
   const exportStatus = useSelector(getExportStatus)
   const importStatus = useSelector(getImportStatus)
-  const exportBuffer = useSelector(getExportBuffer)
   const totalSize = useSelector(getTotalStorageSize) ?? 0
 
-  const fileInputRef = useRef(null)
   const [lastBackup, setLastBackup] = useState(() => {
     const stored = localStorage.getItem(LAST_BACKUP_KEY)
     return stored ? new Date(stored) : null
@@ -48,25 +41,10 @@ export default function BackupSettings() {
       }, 0)
       return
     }
-    if (exportStatus.step === 'done' && exportBuffer) {
-      try {
-        const uint8 = toUint8Array(exportBuffer)
-        const blob = new Blob([uint8], { type: 'application/octet-stream' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        const date = new Date().toISOString().split('T')[0]
-        a.href = url
-        a.download = `pear-notes-backup-${date}.pnbk`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        const now = new Date()
-        localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
-        setTimeout(() => setLastBackup(now), 0)
-      } catch (err) {
-        console.error(err)
-      }
+    if (exportStatus.step === 'done') {
+      const now = new Date()
+      localStorage.setItem(LAST_BACKUP_KEY, now.toISOString())
+      setTimeout(() => setLastBackup(now), 0)
 
       setTimeout(() => {
         setModalState({ visible: true, done: true, doneType: 'export', error: false, errorMessage: '' })
@@ -77,7 +55,7 @@ export default function BackupSettings() {
     setTimeout(() => {
       setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
     }, 0)
-  }, [exportStatus.step, exportStatus.message, exportBuffer, dispatch])
+  }, [exportStatus.step, exportStatus.message, dispatch])
 
   useEffect(() => {
     if (importStatus.step === 'idle') return
@@ -110,29 +88,49 @@ export default function BackupSettings() {
     setShowExportPasswordModal(true)
   }
 
-  const handleConfirmExport = (password) => {
+  const handleConfirmExport = async (password) => {
     setShowExportPasswordModal(false)
-    setModalState({ visible: true, done: false, doneType: 'export', error: false, errorMessage: '' })
-    dispatch(resetExport())
-    dispatch(startExportBackup({ password }))
-  }
+    const date = new Date().toISOString().split('T')[0]
+    const defaultPath = `pear-notes-backup-${date}.pnbk`
+    
+    try {
+      const result = await window.electronBridge.showSaveDialog({
+        defaultPath,
+        filters: [{ name: 'Pear Notes Backup', extensions: ['pnbk', 'pearnotes'] }]
+      })
 
-  const handleImport = () => {
-    fileInputRef.current?.click()
-  }
+      if (result.canceled || !result.filePath) {
+        return
+      }
 
-  const handleFileSelected = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-
-    if (!file.name.endsWith('.pnbk') && !file.name.endsWith('.pearnotes')) {
-      alert('Please select a valid backup file (.pnbk or .pearnotes)')
-      return
+      setModalState({ visible: true, done: false, doneType: 'export', error: false, errorMessage: '' })
+      dispatch(resetExport())
+      dispatch(startExportBackup({ password, filePath: result.filePath }))
+    } catch (err) {
+      console.error(err)
+      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: String(err) })
     }
+  }
 
-    setSelectedFile(file)
-    setShowRestorePasswordModal(true)
+  const handleImport = async () => {
+    try {
+      const result = await window.electronBridge.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Pear Notes Backup', extensions: ['pnbk', 'pearnotes'] }]
+      })
+
+      if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+        return
+      }
+
+      const filePath = result.filePaths[0]
+      const name = filePath.split(/[/\\]/).pop() || ''
+      
+      setSelectedFile({ name, filePath })
+      setShowRestorePasswordModal(true)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleConfirmRestore = async (password) => {
@@ -143,14 +141,9 @@ export default function BackupSettings() {
 
     setModalState({ visible: true, done: false, doneType: 'import', error: false, errorMessage: '' })
     dispatch(setImportStatus({ step: 'reading', progress: 5, message: 'Reading backup file...' }))
-    try {
-      const buffer = await file.arrayBuffer()
-      dispatch(resetImport())
-      dispatch(startImportBackup({ buffer: new Uint8Array(buffer), password }))
-    } catch (err) {
-      dispatch(resetImport())
-      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: String(err) })
-    }
+    
+    dispatch(resetImport())
+    dispatch(startImportBackup({ filePath: file.filePath, password }))
   }
 
   const handleCancelExportPassword = () => {
@@ -225,13 +218,6 @@ export default function BackupSettings() {
           </button>
         </div>
 
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='.pnbk,.pearnotes'
-          className='hidden'
-          onChange={handleFileSelected}
-        />
       </div>
 
       <div className='grid grid-cols-2 gap-4'>
