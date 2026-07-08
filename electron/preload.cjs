@@ -1,6 +1,14 @@
-const { ipcRenderer } = require('electron')
+const { ipcRenderer, webUtils } = require('electron')
 
 window.electronBridge = {
+  getPathForFile: (file) => {
+    try {
+      return webUtils.getPathForFile(file) || ''
+    } catch {
+      return ''
+    }
+  },
+
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
   getAppDir: () => ipcRenderer.sendSync('get-app-dir'),
   reload: () => ipcRenderer.send('app-reload'),

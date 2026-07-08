@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { insertFileFromFile } from '../lib/fileManager'
 
 export function useFormattingToolbar(editor, noteKey) {
   const [editorState, setEditorState] = useState({
@@ -148,12 +149,7 @@ export function useFormattingToolbar(editor, noteKey) {
 
     for (const file of fileList) {
       try {
-        const buffer = await file.arrayBuffer()
-        const { link } = await backendApi.insertFile({
-          key: noteKey,
-          fileName: file.name,
-          buffer
-        })
+        const { link } = await insertFileFromFile({ noteKey, file })
         if (link) {
           editor.chain().focus().insertContent([
             { type: 'image', attrs: { src: link } },
@@ -175,12 +171,7 @@ export function useFormattingToolbar(editor, noteKey) {
 
     for (const file of fileList) {
       try {
-        const buffer = await file.arrayBuffer()
-        const { link } = await backendApi.insertFile({
-          key: noteKey,
-          fileName: file.name,
-          buffer
-        })
+        const { link } = await insertFileFromFile({ noteKey, file })
 
         if (link) {
           editor.chain().focus().insertContent([

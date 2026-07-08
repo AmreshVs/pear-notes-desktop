@@ -1,13 +1,26 @@
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 
-export async function uploadFile({ noteKey, file }) {
+export function getFilePath(file) {
+  try {
+    return window.electronBridge?.getPathForFile?.(file) || ''
+  } catch {
+    return ''
+  }
+}
+
+export async function insertFileFromFile({ noteKey, file, fileName }) {
+  const name = fileName || file.name
+  const path = getFilePath(file)
+  if (path) {
+    return backendApi.insertFile({ key: noteKey, fileName: name, path })
+  }
   const buffer = await file.arrayBuffer()
-  return backendApi.insertFile({
-    key: noteKey,
-    fileName: file.name,
-    buffer
-  })
+  return backendApi.insertFile({ key: noteKey, fileName: name, buffer })
+}
+
+export async function uploadFile({ noteKey, file }) {
+  return insertFileFromFile({ noteKey, file })
 }
 
 export async function deleteHyperdriveFile(url) {

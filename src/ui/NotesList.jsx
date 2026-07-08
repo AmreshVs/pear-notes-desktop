@@ -1,4 +1,4 @@
-import { Search, Loader2, SquarePen, Folder, Lock, LockOpen, Pin } from 'lucide-react'
+import { Search, Loader2, SquarePen, Folder, Lock, LockOpen, Pin, Image as ImageIcon, Film, Mic, Paperclip } from 'lucide-react'
 import { useCallback, useMemo, memo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { deleteNote, getNoteData, getFilteredNotes, getSelectedNote, setSelectedNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -7,12 +7,46 @@ import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/sl
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { RECENTLY_DELETED_KEY, ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
-import { formatDate, getGroupTitle, getPreview, getFirstImage, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
+import { formatDate, getGroupTitle, getPreview, getFirstImage, getAttachmentInfo, NOTES_LIST_GROUP } from '@pear-notes/core/utils.js'
 import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
 import { toggleNoteLock } from '../lib/noteLockActions'
 import { showContextMenu } from '../lib/contextMenu'
 import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
+
+const ATTACHMENT_ICONS = {
+  image: ImageIcon,
+  video: Film,
+  audio: Mic,
+  file: Paperclip,
+  mixed: Paperclip
+}
+
+const getAttachmentLabel = ({ kind, count }) => {
+  switch (kind) {
+    case 'image':
+      return count === 1 ? 'Photo' : `${count} Photos`
+    case 'video':
+      return count === 1 ? 'Video' : `${count} Videos`
+    case 'audio':
+      return count === 1 ? 'Voice recording' : `${count} Voice recordings`
+    default:
+      return count === 1 ? 'Attachment' : `${count} Attachments`
+  }
+}
+
+const AttachmentPreview = ({ info, isSelected }) => {
+  const Icon = ATTACHMENT_ICONS[info.kind] || Paperclip
+  return (
+    <p
+      className={`text-[12px] leading-relaxed opacity-80 flex items-center gap-1.5
+        ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
+    >
+      <Icon className='w-3.5 h-3.5 flex-shrink-0 opacity-80' />
+      <span className='truncate'>{getAttachmentLabel(info)}</span>
+    </p>
+  )
+}
 
 const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder, isLast }) => {
   const dispatch = useDispatch()
@@ -27,7 +61,11 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
   const imgSrc = isMasked ? null : resolvedImgSrc
 
   const rawPreviewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
-  const previewText = isMasked ? 'Authenticate to view this note' : rawPreviewText
+  const attachmentInfo = useMemo(() => getAttachmentInfo(noteData?.note), [noteData?.note])
+  const showAttachmentPreview = !isMasked && !rawPreviewText && !!attachmentInfo
+  const previewText = isMasked
+    ? 'Authenticate to view this note'
+    : rawPreviewText || 'No additional text'
 
   const isSelected = selectedNote === key
 
@@ -96,12 +134,16 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
                 {noteData?.title || 'Untitled'}
               </span>
             </h3>
-            <p
-              className={`text-[12px] line-clamp-2 leading-relaxed opacity-80
-                ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
-            >
-              {previewText}
-            </p>
+            {showAttachmentPreview ? (
+              <AttachmentPreview info={attachmentInfo} isSelected={isSelected} />
+            ) : (
+              <p
+                className={`text-[12px] line-clamp-2 leading-relaxed opacity-80
+                  ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
+              >
+                {previewText}
+              </p>
+            )}
             <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
               {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
                 <>

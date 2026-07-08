@@ -55,6 +55,7 @@ import {
 import { useEffect, useRef, useImperativeHandle, forwardRef, useMemo } from 'react'
 import '../styles/tiptap.css'
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { insertFileFromFile } from '../lib/fileManager'
 import { useSelector } from 'react-redux'
 import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
 import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
@@ -209,12 +210,7 @@ const RichTextEditor = forwardRef(
               if (!file) return
 
               try {
-                const buffer = await file.arrayBuffer()
-                const { link } = await backendApi.insertFile({ 
-                  key: currentNoteKey, 
-                  fileName: file.name, 
-                  buffer 
-                })
+                const { link } = await insertFileFromFile({ noteKey: currentNoteKey, file })
                 if (!link) return
 
                 const { schema } = view.state
@@ -253,12 +249,7 @@ const RichTextEditor = forwardRef(
 
           files.forEach(async (file) => {
             try {
-              const buffer = await file.arrayBuffer()
-              const { link } = await backendApi.insertFile({ 
-                key: currentNoteKey, 
-                fileName: file.name, 
-                buffer 
-              })
+              const { link } = await insertFileFromFile({ noteKey: currentNoteKey, file })
 
               if (!link) return
 

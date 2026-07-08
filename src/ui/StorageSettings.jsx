@@ -4,9 +4,11 @@ import {
   getTotalBlobBytes,
   getTotalOnDiskBytes,
   getReclaimableBytes,
+  getIsReclaiming,
   getStorageIsLoading,
   getStorageError,
   deleteNoteMedia,
+  reclaimStorage,
   selectStorageByKind,
   mediaKind
 } from '@pear-notes/core/store/slices/storageSlice.js'
@@ -102,6 +104,7 @@ export default function StorageSettings() {
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
   const reclaimableBytes = useSelector(getReclaimableBytes)
+  const isReclaiming = useSelector(getIsReclaiming)
   const notesStorageInfo = useSelector(getNotesStorageInfo)
   const buckets = useSelector(selectStorageByKind)
   const isLoading = useSelector(getStorageIsLoading)
@@ -127,6 +130,10 @@ export default function StorageSettings() {
     setConfirmClear(false)
     deleteDbEncryptionKey()
     dispatch(clearStorage())
+  }
+
+  const handleReclaim = () => {
+    dispatch(reclaimStorage())
   }
 
 
@@ -179,8 +186,20 @@ export default function StorageSettings() {
 
               {reclaimableBytes > 0 && (
                 <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
-                  <span className='text-[15px] font-semibold text-text-tertiary'>Reclaimable</span>
-                  <span className='text-[15px] font-bold text-accent-primary'>{formatBytes(reclaimableBytes)}</span>
+                  <div className='flex flex-col'>
+                    <span className='text-[15px] font-semibold text-text-tertiary'>Reclaimable</span>
+                    <span className='text-[12px] text-text-tertiary/70'>Deleted attachments still on disk</span>
+                  </div>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-[15px] font-bold text-accent-primary'>{formatBytes(reclaimableBytes)}</span>
+                    <button
+                      onClick={handleReclaim}
+                      disabled={isReclaiming}
+                      className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-[13px] font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      {isReclaiming ? 'Reclaiming…' : 'Reclaim now'}
+                    </button>
+                  </div>
                 </div>
               )}
 
