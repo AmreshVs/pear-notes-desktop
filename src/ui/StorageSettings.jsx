@@ -6,19 +6,21 @@ import {
   getReclaimableBytes,
   getIsReclaiming,
   getActiveDownloads,
+  getActiveUploads,
   getStorageIsLoading,
   getStorageError,
   deleteNoteMedia,
   reclaimStorage,
+  retryDownload,
   selectStorageByKind,
   mediaKind
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { deleteDbEncryptionKey } from '../utils.js'
-import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, Database, HardDrive, Info, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, Database, HardDrive, Info, RotateCw, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { formatBytes } from '../utils/formatters'
+import { formatBytes, groupTransfersByNote } from '../utils/formatters'
 
 function Tooltip({ text, children }) {
   const [visible, setVisible] = useState(false)
@@ -100,7 +102,7 @@ function NoteRow({ note, onDeleteMedia }) {
   )
 }
 
-function DownloadRow({ download }) {
+function DownloadRow({ download, onRetry }) {
   const pct = download.totalBytes > 0
     ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
     : 0
@@ -119,8 +121,47 @@ function DownloadRow({ download }) {
             </span>
           )}
         </div>
+        <div className='flex items-center gap-2 flex-shrink-0'>
+          <span className='text-[12px] font-bold text-text-tertiary'>
+            {formatBytes(download.downloadedBytes)} / {formatBytes(download.totalBytes)}
+          </span>
+          {download.status === 'error' && (
+            <button
+              onClick={() => onRetry(download.url)}
+              title='Retry'
+              className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
+            >
+              <RotateCw className='w-3.5 h-3.5' />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className='w-full h-1 bg-overlay-soft rounded-full overflow-hidden'>
+        <div
+          className='h-full bg-accent-primary rounded-full transition-all duration-300'
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function UploadRow({ upload }) {
+  const pct = upload.totalBytes > 0
+    ? Math.min(100, Math.round((upload.uploadedBytes / upload.totalBytes) * 100))
+    : 0
+
+  return (
+    <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
+      <div className='flex items-center justify-between gap-3 mb-2'>
+        <div className='flex items-center gap-2 min-w-0'>
+          <CloudUpload className='w-4 h-4 text-accent-primary flex-shrink-0' />
+          <span className='text-[13px] font-medium text-text-primary truncate'>
+            {upload.fileName || 'Attachment'}
+          </span>
+        </div>
         <span className='text-[12px] font-bold text-text-tertiary flex-shrink-0'>
-          {formatBytes(download.downloadedBytes)} / {formatBytes(download.totalBytes)}
+          {formatBytes(upload.uploadedBytes)} / {formatBytes(upload.totalBytes)}
         </span>
       </div>
       <div className='w-full h-1 bg-overlay-soft rounded-full overflow-hidden'>
@@ -133,6 +174,17 @@ function DownloadRow({ download }) {
   )
 }
 
+function TransferNoteGroup({ group, renderRow }) {
+  return (
+    <div className='border-b border-overlay-light last:border-0'>
+      <div className='px-5 pt-3 pb-1 text-[12px] font-semibold text-text-tertiary truncate'>
+        {group.title}
+      </div>
+      {group.items.map(renderRow)}
+    </div>
+  )
+}
+
 export default function StorageSettings() {
   const dispatch = useDispatch()
   const totalBlobBytes = useSelector(getTotalBlobBytes)
@@ -140,12 +192,28 @@ export default function StorageSettings() {
   const reclaimableBytes = useSelector(getReclaimableBytes)
   const isReclaiming = useSelector(getIsReclaiming)
   const activeDownloads = useSelector(getActiveDownloads)
+  const activeUploads = useSelector(getActiveUploads)
   const notesStorageInfo = useSelector(getNotesStorageInfo)
   const buckets = useSelector(selectStorageByKind)
   const isLoading = useSelector(getStorageIsLoading)
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
   const [confirmClear, setConfirmClear] = useState(false)
+
+  const noteTitleByKey = useMemo(() => {
+    const map = {}
+    for (const note of notesStorageInfo) map[note.key] = note.title
+    return map
+  }, [notesStorageInfo])
+
+  const downloadGroups = useMemo(
+    () => groupTransfersByNote(activeDownloads, noteTitleByKey, 'Untitled'),
+    [activeDownloads, noteTitleByKey]
+  )
+  const uploadGroups = useMemo(
+    () => groupTransfersByNote(activeUploads, noteTitleByKey, 'Untitled'),
+    [activeUploads, noteTitleByKey]
+  )
 
   useEffect(() => {
     dispatch(subscribeStorageInfo())
@@ -159,6 +227,10 @@ export default function StorageSettings() {
 
   const handleDeleteMedia = (noteKey, mediaPath) => {
     dispatch(deleteNoteMedia({ noteKey, mediaPath }))
+  }
+
+  const handleRetryDownload = (url) => {
+    dispatch(retryDownload({ url }))
   }
 
   const handleClearStorage = () => {
@@ -189,8 +261,31 @@ export default function StorageSettings() {
             Syncing from other devices ({activeDownloads.length})
           </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
-            {activeDownloads.map((download) => (
-              <DownloadRow key={download.url} download={download} />
+            {downloadGroups.map((group) => (
+              <TransferNoteGroup
+                key={group.noteKey}
+                group={group}
+                renderRow={(download) => (
+                  <DownloadRow key={download.url} download={download} onRetry={handleRetryDownload} />
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeUploads.length > 0 && (
+        <div className='space-y-1'>
+          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+            Syncing to other devices ({activeUploads.length})
+          </h3>
+          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+            {uploadGroups.map((group) => (
+              <TransferNoteGroup
+                key={group.noteKey}
+                group={group}
+                renderRow={(upload) => <UploadRow key={upload.url} upload={upload} />}
+              />
             ))}
           </div>
         </div>
