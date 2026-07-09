@@ -5,6 +5,7 @@ import {
   getTotalOnDiskBytes,
   getReclaimableBytes,
   getIsReclaiming,
+  getActiveDownloads,
   getStorageIsLoading,
   getStorageError,
   deleteNoteMedia,
@@ -14,7 +15,7 @@ import {
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { deleteDbEncryptionKey } from '../utils.js'
-import { AlertTriangle, ChevronDown, ChevronRight, Database, HardDrive, Info, Trash2, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, Database, HardDrive, Info, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes } from '../utils/formatters'
@@ -99,12 +100,46 @@ function NoteRow({ note, onDeleteMedia }) {
   )
 }
 
+function DownloadRow({ download }) {
+  const pct = download.totalBytes > 0
+    ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
+    : 0
+
+  return (
+    <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
+      <div className='flex items-center justify-between gap-3 mb-2'>
+        <div className='flex items-center gap-2 min-w-0'>
+          <CloudDownload className='w-4 h-4 text-accent-primary flex-shrink-0' />
+          <span className='text-[13px] font-medium text-text-primary truncate'>
+            {download.fileName || 'Attachment'}
+          </span>
+          {!download.sourceOnline && (
+            <span title='Waiting for the other device to come online'>
+              <WifiOff className='w-3.5 h-3.5 text-text-tertiary/60 flex-shrink-0' />
+            </span>
+          )}
+        </div>
+        <span className='text-[12px] font-bold text-text-tertiary flex-shrink-0'>
+          {formatBytes(download.downloadedBytes)} / {formatBytes(download.totalBytes)}
+        </span>
+      </div>
+      <div className='w-full h-1 bg-overlay-soft rounded-full overflow-hidden'>
+        <div
+          className='h-full bg-accent-primary rounded-full transition-all duration-300'
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function StorageSettings() {
   const dispatch = useDispatch()
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
   const reclaimableBytes = useSelector(getReclaimableBytes)
   const isReclaiming = useSelector(getIsReclaiming)
+  const activeDownloads = useSelector(getActiveDownloads)
   const notesStorageInfo = useSelector(getNotesStorageInfo)
   const buckets = useSelector(selectStorageByKind)
   const isLoading = useSelector(getStorageIsLoading)
@@ -145,6 +180,19 @@ export default function StorageSettings() {
         <div className='flex items-center gap-3 px-4 py-3 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-[13px]'>
           <AlertTriangle className='w-4 h-4 flex-shrink-0' />
           {error}
+        </div>
+      )}
+
+      {activeDownloads.length > 0 && (
+        <div className='space-y-1'>
+          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+            Syncing from other devices ({activeDownloads.length})
+          </h3>
+          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+            {activeDownloads.map((download) => (
+              <DownloadRow key={download.url} download={download} />
+            ))}
+          </div>
         </div>
       )}
 

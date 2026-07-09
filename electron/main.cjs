@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -18,6 +18,9 @@ try {
 
 let mainWindow = null
 let worker = null
+let tray = null
+let closeToTray = true
+let isQuitting = false
 
 function getStoragePath () {
   const dirName = isDev ? `${appName}-dev` : appName
@@ -93,8 +96,61 @@ function createWindow () {
     mainWindow.webContents.openDevTools()
   }
 
+  mainWindow.on('close', (event) => {
+    if (!isQuitting && closeToTray && tray) {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
+  })
+}
+
+function createTray () {
+  const iconPath = path.join(__dirname, '..', 'build', 'icon.png')
+  const trayIconSize = isMac ? 16 : 32
+  const icon = nativeImage.createFromPath(iconPath).resize({ width: trayIconSize, height: trayIconSize })
+
+  tray = new Tray(icon)
+  tray.setToolTip(appName)
+
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'Open PearNotes',
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.show()
+          mainWindow.focus()
+        } else {
+          createWindow()
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit',
+      click: () => {
+        isQuitting = true
+        app.quit()
+      }
+    }
+  ])
+
+  tray.setContextMenu(menu)
+
+  tray.on('click', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide()
+      } else {
+        mainWindow.show()
+        mainWindow.focus()
+      }
+    } else {
+      createWindow()
+    }
   })
 }
 
@@ -143,6 +199,15 @@ function setupIPC () {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setContentProtection(enabled === true)
     }
+    return true
+  })
+
+  ipcMain.on('close-to-tray:set', (event, enabled) => {
+    closeToTray = enabled === true
+  })
+
+  ipcMain.handle('login-item:set', (event, enabled) => {
+    app.setLoginItemSettings({ openAtLogin: enabled === true })
     return true
   })
 
@@ -225,22 +290,27 @@ if (!lock) {
 
     setupIPC()
     createWindow()
+    createTray()
     startWorker()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         createWindow()
+      } else if (mainWindow) {
+        mainWindow.show()
       }
     })
   })
 
   app.on('window-all-closed', () => {
+    if (closeToTray && tray) return
     if (process.platform !== 'darwin') {
       app.quit()
     }
   })
 
   app.on('before-quit', () => {
+    isQuitting = true
     if (worker) {
       worker.destroy()
       worker = null

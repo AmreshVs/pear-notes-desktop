@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   getTheme,
@@ -8,6 +9,14 @@ import {
   getEditorFontSize,
   getSortBy
 } from '@pear-notes/core/store/slices/settingsSlice.js'
+import {
+  getAppBehaviorPreference,
+  setAppBehaviorPreference,
+  applyCloseToTray,
+  applyStartAtLogin,
+  CLOSE_TO_TRAY_KEY,
+  START_AT_LOGIN_KEY
+} from '../lib/appBehavior'
 
 export default function GeneralSettings() {
   const dispatch = useDispatch()
@@ -15,9 +24,38 @@ export default function GeneralSettings() {
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
   const sortBy = useSelector(getSortBy)
+  const [closeToTray, setCloseToTray] = useState(true)
+  const [startAtLogin, setStartAtLogin] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true).then((v) => {
+      if (active) setCloseToTray(v)
+    })
+    getAppBehaviorPreference(START_AT_LOGIN_KEY, false).then((v) => {
+      if (active) setStartAtLogin(v)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleUpdateSetting = (key, value) => {
     dispatch(updateSetting({ key, value }))
+  }
+
+  const handleToggleCloseToTray = () => {
+    const next = !closeToTray
+    setCloseToTray(next)
+    setAppBehaviorPreference(CLOSE_TO_TRAY_KEY, next)
+    applyCloseToTray(next)
+  }
+
+  const handleToggleStartAtLogin = () => {
+    const next = !startAtLogin
+    setStartAtLogin(next)
+    setAppBehaviorPreference(START_AT_LOGIN_KEY, next)
+    applyStartAtLogin(next)
   }
 
   return (
@@ -134,6 +172,37 @@ export default function GeneralSettings() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Startup & Background</h3>
+        <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
+          <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors">
+            <div className="space-y-1 min-w-0">
+              <label className='block text-text-primary text-[15px] font-bold'>Keep Running in Background</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Closing the window keeps PearNotes running in the tray so your notes stay in sync.</p>
+            </div>
+            <button
+              onClick={handleToggleCloseToTray}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${closeToTray ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+            >
+              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${closeToTray ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+
+          <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
+            <div className="space-y-1 min-w-0">
+              <label className='block text-text-primary text-[15px] font-bold'>Start at Login</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Launch PearNotes automatically when you sign in to this device.</p>
+            </div>
+            <button
+              onClick={handleToggleStartAtLogin}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${startAtLogin ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+            >
+              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${startAtLogin ? 'translate-x-5' : ''}`} />
+            </button>
           </div>
         </div>
       </div>

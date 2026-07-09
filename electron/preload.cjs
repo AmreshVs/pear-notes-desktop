@@ -26,6 +26,9 @@ window.electronBridge = {
 
   setContentProtection: (enabled) => ipcRenderer.invoke('content-protection:set', enabled),
 
+  setCloseToTray: (enabled) => ipcRenderer.send('close-to-tray:set', enabled),
+  setStartAtLogin: (enabled) => ipcRenderer.invoke('login-item:set', enabled),
+
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),
 
   showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
