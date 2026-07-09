@@ -177,31 +177,37 @@ export default function StorageSettings() {
                 <div className='flex items-center gap-2'>
                   <HardDrive className='w-4 h-4 text-text-tertiary' />
                   <span className='text-[15px] font-semibold text-text-secondary'>On-disk footprint</span>
-                  <Tooltip text='Hypercore storage is append-only. Deleted media stays on disk until you clear all data.'>
+                  <Tooltip text='Physical bytes hypercore has allocated on disk. Deleting media compacts this automatically; use Reclaim below if it looks stale.'>
                     <Info className='w-3.5 h-3.5 text-text-tertiary/50 cursor-default' />
                   </Tooltip>
                 </div>
                 <span className='text-[15px] font-bold text-text-secondary'>{formatBytes(totalOnDiskBytes)}</span>
               </div>
 
-              {reclaimableBytes > 0 && (
-                <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
-                  <div className='flex flex-col'>
-                    <span className='text-[15px] font-semibold text-text-tertiary'>Reclaimable</span>
-                    <span className='text-[12px] text-text-tertiary/70'>Deleted attachments still on disk</span>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-[15px] font-bold text-accent-primary'>{formatBytes(reclaimableBytes)}</span>
-                    <button
-                      onClick={handleReclaim}
-                      disabled={isReclaiming}
-                      className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-[13px] font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                    >
-                      {isReclaiming ? 'Reclaiming…' : 'Reclaim now'}
-                    </button>
-                  </div>
+              <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
+                <div className='flex flex-col'>
+                  <span className='text-[15px] font-semibold text-text-tertiary'>
+                    {reclaimableBytes > 0 ? 'Reclaimable' : 'Compact storage'}
+                  </span>
+                  <span className='text-[12px] text-text-tertiary/70'>
+                    {reclaimableBytes > 0
+                      ? 'Deleted attachments still on disk'
+                      : 'Force a compaction pass to reclaim freed disk space'}
+                  </span>
                 </div>
-              )}
+                <div className='flex items-center gap-3'>
+                  {reclaimableBytes > 0 && (
+                    <span className='text-[15px] font-bold text-accent-primary'>{formatBytes(reclaimableBytes)}</span>
+                  )}
+                  <button
+                    onClick={handleReclaim}
+                    disabled={isReclaiming}
+                    className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-[13px] font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    {isReclaiming ? 'Reclaiming…' : 'Reclaim now'}
+                  </button>
+                </div>
+              </div>
 
               <div className='px-6 py-4'>
                 <div className='w-full h-1.5 bg-overlay-soft rounded-full overflow-hidden'>
