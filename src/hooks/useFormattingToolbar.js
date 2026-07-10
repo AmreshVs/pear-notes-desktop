@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import { insertFileFromFile } from '../lib/fileManager'
+import { uploadFileWithProgress, UploadCancelledError } from '../lib/noteUploadManager'
 
 export function useFormattingToolbar(editor, noteKey) {
   const [editorState, setEditorState] = useState({
@@ -149,7 +149,7 @@ export function useFormattingToolbar(editor, noteKey) {
 
     for (const file of fileList) {
       try {
-        const { link } = await insertFileFromFile({ noteKey, file })
+        const { link } = await uploadFileWithProgress({ noteKey, file })
         if (link) {
           editor.chain().focus().insertContent([
             { type: 'image', attrs: { src: link } },
@@ -157,7 +157,7 @@ export function useFormattingToolbar(editor, noteKey) {
           ]).run()
         }
       } catch (error) {
-        console.error('Error uploading image:', error)
+        if (!(error instanceof UploadCancelledError)) console.error('Error uploading image:', error)
       }
     }
   }
@@ -171,7 +171,7 @@ export function useFormattingToolbar(editor, noteKey) {
 
     for (const file of fileList) {
       try {
-        const { link } = await insertFileFromFile({ noteKey, file })
+        const { link } = await uploadFileWithProgress({ noteKey, file })
 
         if (link) {
           editor.chain().focus().insertContent([
@@ -188,7 +188,7 @@ export function useFormattingToolbar(editor, noteKey) {
           ]).run()
         }
       } catch (error) {
-        console.error('Error uploading file:', error)
+        if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)
       }
     }
   }

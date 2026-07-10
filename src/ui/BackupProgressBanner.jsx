@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { getExportStatus, getImportStatus } from '@pear-notes/core/store/slices/backupSlice.js'
 import { CloudDownload, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
@@ -8,6 +9,15 @@ export default function BackupProgressBanner() {
 
   const isExporting = exportStatus.step !== 'idle'
   const isImporting = importStatus.step !== 'idle'
+  const isActive = isExporting || isImporting
+
+  useEffect(() => {
+    window.electronBridge?.setPowerSaveBlocker?.(isActive)
+  }, [isActive])
+
+  useEffect(() => {
+    return () => window.electronBridge?.setPowerSaveBlocker?.(false)
+  }, [])
 
   if (!isExporting && !isImporting) return null
 

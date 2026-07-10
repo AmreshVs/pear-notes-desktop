@@ -28,6 +28,7 @@ window.electronBridge = {
 
   setCloseToTray: (enabled) => ipcRenderer.send('close-to-tray:set', enabled),
   setStartAtLogin: (enabled) => ipcRenderer.invoke('login-item:set', enabled),
+  setPowerSaveBlocker: (enabled) => ipcRenderer.send('power-save-blocker:set', enabled),
 
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),
 

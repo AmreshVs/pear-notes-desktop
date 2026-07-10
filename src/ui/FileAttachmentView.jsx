@@ -16,6 +16,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const [duration, setDuration] = useState(0)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
   const mediaRef = useRef(null)
   const playerRef = useRef(null)
   const isPlayingRef = useRef(isPlaying)
@@ -204,12 +206,19 @@ export default function FileAttachmentView({ node, deleteNode }) {
     e.preventDefault()
     e.stopPropagation()
 
+    if (isDownloading) return
+
     if (resolvedUrl) {
+      setIsDownloading(true)
+      setDownloadProgress(0)
       try {
-        const blob = await downloadAsBlob(resolvedUrl)
+        const blob = await downloadAsBlob(resolvedUrl, setDownloadProgress)
         createDownloadLink(blob, fileName || 'download')
       } catch (error) {
         console.error('Download failed:', error)
+      } finally {
+        setIsDownloading(false)
+        setDownloadProgress(0)
       }
       return
     }
@@ -239,12 +248,19 @@ export default function FileAttachmentView({ node, deleteNode }) {
     <NodeViewWrapper className='file-attachment-wrapper'>
       {isAudio ? (
         <div className='relative my-3 group'>
-          <AudioPlayer 
-            src={resolvedUrl || fileData} 
-            duration={node.attrs.duration || 0} 
-            title={fileName || 'Audio Attachment'} 
+          <AudioPlayer
+            src={resolvedUrl || fileData}
+            duration={node.attrs.duration || 0}
+            title={fileName || 'Audio Attachment'}
           />
-          
+
+          {isDownloading && (
+            <div className='absolute inset-0 z-30 flex flex-col items-center justify-center gap-1.5 bg-black/40 rounded-xl'>
+              <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+              <span className='text-xs font-semibold text-white'>{downloadProgress}%</span>
+            </div>
+          )}
+
           <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
             {(resolvedUrl || fileData) && (
               <button
@@ -440,6 +456,13 @@ export default function FileAttachmentView({ node, deleteNode }) {
             className={`relative flex items-center gap-4 cursor-pointer ${isVideo ? 'p-6' : 'p-4'}`}
             onClick={openPreview}
           >
+            {isDownloading && (
+              <div className='absolute inset-0 z-30 flex flex-col items-center justify-center gap-1.5 bg-black/40 rounded-xl'>
+                <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+                <span className='text-xs font-semibold text-white'>{downloadProgress}%</span>
+              </div>
+            )}
+
             <div className='flex-shrink-0 w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center text-text-secondary border border-border-primary'>
               {getFileIcon()}
             </div>
@@ -483,6 +506,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
           fileType={fileType}
           onClose={closePreview}
           onDownload={handleDownload}
+          isDownloading={isDownloading}
+          downloadProgress={downloadProgress}
         />
       )}
     </NodeViewWrapper>

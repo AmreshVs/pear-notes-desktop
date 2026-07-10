@@ -23,15 +23,79 @@ export async function uploadFile({ noteKey, file }) {
   return insertFileFromFile({ noteKey, file })
 }
 
+export class UploadCancelledError extends Error {
+  constructor() {
+    super('UPLOAD_CANCELLED')
+    this.name = 'UploadCancelledError'
+  }
+}
+
+export function createProgressUpload({ noteKey, file, fileName, onProgress }) {
+  const path = getFilePath(file)
+  if (!path) return null
+
+  const stream = backendApi.insertFileWithProgress({ key: noteKey, fileName: fileName || file.name, path })
+  let cancelled = false
+  const cancel = () => {
+    cancelled = true
+    if (typeof stream.destroy === 'function') stream.destroy()
+  }
+  const promise = (async () => {
+    let link = ''
+    let gotDone = false
+    try {
+      for await (const msg of stream) {
+        if (cancelled) break
+        if (msg.done) {
+          link = msg.link
+          gotDone = true
+          continue
+        }
+        if (msg.total > 0) {
+          onProgress?.(Math.min(100, Math.round((msg.transferred / msg.total) * 100)))
+        }
+      }
+    } catch (e) {
+      if (gotDone) return { link }
+      if (cancelled) throw new UploadCancelledError()
+      throw e
+    }
+    if (cancelled && !gotDone) throw new UploadCancelledError()
+    return { link }
+  })()
+  return { promise, cancel }
+}
+
 export async function deleteHyperdriveFile(url) {
   if (!url || !url.startsWith(HYPERDRIVE_URL_PREFIX)) return
   const key = url.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
   await backendApi.deleteFile(key)
 }
 
-export async function downloadAsBlob(url) {
+export async function downloadAsBlob(url, onProgress) {
   const response = await fetch(url)
-  return response.blob()
+  if (!onProgress || !response.body) {
+    return response.blob()
+  }
+
+  const total = Number(response.headers.get('content-length')) || 0
+  if (!total) {
+    const blob = await response.blob()
+    onProgress(100)
+    return blob
+  }
+
+  const reader = response.body.getReader()
+  const chunks = []
+  let received = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value)
+    received += value.length
+    onProgress(Math.min(100, Math.round((received / total) * 100)))
+  }
+  return new Blob(chunks)
 }
 
 export function createDownloadLink(blob, fileName) {

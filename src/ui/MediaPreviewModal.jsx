@@ -22,7 +22,15 @@ function resolveKind(fileType, fileName) {
   return 'unsupported'
 }
 
-export default function MediaPreviewModal({ url, fileName, fileType, onClose, onDownload }) {
+export default function MediaPreviewModal({
+  url,
+  fileName,
+  fileType,
+  onClose,
+  onDownload,
+  isDownloading,
+  downloadProgress,
+}) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
@@ -75,11 +83,12 @@ export default function MediaPreviewModal({ url, fileName, fileType, onClose, on
             </p>
             {onDownload && (
               <button
-                onClick={onDownload}
-                className='flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-black text-sm font-semibold hover:bg-accent-primary-hover transition-colors'
+                onClick={() => !isDownloading && onDownload()}
+                disabled={isDownloading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-black text-sm font-semibold transition-colors ${isDownloading ? 'cursor-wait opacity-70' : 'hover:bg-accent-primary-hover'}`}
               >
                 <Download className='w-4 h-4' />
-                Download
+                {isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
               </button>
             )}
           </div>
@@ -99,12 +108,17 @@ export default function MediaPreviewModal({ url, fileName, fileType, onClose, on
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                onDownload(e)
+                if (!isDownloading) onDownload(e)
               }}
-              className='w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer shadow-md'
-              title='Download'
+              disabled={isDownloading}
+              className={`w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center shadow-md ${isDownloading ? 'cursor-wait' : 'cursor-pointer'}`}
+              title={isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
             >
-              <Download className='w-5 h-5' />
+              {isDownloading ? (
+                <span className='text-[10px] font-bold text-white'>{downloadProgress}%</span>
+              ) : (
+                <Download className='w-5 h-5' />
+              )}
             </button>
           )}
           <button

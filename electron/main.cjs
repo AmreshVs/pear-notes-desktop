@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage, powerSaveBlocker } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -21,6 +21,7 @@ let worker = null
 let tray = null
 let closeToTray = true
 let isQuitting = false
+let powerSaveBlockerId = null
 
 function getStoragePath () {
   const dirName = isDev ? `${appName}-dev` : appName
@@ -206,6 +207,17 @@ function setupIPC () {
     closeToTray = enabled === true
   })
 
+  ipcMain.on('power-save-blocker:set', (event, enabled) => {
+    if (enabled) {
+      if (powerSaveBlockerId === null || !powerSaveBlocker.isStarted(powerSaveBlockerId)) {
+        powerSaveBlockerId = powerSaveBlocker.start('prevent-app-suspension')
+      }
+    } else if (powerSaveBlockerId !== null) {
+      powerSaveBlocker.stop(powerSaveBlockerId)
+      powerSaveBlockerId = null
+    }
+  })
+
   ipcMain.handle('login-item:set', (event, enabled) => {
     app.setLoginItemSettings({ openAtLogin: enabled === true })
     return true
@@ -311,6 +323,10 @@ if (!lock) {
 
   app.on('before-quit', () => {
     isQuitting = true
+    if (powerSaveBlockerId !== null) {
+      powerSaveBlocker.stop(powerSaveBlockerId)
+      powerSaveBlockerId = null
+    }
     if (worker) {
       worker.destroy()
       worker = null

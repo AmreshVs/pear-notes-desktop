@@ -27,6 +27,7 @@ import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
 import BackupProgressBanner from './ui/BackupProgressBanner'
+import UploadProgressToast from './ui/UploadProgressToast'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
 import { useWindowSize } from './hooks/useWindowSize'
@@ -184,6 +185,7 @@ function App() {
         <PairingStatusOverlay />
         <DeviceRemovedModal />
         <BackupProgressBanner />
+        <UploadProgressToast />
       </main>
     </NoteLockPasswordProvider>
   )
