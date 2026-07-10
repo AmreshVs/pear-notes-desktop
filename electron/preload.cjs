@@ -33,5 +33,8 @@ window.electronBridge = {
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),
 
   showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
-  showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options)
+  showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options),
+
+  checkAppUpdate: () => ipcRenderer.invoke('app-update:check-manifest'),
+  openExternal: (url) => ipcRenderer.invoke('shell:open-external', url)
 }

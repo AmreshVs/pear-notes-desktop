@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage, powerSaveBlocker } = require('electron')
+const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage, powerSaveBlocker, shell } = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -246,6 +246,22 @@ function setupIPC () {
   ipcMain.handle('dialog:showOpenDialog', async (event, options) => {
     const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
     return await dialog.showOpenDialog(win, options)
+  })
+
+  ipcMain.handle('app-update:check-manifest', async () => {
+    try {
+      const { APP_UPDATE_MANIFEST_URL } = await import('@pear-notes/core/constant.js')
+      const res = await fetch(APP_UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(5000) })
+      if (!res.ok) return null
+      return await res.json()
+    } catch (e) {
+      console.warn('app-update:check-manifest failed', e.message)
+      return null
+    }
+  })
+
+  ipcMain.handle('shell:open-external', (event, url) => {
+    return shell.openExternal(url)
   })
 }
 
