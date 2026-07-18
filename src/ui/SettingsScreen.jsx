@@ -99,7 +99,7 @@ export default function SettingsScreen({ onClose }) {
             </button>
           </div>
 
-          <div className='flex-1 overflow-y-auto px-10 pb-10 scrollbar-hide'>
+          <div className='flex-1 overflow-y-auto px-10 pb-10'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
