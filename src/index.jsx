@@ -3,6 +3,7 @@ import { Provider } from 'react-redux'
 import { Duplex } from 'stream'
 
 import App from './App.jsx'
+import ErrorBoundary from './ui/ErrorBoundary.jsx'
 import './styles.css'
 import { store } from '@pear-notes/core/store/store.js'
 import FramedStream from 'framed-stream'
@@ -51,6 +52,8 @@ const container = document.getElementById('root')
 const root = createRoot(container)
 root.render(
   <Provider store={store}>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </Provider>
 )

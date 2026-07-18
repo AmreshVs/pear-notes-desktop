@@ -32,6 +32,7 @@ export function useFormattingToolbar(editor, noteKey) {
     if (!editor) return
 
     const updateState = () => {
+      if (!editor || editor.isDestroyed) return
       const headingLevel = editor.isActive('heading', { level: 1 })
         ? 1
         : editor.isActive('heading', { level: 2 })
