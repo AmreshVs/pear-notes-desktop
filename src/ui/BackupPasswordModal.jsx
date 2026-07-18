@@ -44,11 +44,11 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
     <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
       <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300' onClick={handleCancel} />
 
-      <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
+      <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
         <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full' />
         <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-[80px] rounded-full' />
 
-        <div className='relative z-10 flex flex-col space-y-6'>
+        <div className='relative z-10 flex flex-col space-y-6 min-h-0 overflow-y-auto'>
           <div className='flex flex-col items-center text-center space-y-2'>
             <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
               <Lock className='w-6 h-6 text-accent-primary' />
