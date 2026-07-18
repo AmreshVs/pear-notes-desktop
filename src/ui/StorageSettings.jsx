@@ -12,12 +12,13 @@ import {
   deleteNoteMedia,
   reclaimStorage,
   retryDownload,
+  pauseDownload,
   selectStorageByKind,
   mediaKind
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { deleteDbEncryptionKey } from '../utils.js'
-import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, Database, HardDrive, Info, RotateCw, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, Database, HardDrive, Info, Pause, Play, RotateCw, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes, groupTransfersByNote } from '../utils/formatters'
@@ -102,10 +103,11 @@ function NoteRow({ note, onDeleteMedia }) {
   )
 }
 
-function DownloadRow({ download, onRetry }) {
+function DownloadRow({ download, onRetry, onPause }) {
   const pct = download.totalBytes > 0
     ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
     : 0
+  const isStuck = download.status === 'error' || (download.status === 'downloading' && download.stalled)
 
   return (
     <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
@@ -125,10 +127,28 @@ function DownloadRow({ download, onRetry }) {
           <span className='text-[12px] font-bold text-text-tertiary'>
             {formatBytes(download.downloadedBytes)} / {formatBytes(download.totalBytes)}
           </span>
-          {download.status === 'error' && (
+          {download.status === 'downloading' && !download.stalled && (
+            <button
+              onClick={() => onPause(download.url)}
+              title='Pause'
+              className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
+            >
+              <Pause className='w-3.5 h-3.5' />
+            </button>
+          )}
+          {download.status === 'paused' && (
             <button
               onClick={() => onRetry(download.url)}
-              title='Retry'
+              title='Resume'
+              className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
+            >
+              <Play className='w-3.5 h-3.5' />
+            </button>
+          )}
+          {isStuck && (
+            <button
+              onClick={() => onRetry(download.url)}
+              title='Restart'
               className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
             >
               <RotateCw className='w-3.5 h-3.5' />
@@ -233,6 +253,10 @@ export default function StorageSettings() {
     dispatch(retryDownload({ url }))
   }
 
+  const handlePauseDownload = (url) => {
+    dispatch(pauseDownload({ url }))
+  }
+
   const handleClearStorage = () => {
     setConfirmClear(false)
     deleteDbEncryptionKey()
@@ -266,7 +290,12 @@ export default function StorageSettings() {
                 key={group.noteKey}
                 group={group}
                 renderRow={(download) => (
-                  <DownloadRow key={download.url} download={download} onRetry={handleRetryDownload} />
+                  <DownloadRow
+                    key={download.url}
+                    download={download}
+                    onRetry={handleRetryDownload}
+                    onPause={handlePauseDownload}
+                  />
                 )}
               />
             ))}
