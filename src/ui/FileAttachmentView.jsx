@@ -235,10 +235,13 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const handleDelete = async (e) => {
     e.stopPropagation()
 
+    if (!window.confirm(`Delete "${fileName || 'this file'}"? This cannot be undone.`)) return
+
     try {
       await deleteHyperdriveFile(url)
     } catch (error) {
       console.error('Error deleting file from backend:', error)
+      return
     }
 
     if (deleteNode) deleteNode()
@@ -261,7 +264,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
           )}
 
-          <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
+          <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-20'>
             {(resolvedUrl || fileData) && (
               <button
                 onClick={handleDownload}
@@ -478,7 +481,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
               </div>
             </div>
 
-            <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
+            <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-20'>
               {(resolvedUrl || fileData) && (
                 <button
                   onClick={handleDownload}
