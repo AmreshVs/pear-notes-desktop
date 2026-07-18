@@ -163,8 +163,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
           return
         }
 
-        const tempDir = os.tmpdir()
-        const tempFilePath = path.join(tempDir, fileName || 'document.pdf')
+        const rawName = (fileName || 'document.pdf').replace(/\0/g, '')
+        const baseName = path.basename(rawName).replace(/[/\\]/g, '_')
+        const safeName = baseName && baseName !== '.' && baseName !== '..' ? baseName : 'document.pdf'
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-notes-'))
+        const tempFilePath = path.join(tempDir, safeName)
         fs.writeFileSync(tempFilePath, buffer)
 
         await shell.openPath(tempFilePath)
