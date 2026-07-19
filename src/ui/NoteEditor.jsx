@@ -26,6 +26,7 @@ import { getFontFamily, getEditorFontSize, getLockMethod } from '@pear-notes/cor
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { getFontFamilyValue } from '../utils/fonts'
 import { showContextMenu } from '../lib/contextMenu'
+import UploadProgressToast from './UploadProgressToast'
 
 
 
@@ -327,6 +328,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
         </div>
       </div>
+      <UploadProgressToast />
+
       <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
         <span className='text-[10px] font-bold text-text-secondary uppercase tracking-widest'>
           edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}

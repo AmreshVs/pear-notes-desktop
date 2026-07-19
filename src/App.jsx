@@ -27,7 +27,6 @@ import PairingStatusOverlay from './ui/PairingStatusOverlay'
 import DeviceRemovedModal from './ui/DeviceRemovedModal'
 import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
 import BackupProgressBanner from './ui/BackupProgressBanner'
-import UploadProgressToast from './ui/UploadProgressToast'
 import UpdateRequiredModal from './ui/UpdateRequiredModal'
 import UpdateAvailableBanner from './ui/UpdateAvailableBanner'
 import { backendApi } from '@pear-notes/core/backend/api.js'
@@ -189,7 +188,6 @@ function App() {
         <PairingStatusOverlay />
         <DeviceRemovedModal />
         <BackupProgressBanner />
-        <UploadProgressToast />
         {updateStatus?.mandatory && (
           <UpdateRequiredModal
             latestVersion={updateStatus.latestVersion}

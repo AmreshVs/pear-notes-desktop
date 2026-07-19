@@ -55,7 +55,7 @@ export default function UploadProgressToast() {
   const showExpanded = expanded && isBatch
 
   return (
-    <div className='fixed bottom-6 left-6 w-80 bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex flex-col gap-3 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300'>
+    <div className='absolute bottom-6 left-8 w-80 max-w-[calc(100%-4rem)] bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex flex-col gap-3 z-40 animate-in slide-in-from-bottom-5 fade-in duration-300'>
       <div className='flex items-center gap-3'>
         <div className='w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-accent-primary/10 text-accent-primary'>
           <Upload className='w-5 h-5' />
