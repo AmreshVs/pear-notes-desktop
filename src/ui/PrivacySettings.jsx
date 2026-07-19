@@ -90,7 +90,7 @@ export default function PrivacySettings() {
   return (
     <div className='space-y-12 max-w-2xl mx-auto'>
       <div className="space-y-1">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Note Lock</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Note Lock</h3>
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-start justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="flex items-center gap-4 min-w-0">

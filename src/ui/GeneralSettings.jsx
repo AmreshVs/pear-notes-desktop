@@ -87,7 +87,7 @@ export default function GeneralSettings() {
   return (
     <div className='space-y-12 max-w-2xl mx-auto'>
       <div className="space-y-1">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Interface</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Interface</h3>
         
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
@@ -115,7 +115,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className="space-y-1">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Notes List</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Notes List</h3>
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
@@ -139,7 +139,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className="space-y-1">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Editor</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Editor</h3>
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
@@ -203,7 +203,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className="space-y-1">
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Startup & Background</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Startup & Background</h3>
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">
@@ -234,7 +234,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Media Sync</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Media Sync</h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'>
           <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">

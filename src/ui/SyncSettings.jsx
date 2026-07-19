@@ -264,7 +264,7 @@ export default function SyncSettings({ onClose }) {
         ) : (
           <div className='space-y-6'>
             <div className='space-y-1'>
-              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-secondary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
                 This Device
               </h4>
               <div className='grid gap-4'>
@@ -277,7 +277,7 @@ export default function SyncSettings({ onClose }) {
             </div>
 
             <div className='space-y-1'>
-              <h4 className='text-text-tertiary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-secondary font-bold text-[10px] uppercase tracking-widest ml-1 mb-3'>
                 Other Devices
               </h4>
               <div className='grid gap-4'>

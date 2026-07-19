@@ -316,7 +316,7 @@ export default function StorageSettings() {
 
       {activeDownloads.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
             Syncing from other devices ({activeDownloads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
@@ -340,7 +340,7 @@ export default function StorageSettings() {
 
       {activeUploads.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
             Syncing to other devices ({activeUploads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
@@ -356,7 +356,7 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Usage</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Usage</h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           {isLoading && totalBlobBytes === 0 ? (
             <div className='px-6 py-8 flex items-center justify-center'>
@@ -442,7 +442,7 @@ export default function StorageSettings() {
 
       {buckets && (
         <div className='space-y-1'>
-          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Breakdown by type</h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Breakdown by type</h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
              {isLoading && totalBlobBytes === 0 ? null : (
                <div className='p-2'>
@@ -504,7 +504,7 @@ export default function StorageSettings() {
 
       {notesStorageInfo.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Per-Note Breakdown</h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Per-Note Breakdown</h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
@@ -514,7 +514,7 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Danger Zone</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Danger Zone</h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           <div className='px-6 py-5 flex items-center justify-between'>
             <div className='space-y-1'>
