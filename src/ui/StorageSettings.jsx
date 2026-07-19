@@ -24,6 +24,9 @@ import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes, groupTransfersByNote } from '../utils/formatters'
 
+const TRANSFER_LIST_CLASS =
+  'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px] backdrop-blur-md'
+
 const TOOLTIP_WIDTH = 256
 const TOOLTIP_GAP = 8
 const TOOLTIP_MARGIN = 12
@@ -316,7 +319,7 @@ export default function StorageSettings() {
           <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
             Syncing from other devices ({activeDownloads.length})
           </h3>
-          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+          <div className={TRANSFER_LIST_CLASS}>
             {downloadGroups.map((group) => (
               <TransferNoteGroup
                 key={group.noteKey}
@@ -340,7 +343,7 @@ export default function StorageSettings() {
           <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
             Syncing to other devices ({activeUploads.length})
           </h3>
-          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+          <div className={TRANSFER_LIST_CLASS}>
             {uploadGroups.map((group) => (
               <TransferNoteGroup
                 key={group.noteKey}
