@@ -85,7 +85,7 @@ export default function MediaPreviewModal({
               <button
                 onClick={() => !isDownloading && onDownload()}
                 disabled={isDownloading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-black text-sm font-semibold transition-colors ${isDownloading ? 'cursor-wait opacity-70' : 'hover:bg-accent-primary-hover'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-accent-on-primary text-sm font-semibold transition-colors ${isDownloading ? 'cursor-wait opacity-70' : 'hover:bg-accent-primary-hover'}`}
               >
                 <Download className='w-4 h-4' />
                 {isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
