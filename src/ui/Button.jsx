@@ -16,7 +16,7 @@ const variants = {
     'disabled:opacity-50 disabled:shadow-none'
   ],
   primary: [
-    'text-white bg-accent-primary border-transparent',
+    'text-accent-on-primary bg-accent-primary border-transparent',
     'active:bg-accent-primary-hover active:shadow-none'
   ]
 }

@@ -19,6 +19,7 @@
 
   --accent-primary: #DCA323;
   --accent-primary-hover: #c8931f;
+  --accent-on-primary: #1a1300;
   --accent-success: #30d158;
   --accent-danger: #ff453a;
   --accent-warning: #ff9f0a;
@@ -116,6 +117,7 @@
 
   --accent-primary: #DCA323;
   --accent-primary-hover: #c8931f;
+  --accent-on-primary: #1a1300;
   --accent-success: #34c759;
   --accent-danger: #ff3b30;
   --accent-warning: #ff9500;

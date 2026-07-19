@@ -174,8 +174,8 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                 disabled={isSaving}
                 className={`flex-1 px-4 py-3 rounded-xl transition-all font-bold text-sm tracking-tight disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
                   isSaving
-                    ? 'bg-accent-primary/70 text-white cursor-wait'
-                    : 'bg-accent-primary hover:bg-accent-primary/90 text-white shadow-accent-primary/20 hover:scale-[1.02]'
+                    ? 'bg-accent-primary/70 text-accent-on-primary cursor-wait'
+                    : 'bg-accent-primary hover:bg-accent-primary/90 text-accent-on-primary shadow-accent-primary/20 hover:scale-[1.02]'
                 }`}
               >
                 {isSaving ? (

@@ -32,6 +32,7 @@
   /* Accent Colors */
   --color-accent-primary: var(--accent-primary);
   --color-accent-primary-hover: var(--accent-primary-hover);
+  --color-accent-on-primary: var(--accent-on-primary);
   --color-accent-success: var(--accent-success);
   --color-accent-danger: var(--accent-danger);
   --color-accent-warning: var(--accent-warning);

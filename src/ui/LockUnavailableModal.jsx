@@ -24,7 +24,7 @@ export default function LockUnavailableModal({ open, onCancel }) {
 
           <button
             onClick={onCancel}
-            className='w-full py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+            className='w-full py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
           >
             OK
           </button>

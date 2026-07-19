@@ -121,7 +121,7 @@ export default function PrivacySettings() {
                 disabled={!lockAvailable}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
                   lockMethod !== 'password'
-                    ? 'bg-accent-primary text-text-primary shadow-sm'
+                    ? 'bg-accent-primary text-accent-on-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
                 }`}
               >
@@ -133,7 +133,7 @@ export default function PrivacySettings() {
                 disabled={passwordDisabled}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
                   lockMethod === 'password'
-                    ? 'bg-accent-primary text-text-primary shadow-sm'
+                    ? 'bg-accent-primary text-accent-on-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
                 }`}
               >

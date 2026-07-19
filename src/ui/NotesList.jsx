@@ -407,7 +407,7 @@ export default function NotesList({
                         
                         <button 
                           onClick={handleLinkDevice}
-                          className='w-full py-4 bg-accent-primary text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+                          className='w-full py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
                         >
                           Connect Device
                         </button>

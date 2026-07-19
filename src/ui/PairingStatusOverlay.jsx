@@ -256,7 +256,7 @@ export default function PairingStatusOverlay() {
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 py-4 bg-accent-primary text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95"
+              className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95"
             >
               Verify Code
             </button>
@@ -329,7 +329,7 @@ export default function PairingStatusOverlay() {
                   <button
                     onClick={handleConnect}
                     disabled={!pasteCode.trim()}
-                    className="flex-1 py-4 bg-accent-primary text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Connect
                   </button>

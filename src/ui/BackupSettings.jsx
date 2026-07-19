@@ -202,7 +202,7 @@ export default function BackupSettings() {
           <button
             onClick={handleExport}
             disabled={isExporting || isImporting}
-            className='group relative px-8 py-3.5 bg-accent-primary text-text-primary rounded-xl font-bold text-[15px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 overflow-hidden'
+            className='group relative px-8 py-3.5 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 overflow-hidden'
           >
             <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
             <HardDrive className='w-4 h-4' />
@@ -340,7 +340,7 @@ export default function BackupSettings() {
                 {isDone || isError ? (
                   <button
                     onClick={handleDismiss}
-                    className='flex-1 py-4 bg-accent-primary text-text-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+                    className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
                   >
                     Dismiss
                   </button>

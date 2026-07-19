@@ -311,7 +311,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                     <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover/player:opacity-100 transition-opacity bg-black/30 pointer-events-none z-10'>
                       <button
                         onClick={togglePlayPause}
-                        className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-white pointer-events-auto shadow-lg hover:scale-105 transition-transform'
+                        className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary pointer-events-auto shadow-lg hover:scale-105 transition-transform'
                       >
                         {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
                       </button>
@@ -393,7 +393,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover/player:opacity-100 transition-opacity bg-black/30 pointer-events-none z-10'>
                   <button
                     onClick={togglePlayPause}
-                    className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-white pointer-events-auto shadow-lg hover:scale-105 transition-transform'
+                    className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary pointer-events-auto shadow-lg hover:scale-105 transition-transform'
                   >
                     {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
                   </button>

@@ -98,7 +98,7 @@ export default function SyncScreen({ onClose }) {
 
                   <button
                     onClick={handleCopyInvite}
-                    className='w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl transition-colors font-bold text-[15px] bg-accent-primary text-text-primary hover:bg-accent-primary-hover shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
+                    className='w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl transition-colors font-bold text-[15px] bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
                   >
                     {copied ? (
                       <>
@@ -132,7 +132,7 @@ export default function SyncScreen({ onClose }) {
                   <button
                     onClick={handleConnect}
                     disabled={!pasteCode.trim()}
-                    className='px-6 py-4 rounded-xl transition-colors font-bold text-[15px] bg-accent-primary text-text-primary hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
+                    className='px-6 py-4 rounded-xl transition-colors font-bold text-[15px] bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
                   >
                     Connect
                   </button>

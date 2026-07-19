@@ -115,7 +115,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
               <button
                 type='submit'
                 disabled={!url.trim()}
-                className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md bg-accent-primary text-text-primary hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-primary'
+                className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-primary'
               >
                 Add Link
               </button>

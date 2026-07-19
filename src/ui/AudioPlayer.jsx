@@ -114,7 +114,7 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
         <audio ref={mediaRef} src={src} preload='auto' />
         <button
           onClick={togglePlayPause}
-          className='flex-shrink-0 w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-white active:scale-95 transition-transform'
+          className='flex-shrink-0 w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary active:scale-95 transition-transform'
         >
           {isPlaying ? <Pause className='w-5 h-5 fill-white' /> : <Play className='w-5 h-5 fill-white ml-0.5' />}
         </button>

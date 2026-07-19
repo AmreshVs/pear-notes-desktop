@@ -52,7 +52,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             onClick={() => setShowFormatMenu(!showFormatMenu)}
             className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 duration-200 ${
               showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic
-                ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
+                ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
                 : 'text-text-primary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
             title='Formatting'
@@ -275,7 +275,7 @@ const Button = forwardRef(({ onClick, isActive, disabled, title, children, class
     onClick={onClick}
     className={`rounded-lg transition-all flex-shrink-0 flex items-center justify-center active:scale-95 duration-200 ${
       isActive
-        ? 'bg-accent-primary text-text-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
+        ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
         : disabled
           ? 'text-text-tertiary opacity-30 cursor-not-allowed'
           : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
@@ -293,7 +293,7 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
     onClick={onClick}
     className={`p-1.5 rounded-lg transition-all flex items-center justify-center active:scale-95 duration-200 ${
       isActive
-        ? 'bg-accent-primary text-text-primary shadow-[0_0_10px_rgba(var(--accent-primary),0.2)]'
+        ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_10px_rgba(var(--accent-primary),0.2)]'
         : 'text-text-primary hover:bg-overlay-soft hover:text-text-primary'
     }`}
     title={title}

@@ -42,7 +42,7 @@ export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
 
       <button
         onClick={handleUpdate}
-        className="w-full py-2 bg-accent-primary text-white rounded-lg font-semibold text-sm hover:bg-accent-primary-hover transition-all active:scale-95"
+        className="w-full py-2 bg-accent-primary text-accent-on-primary rounded-lg font-semibold text-sm hover:bg-accent-primary-hover transition-all active:scale-95"
       >
         Update Now
       </button>

@@ -280,7 +280,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             <button
               onClick={handleUnlock}
               disabled={unlocking}
-              className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-text-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <Lock className='w-4 h-4' />
               {unlocking ? 'Authenticating…' : 'Unlock'}
