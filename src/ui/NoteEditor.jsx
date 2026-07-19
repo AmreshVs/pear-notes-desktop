@@ -327,8 +327,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
         </div>
       </div>
-      <div className='absolute bottom-6 right-8 pointer-events-none z-30 opacity-40 hover:opacity-100 transition-opacity duration-500'>
-        <span className='text-[10px] font-bold text-text-tertiary uppercase tracking-widest'>
+      <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
+        <span className='text-[10px] font-bold text-text-secondary uppercase tracking-widest'>
           edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>

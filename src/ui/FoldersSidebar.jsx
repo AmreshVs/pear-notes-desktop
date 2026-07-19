@@ -188,7 +188,7 @@ export default function FoldersSidebar({
           
           {count > 0 && (
             <div className={`flex items-center flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-muted bg-bg-tertiary/50'}`}>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}>
                 {count}
               </span>
             </div>
@@ -207,6 +207,7 @@ export default function FoldersSidebar({
             onClick={handleCreateNewFolder}
             className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
             title='New Folder'
+            aria-label='New Folder'
           >
             <FolderPlus className='w-5 h-5 transition-none' />
           </button>
@@ -220,7 +221,7 @@ export default function FoldersSidebar({
           {topFolders.slice(1).map(renderFolderItem)}
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
-          <div className='text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
+          <div className='text-[10px] font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
             Archive
           </div>
           <div className="transition-none">
@@ -235,6 +236,7 @@ export default function FoldersSidebar({
             onClick={onSettingsClick}
             className="flex items-center justify-center transition-none font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl"
             title='Settings'
+            aria-label='Settings'
           >
             <Settings className="w-4 h-4 flex-shrink-0 transition-none" />
             <span className='text-[14px] font-medium whitespace-nowrap transition-none'>Settings</span>

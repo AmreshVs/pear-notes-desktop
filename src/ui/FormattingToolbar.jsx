@@ -281,6 +281,7 @@ const Button = forwardRef(({ onClick, isActive, disabled, title, children, class
           : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
     } ${className}`}
     title={title}
+    aria-label={title}
     disabled={disabled}
   >
     {children}
@@ -297,6 +298,7 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
         : 'text-text-primary hover:bg-overlay-soft hover:text-text-primary'
     }`}
     title={title}
+    aria-label={title}
   >
     {children}
   </button>

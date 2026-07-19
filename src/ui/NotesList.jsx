@@ -303,6 +303,7 @@ export default function NotesList({
               onClick={onToggleSidebar}
               className='p-2 rounded-xl bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
               title='Toggle Sidebar'
+              aria-label='Toggle Sidebar'
             >
               <svg 
                 viewBox="0 0 24 24" 
@@ -328,7 +329,7 @@ export default function NotesList({
               <h2 className='font-bold text-[20px] text-text-primary tracking-tight truncate max-w-[150px] leading-tight'>
                 {currentFolderName}
               </h2>
-              <span className='text-[11px] font-bold text-text-tertiary opacity-50 uppercase tracking-wider'>
+              <span className='text-[11px] font-bold text-text-secondary uppercase tracking-wider'>
                 {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
               </span>
             </div>
@@ -339,6 +340,7 @@ export default function NotesList({
               onClick={onCreateNote}
               className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
               title='New Note'
+              aria-label='New Note'
             >
               <SquarePen className='w-5 h-5' />
             </button>

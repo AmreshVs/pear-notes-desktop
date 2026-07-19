@@ -79,6 +79,7 @@ export default function Sidebar({
             onClick={onCreateNote}
             className='p-1.5 rounded-md hover:bg-bg-tertiary active:bg-bg-tertiary transition-colors'
             title='New Note'
+            aria-label='New Note'
           >
             <Plus className='w-5 h-5 text-text-primary' />
           </button>
