@@ -19,25 +19,57 @@ import {
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { deleteDbEncryptionKey } from '../utils.js'
 import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, Database, HardDrive, Info, Pause, Play, RotateCw, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes, groupTransfersByNote } from '../utils/formatters'
 
+const TOOLTIP_WIDTH = 256
+const TOOLTIP_GAP = 8
+const TOOLTIP_MARGIN = 12
+
 function Tooltip({ text, children }) {
-  const [visible, setVisible] = useState(false)
+  const triggerRef = useRef(null)
+  const [position, setPosition] = useState(null)
+
+  const showTooltip = () => {
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const half = TOOLTIP_WIDTH / 2
+    const minLeft = TOOLTIP_MARGIN + half
+    const maxLeft = window.innerWidth - TOOLTIP_MARGIN - half
+    const left = Math.min(Math.max(rect.left + rect.width / 2, minLeft), Math.max(minLeft, maxLeft))
+    const flipBelow = rect.top - TOOLTIP_GAP < TOOLTIP_MARGIN
+    setPosition({
+      left,
+      top: flipBelow ? rect.bottom + TOOLTIP_GAP : rect.top - TOOLTIP_GAP,
+      flipBelow
+    })
+  }
+
+  const hideTooltip = () => setPosition(null)
+
   return (
-    <span
-      className='relative inline-flex items-center'
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
-    >
-      {children}
-      {visible && (
-        <span className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 px-3 py-2 rounded-xl bg-bg-panel border border-overlay-strong text-[12px] text-text-tertiary leading-relaxed shadow-xl z-50 pointer-events-none animate-in fade-in duration-150'>
-          {text}
-        </span>
-      )}
-    </span>
+    <>
+      <span
+        ref={triggerRef}
+        className='relative inline-flex items-center'
+        onMouseEnter={showTooltip}
+        onMouseLeave={hideTooltip}
+      >
+        {children}
+      </span>
+      {position &&
+        createPortal(
+          <span
+            style={{ left: position.left, top: position.top, width: TOOLTIP_WIDTH }}
+            className={`fixed -translate-x-1/2 ${position.flipBelow ? '' : '-translate-y-full'} px-3 py-2 rounded-xl bg-bg-panel border border-overlay-strong text-[12px] text-text-tertiary leading-relaxed shadow-xl z-[100] pointer-events-none animate-in fade-in duration-150`}
+          >
+            {text}
+          </span>,
+          document.body
+        )}
+    </>
   )
 }
 
