@@ -31,6 +31,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import MergeConfirmModal from './MergeConfirmModal'
+import { getDeviceDisplayName } from '../lib/deviceDisplay'
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -382,9 +383,9 @@ function DeviceItem({ device, isOther }) {
               <span
                 className='font-bold text-text-primary text-base truncate cursor-pointer block'
                 onDoubleClick={handleDoubleClick}
-                title={device.isLocal ? 'Double-click to rename' : device.title}
+                title={device.isLocal ? 'Double-click to rename' : getDeviceDisplayName(device)}
               >
-                {device.title || 'Unnamed Device'}
+                {getDeviceDisplayName(device)}
               </span>
               <p className='text-[11px] text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
                 {getPlatformName(device.platform)}
