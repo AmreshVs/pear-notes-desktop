@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { uploadFileWithProgress, UploadCancelledError } from '../lib/noteUploadManager'
+import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
 
 export function useFormattingToolbar(editor, noteKey) {
   const [editorState, setEditorState] = useState({
@@ -148,9 +149,12 @@ export function useFormattingToolbar(editor, noteKey) {
     const { to } = editor.state.selection
     editor.commands.setTextSelection(to)
 
-    for (const file of fileList) {
+    const queued = fileList.map((file) => ({ id: nextUploadItemId(), fileName: file.name, file }))
+    enqueueUploads(queued)
+
+    for (const { id: itemId, file } of queued) {
       try {
-        const { link } = await uploadFileWithProgress({ noteKey, file })
+        const { link } = await uploadFileWithProgress({ noteKey, file, itemId })
         if (link) {
           editor.chain().focus().insertContent([
             { type: 'image', attrs: { src: link } },
@@ -161,6 +165,7 @@ export function useFormattingToolbar(editor, noteKey) {
         if (!(error instanceof UploadCancelledError)) console.error('Error uploading image:', error)
       }
     }
+    clearUploadQueue()
   }
 
   const handleInsertFile = async (files) => {
@@ -170,9 +175,12 @@ export function useFormattingToolbar(editor, noteKey) {
     const { to } = editor.state.selection
     editor.commands.setTextSelection(to)
 
-    for (const file of fileList) {
+    const queued = fileList.map((file) => ({ id: nextUploadItemId(), fileName: file.name, file }))
+    enqueueUploads(queued)
+
+    for (const { id: itemId, file } of queued) {
       try {
-        const { link } = await uploadFileWithProgress({ noteKey, file })
+        const { link } = await uploadFileWithProgress({ noteKey, file, itemId })
 
         if (link) {
           editor.chain().focus().insertContent([
@@ -192,6 +200,7 @@ export function useFormattingToolbar(editor, noteKey) {
         if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)
       }
     }
+    clearUploadQueue()
   }
 
   const handleInsertAudio = async ({ data, duration }) => {

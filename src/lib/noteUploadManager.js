@@ -1,20 +1,37 @@
 import { createProgressUpload, insertFileFromFile, UploadCancelledError } from './fileManager'
-import { startUpload, updateUploadProgress, endUpload } from './uploadRegistry'
+import {
+  beginUploadItem,
+  completeUploadItem,
+  isUploadCancelled,
+  updateUploadItemProgress
+} from './uploadRegistry'
 
 export { UploadCancelledError }
 
-export async function uploadFileWithProgress({ noteKey, file, fileName }) {
+export async function uploadFileWithProgress({ noteKey, file, fileName, itemId }) {
   const name = fileName || file.name
-  const attempt = createProgressUpload({ noteKey, file, fileName: name, onProgress: updateUploadProgress })
+
+  if (itemId && isUploadCancelled(itemId)) {
+    throw new UploadCancelledError()
+  }
+
+  const attempt = createProgressUpload({
+    noteKey,
+    file,
+    fileName: name,
+    onProgress: (progress) => {
+      if (itemId) updateUploadItemProgress(itemId, progress)
+    }
+  })
 
   if (!attempt) {
     return insertFileFromFile({ noteKey, file, fileName: name })
   }
 
-  startUpload({ fileName: name, progress: 0, cancel: attempt.cancel })
+  if (itemId) beginUploadItem(itemId, attempt.cancel)
   try {
     return await attempt.promise
   } finally {
-    endUpload()
+    if (itemId && !isUploadCancelled(itemId)) completeUploadItem(itemId)
   }
 }

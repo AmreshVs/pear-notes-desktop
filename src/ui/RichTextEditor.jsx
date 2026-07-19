@@ -56,6 +56,7 @@ import { useEffect, useRef, useImperativeHandle, forwardRef, useMemo } from 'rea
 import '../styles/tiptap.css'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { uploadFileWithProgress, UploadCancelledError } from '../lib/noteUploadManager'
+import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
 import { useSelector } from 'react-redux'
 import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
 import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
@@ -204,14 +205,22 @@ const RichTextEditor = forwardRef(
         handlePaste: (view, event) => {
           const items = Array.from(event.clipboardData?.items || [])
           
-          items.forEach(async (item) => {
-            if (item.kind === 'file') {
-              const file = item.getAsFile()
-              if (!file) return
+          const pastedFiles = items
+            .filter((item) => item.kind === 'file')
+            .map((item) => item.getAsFile())
+            .filter(Boolean)
+          const pastedQueue = pastedFiles.map((file) => ({
+            id: nextUploadItemId(),
+            fileName: file.name,
+            file
+          }))
+          enqueueUploads(pastedQueue)
 
+          void (async () => {
+            for (const { id: itemId, file } of pastedQueue) {
               try {
-                const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file })
-                if (!link) return
+                const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file, itemId })
+                if (!link) continue
 
                 const { schema } = view.state
 
@@ -235,9 +244,10 @@ const RichTextEditor = forwardRef(
                 if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)
               }
             }
-          })
-          
-          return items.some(item => item.kind === 'file')
+            clearUploadQueue()
+          })()
+
+          return pastedFiles.length > 0
         },
         handleDrop: (view, event, slice, moved) => {
           if (moved) return false
@@ -247,11 +257,19 @@ const RichTextEditor = forwardRef(
 
           event.preventDefault()
 
-          files.forEach(async (file) => {
-            try {
-              const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file })
+          const droppedQueue = files.map((file) => ({
+            id: nextUploadItemId(),
+            fileName: file.name,
+            file
+          }))
+          enqueueUploads(droppedQueue)
 
-              if (!link) return
+          void (async () => {
+            for (const { id: itemId, file } of droppedQueue) {
+            try {
+              const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file, itemId })
+
+              if (!link) continue
 
               const { schema } = view.state
 
@@ -274,7 +292,9 @@ const RichTextEditor = forwardRef(
             } catch (error) {
               if (!(error instanceof UploadCancelledError)) console.error('Error uploading dropped file:', error)
             }
-          })
+            }
+            clearUploadQueue()
+          })()
 
           return true
         },
