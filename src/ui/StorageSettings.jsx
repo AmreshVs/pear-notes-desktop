@@ -268,7 +268,7 @@ export default function StorageSettings() {
   }
 
 
-  const blobPct = totalOnDiskBytes > 0 ? Math.round((totalBlobBytes / totalOnDiskBytes) * 100) : 100
+  const blobPct = totalOnDiskBytes > 0 ? Math.round((totalBlobBytes / totalOnDiskBytes) * 100) : 0
 
   return (
     <div className='max-w-2xl mx-auto space-y-6'>
@@ -381,8 +381,19 @@ export default function StorageSettings() {
                 </div>
               </div>
 
-              <div className='px-6 py-4'>
-                <div className='w-full h-1.5 bg-overlay-soft rounded-full overflow-hidden'>
+              <div className='px-6 py-4 space-y-2'>
+                <div className='flex items-center justify-between text-[12px]'>
+                  <span className='text-text-tertiary font-medium'>Live media on disk</span>
+                  <span className='text-text-secondary font-bold'>{blobPct}%</span>
+                </div>
+                <div
+                  className='w-full h-1.5 bg-overlay-soft rounded-full overflow-hidden'
+                  role='progressbar'
+                  aria-valuenow={blobPct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label='Live media as a share of on-disk storage'
+                >
                   <div
                     className='h-full bg-accent-primary rounded-full transition-all duration-500'
                     style={{ width: `${blobPct}%` }}

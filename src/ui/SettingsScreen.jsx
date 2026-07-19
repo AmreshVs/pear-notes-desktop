@@ -6,8 +6,9 @@ import {
   ShieldCheck,
   X
 } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { version as appVersion } from '../../package.json'
+import { useDialog } from '../hooks/useDialog'
 import GeneralSettings from './GeneralSettings'
 import SyncSettings from './SyncSettings'
 import BackupSettings from './BackupSettings'
@@ -18,10 +19,12 @@ export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
   const [isExiting, setIsExiting] = useState(false)
 
-  const handleAnimatedClose = () => {
+  const handleAnimatedClose = useCallback(() => {
     setIsExiting(true)
     setTimeout(onClose, 300)
-  }
+  }, [onClose])
+
+  const dialogRef = useDialog(handleAnimatedClose)
 
   const sections = [
     { id: 'general', name: 'General', icon: SettingsIcon },
@@ -38,7 +41,14 @@ export default function SettingsScreen({ onClose }) {
         onClick={handleAnimatedClose}
       />
 
-      <div className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}>
+      <div
+        ref={dialogRef}
+        role='dialog'
+        aria-modal='true'
+        aria-label='Settings'
+        tabIndex={-1}
+        className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden outline-none animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}
+      >
         <div className="absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none" />
 

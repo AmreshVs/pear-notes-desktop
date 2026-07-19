@@ -147,16 +147,16 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
             <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
               {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
                 <>
-                  <div className='flex items-center gap-1.5'>
-                    <Folder className='w-3 h-3' />
-                    <span>
+                  <div className='flex items-center gap-1.5 min-w-0'>
+                    <Folder className='w-3 h-3 flex-shrink-0' />
+                    <span className='truncate'>
                       {allFolders.find(f => f.id === noteData.folderKey)?.name || 'Notes'}
                     </span>
                   </div>
-                  <span>•</span>
+                  <span className='flex-shrink-0'>•</span>
                 </>
               )}
-              <span>
+              <span className='flex-shrink-0 whitespace-nowrap'>
                 {formatDate(noteData?.updatedAt || noteData?.createdAt)}
               </span>
             </div>

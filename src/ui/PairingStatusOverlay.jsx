@@ -131,7 +131,7 @@ export default function PairingStatusOverlay() {
     if (isError || isRejected) {
       return (
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="w-20 h-20 bg-red-500/15 rounded-3xl flex items-center justify-center ring-1 ring-red-500/30 mb-2">
+          <div className="w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2">
             <span className="text-4xl">✕</span>
           </div>
           <div className="space-y-2">
@@ -146,7 +146,7 @@ export default function PairingStatusOverlay() {
           </div>
           <button
             onClick={handleResetAfterFailedPairing}
-            className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold text-[15px] hover:bg-red-500/20 transition-all active:scale-95"
+            className="w-full py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-[15px] hover:bg-accent-danger/20 transition-all active:scale-95"
           >
             Okay
           </button>
@@ -250,7 +250,7 @@ export default function PairingStatusOverlay() {
           <div className="flex gap-3 w-full pt-2">
             <button
               onClick={handleReject}
-              className="flex-1 py-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-all active:scale-95"
+              className="flex-1 py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-sm hover:bg-accent-danger/20 transition-all active:scale-95"
             >
               Reject
             </button>

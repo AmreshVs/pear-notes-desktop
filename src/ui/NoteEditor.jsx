@@ -302,7 +302,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       </div>
 
       <div className='flex-1 overflow-y-auto custom-scrollbar pt-16' onContextMenu={handleEditorContextMenu}>
-        <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
+        <div className='max-w-4xl mx-auto px-6 py-4 w-full min-h-full bg-bg-primary'>
           <input
             ref={titleRef}
             type='text'
