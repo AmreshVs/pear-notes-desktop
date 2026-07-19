@@ -17,6 +17,12 @@ import {
   CLOSE_TO_TRAY_KEY,
   START_AT_LOGIN_KEY
 } from '../lib/appBehavior'
+import {
+  getMediaSyncFlag,
+  setMediaSyncFlag,
+  MEDIA_SYNC_PAUSED_KEY,
+  METERED_CONNECTION_KEY
+} from '../lib/mediaSyncPolicy'
 
 export default function GeneralSettings() {
   const dispatch = useDispatch()
@@ -26,6 +32,8 @@ export default function GeneralSettings() {
   const sortBy = useSelector(getSortBy)
   const [closeToTray, setCloseToTray] = useState(true)
   const [startAtLogin, setStartAtLogin] = useState(false)
+  const [mediaPaused, setMediaPaused] = useState(false)
+  const [metered, setMetered] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -35,10 +43,28 @@ export default function GeneralSettings() {
     getAppBehaviorPreference(START_AT_LOGIN_KEY, false).then((v) => {
       if (active) setStartAtLogin(v)
     })
+    getMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY).then((v) => {
+      if (active) setMediaPaused(v)
+    })
+    getMediaSyncFlag(METERED_CONNECTION_KEY).then((v) => {
+      if (active) setMetered(v)
+    })
     return () => {
       active = false
     }
   }, [])
+
+  const handleToggleMediaPaused = () => {
+    const next = !mediaPaused
+    setMediaPaused(next)
+    setMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY, next)
+  }
+
+  const handleToggleMetered = () => {
+    const next = !metered
+    setMetered(next)
+    setMediaSyncFlag(METERED_CONNECTION_KEY, next)
+  }
 
   const handleUpdateSetting = (key, value) => {
     dispatch(updateSetting({ key, value }))
@@ -205,6 +231,40 @@ export default function GeneralSettings() {
             </button>
           </div>
         </div>
+      </div>
+
+      <div className='space-y-1'>
+        <h3 className='text-text-primary/40 font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Media Sync</h3>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'>
+          <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
+            <div className="space-y-1 min-w-0">
+              <label className='block text-text-primary text-[15px] font-bold'>Pause Media Transfers</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Hold photos, video, and file transfers. Notes, folders, and settings keep syncing.</p>
+            </div>
+            <button
+              onClick={handleToggleMediaPaused}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${mediaPaused ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+            >
+              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${mediaPaused ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+
+          <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
+            <div className="space-y-1 min-w-0">
+              <label className='block text-text-primary text-[15px] font-bold'>Metered Connection</label>
+              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.</p>
+            </div>
+            <button
+              onClick={handleToggleMetered}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${metered ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+            >
+              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${metered ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+        </div>
+        {(mediaPaused || metered) && (
+          <p className='text-[12px] text-text-tertiary ml-2 mt-2'>Media transfers are held. Queued items resume automatically once media is allowed again.</p>
+        )}
       </div>
 
     </div>
