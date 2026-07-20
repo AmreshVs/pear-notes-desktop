@@ -18,11 +18,10 @@ import {
   START_AT_LOGIN_KEY
 } from '../lib/appBehavior'
 import {
-  getMediaSyncFlag,
-  setMediaSyncFlag,
   MEDIA_SYNC_PAUSED_KEY,
   METERED_CONNECTION_KEY
-} from '../lib/mediaSyncPolicy'
+} from '@pear-notes/core/constant.js'
+import { getMediaSyncFlag, setMediaSyncFlag } from '@pear-notes/core/utils.js'
 
 export default function GeneralSettings() {
   const dispatch = useDispatch()

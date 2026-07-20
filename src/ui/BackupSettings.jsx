@@ -11,7 +11,7 @@ import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.
 import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { formatBytes } from '../utils/formatters'
+import { formatBytes } from '@pear-notes/core/utils.js'
 import { getBackupErrorMessage } from '../utils/backupErrors'
 import BackupPasswordModal from './BackupPasswordModal'
 

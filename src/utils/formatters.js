@@ -1,28 +1,3 @@
-export function formatBytes(bytes) {
-  if (!bytes || bytes < 1) return '0 B'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`
-  return `${(bytes / 1073741824).toFixed(2)} GB`
-}
-
-export function groupTransfersByNote(items, noteTitles, untitledLabel) {
-  const order = []
-  const byNote = new Map()
-  for (const item of items) {
-    if (!byNote.has(item.noteKey)) {
-      byNote.set(item.noteKey, [])
-      order.push(item.noteKey)
-    }
-    byNote.get(item.noteKey).push(item)
-  }
-  return order.map((noteKey) => ({
-    noteKey,
-    title: noteTitles[noteKey] || untitledLabel,
-    items: byNote.get(noteKey)
-  }))
-}
-
 export function formatTime(seconds) {
   if (!seconds || isNaN(seconds) || seconds === Infinity) return '0:00'
   const mins = Math.floor(seconds / 60)

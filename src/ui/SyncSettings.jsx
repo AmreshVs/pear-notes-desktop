@@ -31,7 +31,7 @@ import { QRCodeCanvas } from 'qrcode.react'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import MergeConfirmModal from './MergeConfirmModal'
-import { getDeviceDisplayName } from '../lib/deviceDisplay'
+import { getDeviceDisplayName } from '@pear-notes/core/utils.js'
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',

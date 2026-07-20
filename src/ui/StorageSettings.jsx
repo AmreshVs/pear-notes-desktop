@@ -22,7 +22,7 @@ import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, D
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { formatBytes, groupTransfersByNote } from '../utils/formatters'
+import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px] backdrop-blur-md'

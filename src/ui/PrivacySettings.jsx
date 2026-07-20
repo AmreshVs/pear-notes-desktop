@@ -11,11 +11,8 @@ import { authenticate, isDeviceAuthSupported } from '../lib/deviceAuth'
 import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
 import NoteLockPasswordModal from './NoteLockPasswordModal'
 import { clearUnlockedNotes } from '../lib/noteLock'
-import {
-  getLockPrivacyPreference,
-  setLockPrivacyPreference,
-  LOCK_SCREENSHOT_PROTECTION_KEY
-} from '../lib/contentProtection'
+import { LOCK_SCREENSHOT_PROTECTION_KEY } from '@pear-notes/core/constant.js'
+import { getLockPrivacyPreference, setLockPrivacyPreference } from '@pear-notes/core/utils.js'
 
 const AUTH_METHOD_LABELS = {
   mac: 'Touch ID or your macOS password',
