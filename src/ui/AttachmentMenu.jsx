@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { Image, Paperclip, Mic } from 'lucide-react'
+import { Image, Mic, Paperclip } from 'lucide-react'
 
-export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, onRecordAudio, buttonRef }) {
+export default function AttachmentMenu({
+  onClose,
+  onInsertImage,
+  onInsertFile,
+  onRecordAudio,
+  buttonRef
+}) {
   const menuRef = useRef(null)
   const imageInputRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -9,8 +15,12 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target) &&
-          buttonRef.current && !buttonRef.current.contains(event.target)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
         onClose()
       }
     }
@@ -33,17 +43,18 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
     event.preventDefault()
     const items = Array.from(menuRef.current?.querySelectorAll('[role="menuitem"]') || [])
     const index = items.indexOf(document.activeElement)
-    const nextIndex = event.key === 'ArrowDown'
-      ? (index + 1) % items.length
-      : (index - 1 + items.length) % items.length
+    const nextIndex =
+      event.key === 'ArrowDown'
+        ? (index + 1) % items.length
+        : (index - 1 + items.length) % items.length
     items[nextIndex]?.focus()
   }
 
   const handleImageSelect = (event) => {
     const files = Array.from(event.target.files || [])
     if (files.length === 0) return
-    const imageFiles = files.filter(file => file.type.startsWith('image/'))
-    const videoFiles = files.filter(file => file.type.startsWith('video/'))
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'))
+    const videoFiles = files.filter((file) => file.type.startsWith('video/'))
     if (imageFiles.length > 0) onInsertImage(imageFiles)
     if (videoFiles.length > 0) onInsertFile(videoFiles)
     onClose()
@@ -100,7 +111,9 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Image className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>Photos or Videos</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>
+            Photos or Videos
+          </span>
         </button>
 
         <button

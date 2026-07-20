@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+
 import { getUpdateStatus } from '@pear-notes/core/utils.js'
+
 import { version as appVersion } from '../../package.json'
 
 export async function checkAppUpdate() {

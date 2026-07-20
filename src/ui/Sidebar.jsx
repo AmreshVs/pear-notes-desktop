@@ -1,5 +1,6 @@
-import { Search, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
+import { Plus, Search, Trash2 } from 'lucide-react'
+
 import { formatRelativeDate } from '../utils/formatters'
 
 function getPreview(content) {
@@ -17,64 +18,65 @@ export default function Sidebar({
   searchQuery,
   onSearchChange
 }) {
-  const filteredNotes = useMemo(() => notes.filter((note) => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    const title = (note.value?.title || '').toLowerCase()
-    const content = (note.value?.content || '').toLowerCase()
-    return title.includes(query) || content.includes(query)
-  }), [notes, searchQuery])
+  const filteredNotes = useMemo(
+    () =>
+      notes.filter((note) => {
+        if (!searchQuery) return true
+        const query = searchQuery.toLowerCase()
+        const title = (note.value?.title || '').toLowerCase()
+        const content = (note.value?.content || '').toLowerCase()
+        return title.includes(query) || content.includes(query)
+      }),
+    [notes, searchQuery]
+  )
 
-  const renderNote = useCallback((note) => {
-    const isSelected = selectedNote?.key === note.key
-    return (
-      <div
-        key={note.key}
-        onClick={() => onSelectNote(note)}
-        className={`px-3 py-2.5 cursor-pointer border-b border-border-primary transition-colors group ${
-          isSelected
-            ? 'bg-bg-secondary'
-            : 'hover:bg-bg-tertiary active:bg-bg-tertiary'
-        }`}
-      >
-        <div className='flex items-start justify-between gap-2'>
-          <div className='flex-1 min-w-0'>
-            <h3
-              className={`font-medium text-base mb-0.5 truncate text-text-primary`}
-            >
-              {note.value?.title || 'Untitled'}
-            </h3>
-            <p className='text-sm text-text-tertiary line-clamp-2 mb-1 leading-snug'>
-              {getPreview(note.value?.content)}
-            </p>
-            <p className='text-xs text-text-tertiary'>
-              {formatRelativeDate(note.value?.updatedAt || note.value?.createdAt)}
-            </p>
+  const renderNote = useCallback(
+    (note) => {
+      const isSelected = selectedNote?.key === note.key
+      return (
+        <div
+          key={note.key}
+          onClick={() => onSelectNote(note)}
+          className={`px-3 py-2.5 cursor-pointer border-b border-border-primary transition-colors group ${
+            isSelected ? 'bg-bg-secondary' : 'hover:bg-bg-tertiary active:bg-bg-tertiary'
+          }`}
+        >
+          <div className='flex items-start justify-between gap-2'>
+            <div className='flex-1 min-w-0'>
+              <h3 className={`font-medium text-base mb-0.5 truncate text-text-primary`}>
+                {note.value?.title || 'Untitled'}
+              </h3>
+              <p className='text-sm text-text-tertiary line-clamp-2 mb-1 leading-snug'>
+                {getPreview(note.value?.content)}
+              </p>
+              <p className='text-xs text-text-tertiary'>
+                {formatRelativeDate(note.value?.updatedAt || note.value?.createdAt)}
+              </p>
+            </div>
+            {isSelected && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteNote(note.key)
+                }}
+                className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-accent-danger/10 transition-all'
+                title='Delete Note'
+              >
+                <Trash2 className='w-4 h-4 text-accent-danger' />
+              </button>
+            )}
           </div>
-          {isSelected && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeleteNote(note.key)
-              }}
-              className='opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-accent-danger/10 transition-all'
-              title='Delete Note'
-            >
-              <Trash2 className='w-4 h-4 text-accent-danger' />
-            </button>
-          )}
         </div>
-      </div>
-    )
-  }, [selectedNote, onSelectNote, onDeleteNote])
+      )
+    },
+    [selectedNote, onSelectNote, onDeleteNote]
+  )
 
   return (
     <div className='sidebar flex flex-col h-full bg-bg-secondary border-r border-border-primary'>
       <div className='px-3 pt-4 pb-3 border-b border-border-primary'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-lg font-semibold text-text-primary tracking-tight'>
-            Notes
-          </h1>
+          <h1 className='text-lg font-semibold text-text-primary tracking-tight'>Notes</h1>
           <button
             onClick={onCreateNote}
             className='p-1.5 rounded-md hover:bg-bg-tertiary active:bg-bg-tertiary transition-colors'
@@ -113,9 +115,7 @@ export default function Sidebar({
             )}
           </div>
         ) : (
-          <div>
-            {filteredNotes.map(renderNote)}
-          </div>
+          <div>{filteredNotes.map(renderNote)}</div>
         )}
       </div>
     </div>

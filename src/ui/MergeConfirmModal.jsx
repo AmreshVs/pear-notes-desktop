@@ -21,9 +21,12 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>Combine This Device?</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+              Combine This Device?
+            </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              Notes, folders, and media on this device will be merged into the linked vault. Nothing on this device will be deleted.
+              Notes, folders, and media on this device will be merged into the linked vault. Nothing
+              on this device will be deleted.
             </p>
           </div>
 
@@ -44,6 +47,6 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   )
 }

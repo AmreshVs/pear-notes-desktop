@@ -1,5 +1,5 @@
-import { X, Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
+import { Check, Link2, X } from 'lucide-react'
 
 export default function SyncScreen({ onClose }) {
   const [activeTab, setActiveTab] = useState('invite')
@@ -22,12 +22,11 @@ export default function SyncScreen({ onClose }) {
 
   return (
     <div className='fixed inset-0 flex items-center justify-center z-50 p-6'>
-      <div 
-        className="absolute inset-0 bg-backdrop-light backdrop-blur-sm animate-in fade-in duration-1000 cursor-pointer"
+      <div
+        className='absolute inset-0 bg-backdrop-light backdrop-blur-sm animate-in fade-in duration-1000 cursor-pointer'
         onClick={onClose}
       />
       <div className='relative bg-bg-panel border border-border-secondary rounded-xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-12 duration-700 ease-out'>
-
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <h2 className='text-text-primary text-xl font-semibold'>Sync Devices</h2>
           <button
@@ -37,7 +36,6 @@ export default function SyncScreen({ onClose }) {
             <X className='w-4 h-4' />
           </button>
         </div>
-
 
         <div className='flex border-b border-border-primary px-6 bg-bg-panel'>
           <button
@@ -62,7 +60,6 @@ export default function SyncScreen({ onClose }) {
           </button>
         </div>
 
-
         <div className='p-6 bg-bg-panel'>
           {activeTab === 'invite' ? (
             <div>
@@ -75,7 +72,6 @@ export default function SyncScreen({ onClose }) {
               </p>
 
               <div className='flex gap-6'>
-
                 <div className='w-48 h-48 bg-bg-panel-secondary rounded-lg flex items-center justify-center border border-border-tertiary'>
                   <div className='text-xs text-center text-text-tertiary'>
                     QR Code
@@ -85,7 +81,6 @@ export default function SyncScreen({ onClose }) {
                 </div>
 
                 <div className='flex-1'>
-
                   <div className='bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4'>
                     <div className='flex items-start gap-3'>
                       <Check className='w-5 h-5 text-green-500 flex-shrink-0 mt-0.5' />
@@ -94,7 +89,6 @@ export default function SyncScreen({ onClose }) {
                       </p>
                     </div>
                   </div>
-
 
                   <button
                     onClick={handleCopyInvite}
@@ -114,7 +108,6 @@ export default function SyncScreen({ onClose }) {
                   </button>
                 </div>
               </div>
-
 
               <div className='mt-8 pt-8 border-t border-border-primary'>
                 <h3 className='text-text-primary font-semibold text-lg mb-2'>Have an invite?</h3>
@@ -147,14 +140,18 @@ export default function SyncScreen({ onClose }) {
                   <div className='flex items-center justify-between'>
                     <div>
                       <p className='text-text-primary font-medium'>This Device</p>
-                      <p className='text-sm text-text-tertiary'>MacBook Pro • Last synced: Just now</p>
+                      <p className='text-sm text-text-tertiary'>
+                        MacBook Pro • Last synced: Just now
+                      </p>
                     </div>
                     <span className='px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 text-xs rounded-full border border-green-500/20'>
                       Active
                     </span>
                   </div>
                 </div>
-                <p className='text-sm text-center py-4 text-text-tertiary'>No other devices connected</p>
+                <p className='text-sm text-center py-4 text-text-tertiary'>
+                  No other devices connected
+                </p>
               </div>
             </div>
           )}

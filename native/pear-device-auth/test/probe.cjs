@@ -1,6 +1,6 @@
 const auth = require('..')
 
-async function main () {
+async function main() {
   console.log('[probe] loadError:', auth.loadError() ? auth.loadError().message : 'none')
   console.log('[probe] isSupported:', auth.isSupported())
 

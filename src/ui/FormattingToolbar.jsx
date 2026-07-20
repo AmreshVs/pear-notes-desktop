@@ -1,22 +1,24 @@
+import { forwardRef } from 'react'
 import {
   Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Square,
-  Link2,
-  Highlighter,
-  Undo,
-  Redo,
-  Table as TableIcon,
   Code as CodeIcon,
-  Paperclip
+  Highlighter,
+  Italic,
+  Link2,
+  Paperclip,
+  Redo,
+  Square,
+  Strikethrough,
+  Table as TableIcon,
+  Underline,
+  Undo
 } from 'lucide-react'
-import { forwardRef } from 'react'
-import LinkModal from './LinkModal'
+
+import { useFormattingToolbar } from '../hooks/useFormattingToolbar'
+
 import AttachmentMenu from './AttachmentMenu'
 import AudioRecorderModal from './AudioRecorderModal'
-import { useFormattingToolbar } from '../hooks/useFormattingToolbar'
+import LinkModal from './LinkModal'
 
 export default function FormattingToolbar({ editor, noteKey }) {
   const {
@@ -51,7 +53,10 @@ export default function FormattingToolbar({ editor, noteKey }) {
           <button
             onClick={() => setShowFormatMenu(!showFormatMenu)}
             className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 duration-200 ${
-              showFormatMenu || editorState.headingLevel > 0 || editorState.isBold || editorState.isItalic
+              showFormatMenu ||
+              editorState.headingLevel > 0 ||
+              editorState.isBold ||
+              editorState.isItalic
                 ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
                 : 'text-text-primary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
@@ -62,7 +67,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
 
           {showFormatMenu && (
             <div className='absolute top-full left-0 mt-3 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 bg-bg-panel backdrop-blur-2xl border border-overlay-medium min-w-[280px] overflow-hidden animate-in zoom-in-95 fade-in duration-200 origin-top-left'>
-              <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
+              <div className='absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none' />
 
               <div className='flex items-center justify-between p-2 border-b border-divider-light relative z-10'>
                 <MenuButton
@@ -111,32 +116,40 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   onClick={() => handleHeadingClick(1)}
                   isActive={editorState.headingLevel === 1}
                   label='Title'
-                  style="text-2xl font-black tracking-tight"
+                  style='text-2xl font-black tracking-tight'
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(2)}
                   isActive={editorState.headingLevel === 2}
                   label='Heading'
-                  style="text-xl font-bold tracking-tight"
+                  style='text-xl font-bold tracking-tight'
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(3)}
                   isActive={editorState.headingLevel === 3}
                   label='Subheading'
-                  style="text-lg font-bold opacity-90"
+                  style='text-lg font-bold opacity-90'
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(0)}
-                  isActive={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
+                  isActive={
+                    editorState.headingLevel === 0 &&
+                    !editorState.isCodeBlock &&
+                    !editorState.isCode
+                  }
                   label='Body Text'
-                  showCheck={editorState.headingLevel === 0 && !editorState.isCodeBlock && !editorState.isCode}
-                  style="font-medium opacity-80"
+                  showCheck={
+                    editorState.headingLevel === 0 &&
+                    !editorState.isCodeBlock &&
+                    !editorState.isCode
+                  }
+                  style='font-medium opacity-80'
                 />
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleCode().run()}
                   isActive={editorState.isCode}
                   label='Monospaced'
-                  style="font-mono text-sm opacity-80"
+                  style='font-mono text-sm opacity-80'
                 />
 
                 <div className='h-px bg-divider-light my-2 mx-1' />
@@ -145,13 +158,19 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   onClick={() => editor?.chain().focus().toggleBulletList().run()}
                   isActive={editorState.isBulletList}
                   label='Bulleted List'
-                  icon={<div className='w-1.5 h-1.5 rounded-full bg-text-tertiary/70 mr-3 ml-1 group-hover:bg-accent-primary transition-colors' />}
+                  icon={
+                    <div className='w-1.5 h-1.5 rounded-full bg-text-tertiary/70 mr-3 ml-1 group-hover:bg-accent-primary transition-colors' />
+                  }
                 />
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleOrderedList().run()}
                   isActive={editorState.isOrderedList}
                   label='Numbered List'
-                  icon={<span className='text-xs font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>1.</span>}
+                  icon={
+                    <span className='text-xs font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>
+                      1.
+                    </span>
+                  }
                 />
 
                 <div className='h-px bg-divider-light my-2 mx-1' />
@@ -160,7 +179,9 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   onClick={() => editor?.chain().focus().toggleBlockquote().run()}
                   isActive={editorState.isBlockquote}
                   label='Quote Block'
-                  icon={<div className='w-1 h-3 bg-text-tertiary/50 rounded-full mr-3.5 ml-1 group-hover:bg-accent-primary transition-colors' />}
+                  icon={
+                    <div className='w-1 h-3 bg-text-tertiary/50 rounded-full mr-3.5 ml-1 group-hover:bg-accent-primary transition-colors' />
+                  }
                 />
               </div>
             </div>
@@ -199,7 +220,9 @@ export default function FormattingToolbar({ editor, noteKey }) {
         </Button>
 
         <Button
-          onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          onClick={() =>
+            editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+          }
           title='Insert Table'
           className='w-9 h-9'
         >
@@ -271,26 +294,28 @@ export default function FormattingToolbar({ editor, noteKey }) {
   )
 }
 
-const Button = forwardRef(({ onClick, isActive, disabled, title, children, className = '', hasPopup, expanded }, ref) => (
-  <button
-    ref={ref}
-    onClick={onClick}
-    aria-haspopup={hasPopup}
-    aria-expanded={hasPopup ? !!expanded : undefined}
-    className={`rounded-lg transition-all flex-shrink-0 flex items-center justify-center active:scale-95 duration-200 ${
-      isActive
-        ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
-        : disabled
-          ? 'text-text-tertiary opacity-30 cursor-not-allowed'
-          : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
-    } ${className}`}
-    title={title}
-    aria-label={title}
-    disabled={disabled}
-  >
-    {children}
-  </button>
-))
+const Button = forwardRef(
+  ({ onClick, isActive, disabled, title, children, className = '', hasPopup, expanded }, ref) => (
+    <button
+      ref={ref}
+      onClick={onClick}
+      aria-haspopup={hasPopup}
+      aria-expanded={hasPopup ? !!expanded : undefined}
+      className={`rounded-lg transition-all flex-shrink-0 flex items-center justify-center active:scale-95 duration-200 ${
+        isActive
+          ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
+          : disabled
+            ? 'text-text-tertiary opacity-30 cursor-not-allowed'
+            : 'text-text-primary hover:bg-bg-tertiary/60 hover:text-text-primary'
+      } ${className}`}
+      title={title}
+      aria-label={title}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
+)
 Button.displayName = 'Button'
 
 const MenuButton = ({ onClick, isActive, title, children }) => (
@@ -312,15 +337,26 @@ const ListButton = ({ onClick, isActive, label, icon, showCheck, style }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent-primary/10 group active:scale-95 ${
-      isActive ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:text-text-primary'
+      isActive
+        ? 'bg-accent-primary/10 text-accent-primary'
+        : 'text-text-secondary hover:text-text-primary'
     }`}
   >
     <div className='flex items-center'>
       {icon}
-      <span className={`text-base tracking-tight ${style || (isActive ? 'font-bold' : 'font-medium')}`}>{label}</span>
+      <span
+        className={`text-base tracking-tight ${style || (isActive ? 'font-bold' : 'font-medium')}`}
+      >
+        {label}
+      </span>
     </div>
     {(isActive || showCheck) && (
-      <svg className='w-4 h-4 text-accent-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+      <svg
+        className='w-4 h-4 text-accent-primary'
+        fill='none'
+        viewBox='0 0 24 24'
+        stroke='currentColor'
+      >
         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
       </svg>
     )}

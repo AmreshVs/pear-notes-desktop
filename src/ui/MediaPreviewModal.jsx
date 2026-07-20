@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom'
 import { useEffect } from 'react'
-import { X, Download, FileQuestion } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Download, FileQuestion, X } from 'lucide-react'
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'heic', 'avif']
 const TEXT_EXTENSIONS = ['txt', 'md', 'json', 'csv', 'log', 'xml', 'html']
@@ -29,7 +29,7 @@ export default function MediaPreviewModal({
   onClose,
   onDownload,
   isDownloading,
-  downloadProgress,
+  downloadProgress
 }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -102,7 +102,9 @@ export default function MediaPreviewModal({
       onClick={onClose}
     >
       <div className='flex items-center justify-between px-8 py-5 flex-shrink-0 z-30'>
-        <p className='text-base font-bold text-white/95 truncate pr-8 select-none'>{fileName || 'Preview'}</p>
+        <p className='text-base font-bold text-white/95 truncate pr-8 select-none'>
+          {fileName || 'Preview'}
+        </p>
         <div className='flex items-center gap-3'>
           {onDownload && (
             <button
@@ -137,6 +139,6 @@ export default function MediaPreviewModal({
         {renderBody()}
       </div>
     </div>,
-    document.body,
+    document.body
   )
 }

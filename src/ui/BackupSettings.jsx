@@ -1,3 +1,7 @@
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
+
 import {
   getExportStatus,
   getImportStatus,
@@ -8,15 +12,13 @@ import {
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
-import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { formatBytes } from '@pear-notes/core/utils.js'
+
 import { getBackupErrorMessage } from '../utils/backupErrors'
+
 import BackupPasswordModal from './BackupPasswordModal'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
-
 
 export default function BackupSettings() {
   const dispatch = useDispatch()
@@ -28,7 +30,13 @@ export default function BackupSettings() {
     const stored = localStorage.getItem(LAST_BACKUP_KEY)
     return stored ? new Date(stored) : null
   })
-  const [modalState, setModalState] = useState({ visible: false, done: false, doneType: null, error: false, errorMessage: '' })
+  const [modalState, setModalState] = useState({
+    visible: false,
+    done: false,
+    doneType: null,
+    error: false,
+    errorMessage: ''
+  })
   const [showExportPasswordModal, setShowExportPasswordModal] = useState(false)
   const [showRestorePasswordModal, setShowRestorePasswordModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
@@ -37,7 +45,13 @@ export default function BackupSettings() {
     if (exportStatus.step === 'idle') return
     if (exportStatus.step === 'error') {
       setTimeout(() => {
-        setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: exportStatus.message })
+        setModalState({
+          visible: true,
+          done: false,
+          doneType: null,
+          error: true,
+          errorMessage: exportStatus.message
+        })
       }, 0)
       return
     }
@@ -47,13 +61,25 @@ export default function BackupSettings() {
       setTimeout(() => setLastBackup(now), 0)
 
       setTimeout(() => {
-        setModalState({ visible: true, done: true, doneType: 'export', error: false, errorMessage: '' })
+        setModalState({
+          visible: true,
+          done: true,
+          doneType: 'export',
+          error: false,
+          errorMessage: ''
+        })
       }, 0)
       dispatch(resetExport())
       return
     }
     setTimeout(() => {
-      setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+      setModalState((prev) => ({
+        ...prev,
+        visible: true,
+        done: false,
+        doneType: null,
+        error: false
+      }))
     }, 0)
   }, [exportStatus.step, exportStatus.message, dispatch])
 
@@ -61,24 +87,44 @@ export default function BackupSettings() {
     if (importStatus.step === 'idle') return
     if (importStatus.step === 'error') {
       setTimeout(() => {
-        setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: importStatus.message })
+        setModalState({
+          visible: true,
+          done: false,
+          doneType: null,
+          error: true,
+          errorMessage: importStatus.message
+        })
       }, 0)
       return
     }
     if (importStatus.step === 'done') {
       setTimeout(() => {
-        setModalState({ visible: true, done: true, doneType: 'import', error: false, errorMessage: '' })
+        setModalState({
+          visible: true,
+          done: true,
+          doneType: 'import',
+          error: false,
+          errorMessage: ''
+        })
       }, 0)
       dispatch(resetImport())
       return
     }
     setTimeout(() => {
-      setModalState((prev) => ({ ...prev, visible: true, done: false, doneType: null, error: false }))
+      setModalState((prev) => ({
+        ...prev,
+        visible: true,
+        done: false,
+        doneType: null,
+        error: false
+      }))
     }, 0)
   }, [importStatus.step, importStatus.message, dispatch])
 
-  const isExporting = exportStatus.step !== 'idle' && exportStatus.step !== 'done' && exportStatus.step !== 'error'
-  const isImporting = importStatus.step !== 'idle' && importStatus.step !== 'done' && importStatus.step !== 'error'
+  const isExporting =
+    exportStatus.step !== 'idle' && exportStatus.step !== 'done' && exportStatus.step !== 'error'
+  const isImporting =
+    importStatus.step !== 'idle' && importStatus.step !== 'done' && importStatus.step !== 'error'
   const showModal = modalState.visible
   const isDone = modalState.done
   const isError = modalState.error
@@ -92,7 +138,7 @@ export default function BackupSettings() {
     setShowExportPasswordModal(false)
     const date = new Date().toISOString().split('T')[0]
     const defaultPath = `pear-notes-backup-${date}.pnbk`
-    
+
     try {
       const result = await window.electronBridge.showSaveDialog({
         defaultPath,
@@ -103,12 +149,24 @@ export default function BackupSettings() {
         return
       }
 
-      setModalState({ visible: true, done: false, doneType: 'export', error: false, errorMessage: '' })
+      setModalState({
+        visible: true,
+        done: false,
+        doneType: 'export',
+        error: false,
+        errorMessage: ''
+      })
       dispatch(resetExport())
       dispatch(startExportBackup({ password, filePath: result.filePath }))
     } catch (err) {
       console.error(err)
-      setModalState({ visible: true, done: false, doneType: null, error: true, errorMessage: String(err) })
+      setModalState({
+        visible: true,
+        done: false,
+        doneType: null,
+        error: true,
+        errorMessage: String(err)
+      })
     }
   }
 
@@ -125,7 +183,7 @@ export default function BackupSettings() {
 
       const filePath = result.filePaths[0]
       const name = filePath.split(/[/\\]/).pop() || ''
-      
+
       setSelectedFile({ name, filePath })
       setShowRestorePasswordModal(true)
     } catch (err) {
@@ -139,9 +197,15 @@ export default function BackupSettings() {
     setShowRestorePasswordModal(false)
     setSelectedFile(null)
 
-    setModalState({ visible: true, done: false, doneType: 'import', error: false, errorMessage: '' })
+    setModalState({
+      visible: true,
+      done: false,
+      doneType: 'import',
+      error: false,
+      errorMessage: ''
+    })
     dispatch(setImportStatus({ step: 'reading', progress: 5, message: 'Reading backup file...' }))
-    
+
     dispatch(resetImport())
     dispatch(startImportBackup({ filePath: file.filePath, password }))
   }
@@ -154,7 +218,6 @@ export default function BackupSettings() {
     setShowRestorePasswordModal(false)
     setSelectedFile(null)
   }
-
 
   const handleDismiss = () => {
     if (modalState.doneType === 'import') {
@@ -217,7 +280,6 @@ export default function BackupSettings() {
             Restore Data
           </button>
         </div>
-
       </div>
 
       <div className='grid grid-cols-2 gap-4'>
@@ -252,7 +314,8 @@ export default function BackupSettings() {
           <h4 className='text-text-primary font-bold text-base'>Password Protected</h4>
         </div>
         <p className='text-text-tertiary text-xs leading-relaxed'>
-          You choose a password when creating a backup, and it encrypts the file. You&apos;ll need that same password to restore — it is never stored, so keep it somewhere safe.
+          You choose a password when creating a backup, and it encrypts the file. You&apos;ll need
+          that same password to restore — it is never stored, so keep it somewhere safe.
         </p>
       </div>
 
@@ -311,13 +374,15 @@ export default function BackupSettings() {
                   {isError
                     ? 'Something went wrong'
                     : isDone
-                    ? 'All done!'
-                    : modalState.doneType === 'export' || isExporting
-                    ? 'Creating Backup...'
-                    : 'Restoring Data...'}
+                      ? 'All done!'
+                      : modalState.doneType === 'export' || isExporting
+                        ? 'Creating Backup...'
+                        : 'Restoring Data...'}
                 </h3>
                 {(isError ? modalState.errorMessage : progressMessage) ? (
-                  <p className='text-text-tertiary text-sm leading-relaxed'>{isError ? getBackupErrorMessage(modalState.errorMessage) : progressMessage}</p>
+                  <p className='text-text-tertiary text-sm leading-relaxed'>
+                    {isError ? getBackupErrorMessage(modalState.errorMessage) : progressMessage}
+                  </p>
                 ) : null}
               </div>
 

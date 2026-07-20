@@ -1,15 +1,25 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import { Trash2, Download } from 'lucide-react'
 import { useState } from 'react'
-import AudioPlayer from './AudioPlayer'
 import { useSelector } from 'react-redux'
+import { NodeViewWrapper } from '@tiptap/react'
+import { Download, Trash2 } from 'lucide-react'
+
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
-import { deleteHyperdriveFile, base64ToBlob, createDownloadLink, downloadAsBlob } from '../lib/fileManager'
+
+import {
+  base64ToBlob,
+  createDownloadLink,
+  deleteHyperdriveFile,
+  downloadAsBlob
+} from '../lib/fileManager'
+
+import AudioPlayer from './AudioPlayer'
 
 export default function AudioAttachmentView({ node, deleteNode }) {
   const { audioData, duration, url, fileName } = node.attrs
-  const resolvedUrl = useSelector((state) => (url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url))
+  const resolvedUrl = useSelector((state) =>
+    url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
+  )
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
 
@@ -54,7 +64,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
         <AudioPlayer
           src={resolvedUrl || audioData}
           duration={duration}
-          title={fileName || "Audio Recording"}
+          title={fileName || 'Audio Recording'}
         />
 
         {isDownloading && (

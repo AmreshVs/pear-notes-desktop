@@ -187,30 +187,72 @@
     animation-timing-function: var(--animation-timing-standard);
   }
 
-  .fade-in { animation-name: fade-in; }
-  .zoom-in-95 { animation-name: zoom-in-95; }
-  .slide-in-from-bottom-4 { animation-name: slide-in-from-bottom-4; }
-  .slide-in-from-bottom-8 { animation-name: slide-in-from-bottom-8; }
-  .slide-in-from-bottom-12 { animation-name: slide-in-from-bottom-12; }
-  .slide-in-from-left-4 { animation-name: slide-in-from-left-4; }
-  .slide-in-from-right-2 { animation-name: slide-in-from-right-2; }
-  .slide-in-from-right-8 { animation-name: slide-in-from-right-8; }
+  .fade-in {
+    animation-name: fade-in;
+  }
+  .zoom-in-95 {
+    animation-name: zoom-in-95;
+  }
+  .slide-in-from-bottom-4 {
+    animation-name: slide-in-from-bottom-4;
+  }
+  .slide-in-from-bottom-8 {
+    animation-name: slide-in-from-bottom-8;
+  }
+  .slide-in-from-bottom-12 {
+    animation-name: slide-in-from-bottom-12;
+  }
+  .slide-in-from-left-4 {
+    animation-name: slide-in-from-left-4;
+  }
+  .slide-in-from-right-2 {
+    animation-name: slide-in-from-right-2;
+  }
+  .slide-in-from-right-8 {
+    animation-name: slide-in-from-right-8;
+  }
 
-  .duration-300 { animation-duration: var(--animation-duration-standard); }
-  .duration-400 { animation-duration: 400ms; }
-  .duration-500 { animation-duration: 500ms; }
-  .duration-1000 { animation-duration: 1000ms; }
+  .duration-300 {
+    animation-duration: var(--animation-duration-standard);
+  }
+  .duration-400 {
+    animation-duration: 400ms;
+  }
+  .duration-500 {
+    animation-duration: 500ms;
+  }
+  .duration-1000 {
+    animation-duration: 1000ms;
+  }
 
-  .delay-150 { animation-delay: 150ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  .delay-600 { animation-delay: 600ms; }
-  .delay-700 { animation-delay: 700ms; }
+  .delay-150 {
+    animation-delay: 150ms;
+  }
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+  .delay-600 {
+    animation-delay: 600ms;
+  }
+  .delay-700 {
+    animation-delay: 700ms;
+  }
 
-  .ease-out { animation-timing-function: var(--animation-timing-standard); }
-  .fill-mode-both { animation-fill-mode: both; }
+  .ease-out {
+    animation-timing-function: var(--animation-timing-standard);
+  }
+  .fill-mode-both {
+    animation-fill-mode: both;
+  }
 
   .animate-out {
     animation-duration: var(--animation-duration-standard);
@@ -218,78 +260,147 @@
     animation-timing-function: var(--animation-timing-standard);
   }
 
-  .fade-out { animation-name: fade-out; }
-  .zoom-out-95 { animation-name: zoom-out-95; }
-  .slide-out-to-bottom-8 { animation-name: slide-out-to-bottom-8; }
+  .fade-out {
+    animation-name: fade-out;
+  }
+  .zoom-out-95 {
+    animation-name: zoom-out-95;
+  }
+  .slide-out-to-bottom-8 {
+    animation-name: slide-out-to-bottom-8;
+  }
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
 
   @keyframes zoom-in-95 {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   @keyframes zoom-out-95 {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.95); }
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
   }
 
   @keyframes slide-in-from-bottom-4 {
-    from { opacity: 0; transform: translateY(1rem); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes slide-in-from-bottom-8 {
-    from { opacity: 0; transform: translateY(2rem); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes slide-in-from-bottom-12 {
-    from { opacity: 0; transform: translateY(3rem); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(3rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes slide-in-from-left-4 {
-    from { opacity: 0; transform: translateX(-1rem); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(-1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @keyframes slide-in-from-right-2 {
-    from { opacity: 0; transform: translateX(0.5rem); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @keyframes slide-in-from-right-8 {
-    from { opacity: 0; transform: translateX(2rem); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+      opacity: 0;
+      transform: translateX(2rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   @keyframes slide-out-to-bottom-8 {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(2rem); }
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
   }
 
   @keyframes folder-entrance {
-    from { 
-      opacity: 0; 
+    from {
+      opacity: 0;
       transform: translateY(-8px);
     }
-    to { 
-      opacity: 1; 
+    to {
+      opacity: 1;
       transform: translateY(0);
     }
   }
 
   @keyframes soft-ping {
-    75%, 100% {
+    75%,
+    100% {
       transform: scale(1.4);
       opacity: 0;
     }
@@ -300,12 +411,12 @@
   }
 
   @keyframes folder-exit {
-    from { 
-      opacity: 1; 
+    from {
+      opacity: 1;
       transform: translateY(0);
     }
-    to { 
-      opacity: 0; 
+    to {
+      opacity: 0;
       transform: translateY(-8px);
     }
   }
@@ -428,7 +539,6 @@
     opacity: 0.95;
   }
 }
-
 
 .text-accent-primary,
 .hover\:text-accent-primary:hover,

@@ -3,7 +3,7 @@ import { backendApi } from '@pear-notes/core/backend/api.js'
 export const CLOSE_TO_TRAY_KEY = 'closeToTray'
 export const START_AT_LOGIN_KEY = 'startAtLogin'
 
-export async function getAppBehaviorPreference (key, defaultValue = true) {
+export async function getAppBehaviorPreference(key, defaultValue = true) {
   try {
     const value = await backendApi.getPreference({ key })
     if (value === undefined || value === null) return defaultValue
@@ -13,7 +13,7 @@ export async function getAppBehaviorPreference (key, defaultValue = true) {
   }
 }
 
-export async function setAppBehaviorPreference (key, enabled) {
+export async function setAppBehaviorPreference(key, enabled) {
   try {
     await backendApi.updatePreference({ key, value: enabled ? 'true' : 'false' })
   } catch (e) {
@@ -21,7 +21,7 @@ export async function setAppBehaviorPreference (key, enabled) {
   }
 }
 
-export function applyCloseToTray (enabled) {
+export function applyCloseToTray(enabled) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null
   if (!bridge || typeof bridge.setCloseToTray !== 'function') return
   try {
@@ -31,7 +31,7 @@ export function applyCloseToTray (enabled) {
   }
 }
 
-export function applyStartAtLogin (enabled) {
+export function applyStartAtLogin(enabled) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null
   if (!bridge || typeof bridge.setStartAtLogin !== 'function') return
   try {

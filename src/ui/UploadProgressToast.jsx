@@ -1,5 +1,6 @@
-import { Check, ChevronDown, ChevronUp, Clock, Upload, X } from 'lucide-react'
 import { useState } from 'react'
+import { Check, ChevronDown, ChevronUp, Clock, Upload, X } from 'lucide-react'
+
 import { cancelAllUploads, cancelUploadItem, useUploadQueue } from '../lib/uploadRegistry'
 
 function QueueRow({ item, onCancel }) {

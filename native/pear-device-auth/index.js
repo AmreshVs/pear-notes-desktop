@@ -9,7 +9,7 @@ try {
   loadError = error
 }
 
-function isSupported () {
+function isSupported() {
   if (!native) return false
   try {
     return native.isSupported()
@@ -18,7 +18,7 @@ function isSupported () {
   }
 }
 
-function authenticate (reason, windowHandle) {
+function authenticate(reason, windowHandle) {
   if (!native) {
     return Promise.reject(loadError || new Error('pear-device-auth native module unavailable'))
   }

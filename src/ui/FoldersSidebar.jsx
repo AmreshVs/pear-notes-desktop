@@ -1,19 +1,24 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  FileText,
   Briefcase,
-  User,
-  Lightbulb,
-  Trash2,
+  FileText,
+  Folder,
   FolderPlus,
+  Lightbulb,
   Settings,
-  Folder
+  Trash2,
+  User
 } from 'lucide-react'
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+
+import { DEFAULT_FOLDER_NAME } from '@pear-notes/core/constant.js'
 import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { getNoteCountsPerFolder } from '@pear-notes/core/store/slices/notesSlice.js'
-import { getShouldAutoRenameNextFolder, setShouldAutoRenameNextFolder } from '@pear-notes/core/store/slices/uiSlice.js'
-import { DEFAULT_FOLDER_NAME } from '@pear-notes/core/constant.js'
+import {
+  getShouldAutoRenameNextFolder,
+  setShouldAutoRenameNextFolder
+} from '@pear-notes/core/store/slices/uiSlice.js'
+
 import { showContextMenu } from '../lib/contextMenu'
 
 const ICON_MAP = {
@@ -46,7 +51,7 @@ export default function FoldersSidebar({
 
   useEffect(() => {
     if (shouldAutoRenameNextFolder) {
-      const newFolder = folders.find(f => !foldersRef.current.some(of => of.id === f.id))
+      const newFolder = folders.find((f) => !foldersRef.current.some((of) => of.id === f.id))
       if (newFolder) {
         setEditingFolderId(newFolder.id)
         setEditName(newFolder.name)
@@ -146,8 +151,8 @@ export default function FoldersSidebar({
     const isDeleting = deletingFolderId === folder.id
 
     return (
-      <div 
-        key={folder.id} 
+      <div
+        key={folder.id}
         className={`relative ${isNew ? '[animation:folder-entrance_200ms_var(--animation-timing-standard)]' : ''} ${isDeleting ? '[animation:folder-exit_200ms_var(--animation-timing-standard)]' : ''}`}
       >
         <button
@@ -162,15 +167,15 @@ export default function FoldersSidebar({
             }`}
           title={isEditing ? '' : 'Double click to rename'}
         >
-          <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className='flex items-center gap-4 min-w-0 flex-1'>
             <Icon
               className={`w-5 h-5 transition-none duration-0 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'} flex-shrink-0`}
             />
-            <div className="flex-1 flex items-center h-5 overflow-hidden">
+            <div className='flex-1 flex items-center h-5 overflow-hidden'>
               {isEditing ? (
                 <input
                   ref={inputRef}
-                  type="text"
+                  type='text'
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   onBlur={handleSubmitRename}
@@ -180,16 +185,22 @@ export default function FoldersSidebar({
                   className={`w-full bg-bg-panel text-base text-text-primary tracking-tight leading-[20px] h-6 px-1.5 rounded-md border border-accent-primary ${isSelected ? 'font-bold' : 'font-medium'}`}
                 />
               ) : (
-                <span className={`block text-base tracking-tight whitespace-nowrap truncate transition-none duration-0 leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}>
+                <span
+                  className={`block text-base tracking-tight whitespace-nowrap truncate transition-none duration-0 leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}
+                >
                   {folder.name || DEFAULT_FOLDER_NAME}
                 </span>
               )}
             </div>
           </div>
-          
+
           {count > 0 && (
-            <div className={`flex items-center flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}>
+            <div
+              className={`flex items-center flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}
+            >
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}
+              >
                 {count}
               </span>
             </div>
@@ -201,9 +212,11 @@ export default function FoldersSidebar({
 
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative transition-none'>
-      <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none">
+      <div className='px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none'>
         <div className='flex items-center justify-between h-[40px] transition-none'>
-          <h2 className="text-title font-bold text-text-primary tracking-tight transition-none">Folders</h2>
+          <h2 className='text-title font-bold text-text-primary tracking-tight transition-none'>
+            Folders
+          </h2>
           <button
             onClick={handleCreateNewFolder}
             className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
@@ -215,32 +228,32 @@ export default function FoldersSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pt-4 pb-2 flex flex-col justify-between scrollbar-hide px-3 transition-none">
-        <div className="transition-none">
+      <div className='flex-1 overflow-y-auto pt-4 pb-2 flex flex-col justify-between scrollbar-hide px-3 transition-none'>
+        <div className='transition-none'>
           {topFolders.length > 0 && renderFolderItem(topFolders[0])}
-          
+
           {topFolders.slice(1).map(renderFolderItem)}
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
           <div className='text-xs font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
             Archive
           </div>
-          <div className="transition-none">
-            {bottomFolders.map(renderFolderItem)}
-          </div>
+          <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
         </div>
       </div>
 
-      <div className="py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center px-3 space-y-3 transition-none">
-        <div className="w-full transition-none">
+      <div className='py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center px-3 space-y-3 transition-none'>
+        <div className='w-full transition-none'>
           <button
             onClick={onSettingsClick}
-            className="flex items-center justify-center transition-none font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl"
+            className='flex items-center justify-center transition-none font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl'
             title='Settings'
             aria-label='Settings'
           >
-            <Settings className="w-4 h-4 flex-shrink-0 transition-none" />
-            <span className='text-base font-medium whitespace-nowrap transition-none'>Settings</span>
+            <Settings className='w-4 h-4 flex-shrink-0 transition-none' />
+            <span className='text-base font-medium whitespace-nowrap transition-none'>
+              Settings
+            </span>
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { X, Link2 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link2, X } from 'lucide-react'
 
 export default function LinkModal({ onClose, onSetLink, currentUrl = '', currentText = '' }) {
   const [url, setUrl] = useState(currentUrl)
@@ -34,7 +34,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
   const handleTextChange = (e) => {
     const newText = e.target.value
     setText(newText)
-    
+
     if (!url && newText) {
       const urlPattern = /^(https?:\/\/|www\.)/i
       if (urlPattern.test(newText)) {

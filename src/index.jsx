@@ -1,35 +1,37 @@
+import './styles.css'
+
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
+import FramedStream from 'framed-stream'
 import { Duplex } from 'stream'
 
-import App from './App.jsx'
-import ErrorBoundary from './ui/ErrorBoundary.jsx'
-import './styles.css'
-import { store } from '@pear-notes/core/store/store.js'
-import FramedStream from 'framed-stream'
-import HRPC from '@pear-notes/core/spec/hrpc/index.js'
-import { setRPC } from '@pear-notes/core/rpc.js'
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { setRPC } from '@pear-notes/core/rpc.js'
+import HRPC from '@pear-notes/core/spec/hrpc/index.js'
 import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
+import { store } from '@pear-notes/core/store/store.js'
+
+import ErrorBoundary from './ui/ErrorBoundary.jsx'
+import App from './App.jsx'
 
 const { ipcRenderer } = window.require('electron')
 
 class WorkerIPCStream extends Duplex {
-  constructor () {
+  constructor() {
     super()
     this._cleanup = window.electronBridge.onWorkerData((chunk) => {
       this.push(Buffer.from(chunk))
     })
   }
 
-  _read () {}
+  _read() {}
 
-  _write (chunk, encoding, callback) {
+  _write(chunk, encoding, callback) {
     ipcRenderer.send('worker-data', Buffer.from(chunk))
     callback()
   }
 
-  _destroy (err, callback) {
+  _destroy(err, callback) {
     if (this._cleanup) this._cleanup()
     callback(err)
   }

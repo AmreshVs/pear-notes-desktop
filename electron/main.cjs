@@ -1,4 +1,16 @@
-const { app, BrowserWindow, ipcMain, session, systemPreferences, Menu, dialog, Tray, nativeImage, powerSaveBlocker, shell } = require('electron')
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  session,
+  systemPreferences,
+  Menu,
+  dialog,
+  Tray,
+  nativeImage,
+  powerSaveBlocker,
+  shell
+} = require('electron')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
@@ -23,7 +35,7 @@ let closeToTray = true
 let isQuitting = false
 let powerSaveBlockerId = null
 
-function getStoragePath () {
+function getStoragePath() {
   const dirName = isDev ? `${appName}-dev` : appName
   const isSnap = !!process.env.SNAP_USER_COMMON
   const linuxConfigHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
@@ -36,11 +48,11 @@ function getStoragePath () {
       : path.join(os.homedir(), 'AppData', 'Roaming', dirName)
 }
 
-function getAppDir () {
+function getAppDir() {
   return isDev ? path.resolve(__dirname, '..') : path.dirname(app.getPath('exe'))
 }
 
-function ensureStorageDir () {
+function ensureStorageDir() {
   const storagePath = getStoragePath()
   if (!fs.existsSync(storagePath)) {
     fs.mkdirSync(storagePath, { recursive: true })
@@ -48,7 +60,7 @@ function ensureStorageDir () {
   return storagePath
 }
 
-function startWorker () {
+function startWorker() {
   const workerPath = require.resolve('../workers/main.js')
   const storagePath = ensureStorageDir()
 
@@ -74,7 +86,7 @@ function startWorker () {
   })
 }
 
-function createWindow () {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 1280,
@@ -111,10 +123,12 @@ function createWindow () {
   })
 }
 
-function createTray () {
+function createTray() {
   const iconPath = path.join(__dirname, '..', 'build', 'icon.png')
   const trayIconSize = isMac ? 16 : 32
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: trayIconSize, height: trayIconSize })
+  const icon = nativeImage
+    .createFromPath(iconPath)
+    .resize({ width: trayIconSize, height: trayIconSize })
 
   tray = new Tray(icon)
   tray.setToolTip(appName)
@@ -157,7 +171,7 @@ function createTray () {
   })
 }
 
-function setupIPC () {
+function setupIPC() {
   ipcMain.on('worker-data', (event, data) => {
     if (worker) {
       worker.write(Buffer.from(data))
@@ -267,12 +281,12 @@ function setupIPC () {
   })
 }
 
-function buildContextMenuTemplate (items, onSelect) {
+function buildContextMenuTemplate(items, onSelect) {
   return items.map((item) => {
     if (item.type === 'separator') return { type: 'separator' }
     const entry = {
       label: item.label,
-      enabled: item.enabled !== false,
+      enabled: item.enabled !== false
     }
     if (item.role) entry.role = item.role
     if (Array.isArray(item.submenu)) {

@@ -1,3 +1,20 @@
+import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  Check,
+  Globe,
+  Info,
+  Link2,
+  Loader2,
+  Monitor,
+  Plus,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Trash2
+} from 'lucide-react'
+import { QRCodeCanvas } from 'qrcode.react'
+
 import {
   deleteSyncedDevice,
   getLocalPreferences,
@@ -14,24 +31,9 @@ import {
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
-import {
-  Check,
-  Globe,
-  Info,
-  Link2,
-  Loader2,
-  Monitor,
-  Plus,
-  ShieldAlert,
-  ShieldCheck,
-  Smartphone,
-  Trash2
-} from 'lucide-react'
-import { QRCodeCanvas } from 'qrcode.react'
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import MergeConfirmModal from './MergeConfirmModal'
 import { getDeviceDisplayName } from '@pear-notes/core/utils.js'
+
+import MergeConfirmModal from './MergeConfirmModal'
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -180,9 +182,7 @@ export default function SyncSettings({ onClose }) {
                       />
                     </div>
                     <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-base'>
-                        Scan to link faster
-                      </h5>
+                      <h5 className='text-text-primary font-bold text-base'>Scan to link faster</h5>
                       <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
                         Open the link screen on your other device and scan this QR code to paste the
                         invite instantly.

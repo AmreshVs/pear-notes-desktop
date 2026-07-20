@@ -1,19 +1,21 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Settings as SettingsIcon,
-  RefreshCw,
-  HardDrive,
   Database,
+  HardDrive,
+  RefreshCw,
+  Settings as SettingsIcon,
   ShieldCheck,
   X
 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+
 import { version as appVersion } from '../../package.json'
 import { useDialog } from '../hooks/useDialog'
-import GeneralSettings from './GeneralSettings'
-import SyncSettings from './SyncSettings'
+
 import BackupSettings from './BackupSettings'
-import StorageSettings from './StorageSettings'
+import GeneralSettings from './GeneralSettings'
 import PrivacySettings from './PrivacySettings'
+import StorageSettings from './StorageSettings'
+import SyncSettings from './SyncSettings'
 
 export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
@@ -41,7 +43,7 @@ export default function SettingsScreen({ onClose }) {
 
   return (
     <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
-      <div 
+      <div
         className={`absolute inset-0 bg-backdrop-light backdrop-blur-xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300 cursor-pointer`}
         onClick={handleAnimatedClose}
       />
@@ -54,14 +56,14 @@ export default function SettingsScreen({ onClose }) {
         tabIndex={-1}
         className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden outline-none animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}
       >
-        <div className="absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className='absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none' />
+        <div className='absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
 
         <div className='w-72 bg-overlay-faint border-r border-border-primary flex flex-col relative z-10'>
           <div className='p-8'>
             <h2 className='text-text-primary font-black text-2xl tracking-tighter'>Settings</h2>
           </div>
-          
+
           <div className='flex-1 overflow-y-auto px-4 space-y-2'>
             {sections.map((section) => {
               const Icon = section.icon
@@ -80,7 +82,11 @@ export default function SettingsScreen({ onClose }) {
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 transition-all duration-0 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
                   />
-                  <span className={`text-base tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{section.name}</span>
+                  <span
+                    className={`text-base tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}
+                  >
+                    {section.name}
+                  </span>
                 </button>
               )
             })}
@@ -100,10 +106,14 @@ export default function SettingsScreen({ onClose }) {
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' &&
                   'Customize your personal workspace experience, from aesthetics to native language supports.'}
-                {activeSection === 'privacy' && 'Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.'}
-                {activeSection === 'sync' && 'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
-                {activeSection === 'backup' && 'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
-                {activeSection === 'storage' && 'Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.'}
+                {activeSection === 'privacy' &&
+                  'Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.'}
+                {activeSection === 'sync' &&
+                  'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
+                {activeSection === 'backup' &&
+                  'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
+                {activeSection === 'storage' &&
+                  'Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.'}
               </p>
             </div>
             <button

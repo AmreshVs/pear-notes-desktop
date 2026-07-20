@@ -10,7 +10,7 @@ export const PASSWORD_RULES = [
   { key: 'symbol', label: 'A symbol' }
 ]
 
-export function getPasswordStrengthUi (password) {
+export function getPasswordStrengthUi(password) {
   const { checks, score, valid } = getBackupPasswordStrength(password)
   return {
     checks,

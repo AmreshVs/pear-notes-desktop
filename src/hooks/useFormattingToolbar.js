@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import { uploadFileWithProgress, UploadCancelledError } from '../lib/noteUploadManager'
+
+import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
 
 export function useFormattingToolbar(editor, noteKey) {
@@ -156,10 +158,11 @@ export function useFormattingToolbar(editor, noteKey) {
       try {
         const { link } = await uploadFileWithProgress({ noteKey, file, itemId })
         if (link) {
-          editor.chain().focus().insertContent([
-            { type: 'image', attrs: { src: link } },
-            { type: 'paragraph' }
-          ]).run()
+          editor
+            .chain()
+            .focus()
+            .insertContent([{ type: 'image', attrs: { src: link } }, { type: 'paragraph' }])
+            .run()
         }
       } catch (error) {
         if (!(error instanceof UploadCancelledError)) console.error('Error uploading image:', error)
@@ -183,18 +186,22 @@ export function useFormattingToolbar(editor, noteKey) {
         const { link } = await uploadFileWithProgress({ noteKey, file, itemId })
 
         if (link) {
-          editor.chain().focus().insertContent([
-            {
-              type: 'fileAttachment',
-              attrs: {
-                fileName: file.name,
-                fileSize: file.size,
-                fileType: file.type,
-                url: link
-              }
-            },
-            { type: 'paragraph' }
-          ]).run()
+          editor
+            .chain()
+            .focus()
+            .insertContent([
+              {
+                type: 'fileAttachment',
+                attrs: {
+                  fileName: file.name,
+                  fileSize: file.size,
+                  fileType: file.type,
+                  url: link
+                }
+              },
+              { type: 'paragraph' }
+            ])
+            .run()
         }
       } catch (error) {
         if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)
@@ -218,18 +225,22 @@ export function useFormattingToolbar(editor, noteKey) {
       })
 
       if (link) {
-        editor.chain().focus().insertContent([
-          {
-            type: 'audioAttachment',
-            attrs: {
-              audioData: null,
-              url: link,
-              duration: duration,
-              fileName: fileName
-            }
-          },
-          { type: 'paragraph' }
-        ]).run()
+        editor
+          .chain()
+          .focus()
+          .insertContent([
+            {
+              type: 'audioAttachment',
+              attrs: {
+                audioData: null,
+                url: link,
+                duration: duration,
+                fileName: fileName
+              }
+            },
+            { type: 'paragraph' }
+          ])
+          .run()
       }
     } catch (error) {
       console.error('Error uploading audio:', error)

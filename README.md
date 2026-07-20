@@ -36,7 +36,6 @@ npm run build
 
 MIT
 
-
 dev key - pear://5r36ucqowh694j348synyh4ur9pqwope9en837xywb5p6yjcib9y
 
 pear stage production

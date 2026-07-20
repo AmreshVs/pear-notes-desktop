@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export default function ResizablePanel({
   children,
@@ -13,12 +13,15 @@ export default function ResizablePanel({
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isResizing) return
-    const diff = e.clientX - startXRef.current
-    const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + diff))
-    setBaseWidth(newWidth)
-  }, [isResizing, minWidth, maxWidth])
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isResizing) return
+      const diff = e.clientX - startXRef.current
+      const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + diff))
+      setBaseWidth(newWidth)
+    },
+    [isResizing, minWidth, maxWidth]
+  )
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false)
@@ -54,14 +57,16 @@ export default function ResizablePanel({
       className='relative flex flex-shrink-0'
       style={{
         width: `${displayWidth}px`,
-        transition: isResizing ? 'none' : 'width var(--animation-duration-standard) var(--animation-timing-standard)',
+        transition: isResizing
+          ? 'none'
+          : 'width var(--animation-duration-standard) var(--animation-timing-standard)',
         overflow: 'hidden',
         willChange: 'width'
       }}
     >
-      <div 
-        className="h-full w-full overflow-hidden transition-opacity duration-300 ease-in-out"
-        style={{ 
+      <div
+        className='h-full w-full overflow-hidden transition-opacity duration-300 ease-in-out'
+        style={{
           opacity: collapsed ? 0 : 1,
           minWidth: collapsed ? 0 : `${minWidth}px`,
           pointerEvents: collapsed ? 'none' : 'auto',

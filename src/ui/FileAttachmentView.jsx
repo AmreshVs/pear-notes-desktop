@@ -1,13 +1,33 @@
-import { NodeViewWrapper } from '@tiptap/react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FileText, FileImage, FileVideo, FileAudio, File, Download, Trash2, Play, Pause, Maximize2, Minimize2 } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useSelector } from 'react-redux'
+import { NodeViewWrapper } from '@tiptap/react'
+import {
+  Download,
+  File,
+  FileAudio,
+  FileImage,
+  FileText,
+  FileVideo,
+  Maximize2,
+  Minimize2,
+  Pause,
+  Play,
+  Trash2
+} from 'lucide-react'
+
+import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+
+import {
+  base64ToBlob,
+  createDownloadLink,
+  deleteHyperdriveFile,
+  downloadAsBlob
+} from '../lib/fileManager'
+
 import AudioPlayer from './AudioPlayer'
 import MediaPreviewModal from './MediaPreviewModal'
-import { useSelector } from 'react-redux'
-import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
-import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
-import { deleteHyperdriveFile, downloadAsBlob, createDownloadLink, base64ToBlob } from '../lib/fileManager'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { fileName, fileSize, fileType, fileData, url } = node.attrs
@@ -30,9 +50,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
   useEffect(() => {
     currentTimeRef.current = currentTime
   }, [currentTime])
-  
-  const resolvedUrl = useSelector((state) => (url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url))
-  
+
+  const resolvedUrl = useSelector((state) =>
+    url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
+  )
+
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')
 
@@ -165,7 +187,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
         const rawName = (fileName || 'document.pdf').replace(/\0/g, '')
         const baseName = path.basename(rawName).replace(/[/\\]/g, '_')
-        const safeName = baseName && baseName !== '.' && baseName !== '..' ? baseName : 'document.pdf'
+        const safeName =
+          baseName && baseName !== '.' && baseName !== '..' ? baseName : 'document.pdf'
         const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-notes-'))
         const tempFilePath = path.join(tempDir, safeName)
         fs.writeFileSync(tempFilePath, buffer)
@@ -188,7 +211,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
     if (fileType.startsWith('image/')) return <FileImage className='w-6 h-6' />
     if (fileType.startsWith('video/')) return <FileVideo className='w-6 h-6' />
     if (fileType.startsWith('audio/')) return <FileAudio className='w-6 h-6' />
-    if (fileType.includes('pdf') || fileType.includes('document')) return <FileText className='w-6 h-6' />
+    if (fileType.includes('pdf') || fileType.includes('document'))
+      return <FileText className='w-6 h-6' />
     return <File className='w-6 h-6' />
   }
 
@@ -288,16 +312,19 @@ export default function FileAttachmentView({ node, deleteNode }) {
           </div>
         </div>
       ) : (
-        <div className={`flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden ${isVideo ? 'max-w-2xl w-full mx-auto shadow-md' : ''}`}>
-          {isVideo && (resolvedUrl || fileData) && (
-            isFullscreen ? (
+        <div
+          className={`flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden ${isVideo ? 'max-w-2xl w-full mx-auto shadow-md' : ''}`}
+        >
+          {isVideo &&
+            (resolvedUrl || fileData) &&
+            (isFullscreen ? (
               <>
                 <div className='relative aspect-video bg-bg-tertiary w-full flex items-center justify-center text-text-tertiary text-xs select-none rounded-t-xl border-b border-border-primary'>
                   Playing in fullscreen
                 </div>
                 {createPortal(
-                  <div 
-                    ref={playerRef} 
+                  <div
+                    ref={playerRef}
                     className='fixed inset-0 z-[9999] w-screen h-screen bg-black flex items-center justify-center group/player'
                   >
                     <video
@@ -314,7 +341,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                         onClick={togglePlayPause}
                         className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary pointer-events-auto shadow-lg hover:scale-105 transition-transform'
                       >
-                        {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
+                        {isPlaying ? (
+                          <Pause className='w-6 h-6 fill-white' />
+                        ) : (
+                          <Play className='w-6 h-6 fill-white ml-0.5' />
+                        )}
                       </button>
                     </div>
 
@@ -339,11 +370,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                           className='absolute top-0 left-0 h-full bg-accent-primary rounded-full pointer-events-none'
                           style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                         />
-                        <div 
+                        <div
                           className='absolute top-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
-                          style={{ 
-                            left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, 
-                            transform: 'translate(-50%, -50%)' 
+                          style={{
+                            left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                            transform: 'translate(-50%, -50%)'
                           }}
                         />
                       </div>
@@ -355,7 +386,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                             className='hover:text-accent-primary transition-colors p-1'
                             title={isPlaying ? 'Pause' : 'Play'}
                           >
-                            {isPlaying ? <Pause className='w-4 h-4 fill-white' /> : <Play className='w-4 h-4 fill-white ml-0.5' />}
+                            {isPlaying ? (
+                              <Pause className='w-4 h-4 fill-white' />
+                            ) : (
+                              <Play className='w-4 h-4 fill-white ml-0.5' />
+                            )}
                           </button>
                           <span className='font-mono select-none'>
                             {formatTime(currentTime)} / {formatTime(duration)}
@@ -378,8 +413,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 )}
               </>
             ) : (
-              <div 
-                ref={playerRef} 
+              <div
+                ref={playerRef}
                 className='relative aspect-video bg-black group/player w-full overflow-hidden'
               >
                 <video
@@ -396,7 +431,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                     onClick={togglePlayPause}
                     className='w-14 h-14 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary pointer-events-auto shadow-lg hover:scale-105 transition-transform'
                   >
-                    {isPlaying ? <Pause className='w-6 h-6 fill-white' /> : <Play className='w-6 h-6 fill-white ml-0.5' />}
+                    {isPlaying ? (
+                      <Pause className='w-6 h-6 fill-white' />
+                    ) : (
+                      <Play className='w-6 h-6 fill-white ml-0.5' />
+                    )}
                   </button>
                 </div>
 
@@ -421,11 +460,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                       className='absolute top-0 left-0 h-full bg-accent-primary rounded-full pointer-events-none'
                       style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                     />
-                    <div 
+                    <div
                       className='absolute top-1/2 w-3 h-3 bg-white border-2 border-accent-primary rounded-full shadow-sm opacity-0 group-hover/slider:opacity-100 transition-opacity pointer-events-none z-20'
-                      style={{ 
-                        left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, 
-                        transform: 'translate(-50%, -50%)' 
+                      style={{
+                        left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                        transform: 'translate(-50%, -50%)'
                       }}
                     />
                   </div>
@@ -437,7 +476,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
                         className='hover:text-accent-primary transition-colors p-1'
                         title={isPlaying ? 'Pause' : 'Play'}
                       >
-                        {isPlaying ? <Pause className='w-4 h-4 fill-white' /> : <Play className='w-4 h-4 fill-white ml-0.5' />}
+                        {isPlaying ? (
+                          <Pause className='w-4 h-4 fill-white' />
+                        ) : (
+                          <Play className='w-4 h-4 fill-white ml-0.5' />
+                        )}
                       </button>
                       <span className='font-mono select-none'>
                         {formatTime(currentTime)} / {formatTime(duration)}
@@ -456,8 +499,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                   </div>
                 </div>
               </div>
-            )
-          )}
+            ))}
 
           <div
             className={`relative flex items-center gap-4 cursor-pointer ${isVideo ? 'p-6' : 'p-4'}`}
@@ -475,7 +517,9 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
 
             <div className='flex-1 min-w-0'>
-              <p className='text-sm font-semibold text-text-primary truncate mb-1'>{fileName || 'Untitled File'}</p>
+              <p className='text-sm font-semibold text-text-primary truncate mb-1'>
+                {fileName || 'Untitled File'}
+              </p>
               <div className='flex items-center gap-2'>
                 <span className='text-xs font-medium text-text-tertiary bg-bg-tertiary px-2 py-0.5 rounded-md'>
                   {getFileExtension()}

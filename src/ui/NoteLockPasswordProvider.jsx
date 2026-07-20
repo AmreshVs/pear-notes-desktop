@@ -1,8 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
+
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import NoteLockPasswordModal from './NoteLockPasswordModal'
-import LockUnavailableModal from './LockUnavailableModal'
+
 import { NoteLockPasswordContext } from '../lib/noteLockPasswordContext'
+
+import LockUnavailableModal from './LockUnavailableModal'
+import NoteLockPasswordModal from './NoteLockPasswordModal'
 
 export default function NoteLockPasswordProvider({ children }) {
   const [open, setOpen] = useState(false)
@@ -26,16 +29,19 @@ export default function NoteLockPasswordProvider({ children }) {
     if (resolve) resolve(value)
   }, [])
 
-  const handleSubmit = useCallback(async (password) => {
-    const { valid, retryAfter } = await backendApi.verifyNoteLockPassword({ password })
-    if (valid) {
-      settle(true)
-    } else if (retryAfter > 0) {
-      setError(`Too many attempts. Try again in ${retryAfter}s.`)
-    } else {
-      setError('Incorrect password')
-    }
-  }, [settle])
+  const handleSubmit = useCallback(
+    async (password) => {
+      const { valid, retryAfter } = await backendApi.verifyNoteLockPassword({ password })
+      if (valid) {
+        settle(true)
+      } else if (retryAfter > 0) {
+        setError(`Too many attempts. Try again in ${retryAfter}s.`)
+      } else {
+        setError('Incorrect password')
+      }
+    },
+    [settle]
+  )
 
   const handleCancel = useCallback(() => settle(false), [settle])
 
@@ -51,10 +57,7 @@ export default function NoteLockPasswordProvider({ children }) {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
       />
-      <LockUnavailableModal
-        open={unavailableOpen}
-        onCancel={() => setUnavailableOpen(false)}
-      />
+      <LockUnavailableModal open={unavailableOpen} onCancel={() => setUnavailableOpen(false)} />
     </NoteLockPasswordContext.Provider>
   )
 }

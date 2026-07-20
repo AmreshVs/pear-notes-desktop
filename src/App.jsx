@@ -1,47 +1,53 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { createNote, updateNote, deleteNote, getSelectedNote, getIsLoading as getNotesLoading } from '@pear-notes/core/store/slices/notesSlice.js'
+
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import {
-  setSelectedFolder,
-  getFolders,
   createFolder,
   deleteFolder,
-  getSelectedFolder
+  getFolders,
+  getSelectedFolder,
+  setSelectedFolder
 } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
-  setSearchQuery,
-  setShowSettings,
-  setEditor,
+  createNote,
+  deleteNote,
+  getIsLoading as getNotesLoading,
+  getSelectedNote,
+  updateNote
+} from '@pear-notes/core/store/slices/notesSlice.js'
+import {
   appReady,
   getSearchQuery,
-  getShowSettings
+  getShowSettings,
+  setEditor,
+  setSearchQuery,
+  setShowSettings
 } from '@pear-notes/core/store/slices/uiSlice.js'
-
-import TitleBar from './ui/TitleBar'
-import FoldersSidebar from './ui/FoldersSidebar'
-import NotesList from './ui/NotesList'
-import NoteEditor from './ui/NoteEditor'
-import ResizablePanel from './ui/ResizablePanel'
-import SettingsScreen from './ui/SettingsScreen'
-import PairingStatusOverlay from './ui/PairingStatusOverlay'
-import DeviceRemovedModal from './ui/DeviceRemovedModal'
-import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
-import BackupProgressBanner from './ui/BackupProgressBanner'
-import UpdateRequiredModal from './ui/UpdateRequiredModal'
-import UpdateAvailableBanner from './ui/UpdateAvailableBanner'
-import { backendApi } from '@pear-notes/core/backend/api.js'
 import { debounce } from '@pear-notes/core/utils.js'
+
 import { useWindowSize } from './hooks/useWindowSize'
-import { useAppUpdateStatus } from './lib/appUpdateCheck'
-import { getDbEncryptionKey } from './utils.js'
 import {
-  getAppBehaviorPreference,
   applyCloseToTray,
   applyStartAtLogin,
   CLOSE_TO_TRAY_KEY,
+  getAppBehaviorPreference,
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
-
+import { useAppUpdateStatus } from './lib/appUpdateCheck'
+import BackupProgressBanner from './ui/BackupProgressBanner'
+import DeviceRemovedModal from './ui/DeviceRemovedModal'
+import FoldersSidebar from './ui/FoldersSidebar'
+import NoteEditor from './ui/NoteEditor'
+import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
+import NotesList from './ui/NotesList'
+import PairingStatusOverlay from './ui/PairingStatusOverlay'
+import ResizablePanel from './ui/ResizablePanel'
+import SettingsScreen from './ui/SettingsScreen'
+import TitleBar from './ui/TitleBar'
+import UpdateAvailableBanner from './ui/UpdateAvailableBanner'
+import UpdateRequiredModal from './ui/UpdateRequiredModal'
+import { getDbEncryptionKey } from './utils.js'
 
 function App() {
   const dispatch = useDispatch()
@@ -100,9 +106,10 @@ function App() {
   }
 
   const debouncedUpdateNote = useMemo(
-    () => debounce(({ key, title, contentHtml }) => {
-      dispatch(updateNote({ key, title, note: contentHtml }))
-    }, 100),
+    () =>
+      debounce(({ key, title, contentHtml }) => {
+        dispatch(updateNote({ key, title, note: contentHtml }))
+      }, 100),
     [dispatch]
   )
 
@@ -130,17 +137,15 @@ function App() {
     <div className='flex-1 flex items-center justify-center'>
       <div className='text-center'>
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
-        <p className='text-base text-text-tertiary'>
-          Loading...
-        </p>
+        <p className='text-base text-text-tertiary'>Loading...</p>
       </div>
     </div>
   ) : (
     <div className='flex-1 flex overflow-hidden relative z-10'>
-      <ResizablePanel 
-        defaultWidth={260} 
-        minWidth={260} 
-        maxWidth={400} 
+      <ResizablePanel
+        defaultWidth={260}
+        minWidth={260}
+        maxWidth={400}
         collapsed={isSidebarCollapsed}
         collapsedWidth={0}
       >
@@ -157,8 +162,8 @@ function App() {
       </ResizablePanel>
 
       <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
-        <NotesList 
-          selectedFolder={selectedFolder} 
+        <NotesList
+          selectedFolder={selectedFolder}
           searchQuery={searchQuery}
           onSearchChange={(value) => dispatch(setSearchQuery(value))}
           onCreateNote={handleCreateNote}

@@ -1,18 +1,21 @@
-import { LockKeyhole, Fingerprint, KeyRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { Fingerprint, KeyRound, LockKeyhole } from 'lucide-react'
+
+import { backendApi } from '@pear-notes/core/backend/api.js'
+import { LOCK_SCREENSHOT_PROTECTION_KEY } from '@pear-notes/core/constant.js'
 import {
-  getLockMethod,
   clearLockPassword,
+  getLockMethod,
   loadSettings
 } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { backendApi } from '@pear-notes/core/backend/api.js'
-import { authenticate, isDeviceAuthSupported } from '../lib/deviceAuth'
-import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
-import NoteLockPasswordModal from './NoteLockPasswordModal'
-import { clearUnlockedNotes } from '../lib/noteLock'
-import { LOCK_SCREENSHOT_PROTECTION_KEY } from '@pear-notes/core/constant.js'
 import { getLockPrivacyPreference, setLockPrivacyPreference } from '@pear-notes/core/utils.js'
+
+import { authenticate, isDeviceAuthSupported } from '../lib/deviceAuth'
+import { clearUnlockedNotes } from '../lib/noteLock'
+import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
+
+import NoteLockPasswordModal from './NoteLockPasswordModal'
 
 const AUTH_METHOD_LABELS = {
   mac: 'Touch ID or your macOS password',
@@ -20,7 +23,7 @@ const AUTH_METHOD_LABELS = {
   linux: 'your system authentication'
 }
 
-function getAuthMethodLabel () {
+function getAuthMethodLabel() {
   const platform = (typeof navigator !== 'undefined' ? navigator.platform : '').toLowerCase()
   if (platform.includes('mac')) return AUTH_METHOD_LABELS.mac
   if (platform.includes('win')) return AUTH_METHOD_LABELS.win
@@ -86,15 +89,17 @@ export default function PrivacySettings() {
 
   return (
     <div className='space-y-12 max-w-2xl mx-auto'>
-      <div className="space-y-1">
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Note Lock</h3>
-        <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
-          <div className="p-6 flex items-start justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center">
-                <LockKeyhole className="w-5 h-5 text-accent-primary" />
+      <div className='space-y-1'>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          Note Lock
+        </h3>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
+          <div className='p-6 flex items-start justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
+            <div className='flex items-center gap-4 min-w-0'>
+              <div className='flex-shrink-0 w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center'>
+                <LockKeyhole className='w-5 h-5 text-accent-primary' />
               </div>
-              <div className="space-y-1 min-w-0">
+              <div className='space-y-1 min-w-0'>
                 <label className='block text-text-primary text-base font-bold'>Note Lock</label>
                 <p className='text-sm text-text-tertiary font-medium opacity-60'>
                   {lockMethod === 'password'
@@ -107,10 +112,12 @@ export default function PrivacySettings() {
             </div>
           </div>
 
-          <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary">
-            <div className="space-y-1 min-w-0">
+          <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary'>
+            <div className='space-y-1 min-w-0'>
               <label className='block text-text-primary text-base font-bold'>Unlock Method</label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>Choose how locked notes are unlocked.</p>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>
+                Choose how locked notes are unlocked.
+              </p>
             </div>
             <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary shrink-0'>
               <button
@@ -140,16 +147,23 @@ export default function PrivacySettings() {
             </div>
           </div>
 
-          <div className="p-6 flex items-center justify-between gap-6">
-            <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-base font-bold'>Block Screenshots</label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>Exclude the window from screenshots, screen recordings, and window previews while viewing a locked note.</p>
+          <div className='p-6 flex items-center justify-between gap-6'>
+            <div className='space-y-1 min-w-0'>
+              <label className='block text-text-primary text-base font-bold'>
+                Block Screenshots
+              </label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>
+                Exclude the window from screenshots, screen recordings, and window previews while
+                viewing a locked note.
+              </p>
             </div>
             <button
               onClick={handleToggleScreenshotProtection}
               className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${screenshotProtection ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
             >
-              <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${screenshotProtection ? 'translate-x-5' : ''}`} />
+              <span
+                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${screenshotProtection ? 'translate-x-5' : ''}`}
+              />
             </button>
           </div>
         </div>

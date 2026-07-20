@@ -34,7 +34,11 @@ export function createProgressUpload({ noteKey, file, fileName, onProgress }) {
   const path = getFilePath(file)
   if (!path) return null
 
-  const stream = backendApi.insertFileWithProgress({ key: noteKey, fileName: fileName || file.name, path })
+  const stream = backendApi.insertFileWithProgress({
+    key: noteKey,
+    fileName: fileName || file.name,
+    path
+  })
   let cancelled = false
   const cancel = () => {
     cancelled = true
@@ -124,27 +128,29 @@ export async function processHtmlImages(html) {
     const doc = parser.parseFromString(html, 'text/html')
     const images = doc.querySelectorAll('img')
 
-    await Promise.all(Array.from(images).map(async (img) => {
-      try {
-        const src = img.getAttribute('src')
-        if (!src || src.startsWith('data:')) return
+    await Promise.all(
+      Array.from(images).map(async (img) => {
+        try {
+          const src = img.getAttribute('src')
+          if (!src || src.startsWith('data:')) return
 
-        const response = await fetch(src)
-        const blob = await response.blob()
+          const response = await fetch(src)
+          const blob = await response.blob()
 
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onloadend = () => {
-            img.setAttribute('src', reader.result)
-            resolve()
-          }
-          reader.onerror = reject
-          reader.readAsDataURL(blob)
-        })
-      } catch (err) {
-        console.error('Failed to process image:', err)
-      }
-    }))
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              img.setAttribute('src', reader.result)
+              resolve()
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          })
+        } catch (err) {
+          console.error('Failed to process image:', err)
+        }
+      })
+    )
 
     return doc.body.innerHTML
   } catch (error) {

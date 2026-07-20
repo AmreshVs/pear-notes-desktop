@@ -1,9 +1,18 @@
-import { Lock, Eye, EyeOff, Check, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { Check, Eye, EyeOff, Lock, X } from 'lucide-react'
+
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
+
 import { getPasswordStrengthUi, PASSWORD_RULES } from '../utils/passwordStrength'
 
-const STRENGTH_BAR_COLORS = ['bg-accent-danger', 'bg-accent-danger', 'bg-yellow-500', 'bg-yellow-500', 'bg-accent-primary', 'bg-accent-success']
+const STRENGTH_BAR_COLORS = [
+  'bg-accent-danger',
+  'bg-accent-danger',
+  'bg-yellow-500',
+  'bg-yellow-500',
+  'bg-accent-primary',
+  'bg-accent-success'
+]
 
 export default function BackupPasswordModal({ open, mode, error, onSubmit, onCancel }) {
   const isCreate = mode === 'create'
@@ -42,7 +51,10 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
 
   return (
     <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>
-      <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300' onClick={handleCancel} />
+      <div
+        className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300'
+        onClick={handleCancel}
+      />
 
       <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
         <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/10 blur-[80px] rounded-full' />
@@ -101,14 +113,23 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                         style={{ width: `${(strength.score / 5) * 100}%` }}
                       />
                     </div>
-                    <span className='text-xs font-bold text-text-tertiary w-16 text-right'>{strength.label}</span>
+                    <span className='text-xs font-bold text-text-tertiary w-16 text-right'>
+                      {strength.label}
+                    </span>
                   </div>
                   <ul className='grid grid-cols-2 gap-x-3 gap-y-1'>
                     {PASSWORD_RULES.map((rule) => {
                       const met = strength.checks[rule.key]
                       return (
-                        <li key={rule.key} className={`flex items-center gap-1.5 text-xs ${met ? 'text-accent-success' : 'text-text-tertiary/70'}`}>
-                          {met ? <Check className='w-3 h-3 shrink-0' /> : <X className='w-3 h-3 shrink-0' />}
+                        <li
+                          key={rule.key}
+                          className={`flex items-center gap-1.5 text-xs ${met ? 'text-accent-success' : 'text-text-tertiary/70'}`}
+                        >
+                          {met ? (
+                            <Check className='w-3 h-3 shrink-0' />
+                          ) : (
+                            <X className='w-3 h-3 shrink-0' />
+                          )}
                           {rule.label}
                         </li>
                       )

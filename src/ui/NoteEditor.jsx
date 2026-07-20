@@ -1,34 +1,39 @@
-import { useEffect, useRef, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
-import { formatRelativeDate } from '../utils/formatters'
-import RichTextEditor from './RichTextEditor'
-import FormattingToolbar from './FormattingToolbar'
-import { unlockNote, isNoteUnlocked, markNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
-import { toggleNoteLock } from '../lib/noteLockActions'
-import { isDeviceAuthSupported } from '../lib/deviceAuth'
-import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
-import { useLockedNoteProtection } from '../hooks/useLockedNoteProtection'
-import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
+
+import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import {
-  getEditorTitle,
   getEditorContent,
   getEditorContentText,
   getEditorInstance,
-  setEditorTitle,
+  getEditorTitle,
   setEditorContent,
-  setEditorInstance
+  setEditorInstance,
+  setEditorTitle
 } from '@pear-notes/core/store/slices/editorSlice.js'
-import { useSelector, useDispatch } from 'react-redux'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import {
+  getEditorFontSize,
+  getFontFamily,
+  getLockMethod
+} from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
-import { getFontFamily, getEditorFontSize, getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
-import { getFontFamilyValue } from '../utils/fonts'
+
+import { useLockedNoteProtection } from '../hooks/useLockedNoteProtection'
 import { showContextMenu } from '../lib/contextMenu'
+import { isDeviceAuthSupported } from '../lib/deviceAuth'
+import { isNoteUnlocked, markNoteUnlocked, unlockNote, useNoteLockVersion } from '../lib/noteLock'
+import { toggleNoteLock } from '../lib/noteLockActions'
+import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
+import { getFontFamilyValue } from '../utils/fonts'
+import { formatRelativeDate } from '../utils/formatters'
+
+import FormattingToolbar from './FormattingToolbar'
+import RichTextEditor from './RichTextEditor'
 import UploadProgressToast from './UploadProgressToast'
-
-
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const dispatch = useDispatch()
@@ -129,7 +134,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     dispatch(setEditorTitle(newTitle))
     if (noteData) {
       const currentText = editorInstance?.getText() || contentText
-      onUpdate({ key: selectedNoteKey, title: newTitle, contentHtml: content, content: currentText })
+      onUpdate({
+        key: selectedNoteKey,
+        title: newTitle,
+        contentHtml: content,
+        content: currentText
+      })
     }
   }
 
@@ -142,12 +152,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   const handleMoveTo = (folderKey) => {
     if (noteData) {
-      dispatch(updateNote({ 
-        key: selectedNoteKey, 
-        title, 
-        note: content,
-        folderKey 
-      }))
+      dispatch(
+        updateNote({
+          key: selectedNoteKey,
+          title,
+          note: content,
+          folderKey
+        })
+      )
     }
   }
 
@@ -157,7 +169,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     const safeTitle = title || 'Untitled Note'
     const titleHtml = `<h1 style="font-size: 2em; font-weight: 800; margin-bottom: 0.5em;">${safeTitle}</h1>`
     const fullHtml = `${titleHtml}${content || ''}`
-    
+
     return {
       text: `${safeTitle}\n\n${currentText || ''}`,
       html: fullHtml
@@ -188,9 +200,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     const moveTargets = folders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
     )
-    const moveSubmenu = moveTargets.length > 0
-      ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
-      : [{ label: 'No other lists', enabled: false }]
+    const moveSubmenu =
+      moveTargets.length > 0
+        ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
+        : [{ label: 'No other lists', enabled: false }]
     const result = await showContextMenu([
       { role: 'cut', label: 'Cut' },
       { role: 'copy', label: 'Copy' },
@@ -218,12 +231,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
-
   if (!noteData || !selectedNoteKey) {
     return (
       <div className='flex-1 flex items-center justify-center bg-bg-primary relative overflow-hidden'>
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
-        
+
         <div className='relative z-10 flex flex-col items-center text-center px-8 animate-in fade-in zoom-in-95 duration-700'>
           <div className='w-24 h-24 bg-bg-secondary border border-border-primary rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl relative group'>
             <div className='absolute inset-0 bg-accent-primary/10 blur-xl rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700' />
@@ -241,7 +253,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               />
             </svg>
           </div>
-          
+
           <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>Nothing open</h3>
             <p className='text-base text-text-tertiary leading-relaxed'>
@@ -296,7 +308,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto custom-scrollbar pt-16' onContextMenu={handleEditorContextMenu}>
+      <div
+        className='flex-1 overflow-y-auto custom-scrollbar pt-16'
+        onContextMenu={handleEditorContextMenu}
+      >
         <div className='max-w-4xl mx-auto px-6 py-4 w-full min-h-full bg-bg-primary'>
           <input
             ref={titleRef}
@@ -306,9 +321,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             placeholder='Title'
             aria-label='Note title'
             className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
-            style={{ 
-              fontSize: `${editorFontSize * 2}px`, 
-              fontFamily: editorFontFamily 
+            style={{
+              fontSize: `${editorFontSize * 2}px`,
+              fontFamily: editorFontFamily
             }}
           />
           <div className='flex-1'>

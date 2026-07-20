@@ -1,28 +1,50 @@
-import {
-  subscribeStorageInfo,
-  getNotesStorageInfo,
-  getTotalBlobBytes,
-  getTotalOnDiskBytes,
-  getReclaimableBytes,
-  getIsReclaiming,
-  getActiveDownloads,
-  getActiveUploads,
-  getStorageIsLoading,
-  getStorageError,
-  deleteNoteMedia,
-  reclaimStorage,
-  retryDownload,
-  pauseDownload,
-  selectStorageByKind,
-  mediaKind
-} from '@pear-notes/core/store/slices/storageSlice.js'
-import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
-import { deleteDbEncryptionKey } from '../utils.js'
-import { AlertTriangle, ChevronDown, ChevronRight, CloudDownload, CloudUpload, Database, HardDrive, Info, Pause, Play, RotateCw, Trash2, WifiOff, X, Image as ImageIcon, Film, Mic, FileText, PenLine } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  CloudDownload,
+  CloudUpload,
+  Database,
+  FileText,
+  Film,
+  HardDrive,
+  Image as ImageIcon,
+  Info,
+  Mic,
+  Pause,
+  PenLine,
+  Play,
+  RotateCw,
+  Trash2,
+  WifiOff,
+  X
+} from 'lucide-react'
+
+import {
+  deleteNoteMedia,
+  getActiveDownloads,
+  getActiveUploads,
+  getIsReclaiming,
+  getNotesStorageInfo,
+  getReclaimableBytes,
+  getStorageError,
+  getStorageIsLoading,
+  getTotalBlobBytes,
+  getTotalOnDiskBytes,
+  mediaKind,
+  pauseDownload,
+  reclaimStorage,
+  retryDownload,
+  selectStorageByKind,
+  subscribeStorageInfo
+} from '@pear-notes/core/store/slices/storageSlice.js'
+import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
+
+import { deleteDbEncryptionKey } from '../utils.js'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px] backdrop-blur-md'
@@ -85,9 +107,11 @@ function NoteRow({ note, onDeleteMedia }) {
         className='w-full flex items-center justify-between px-5 py-3.5 hover:bg-overlay-subtle transition-colors group'
       >
         <div className='flex items-center gap-3 min-w-0'>
-          {expanded
-            ? <ChevronDown className='w-3.5 h-3.5 text-text-tertiary flex-shrink-0' />
-            : <ChevronRight className='w-3.5 h-3.5 text-text-tertiary flex-shrink-0' />}
+          {expanded ? (
+            <ChevronDown className='w-3.5 h-3.5 text-text-tertiary flex-shrink-0' />
+          ) : (
+            <ChevronRight className='w-3.5 h-3.5 text-text-tertiary flex-shrink-0' />
+          )}
           <span className='text-base font-medium text-text-primary truncate'>
             {note.title || 'Untitled'}
           </span>
@@ -103,7 +127,9 @@ function NoteRow({ note, onDeleteMedia }) {
             <div className='flex items-center gap-2 min-w-0'>
               <PenLine className='w-4 h-4 text-text-tertiary flex-shrink-0' />
               <span className='text-sm text-text-secondary truncate'>Text</span>
-              <span className='text-sm text-text-tertiary flex-shrink-0'>{formatBytes(note.contentSize)}</span>
+              <span className='text-sm text-text-tertiary flex-shrink-0'>
+                {formatBytes(note.contentSize)}
+              </span>
             </div>
           </div>
 
@@ -115,11 +141,16 @@ function NoteRow({ note, onDeleteMedia }) {
             if (kind === 'audio') Icon = Mic
 
             return (
-              <div key={m.path} className='flex items-center justify-between py-2 px-3 rounded-xl hover:bg-overlay-subtle transition-colors group/item'>
+              <div
+                key={m.path}
+                className='flex items-center justify-between py-2 px-3 rounded-xl hover:bg-overlay-subtle transition-colors group/item'
+              >
                 <div className='flex items-center gap-2 min-w-0'>
                   <Icon className='w-4 h-4 text-text-tertiary flex-shrink-0' />
                   <span className='text-sm text-text-secondary truncate'>{m.name}</span>
-                  <span className='text-sm text-text-tertiary flex-shrink-0'>{formatBytes(m.size)}</span>
+                  <span className='text-sm text-text-tertiary flex-shrink-0'>
+                    {formatBytes(m.size)}
+                  </span>
                 </div>
                 <button
                   onClick={() => onDeleteMedia(note.key, m.path)}
@@ -133,16 +164,17 @@ function NoteRow({ note, onDeleteMedia }) {
           })}
         </div>
       )}
-
     </div>
   )
 }
 
 function DownloadRow({ download, onRetry, onPause }) {
-  const pct = download.totalBytes > 0
-    ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
-    : 0
-  const isStuck = download.status === 'error' || (download.status === 'downloading' && download.stalled)
+  const pct =
+    download.totalBytes > 0
+      ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
+      : 0
+  const isStuck =
+    download.status === 'error' || (download.status === 'downloading' && download.stalled)
   const statusLabel = !download.sourceOnline
     ? 'Waiting for the source device to come online'
     : download.status === 'error'
@@ -206,17 +238,16 @@ function DownloadRow({ download, onRetry, onPause }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      {statusLabel && (
-        <p className='text-xs text-text-tertiary mt-1.5'>{statusLabel}</p>
-      )}
+      {statusLabel && <p className='text-xs text-text-tertiary mt-1.5'>{statusLabel}</p>}
     </div>
   )
 }
 
 function UploadRow({ upload }) {
-  const pct = upload.totalBytes > 0
-    ? Math.min(100, Math.round((upload.uploadedBytes / upload.totalBytes) * 100))
-    : 0
+  const pct =
+    upload.totalBytes > 0
+      ? Math.min(100, Math.round((upload.uploadedBytes / upload.totalBytes) * 100))
+      : 0
 
   return (
     <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
@@ -314,7 +345,6 @@ export default function StorageSettings() {
     dispatch(reclaimStorage())
   }
 
-
   const blobPct = totalOnDiskBytes > 0 ? Math.round((totalBlobBytes / totalOnDiskBytes) * 100) : 0
 
   return (
@@ -368,13 +398,30 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Usage</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          Usage
+        </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           {isLoading && totalBlobBytes === 0 ? (
             <div className='px-6 py-8 flex items-center justify-center'>
-              <svg className='animate-spin w-5 h-5 text-accent-primary' fill='none' viewBox='0 0 24 24'>
-                <circle className='opacity-20' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='3' />
-                <path className='opacity-90' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
+              <svg
+                className='animate-spin w-5 h-5 text-accent-primary'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
+                <circle
+                  className='opacity-20'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='3'
+                />
+                <path
+                  className='opacity-90'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z'
+                />
               </svg>
             </div>
           ) : (
@@ -395,12 +442,16 @@ export default function StorageSettings() {
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
                 <div className='flex items-center gap-2'>
                   <HardDrive className='w-4 h-4 text-text-tertiary' />
-                  <span className='text-base font-semibold text-text-secondary'>On-disk footprint</span>
+                  <span className='text-base font-semibold text-text-secondary'>
+                    On-disk footprint
+                  </span>
                   <Tooltip text='Physical bytes hypercore has allocated on disk. Deleting media compacts this automatically; use Reclaim below if it looks stale.'>
                     <Info className='w-3.5 h-3.5 text-text-tertiary/50 cursor-default' />
                   </Tooltip>
                 </div>
-                <span className='text-base font-bold text-text-secondary'>{formatBytes(totalOnDiskBytes)}</span>
+                <span className='text-base font-bold text-text-secondary'>
+                  {formatBytes(totalOnDiskBytes)}
+                </span>
               </div>
 
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
@@ -416,7 +467,9 @@ export default function StorageSettings() {
                 </div>
                 <div className='flex items-center gap-3'>
                   {reclaimableBytes > 0 && (
-                    <span className='text-base font-bold text-accent-primary'>{formatBytes(reclaimableBytes)}</span>
+                    <span className='text-base font-bold text-accent-primary'>
+                      {formatBytes(reclaimableBytes)}
+                    </span>
                   )}
                   <button
                     onClick={handleReclaim}
@@ -454,69 +507,89 @@ export default function StorageSettings() {
 
       {buckets && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Breakdown by type</h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+            Breakdown by type
+          </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
-             {isLoading && totalBlobBytes === 0 ? null : (
-               <div className='p-2'>
-                 {buckets.image.count > 0 && (
-                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                     <div className='flex items-center gap-3'>
-                       <ImageIcon className='w-4 h-4 text-text-tertiary' />
-                       <span className='text-base font-medium text-text-primary'>Images</span>
-                       <span className='text-sm text-text-tertiary'>{buckets.image.count} items</span>
-                     </div>
-                     <span className='text-base font-bold text-text-secondary'>{formatBytes(buckets.image.size)}</span>
-                   </div>
-                 )}
-                 {buckets.video.count > 0 && (
-                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                     <div className='flex items-center gap-3'>
-                       <Film className='w-4 h-4 text-text-tertiary' />
-                       <span className='text-base font-medium text-text-primary'>Videos</span>
-                       <span className='text-sm text-text-tertiary'>{buckets.video.count} items</span>
-                     </div>
-                     <span className='text-base font-bold text-text-secondary'>{formatBytes(buckets.video.size)}</span>
-                   </div>
-                 )}
-                 {buckets.audio.count > 0 && (
-                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                     <div className='flex items-center gap-3'>
-                       <Mic className='w-4 h-4 text-text-tertiary' />
-                       <span className='text-base font-medium text-text-primary'>Voice notes</span>
-                       <span className='text-sm text-text-tertiary'>{buckets.audio.count} items</span>
-                     </div>
-                     <span className='text-base font-bold text-text-secondary'>{formatBytes(buckets.audio.size)}</span>
-                   </div>
-                 )}
-                 {buckets.file.count > 0 && (
-                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                     <div className='flex items-center gap-3'>
-                       <FileText className='w-4 h-4 text-text-tertiary' />
-                       <span className='text-base font-medium text-text-primary'>Files</span>
-                       <span className='text-sm text-text-tertiary'>{buckets.file.count} items</span>
-                     </div>
-                     <span className='text-base font-bold text-text-secondary'>{formatBytes(buckets.file.size)}</span>
-                   </div>
-                 )}
-                 {buckets.text.count > 0 && (
-                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                     <div className='flex items-center gap-3'>
-                       <PenLine className='w-4 h-4 text-text-tertiary' />
-                       <span className='text-base font-medium text-text-primary'>Text</span>
-                       <span className='text-sm text-text-tertiary'>(all notes)</span>
-                     </div>
-                     <span className='text-base font-bold text-text-secondary'>{formatBytes(buckets.text.size)}</span>
-                   </div>
-                 )}
-               </div>
-             )}
+            {isLoading && totalBlobBytes === 0 ? null : (
+              <div className='p-2'>
+                {buckets.image.count > 0 && (
+                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                    <div className='flex items-center gap-3'>
+                      <ImageIcon className='w-4 h-4 text-text-tertiary' />
+                      <span className='text-base font-medium text-text-primary'>Images</span>
+                      <span className='text-sm text-text-tertiary'>
+                        {buckets.image.count} items
+                      </span>
+                    </div>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(buckets.image.size)}
+                    </span>
+                  </div>
+                )}
+                {buckets.video.count > 0 && (
+                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                    <div className='flex items-center gap-3'>
+                      <Film className='w-4 h-4 text-text-tertiary' />
+                      <span className='text-base font-medium text-text-primary'>Videos</span>
+                      <span className='text-sm text-text-tertiary'>
+                        {buckets.video.count} items
+                      </span>
+                    </div>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(buckets.video.size)}
+                    </span>
+                  </div>
+                )}
+                {buckets.audio.count > 0 && (
+                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                    <div className='flex items-center gap-3'>
+                      <Mic className='w-4 h-4 text-text-tertiary' />
+                      <span className='text-base font-medium text-text-primary'>Voice notes</span>
+                      <span className='text-sm text-text-tertiary'>
+                        {buckets.audio.count} items
+                      </span>
+                    </div>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(buckets.audio.size)}
+                    </span>
+                  </div>
+                )}
+                {buckets.file.count > 0 && (
+                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                    <div className='flex items-center gap-3'>
+                      <FileText className='w-4 h-4 text-text-tertiary' />
+                      <span className='text-base font-medium text-text-primary'>Files</span>
+                      <span className='text-sm text-text-tertiary'>{buckets.file.count} items</span>
+                    </div>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(buckets.file.size)}
+                    </span>
+                  </div>
+                )}
+                {buckets.text.count > 0 && (
+                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                    <div className='flex items-center gap-3'>
+                      <PenLine className='w-4 h-4 text-text-tertiary' />
+                      <span className='text-base font-medium text-text-primary'>Text</span>
+                      <span className='text-sm text-text-tertiary'>(all notes)</span>
+                    </div>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(buckets.text.size)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {notesStorageInfo.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Per-Note Breakdown</h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+            Per-Note Breakdown
+          </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
@@ -526,7 +599,9 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Danger Zone</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          Danger Zone
+        </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           <div className='px-6 py-5 flex items-center justify-between'>
             <div className='space-y-1'>
@@ -548,7 +623,10 @@ export default function StorageSettings() {
 
       {confirmClear && (
         <div className='fixed inset-0 z-[300] flex items-center justify-center p-6'>
-          <div className='absolute inset-0 bg-backdrop-medium backdrop-blur-xl' onClick={() => setConfirmClear(false)} />
+          <div
+            className='absolute inset-0 bg-backdrop-medium backdrop-blur-xl'
+            onClick={() => setConfirmClear(false)}
+          />
           <div className='relative bg-bg-panel/90 backdrop-blur-3xl border border-overlay-medium rounded-[2rem] p-8 max-w-sm w-full shadow-[0_50px_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 fade-in duration-200'>
             <div className='flex flex-col items-center text-center space-y-4'>
               <div className='w-14 h-14 rounded-2xl bg-accent-danger/10 flex items-center justify-center ring-1 ring-accent-danger/20'>
@@ -557,7 +635,8 @@ export default function StorageSettings() {
               <div className='space-y-2'>
                 <h3 className='text-lg font-bold text-text-primary'>Clear All Data?</h3>
                 <p className='text-sm text-text-tertiary leading-relaxed'>
-                  This will permanently delete ALL notes, folders, settings, and media. This cannot be undone.
+                  This will permanently delete ALL notes, folders, settings, and media. This cannot
+                  be undone.
                 </p>
               </div>
               <div className='flex gap-3 w-full pt-2'>

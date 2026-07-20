@@ -1,28 +1,67 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { resolve, dirname } from 'path'
+import react from '@vitejs/plugin-react'
+import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { defineConfig } from 'vite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const nodeExternals = [
   'electron',
-  'assert', 'async_hooks', 'buffer', 'child_process', 'cluster',
-  'console', 'constants', 'crypto', 'node:crypto', 'dgram', 'diagnostics_channel',
-  'dns', 'domain', 'events', 'fs', 'fs/promises', 'http', 'http2',
-  'https', 'inspector', 'module', 'net', 'os', 'path', 'perf_hooks',
-  'process', 'punycode', 'querystring', 'readline', 'repl', 'stream',
-  'stream/consumers', 'stream/promises', 'stream/web', 'string_decoder',
-  'sys', 'timers', 'timers/promises', 'tls', 'tty', 'url', 'util',
-  'v8', 'vm', 'wasi', 'worker_threads', 'zlib'
+  'assert',
+  'async_hooks',
+  'buffer',
+  'child_process',
+  'cluster',
+  'console',
+  'constants',
+  'crypto',
+  'node:crypto',
+  'dgram',
+  'diagnostics_channel',
+  'dns',
+  'domain',
+  'events',
+  'fs',
+  'fs/promises',
+  'http',
+  'http2',
+  'https',
+  'inspector',
+  'module',
+  'net',
+  'os',
+  'path',
+  'perf_hooks',
+  'process',
+  'punycode',
+  'querystring',
+  'readline',
+  'repl',
+  'stream',
+  'stream/consumers',
+  'stream/promises',
+  'stream/web',
+  'string_decoder',
+  'sys',
+  'timers',
+  'timers/promises',
+  'tls',
+  'tty',
+  'url',
+  'util',
+  'v8',
+  'vm',
+  'wasi',
+  'worker_threads',
+  'zlib'
 ]
 
-function electronExternalsPlugin () {
+function electronExternalsPlugin() {
   return {
     name: 'electron-externals',
     enforce: 'post',
-    generateBundle (options, bundle) {
+    generateBundle(options, bundle) {
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk') continue
         for (const ext of nodeExternals) {
@@ -53,7 +92,11 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       input: resolve(__dirname, 'index.html'),
-      output: { entryFileNames: 'assets/[name].js', chunkFileNames: 'assets/[name].js', assetFileNames: 'assets/[name].[ext]' },
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
+      },
       external: nodeExternals
     }
   },

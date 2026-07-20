@@ -2,7 +2,7 @@ const { execSync } = require('child_process')
 const path = require('path')
 const fs = require('fs')
 
-function run (cmd) {
+function run(cmd) {
   try {
     execSync(cmd, { stdio: 'inherit' })
   } catch {

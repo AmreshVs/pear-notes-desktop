@@ -1,40 +1,40 @@
-import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react'
-import { BubbleMenu } from '@tiptap/react/menus'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import Strike from '@tiptap/extension-strike'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import TextAlign from '@tiptap/extension-text-align'
-import Link from '@tiptap/extension-link'
-import Highlight from '@tiptap/extension-highlight'
-import Subscript from '@tiptap/extension-subscript'
-import Superscript from '@tiptap/extension-superscript'
+import '../styles/tiptap.css'
 
-import Image from '@tiptap/extension-image'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
-import { Table } from '@tiptap/extension-table'
-import { TableRow } from '@tiptap/extension-table-row'
-import { TableCell } from '@tiptap/extension-table-cell'
-import { TableHeader } from '@tiptap/extension-table-header'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
-import { all, createLowlight } from 'lowlight'
-import FileAttachment from './FileAttachment'
-
-import ImageView from './ImageView'
-import AudioAttachment from './AudioAttachment'
-import * as Y from 'yjs'
-import * as encoding from 'lib0/encoding'
-import * as decoding from 'lib0/decoding'
-import { DOMParser as PMDOMParser } from '@tiptap/pm/model'
-import { prosemirrorToYXmlFragment } from 'y-prosemirror'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import Highlight from '@tiptap/extension-highlight'
+import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
+import Strike from '@tiptap/extension-strike'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import { Table } from '@tiptap/extension-table'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableRow } from '@tiptap/extension-table-row'
+import TaskItem from '@tiptap/extension-task-item'
+import TaskList from '@tiptap/extension-task-list'
+import TextAlign from '@tiptap/extension-text-align'
+import Underline from '@tiptap/extension-underline'
+import { DOMParser as PMDOMParser } from '@tiptap/pm/model'
+import { EditorContent, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
+import StarterKit from '@tiptap/starter-kit'
+import * as decoding from 'lib0/decoding'
+import * as encoding from 'lib0/encoding'
+import { all, createLowlight } from 'lowlight'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Split, Trash2 } from 'lucide-react'
+import { prosemirrorToYXmlFragment } from 'y-prosemirror'
 import {
+  applyAwarenessUpdate,
   Awareness,
   encodeAwarenessUpdate,
-  applyAwarenessUpdate,
   removeAwarenessStates
 } from 'y-protocols/awareness'
 import {
@@ -44,28 +44,22 @@ import {
   readSyncStep1,
   writeSyncStep1
 } from 'y-protocols/sync'
-import {
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Split
-} from 'lucide-react'
-import { useEffect, useRef, useImperativeHandle, forwardRef, useMemo } from 'react'
-import '../styles/tiptap.css'
-import { backendApi } from '@pear-notes/core/backend/api.js'
-import { uploadFileWithProgress, UploadCancelledError } from '../lib/noteUploadManager'
-import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
-import { useSelector } from 'react-redux'
-import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
-import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
-import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
-import { getFontFamily, getEditorFontSize } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
-import { useDispatch } from 'react-redux'
+import * as Y from 'yjs'
 
-import { getFontFamilyValue, getFontClass } from '../utils/fonts'
+import { backendApi } from '@pear-notes/core/backend/api.js'
+import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
+import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
+
+import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
+import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
+import { getFontClass, getFontFamilyValue } from '../utils/fonts'
+
+import AudioAttachment from './AudioAttachment'
+import FileAttachment from './FileAttachment'
+import ImageView from './ImageView'
 
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
@@ -112,216 +106,229 @@ const RichTextEditor = forwardRef(
     const editorFontFamily = getFontFamilyValue(fontFamily)
     const editorFontClass = getFontClass(fontFamily)
 
-    const editor = useEditor({
-      extensions: [
-        StarterKit.configure({
-          heading: {
-            levels: [1, 2, 3]
-          },
-          bulletList: {
-            keepMarks: true,
-            keepAttributes: false
-          },
-          orderedList: {
-            keepMarks: true,
-            keepAttributes: false
-          },
-          strike: false,
-          underline: false,
-          link: false,
-          codeBlock: false,
-          undoRedo: !COLLABORATION_ENABLED
-        }),
-        Underline,
-        Strike,
-        TaskList,
-        TaskItem.configure({
-          nested: true
-        }),
-        TextAlign.configure({
-          types: ['heading', 'paragraph']
-        }),
-        Link.configure({
-          openOnClick: false,
-          HTMLAttributes: {
-            class: 'editor-link'
-          }
-        }),
-        Highlight.configure({
-          multicolor: true
-        }),
-        Subscript,
-        Superscript,
-        Placeholder.configure({
-          placeholder
-        }),
-        Image.extend({
-          addAttributes() {
-            return {
-              ...this.parent?.(),
-              width: {
-                default: null,
-              },
-              height: {
-                default: null,
-              },
+    const editor = useEditor(
+      {
+        extensions: [
+          StarterKit.configure({
+            heading: {
+              levels: [1, 2, 3]
+            },
+            bulletList: {
+              keepMarks: true,
+              keepAttributes: false
+            },
+            orderedList: {
+              keepMarks: true,
+              keepAttributes: false
+            },
+            strike: false,
+            underline: false,
+            link: false,
+            codeBlock: false,
+            undoRedo: !COLLABORATION_ENABLED
+          }),
+          Underline,
+          Strike,
+          TaskList,
+          TaskItem.configure({
+            nested: true
+          }),
+          TextAlign.configure({
+            types: ['heading', 'paragraph']
+          }),
+          Link.configure({
+            openOnClick: false,
+            HTMLAttributes: {
+              class: 'editor-link'
             }
-          },
-          addNodeView() {
-            return ReactNodeViewRenderer(ImageView)
-          }
-        }).configure({
+          }),
+          Highlight.configure({
+            multicolor: true
+          }),
+          Subscript,
+          Superscript,
+          Placeholder.configure({
+            placeholder
+          }),
+          Image.extend({
+            addAttributes() {
+              return {
+                ...this.parent?.(),
+                width: {
+                  default: null
+                },
+                height: {
+                  default: null
+                }
+              }
+            },
+            addNodeView() {
+              return ReactNodeViewRenderer(ImageView)
+            }
+          }).configure({
             inline: false,
             allowBase64: true
-        }),
-        BubbleMenuExtension,
-        Table.configure({
-          resizable: true,
-          lastColumnResizable: true,
-          allowTableNodeSelection: true
-        }),
-        TableRow,
-        TableHeader,
-        TableCell,
-        CodeBlockLowlight.configure({
-          lowlight
-        }),
-        FileAttachment,
-        AudioAttachment,
-        ...(COLLABORATION_ENABLED
-          ? [
-              Collaboration.configure({
-                document: ydoc
-              }),
-              CollaborationCursor.configure({
-                provider: { awareness },
-                user: collaborator,
-              })
-            ]
-          : [])
-      ],
-      content: COLLABORATION_ENABLED ? undefined : content || '',
-      editorProps: {
-        handlePaste: (view, event) => {
-          const items = Array.from(event.clipboardData?.items || [])
-          
-          const pastedFiles = items
-            .filter((item) => item.kind === 'file')
-            .map((item) => item.getAsFile())
-            .filter(Boolean)
-          const pastedQueue = pastedFiles.map((file) => ({
-            id: nextUploadItemId(),
-            fileName: file.name,
-            file
-          }))
-          enqueueUploads(pastedQueue)
+          }),
+          BubbleMenuExtension,
+          Table.configure({
+            resizable: true,
+            lastColumnResizable: true,
+            allowTableNodeSelection: true
+          }),
+          TableRow,
+          TableHeader,
+          TableCell,
+          CodeBlockLowlight.configure({
+            lowlight
+          }),
+          FileAttachment,
+          AudioAttachment,
+          ...(COLLABORATION_ENABLED
+            ? [
+                Collaboration.configure({
+                  document: ydoc
+                }),
+                CollaborationCursor.configure({
+                  provider: { awareness },
+                  user: collaborator
+                })
+              ]
+            : [])
+        ],
+        content: COLLABORATION_ENABLED ? undefined : content || '',
+        editorProps: {
+          handlePaste: (view, event) => {
+            const items = Array.from(event.clipboardData?.items || [])
 
-          void (async () => {
-            for (const { id: itemId, file } of pastedQueue) {
-              try {
-                const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file, itemId })
-                if (!link) continue
+            const pastedFiles = items
+              .filter((item) => item.kind === 'file')
+              .map((item) => item.getAsFile())
+              .filter(Boolean)
+            const pastedQueue = pastedFiles.map((file) => ({
+              id: nextUploadItemId(),
+              fileName: file.name,
+              file
+            }))
+            enqueueUploads(pastedQueue)
 
-                const { schema } = view.state
+            void (async () => {
+              for (const { id: itemId, file } of pastedQueue) {
+                try {
+                  const { link } = await uploadFileWithProgress({
+                    noteKey: currentNoteKey,
+                    file,
+                    itemId
+                  })
+                  if (!link) continue
 
-                if (file.type.startsWith('image/')) {
-                  const node = schema.nodes.image.create({ src: link })
-                  const transaction = view.state.tr.replaceSelectionWith(node)
-                  view.dispatch(transaction)
-                } else {
-                  if (schema.nodes.fileAttachment) {
-                    const node = schema.nodes.fileAttachment.create({
-                      fileName: file.name,
-                      fileSize: file.size,
-                      fileType: file.type,
-                      url: link
-                    })
+                  const { schema } = view.state
+
+                  if (file.type.startsWith('image/')) {
+                    const node = schema.nodes.image.create({ src: link })
                     const transaction = view.state.tr.replaceSelectionWith(node)
                     view.dispatch(transaction)
+                  } else {
+                    if (schema.nodes.fileAttachment) {
+                      const node = schema.nodes.fileAttachment.create({
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        url: link
+                      })
+                      const transaction = view.state.tr.replaceSelectionWith(node)
+                      view.dispatch(transaction)
+                    }
                   }
-                }
-              } catch (error) {
-                if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)
-              }
-            }
-            clearUploadQueue()
-          })()
-
-          return pastedFiles.length > 0
-        },
-        handleDrop: (view, event, slice, moved) => {
-          if (moved) return false
-
-          const files = Array.from(event.dataTransfer?.files || [])
-          if (files.length === 0) return false
-
-          event.preventDefault()
-
-          const droppedQueue = files.map((file) => ({
-            id: nextUploadItemId(),
-            fileName: file.name,
-            file
-          }))
-          enqueueUploads(droppedQueue)
-
-          void (async () => {
-            for (const { id: itemId, file } of droppedQueue) {
-            try {
-              const { link } = await uploadFileWithProgress({ noteKey: currentNoteKey, file, itemId })
-
-              if (!link) continue
-
-              const { schema } = view.state
-
-              if (file.type.startsWith('image/')) {
-                const node = schema.nodes.image.create({ src: link })
-                const transaction = view.state.tr.replaceSelectionWith(node)
-                view.dispatch(transaction)
-              } else {
-                if (schema.nodes.fileAttachment) {
-                  const node = schema.nodes.fileAttachment.create({
-                    fileName: file.name,
-                    fileSize: file.size,
-                    fileType: file.type,
-                    url: link
-                  })
-                  const transaction = view.state.tr.replaceSelectionWith(node)
-                  view.dispatch(transaction)
+                } catch (error) {
+                  if (!(error instanceof UploadCancelledError))
+                    console.error('Error uploading file:', error)
                 }
               }
-            } catch (error) {
-              if (!(error instanceof UploadCancelledError)) console.error('Error uploading dropped file:', error)
-            }
-            }
-            clearUploadQueue()
-          })()
+              clearUploadQueue()
+            })()
 
-          return true
-        },
-        attributes: {
-          class: `prose prose-invert max-w-none focus:outline-none ${editorFontClass}`,
-          style: `font-size: ${editorFontSize}px; font-family: ${editorFontFamily};`,
-          'data-placeholder': placeholder,
-          spellcheck: 'false'
-        },
-        handleDOMEvents: {
-          focus: () => {
-            dispatch(setEditorFocused(true))
-            return false
+            return pastedFiles.length > 0
           },
-          blur: () => {
-            dispatch(setEditorFocused(false))
-            return false
+          handleDrop: (view, event, slice, moved) => {
+            if (moved) return false
+
+            const files = Array.from(event.dataTransfer?.files || [])
+            if (files.length === 0) return false
+
+            event.preventDefault()
+
+            const droppedQueue = files.map((file) => ({
+              id: nextUploadItemId(),
+              fileName: file.name,
+              file
+            }))
+            enqueueUploads(droppedQueue)
+
+            void (async () => {
+              for (const { id: itemId, file } of droppedQueue) {
+                try {
+                  const { link } = await uploadFileWithProgress({
+                    noteKey: currentNoteKey,
+                    file,
+                    itemId
+                  })
+
+                  if (!link) continue
+
+                  const { schema } = view.state
+
+                  if (file.type.startsWith('image/')) {
+                    const node = schema.nodes.image.create({ src: link })
+                    const transaction = view.state.tr.replaceSelectionWith(node)
+                    view.dispatch(transaction)
+                  } else {
+                    if (schema.nodes.fileAttachment) {
+                      const node = schema.nodes.fileAttachment.create({
+                        fileName: file.name,
+                        fileSize: file.size,
+                        fileType: file.type,
+                        url: link
+                      })
+                      const transaction = view.state.tr.replaceSelectionWith(node)
+                      view.dispatch(transaction)
+                    }
+                  }
+                } catch (error) {
+                  if (!(error instanceof UploadCancelledError))
+                    console.error('Error uploading dropped file:', error)
+                }
+              }
+              clearUploadQueue()
+            })()
+
+            return true
+          },
+          attributes: {
+            class: `prose prose-invert max-w-none focus:outline-none ${editorFontClass}`,
+            style: `font-size: ${editorFontSize}px; font-family: ${editorFontFamily};`,
+            'data-placeholder': placeholder,
+            spellcheck: 'false'
+          },
+          handleDOMEvents: {
+            focus: () => {
+              dispatch(setEditorFocused(true))
+              return false
+            },
+            blur: () => {
+              dispatch(setEditorFocused(false))
+              return false
+            }
           }
+        },
+        onUpdate: ({ editor }) => {
+          if (isUpdatingRef.current) return
+          const html = editor.getHTML()
+          const text = editor.getText()
+          onChange({ html, text })
         }
       },
-      onUpdate: ({ editor }) => {
-        if (isUpdatingRef.current) return
-        const html = editor.getHTML()
-        const text = editor.getText()
-        onChange({ html, text })
-      }
-    }, [fontFamily, editorFontSize, ydoc, awareness])
+      [fontFamily, editorFontSize, ydoc, awareness]
+    )
 
     useEffect(() => {
       if (!COLLABORATION_ENABLED) return
@@ -369,7 +376,10 @@ const RichTextEditor = forwardRef(
 
       const sendEncoder = (encoder) => {
         if (encoding.length(encoder) === 0) return
-        backendApi.broadcastYjsUpdate({ noteId: currentNoteKey, data: encoding.toUint8Array(encoder) })
+        backendApi.broadcastYjsUpdate({
+          noteId: currentNoteKey,
+          data: encoding.toUint8Array(encoder)
+        })
       }
 
       const handleDocUpdate = (update, origin) => {
@@ -431,7 +441,10 @@ const RichTextEditor = forwardRef(
                 encoding.writeVarUint(replyEncoder, MESSAGE_SYNC)
                 readSyncStep1(decoder, replyEncoder, ydoc)
                 sendEncoder(replyEncoder)
-              } else if (syncMessageType === messageYjsSyncStep2 || syncMessageType === messageYjsUpdate) {
+              } else if (
+                syncMessageType === messageYjsSyncStep2 ||
+                syncMessageType === messageYjsUpdate
+              ) {
                 hasReceivedSyncRef.current = true
                 Y.applyUpdate(ydoc, decoding.readVarUint8Array(decoder), 'remote')
               }
@@ -465,9 +478,9 @@ const RichTextEditor = forwardRef(
       <div className='ProseMirror-wrapper'>
         <EditorContent
           editor={editor}
-          className="flex-1 leading-relaxed text-text-primary transition-all duration-300"
+          className='flex-1 leading-relaxed text-text-primary transition-all duration-300'
         />
-        
+
         {editor && (
           <BubbleMenu
             editor={editor}
@@ -525,7 +538,7 @@ const RichTextEditor = forwardRef(
             >
               <Split className='w-4 h-4 text-text-secondary' />
             </BubbleButton>
-            
+
             <BubbleButton
               onClick={() => editor.chain().focus().deleteTable().run()}
               title='Delete Table'

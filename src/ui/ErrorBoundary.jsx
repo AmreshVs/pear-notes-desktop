@@ -35,7 +35,8 @@ export default class ErrorBoundary extends Component {
                 Something went wrong
               </h3>
               <p className='text-text-tertiary text-sm leading-relaxed'>
-                The app hit an unexpected error. Reloading will recover your notes without data loss.
+                The app hit an unexpected error. Reloading will recover your notes without data
+                loss.
               </p>
               {this.state.error?.message && (
                 <p className='text-text-tertiary/70 text-xs font-mono mt-2 break-words'>

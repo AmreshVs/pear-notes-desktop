@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import { AlertCircle, CheckCircle2, CloudDownload, Loader2, Upload } from 'lucide-react'
+
 import { getExportStatus, getImportStatus } from '@pear-notes/core/store/slices/backupSlice.js'
-import { CloudDownload, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function BackupProgressBanner() {
   const exportStatus = useSelector(getExportStatus)
@@ -23,7 +24,7 @@ export default function BackupProgressBanner() {
 
   const status = isExporting ? exportStatus : importStatus
   const isExport = isExporting
-  
+
   const isDone = status.step === 'done'
   const isError = status.step === 'error'
   const progressValue = status.progress || 0
@@ -32,11 +33,15 @@ export default function BackupProgressBanner() {
   return (
     <div className='fixed bottom-6 right-6 w-80 bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex flex-col gap-3 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300'>
       <div className='flex items-center gap-3'>
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-          isError ? 'bg-red-500/10 text-red-500' :
-          isDone ? 'bg-green-500/10 text-green-500' :
-          'bg-accent-primary/10 text-accent-primary'
-        }`}>
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+            isError
+              ? 'bg-red-500/10 text-red-500'
+              : isDone
+                ? 'bg-green-500/10 text-green-500'
+                : 'bg-accent-primary/10 text-accent-primary'
+          }`}
+        >
           {isError ? (
             <AlertCircle className='w-5 h-5' />
           ) : isDone ? (
@@ -47,24 +52,30 @@ export default function BackupProgressBanner() {
             <CloudDownload className='w-5 h-5' />
           )}
         </div>
-        
+
         <div className='flex-1 min-w-0'>
           <h4 className='text-text-primary font-semibold text-sm truncate'>
-            {isError ? 'Error' : isDone ? (isExport ? 'Backup Complete' : 'Restore Complete') : (isExport ? 'Backing Up Data...' : 'Restoring Data...')}
+            {isError
+              ? 'Error'
+              : isDone
+                ? isExport
+                  ? 'Backup Complete'
+                  : 'Restore Complete'
+                : isExport
+                  ? 'Backing Up Data...'
+                  : 'Restoring Data...'}
           </h4>
           <p className='text-text-tertiary text-xs truncate'>
             {isError ? status.message : progressMessage}
           </p>
         </div>
 
-        {!isDone && !isError && (
-          <Loader2 className='w-4 h-4 text-accent-primary animate-spin' />
-        )}
+        {!isDone && !isError && <Loader2 className='w-4 h-4 text-accent-primary animate-spin' />}
       </div>
 
       {!isError && (
         <div className='w-full h-1.5 bg-bg-primary rounded-full overflow-hidden'>
-          <div 
+          <div
             className={`h-full transition-all duration-300 ${isDone ? 'bg-green-500' : 'bg-accent-primary'}`}
             style={{ width: `${progressValue}%` }}
           />

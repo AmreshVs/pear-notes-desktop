@@ -4,7 +4,7 @@ const path = require('path')
 const pkg = require('./package.json')
 const appName = pkg.productName ?? pkg.name
 
-function getWindowsKitVersion () {
+function getWindowsKitVersion() {
   const programFiles = process.env['PROGRAMFILES(X86)'] || process.env.PROGRAMFILES
   if (!programFiles) return undefined
   const kitsDir = path.join(programFiles, 'Windows Kits')

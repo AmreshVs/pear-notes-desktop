@@ -1,8 +1,8 @@
+import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import crypto from 'crypto'
 
-export function loadEnv () {
+export function loadEnv() {
   try {
     const appDir = window.electronBridge.getAppDir()
     const envPath = path.join(appDir, '.env')
@@ -21,7 +21,7 @@ export function loadEnv () {
   }
 }
 
-export function getDbEncryptionKey () {
+export function getDbEncryptionKey() {
   try {
     const storageDir = window.electronBridge.getStoragePath()
     const configFile = path.join(storageDir, 'desktop-config.json')
@@ -39,7 +39,9 @@ export function getDbEncryptionKey () {
       const envPath = path.join(appDir, '.env')
       if (fs.existsSync(envPath)) {
         const content = fs.readFileSync(envPath, 'utf-8')
-        const envKey = content.split('\n').find(line => line.startsWith('PEAR_NOTES_ENCRYPTION_KEY='))
+        const envKey = content
+          .split('\n')
+          .find((line) => line.startsWith('PEAR_NOTES_ENCRYPTION_KEY='))
         if (envKey) {
           key = envKey.split('=')[1].trim()
         }
@@ -63,7 +65,7 @@ export function getDbEncryptionKey () {
   }
 }
 
-export function deleteDbEncryptionKey () {
+export function deleteDbEncryptionKey() {
   try {
     const storageDir = window.electronBridge.getStoragePath()
     const configFile = path.join(storageDir, 'desktop-config.json')

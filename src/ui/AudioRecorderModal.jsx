@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, X } from 'lucide-react'
-import AudioPlayer from './AudioPlayer'
+
 import { formatTime } from '../utils/formatters'
+
+import AudioPlayer from './AudioPlayer'
 
 export default function AudioRecorderModal({ onClose, onSaveAudio }) {
   const [isRecording, setIsRecording] = useState(false)
@@ -46,7 +48,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         setAudioBlob(blob)
-        stream.getTracks().forEach(track => track.stop())
+        stream.getTracks().forEach((track) => track.stop())
       }
 
       mediaRecorder.start()
@@ -54,7 +56,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
       setRecordingTime(0)
 
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1)
+        setRecordingTime((prev) => prev + 1)
       }, 1000)
     } catch (error) {
       console.error('Error accessing microphone:', error)
@@ -88,24 +90,26 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
 
   return (
     <>
-      <div
-        className='fixed inset-0 flex items-center justify-center z-[110] p-6'
-      >
-        <div 
+      <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
+        <div
           className='absolute inset-0 bg-backdrop-medium backdrop-blur-xl animate-in fade-in duration-300'
           onClick={!isRecording ? onClose : undefined}
         />
         <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] w-full max-w-sm shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col'>
-          <div className="absolute -top-32 -left-32 w-64 h-64 bg-accent-primary/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-accent-primary/5 blur-[80px] rounded-full pointer-events-none" />
+          <div className='absolute -top-32 -left-32 w-64 h-64 bg-accent-primary/10 blur-[80px] rounded-full pointer-events-none' />
+          <div className='absolute -bottom-32 -right-32 w-64 h-64 bg-accent-primary/5 blur-[80px] rounded-full pointer-events-none' />
           <div className='bg-overlay-faint border-b border-overlay-soft flex items-center justify-between px-6 py-5 relative z-10'>
             <div className='flex items-center gap-3'>
               <div className='w-9 h-9 rounded-xl bg-accent-primary/10 flex items-center justify-center text-accent-primary border border-accent-primary/20'>
                 <Mic className='w-4 h-4' />
               </div>
               <div className='flex flex-col'>
-                <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>Record Audio</h2>
-                <span className='text-xs font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>Voice Capture</span>
+                <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>
+                  Record Audio
+                </h2>
+                <span className='text-xs font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>
+                  Voice Capture
+                </span>
               </div>
             </div>
             <button
@@ -136,7 +140,9 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                   }`}
                   title={isRecording ? 'Stop Recording' : 'Start Recording'}
                 >
-                  <div className={`absolute inset-0 rounded-full ${isRecording ? 'animate-soft-ping' : 'group-hover:animate-soft-ping'}`} />
+                  <div
+                    className={`absolute inset-0 rounded-full ${isRecording ? 'animate-soft-ping' : 'group-hover:animate-soft-ping'}`}
+                  />
                   <div className='relative z-10'>
                     {isRecording ? (
                       <Square className='w-7 h-7 text-white fill-white' />
@@ -151,7 +157,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                   <AudioPlayer
                     src={audioDataUrl}
                     duration={recordingTime}
-                    title="Preview Recording"
+                    title='Preview Recording'
                   />
                 </div>
               )}
@@ -184,9 +190,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                     Saving...
                   </>
                 ) : (
-                  <>
-                    Insert
-                  </>
+                  <>Insert</>
                 )}
               </button>
             </div>

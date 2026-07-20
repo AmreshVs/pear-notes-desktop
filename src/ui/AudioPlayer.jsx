@@ -1,5 +1,6 @@
-import { Play, Pause } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Pause, Play } from 'lucide-react'
+
 import { formatTime } from '../utils/formatters'
 
 export default function AudioPlayer({ src, duration: propDuration, title = 'Audio Recording' }) {
@@ -116,7 +117,11 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
           onClick={togglePlayPause}
           className='flex-shrink-0 w-12 h-12 rounded-full bg-accent-primary flex items-center justify-center text-accent-on-primary active:scale-95 transition-transform'
         >
-          {isPlaying ? <Pause className='w-5 h-5 fill-white' /> : <Play className='w-5 h-5 fill-white ml-0.5' />}
+          {isPlaying ? (
+            <Pause className='w-5 h-5 fill-white' />
+          ) : (
+            <Play className='w-5 h-5 fill-white ml-0.5' />
+          )}
         </button>
 
         <div className='flex-1 min-w-0'>
