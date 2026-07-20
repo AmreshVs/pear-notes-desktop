@@ -40,14 +40,14 @@ export default function Sidebar({
         <div className='flex items-start justify-between gap-2'>
           <div className='flex-1 min-w-0'>
             <h3
-              className={`font-medium text-[15px] mb-0.5 truncate text-text-primary`}
+              className={`font-medium text-base mb-0.5 truncate text-text-primary`}
             >
               {note.value?.title || 'Untitled'}
             </h3>
-            <p className='text-[13px] text-text-tertiary line-clamp-2 mb-1 leading-snug'>
+            <p className='text-sm text-text-tertiary line-clamp-2 mb-1 leading-snug'>
               {getPreview(note.value?.content)}
             </p>
-            <p className='text-[11px] text-text-tertiary'>
+            <p className='text-xs text-text-tertiary'>
               {formatRelativeDate(note.value?.updatedAt || note.value?.createdAt)}
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function Sidebar({
     <div className='sidebar flex flex-col h-full bg-bg-secondary border-r border-border-primary'>
       <div className='px-3 pt-4 pb-3 border-b border-border-primary'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-[17px] font-semibold text-text-primary tracking-tight'>
+          <h1 className='text-lg font-semibold text-text-primary tracking-tight'>
             Notes
           </h1>
           <button
@@ -92,7 +92,7 @@ export default function Sidebar({
             placeholder='Search'
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full pl-8 pr-3 py-1.5 bg-bg-tertiary border border-border-primary rounded-md text-[13px] focus:outline-none focus:ring-1 focus:ring-accent-primary text-text-primary placeholder-text-tertiary'
+            className='w-full pl-8 pr-3 py-1.5 bg-bg-tertiary border border-border-primary rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-accent-primary text-text-primary placeholder-text-tertiary'
           />
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function Sidebar({
       <div className='flex-1 overflow-y-auto'>
         {filteredNotes.length === 0 ? (
           <div className='p-8 text-center'>
-            <p className='text-[15px] text-text-tertiary'>
+            <p className='text-base text-text-tertiary'>
               {searchQuery ? 'No notes found' : 'No notes yet'}
             </p>
             {!searchQuery && (

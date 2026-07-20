@@ -146,7 +146,7 @@ export default function PairingStatusOverlay() {
           </div>
           <button
             onClick={handleResetAfterFailedPairing}
-            className="w-full py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-[15px] hover:bg-accent-danger/20 transition-all active:scale-95"
+            className="w-full py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-base hover:bg-accent-danger/20 transition-all active:scale-95"
           >
             Okay
           </button>
@@ -168,7 +168,7 @@ export default function PairingStatusOverlay() {
           </div>
           <button
             onClick={handleAnimatedClose}
-            className="w-full py-4 bg-accent-success/10 border border-accent-success/20 text-accent-success rounded-xl font-bold text-[15px] hover:bg-accent-success/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full py-4 bg-accent-success/10 border border-accent-success/20 text-accent-success rounded-xl font-bold text-base hover:bg-accent-success/20 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             {isInviter ? 'Return to Notes' : 'Open Workspace'}
           </button>
@@ -188,7 +188,7 @@ export default function PairingStatusOverlay() {
           </div>
           
           <div className="w-full space-y-3">
-            <div className="flex justify-center items-center text-[11px] font-bold tracking-widest uppercase opacity-60">
+            <div className="flex justify-center items-center text-xs font-bold tracking-widest uppercase opacity-60">
               <span className="text-text-tertiary">{message} • {progress}% Complete</span>
             </div>
             <div className="relative h-2 w-full bg-overlay-subtle rounded-full overflow-hidden border border-overlay-soft">
@@ -230,7 +230,7 @@ export default function PairingStatusOverlay() {
         {mainIdValue && (
           <div className="w-full space-y-4">
             <div className="px-6 py-4 bg-overlay-subtle border border-overlay-medium rounded-2xl">
-              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-1">{mainIdLabel}</span>
+              <span className="text-xs uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-1">{mainIdLabel}</span>
               <span className="text-2xl font-black text-text-primary tracking-[0.3em] font-mono block">
                 {mainIdValue.toUpperCase()}
               </span>
@@ -238,7 +238,7 @@ export default function PairingStatusOverlay() {
 
             {subIdValue && (
               <div className="flex items-center justify-center gap-2 opacity-40">
-                <span className="text-[10px] uppercase tracking-wider font-bold truncate max-w-[200px]">
+                <span className="text-xs uppercase tracking-wider font-bold truncate max-w-[200px]">
                   {subIdLabel}: {subIdValue.toUpperCase()}
                 </span>
               </div>
@@ -256,7 +256,7 @@ export default function PairingStatusOverlay() {
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95"
+              className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95"
             >
               Verify Code
             </button>
@@ -269,7 +269,7 @@ export default function PairingStatusOverlay() {
                 style={{ width: `${progress || 25}%` }}
               />
             </div>
-            <div className="flex justify-center items-center text-[10px] font-bold tracking-widest uppercase opacity-40">
+            <div className="flex justify-center items-center text-xs font-bold tracking-widest uppercase opacity-40">
               <span className="text-text-tertiary">{message || 'Establishing Link...'}</span>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function PairingStatusOverlay() {
 
               <div className='w-full space-y-4'>
                 <div className='space-y-2'>
-                  <label className='text-[10px] uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
+                  <label className='text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
                     Invite Code
                   </label>
                   <input
@@ -314,7 +314,7 @@ export default function PairingStatusOverlay() {
                     onChange={(e) => setPasteCode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
                     placeholder='Paste your code here...'
-                    className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-[13px] text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
+                    className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
                     autoFocus
                   />
                 </div>
@@ -329,7 +329,7 @@ export default function PairingStatusOverlay() {
                   <button
                     onClick={handleConnect}
                     disabled={!pasteCode.trim()}
-                    className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Connect
                   </button>

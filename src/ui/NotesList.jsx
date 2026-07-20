@@ -39,7 +39,7 @@ const AttachmentPreview = ({ info, isSelected }) => {
   const Icon = ATTACHMENT_ICONS[info.kind] || Paperclip
   return (
     <p
-      className={`text-[12px] leading-relaxed opacity-80 flex items-center gap-1.5
+      className={`text-sm leading-relaxed opacity-80 flex items-center gap-1.5
         ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
     >
       <Icon className='w-3.5 h-3.5 flex-shrink-0 opacity-80' />
@@ -103,11 +103,29 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
     else onMenuAction(result, key)
   }, [availableMoveFolders, noteData?.locked, noteData?.pinned, isTrash, onMenuAction, key])
 
+  const handleRowKeyDown = useCallback((event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleSelectNote(key)
+      return
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    const rows = Array.from(event.currentTarget.closest('[role="listbox"]')?.querySelectorAll('[role="option"]') || [])
+    const index = rows.indexOf(event.currentTarget)
+    const next = rows[event.key === 'ArrowDown' ? index + 1 : index - 1]
+    if (next) next.focus()
+  }, [handleSelectNote, key])
+
   return (
     <div className="relative">
       <div
         key={key}
+        role='option'
+        tabIndex={isSelected ? 0 : -1}
+        aria-selected={isSelected}
         onClick={() => handleSelectNote(key)}
+        onKeyDown={handleRowKeyDown}
         onContextMenu={handleContextMenu}
         className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
           ${
@@ -119,7 +137,7 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
         <div className='flex items-stretch justify-between gap-3'>
           <div className='flex-1 min-w-0 flex flex-col justify-center'>
             <h3
-              className={`text-[15px] tracking-tight mb-0.5 flex items-center gap-1.5
+              className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
             >
               {noteData?.pinned && !isTrash && (
@@ -138,13 +156,13 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
               <AttachmentPreview info={attachmentInfo} isSelected={isSelected} />
             ) : (
               <p
-                className={`text-[12px] line-clamp-2 leading-relaxed opacity-80
+                className={`text-sm line-clamp-2 leading-relaxed opacity-80
                   ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
               >
                 {previewText}
               </p>
             )}
-            <div className='flex items-center gap-1.5 mt-2 opacity-50 text-[10px] font-bold uppercase tracking-wider'>
+            <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold uppercase tracking-wider'>
               {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
                 <>
                   <div className='flex items-center gap-1.5 min-w-0'>
@@ -326,10 +344,14 @@ export default function NotesList({
               </svg>
             </button>
             <div className='flex flex-col min-w-0'>
-              <h2 className='font-bold text-[20px] text-text-primary tracking-tight truncate max-w-[150px] leading-tight'>
+              <h2 title={currentFolderName} className='font-bold text-title text-text-primary tracking-tight truncate max-w-[220px] leading-tight'>
                 {currentFolderName}
               </h2>
-              <span className='text-[11px] font-bold text-text-secondary uppercase tracking-wider'>
+              <span
+                role='status'
+                aria-live='polite'
+                className='text-xs font-bold text-text-secondary uppercase tracking-wider'
+              >
                 {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
               </span>
             </div>
@@ -352,27 +374,32 @@ export default function NotesList({
           <div className='relative group'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary group-focus-within:text-accent-primary transition-colors' />
             <input
-              type='text'
+              type='search'
+              aria-label='Search notes'
               placeholder='Search notes...'
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className='w-full pl-9 pr-4 py-2.5 rounded-xl text-[14px] focus:outline-none bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
+              className='w-full pl-9 pr-4 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
             />
           </div>
         </div>
       </div>
 
-      <div className='flex-1 overflow-y-auto py-2 scrollbar-hide'>
+      <div
+        className='flex-1 overflow-y-auto py-2 scrollbar-hide'
+        role={filteredNotes.length === 0 ? undefined : 'listbox'}
+        aria-label='Notes'
+      >
         {filteredNotes.length === 0 ? (
-          <div className='flex-1 flex flex-col items-center justify-center -mt-10'>
+          <div className='flex-1 flex flex-col items-center justify-center py-10'>
             {syncing ? (
               <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
                 <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
                 <div className='space-y-1 text-center'>
-                  <p className='text-[15px] text-text-primary font-bold'>
+                  <p className='text-base text-text-primary font-bold'>
                     Syncing Library
                   </p>
-                  <p className='text-[12px] text-text-tertiary leading-relaxed px-10'>
+                  <p className='text-sm text-text-tertiary leading-relaxed px-10'>
                     Fetching your notes and folders from your other devices...
                   </p>
                 </div>
@@ -382,36 +409,56 @@ export default function NotesList({
                 {searchQuery ? (
                   <div className='w-full px-8 flex flex-col items-center justify-center gap-4 py-12'>
                     <div className='space-y-3 text-center'>
-                      <p className='text-[17px] text-text-primary font-bold tracking-tight'>
+                      <p className='text-lg text-text-primary font-bold tracking-tight'>
                         No matches found
                       </p>
-                      <p className='text-[13px] text-text-tertiary/80 font-medium'>
+                      <p className='text-sm text-text-tertiary/80 font-medium'>
                         Try a different search term
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className='w-full px-8 space-y-16'>
-                    <div className='flex flex-col items-center gap-4'>
-                      <div className='space-y-2.5 text-center'>
-                        <p className='text-[13px] text-text-tertiary/60 font-bold uppercase tracking-[0.15em]'>
-                          Create a note to start
+                  <div className='w-full px-8 space-y-10'>
+                    {isTrash ? (
+                      <div className='flex flex-col items-center gap-2 text-center'>
+                        <p className='text-lg text-text-primary font-bold tracking-tight'>
+                          Nothing here
+                        </p>
+                        <p className='text-sm text-text-tertiary leading-relaxed'>
+                          Notes you delete appear here before they are removed for good.
                         </p>
                       </div>
-                    </div>
-
-                    {!isSynced && (
-                      <div className='pt-4 space-y-5'>
-                        <div className='text-center space-y-2'>
-                          <p className='text-[13px] font-bold text-text-primary uppercase tracking-[0.15em]'>Link Existing Device</p>
-                          <p className='text-[11px] text-text-tertiary/60 uppercase tracking-[0.12em]'>Already have notes elsewhere?</p>
+                    ) : (
+                      <div className='flex flex-col items-center gap-5 text-center'>
+                        <div className='space-y-1.5'>
+                          <p className='text-lg text-text-primary font-bold tracking-tight'>
+                            No notes yet
+                          </p>
+                          <p className='text-sm text-text-tertiary leading-relaxed'>
+                            Everything you write stays on your devices.
+                          </p>
                         </div>
-                        
-                        <button 
-                          onClick={handleLinkDevice}
-                          className='w-full py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+                        <button
+                          onClick={onCreateNote}
+                          className='w-full py-3.5 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base hover:bg-accent-primary-hover transition-colors active:scale-95'
                         >
-                          Connect Device
+                          Create your first note
+                        </button>
+                      </div>
+                    )}
+
+                    {!isTrash && !isSynced && (
+                      <div className='pt-2 space-y-3 border-t border-border-primary/30'>
+                        <div className='text-center space-y-1 pt-6'>
+                          <p className='text-base font-bold text-text-primary'>Already have notes elsewhere?</p>
+                          <p className='text-sm text-text-tertiary leading-relaxed'>Link this device to sync them here.</p>
+                        </div>
+
+                        <button
+                          onClick={handleLinkDevice}
+                          className='w-full py-3 rounded-xl font-bold text-base bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95'
+                        >
+                          Connect a device
                         </button>
                       </div>
                     )}
@@ -424,7 +471,7 @@ export default function NotesList({
           <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4'>
             {sortedGroups.map(group => (
               <div key={group} className='mb-6'>
-                <h3 className='px-6 py-2 text-[10px] font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
+                <h3 className='px-6 py-2 text-xs font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
                   {group}
                 </h3>
                 <div>

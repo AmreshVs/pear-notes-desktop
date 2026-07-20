@@ -16,8 +16,8 @@ function QueueRow({ item, onCancel }) {
       ) : (
         <Clock className='w-3.5 h-3.5 text-text-tertiary shrink-0' />
       )}
-      <span className='flex-1 min-w-0 text-[12px] text-text-secondary truncate'>{item.fileName}</span>
-      <span className='text-[11px] font-semibold text-text-tertiary shrink-0'>
+      <span className='flex-1 min-w-0 text-sm text-text-secondary truncate'>{item.fileName}</span>
+      <span className='text-xs font-semibold text-text-tertiary shrink-0'>
         {isDone ? 'Done' : isUploading ? `${item.progress}%` : 'Queued'}
       </span>
       {!isDone && (

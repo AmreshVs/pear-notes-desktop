@@ -46,7 +46,7 @@ export default class ErrorBoundary extends Component {
 
             <button
               onClick={this.handleReload}
-              className='w-full py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] hover:bg-accent-primary-hover transition-all active:scale-95'
+              className='w-full py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base hover:bg-accent-primary-hover transition-all active:scale-95'
             >
               Reload
             </button>

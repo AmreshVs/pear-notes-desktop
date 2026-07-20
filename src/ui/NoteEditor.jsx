@@ -243,16 +243,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
           
           <div className='space-y-3 max-w-[390px]'>
-            <h3 className='text-3xl font-black text-text-primary tracking-tight'>No Note Selected</h3>
-            <p className='text-[15px] text-text-tertiary leading-relaxed'>
-              Select a note from the list or <span className='text-accent-primary font-bold'>create a new note</span> to begin.
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>Nothing open</h3>
+            <p className='text-base text-text-tertiary leading-relaxed'>
+              Pick a note from the list, or start a new one with the compose button.
             </p>
-          </div>
-
-          <div className='mt-10 flex items-center gap-2 opacity-30'>
-            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
-            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
-            <div className='w-1 h-1 bg-text-tertiary rounded-full' />
           </div>
         </div>
       </div>
@@ -269,7 +263,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
           <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>Locked Note</h3>
-            <p className='text-[15px] text-text-tertiary leading-relaxed'>
+            <p className='text-base text-text-tertiary leading-relaxed'>
               {lockMethod === 'password'
                 ? 'This note is protected. Enter your note lock password to view it.'
                 : authSupported
@@ -310,7 +304,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             value={title}
             onChange={handleTitleChange}
             placeholder='Title'
-            className='w-full text-4xl font-black mb-4 bg-transparent border-none outline-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
+            aria-label='Note title'
+            className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
             style={{ 
               fontSize: `${editorFontSize * 2}px`, 
               fontFamily: editorFontFamily 
@@ -331,7 +326,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       <UploadProgressToast />
 
       <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-        <span className='text-[10px] font-bold text-text-secondary uppercase tracking-widest'>
+        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
           edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>

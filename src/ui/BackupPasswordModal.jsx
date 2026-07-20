@@ -101,13 +101,13 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                         style={{ width: `${(strength.score / 5) * 100}%` }}
                       />
                     </div>
-                    <span className='text-[11px] font-bold text-text-tertiary w-16 text-right'>{strength.label}</span>
+                    <span className='text-xs font-bold text-text-tertiary w-16 text-right'>{strength.label}</span>
                   </div>
                   <ul className='grid grid-cols-2 gap-x-3 gap-y-1'>
                     {PASSWORD_RULES.map((rule) => {
                       const met = strength.checks[rule.key]
                       return (
-                        <li key={rule.key} className={`flex items-center gap-1.5 text-[11px] ${met ? 'text-accent-success' : 'text-text-tertiary/70'}`}>
+                        <li key={rule.key} className={`flex items-center gap-1.5 text-xs ${met ? 'text-accent-success' : 'text-text-tertiary/70'}`}>
                           {met ? <Check className='w-3 h-3 shrink-0' /> : <X className='w-3 h-3 shrink-0' />}
                           {rule.label}
                         </li>
@@ -117,12 +117,12 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-[11px] text-accent-danger/80 ml-1'>Passwords do not match</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>Passwords do not match</p>
                 )}
               </>
             )}
 
-            {error && <p className='text-[11px] text-accent-danger/80 ml-1'>{error}</p>}
+            {error && <p className='text-xs text-accent-danger/80 ml-1'>{error}</p>}
           </div>
 
           <div className='flex gap-3 w-full'>

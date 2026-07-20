@@ -98,8 +98,8 @@ export default function PrivacySettings() {
                 <LockKeyhole className="w-5 h-5 text-accent-primary" />
               </div>
               <div className="space-y-1 min-w-0">
-                <label className='block text-text-primary text-[15px] font-bold'>Note Lock</label>
-                <p className='text-[13px] text-text-tertiary font-medium opacity-60'>
+                <label className='block text-text-primary text-base font-bold'>Note Lock</label>
+                <p className='text-sm text-text-tertiary font-medium opacity-60'>
                   {lockMethod === 'password'
                     ? 'Locked notes unlock with your custom password on all synced devices.'
                     : lockAvailable
@@ -112,14 +112,14 @@ export default function PrivacySettings() {
 
           <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Unlock Method</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Choose how locked notes are unlocked.</p>
+              <label className='block text-text-primary text-base font-bold'>Unlock Method</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Choose how locked notes are unlocked.</p>
             </div>
             <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary shrink-0'>
               <button
                 onClick={handleSelectBiometric}
                 disabled={!lockAvailable}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
                   lockMethod !== 'password'
                     ? 'bg-accent-primary text-accent-on-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
@@ -131,7 +131,7 @@ export default function PrivacySettings() {
               <button
                 onClick={handleSelectPassword}
                 disabled={passwordDisabled}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
                   lockMethod === 'password'
                     ? 'bg-accent-primary text-accent-on-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
@@ -145,8 +145,8 @@ export default function PrivacySettings() {
 
           <div className="p-6 flex items-center justify-between gap-6">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Block Screenshots</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Exclude the window from screenshots, screen recordings, and window previews while viewing a locked note.</p>
+              <label className='block text-text-primary text-base font-bold'>Block Screenshots</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Exclude the window from screenshots, screen recordings, and window previews while viewing a locked note.</p>
             </div>
             <button
               onClick={handleToggleScreenshotProtection}

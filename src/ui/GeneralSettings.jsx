@@ -90,17 +90,17 @@ export default function GeneralSettings() {
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>Interface</h3>
         
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
-          <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
+          <div className="p-6 flex items-center justify-between border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
-              <label className='block text-text-primary text-[15px] font-bold'>App Theme</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Select your preferred aesthetic.</p>
+              <label className='block text-text-primary text-base font-bold'>App Theme</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Select your preferred aesthetic.</p>
             </div>
             <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary'>
               {['System', 'Light', 'Dark'].map((option) => (
                 <button
                   key={option}
                   onClick={() => dispatch(setTheme(option.toLowerCase()))}
-                  className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                     theme === option.toLowerCase()
                       ? 'bg-accent-primary text-accent-on-primary shadow-sm'
                       : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
@@ -119,14 +119,14 @@ export default function GeneralSettings() {
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
-              <label className='block text-text-primary text-[15px] font-bold'>Sort notes by</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Choose your preferred sorting order.</p>
+              <label className='block text-text-primary text-base font-bold'>Sort notes by</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Choose your preferred sorting order.</p>
             </div>
             <div className='relative group/select'>
               <select 
                 value={sortBy}
                 onChange={(e) => handleUpdateSetting('sortBy', e.target.value)}
-                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
+                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
                 <option value="updatedAt">Date Edited</option>
                 <option value="createdAt">Date Created</option>
@@ -143,14 +143,14 @@ export default function GeneralSettings() {
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1">
-              <label className='block text-text-primary text-[15px] font-bold'>Font Family</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Primary typeface for notes.</p>
+              <label className='block text-text-primary text-base font-bold'>Font Family</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Primary typeface for notes.</p>
             </div>
             <div className='relative group/select'>
               <select 
                 value={fontFamily}
                 onChange={(e) => handleUpdateSetting('fontFamily', e.target.value)}
-                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-[13px] font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
+                className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
                 <option value="Inter">Inter</option>
                 <option value="Outfit">Outfit</option>
@@ -168,18 +168,18 @@ export default function GeneralSettings() {
           <div className="p-6 space-y-4 group hover:bg-overlay-faint transition-colors">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <label className='block text-text-primary text-[15px] font-bold'>Default text size</label>
-                <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Adjust the editor&apos;s base font size.</p>
+                <label className='block text-text-primary text-base font-bold'>Default text size</label>
+                <p className='text-sm text-text-tertiary font-medium opacity-60'>Adjust the editor&apos;s base font size.</p>
               </div>
-              <span className="text-[14px] font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-lg">
+              <span className="text-base font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-lg">
                 {editorFontSize}px
               </span>
             </div>
             
             <div className="px-2 pt-4 pb-2">
               <div className="flex items-end justify-between mb-3 px-1">
-                <span className="text-[12px] font-bold text-text-tertiary leading-none">A</span>
-                <span className="text-[20px] font-bold text-text-tertiary leading-none">A</span>
+                <span className="text-sm font-bold text-text-tertiary leading-none">A</span>
+                <span className="text-title font-bold text-text-tertiary leading-none">A</span>
               </div>
               <div className="relative h-6 flex items-center">
                 <input
@@ -207,8 +207,8 @@ export default function GeneralSettings() {
         <div className="bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated">
           <div className="p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Keep Running in Background</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Closing the window keeps PearNotes running in the tray so your notes stay in sync.</p>
+              <label className='block text-text-primary text-base font-bold'>Keep Running in Background</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Closing the window keeps PearNotes running in the tray so your notes stay in sync.</p>
             </div>
             <button
               onClick={handleToggleCloseToTray}
@@ -220,8 +220,8 @@ export default function GeneralSettings() {
 
           <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Start at Login</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Launch PearNotes automatically when you sign in to this device.</p>
+              <label className='block text-text-primary text-base font-bold'>Start at Login</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Launch PearNotes automatically when you sign in to this device.</p>
             </div>
             <button
               onClick={handleToggleStartAtLogin}
@@ -238,8 +238,8 @@ export default function GeneralSettings() {
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'>
           <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Pause Media Transfers</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Hold photos, video, and file transfers. Notes, folders, and settings keep syncing.</p>
+              <label className='block text-text-primary text-base font-bold'>Pause Media Transfers</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Hold photos, video, and file transfers. Notes, folders, and settings keep syncing.</p>
             </div>
             <button
               onClick={handleToggleMediaPaused}
@@ -251,8 +251,8 @@ export default function GeneralSettings() {
 
           <div className="p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors">
             <div className="space-y-1 min-w-0">
-              <label className='block text-text-primary text-[15px] font-bold'>Metered Connection</label>
-              <p className='text-[13px] text-text-tertiary font-medium opacity-60'>Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.</p>
+              <label className='block text-text-primary text-base font-bold'>Metered Connection</label>
+              <p className='text-sm text-text-tertiary font-medium opacity-60'>Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.</p>
             </div>
             <button
               onClick={handleToggleMetered}
@@ -263,7 +263,7 @@ export default function GeneralSettings() {
           </div>
         </div>
         {(mediaPaused || metered) && (
-          <p className='text-[12px] text-text-tertiary ml-2 mt-2'>Media transfers are held. Queued items resume automatically once media is allowed again.</p>
+          <p className='text-sm text-text-tertiary ml-2 mt-2'>Media transfers are held. Queued items resume automatically once media is allowed again.</p>
         )}
       </div>
 

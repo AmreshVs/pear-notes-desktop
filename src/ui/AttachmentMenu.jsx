@@ -3,10 +3,13 @@ import { Image, Paperclip, Mic } from 'lucide-react'
 
 export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, onRecordAudio, buttonRef }) {
   const menuRef = useRef(null)
+  const imageInputRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const firstItemRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target) && 
+      if (menuRef.current && !menuRef.current.contains(event.target) &&
           buttonRef.current && !buttonRef.current.contains(event.target)) {
         onClose()
       }
@@ -15,78 +18,116 @@ export default function AttachmentMenu({ onClose, onInsertImage, onInsertFile, o
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [buttonRef, onClose])
 
+  useEffect(() => {
+    firstItemRef.current?.focus()
+  }, [])
+
+  const handleMenuKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+      buttonRef.current?.focus()
+      return
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    const items = Array.from(menuRef.current?.querySelectorAll('[role="menuitem"]') || [])
+    const index = items.indexOf(document.activeElement)
+    const nextIndex = event.key === 'ArrowDown'
+      ? (index + 1) % items.length
+      : (index - 1 + items.length) % items.length
+    items[nextIndex]?.focus()
+  }
+
   const handleImageSelect = (event) => {
     const files = Array.from(event.target.files || [])
-    if (files.length > 0) {
-      const imageFiles = files.filter(file => file.type.startsWith('image/'))
-      const videoFiles = files.filter(file => file.type.startsWith('video/'))
-      
-      if (imageFiles.length > 0) {
-        onInsertImage(imageFiles)
-      }
-      if (videoFiles.length > 0) {
-        onInsertFile(videoFiles)
-      }
-      onClose()
-    }
+    if (files.length === 0) return
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    const videoFiles = files.filter(file => file.type.startsWith('video/'))
+    if (imageFiles.length > 0) onInsertImage(imageFiles)
+    if (videoFiles.length > 0) onInsertFile(videoFiles)
+    onClose()
   }
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files || [])
-    if (files.length > 0) {
-      onInsertFile(files)
-      onClose()
-    }
+    if (files.length === 0) return
+    onInsertFile(files)
+    onClose()
+  }
+
+  const handleRecordAudio = () => {
+    onRecordAudio()
+    onClose()
   }
 
   return (
-    <div 
-      ref={menuRef} 
+    <div
+      ref={menuRef}
+      role='menu'
+      aria-label='Insert attachment'
+      onKeyDown={handleMenuKeyDown}
       className='absolute top-full left-0 mt-3 bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-56 animate-in zoom-in-95 fade-in duration-300 origin-top-left overflow-hidden z-[120]'
     >
-      <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none" />
-      
+      <div className='absolute -top-12 -right-12 w-24 h-24 bg-accent-primary/10 blur-[40px] rounded-full pointer-events-none' />
+
       <div className='p-2 relative z-10'>
-        <label className='block group'>
-          <input
-            type='file'
-            accept='image/*,video/*'
-            onChange={handleImageSelect}
-            className='hidden'
-            multiple
-          />
-          <div className='px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95'>
-            <div className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors">
-              <Image className='w-4 h-4' />
-            </div>
-            <p className='text-[13px] font-bold text-text-primary tracking-tight'>Photos or Videos</p>
-          </div>
-        </label>
+        <input
+          ref={imageInputRef}
+          type='file'
+          accept='image/*,video/*'
+          onChange={handleImageSelect}
+          className='hidden'
+          multiple
+          tabIndex={-1}
+        />
+        <input
+          ref={fileInputRef}
+          type='file'
+          onChange={handleFileSelect}
+          className='hidden'
+          multiple
+          tabIndex={-1}
+        />
 
-        <label className='block group'>
-          <input type='file' onChange={handleFileSelect} className='hidden' multiple />
-          <div className='px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95'>
-            <div className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors">
-              <Paperclip className='w-4 h-4' />
-            </div>
-            <p className='text-[13px] font-bold text-text-primary tracking-tight'>Attach File</p>
-          </div>
-        </label>
-
-        <div className="h-px bg-overlay-soft my-1 mx-2" />
-
-        <div 
-          onClick={() => {
-            onRecordAudio()
-            onClose()
-          }}
-          className='px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group'
+        <button
+          ref={firstItemRef}
+          type='button'
+          role='menuitem'
+          onClick={() => imageInputRef.current?.click()}
+          className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group text-left'
         >
-          <div className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors">
+          <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
+            <Image className='w-4 h-4' />
+          </span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>Photos or Videos</span>
+        </button>
+
+        <button
+          type='button'
+          role='menuitem'
+          onClick={() => fileInputRef.current?.click()}
+          className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group text-left'
+        >
+          <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
+            <Paperclip className='w-4 h-4' />
+          </span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>Attach File</span>
+        </button>
+
+        <div className='h-px bg-overlay-soft my-1 mx-2' />
+
+        <button
+          type='button'
+          role='menuitem'
+          onClick={handleRecordAudio}
+          className='w-full px-4 py-3 rounded-xl hover:bg-accent-primary/10 transition-all cursor-pointer flex items-center gap-3 active:scale-95 group text-left'
+        >
+          <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Mic className='w-4 h-4' />
-          </div>
-          <p className='text-[13px] font-bold text-text-primary tracking-tight'>Record Audio</p>
-        </div>
+          </span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>Record Audio</span>
+        </button>
       </div>
     </div>
   )

@@ -35,7 +35,7 @@ export default function DeviceRemovedModal() {
 
           <button
             onClick={handleRestart}
-            className="w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95"
+            className="w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95"
           >
             Okay
           </button>

@@ -130,7 +130,7 @@ function App() {
     <div className='flex-1 flex items-center justify-center'>
       <div className='text-center'>
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
-        <p className='text-[15px] text-text-tertiary'>
+        <p className='text-base text-text-tertiary'>
           Loading...
         </p>
       </div>
@@ -182,8 +182,10 @@ function App() {
         <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
         <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
 
-        <TitleBar />
-        {content}
+        <div className='contents' inert={showSettings}>
+          <TitleBar />
+          {content}
+        </div>
         {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
         <PairingStatusOverlay />
         <DeviceRemovedModal />

@@ -20,9 +20,13 @@
   --accent-primary: #DCA323;
   --accent-primary-hover: #c8931f;
   --accent-on-primary: #1a1300;
+  --accent-primary-text: #e3ad33;
   --accent-success: #30d158;
   --accent-danger: #ff453a;
   --accent-warning: #ff9f0a;
+
+  --focus-ring: 2px solid var(--accent-primary);
+  --focus-ring-offset: 2px;
 
   --interactive-hover: rgba(255, 255, 255, 0.05);
   --interactive-active: rgba(255, 255, 255, 0.1);
@@ -50,6 +54,7 @@
   --font-size-sm: 0.8125rem;
   --font-size-base: 0.9375rem;
   --font-size-lg: 1.0625rem;
+  --font-size-title: 1.25rem;
   --font-size-xl: 1.75rem;
   --font-size-2xl: 2rem;
 
@@ -118,6 +123,8 @@
   --accent-primary: #DCA323;
   --accent-primary-hover: #c8931f;
   --accent-on-primary: #1a1300;
+  --accent-primary-text: #7d5a0e;
+  --focus-ring: 2px solid #7d5a0e;
   --accent-success: #34c759;
   --accent-danger: #ff3b30;
   --accent-warning: #ff9500;

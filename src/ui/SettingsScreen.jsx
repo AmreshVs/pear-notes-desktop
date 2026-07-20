@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   X
 } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { version as appVersion } from '../../package.json'
 import { useDialog } from '../hooks/useDialog'
 import GeneralSettings from './GeneralSettings'
@@ -18,6 +18,11 @@ import PrivacySettings from './PrivacySettings'
 export default function SettingsScreen({ onClose }) {
   const [activeSection, setActiveSection] = useState('general')
   const [isExiting, setIsExiting] = useState(false)
+  const contentScrollRef = useRef(null)
+
+  useEffect(() => {
+    if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0
+  }, [activeSection])
 
   const handleAnimatedClose = useCallback(() => {
     setIsExiting(true)
@@ -75,14 +80,14 @@ export default function SettingsScreen({ onClose }) {
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 transition-all duration-0 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
                   />
-                  <span className={`text-[15px] tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{section.name}</span>
+                  <span className={`text-base tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>{section.name}</span>
                 </button>
               )
             })}
           </div>
 
           <div className='px-6 pb-6'>
-            <p className='text-text-tertiary text-[11px] text-center opacity-50'>v{appVersion}</p>
+            <p className='text-text-tertiary text-xs text-center opacity-50'>v{appVersion}</p>
           </div>
         </div>
 
@@ -92,7 +97,7 @@ export default function SettingsScreen({ onClose }) {
               <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
                 {sections.find((s) => s.id === activeSection)?.name || 'Settings'}
               </h2>
-              <p className='text-[13px] mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
+              <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' &&
                   'Customize your personal workspace experience, from aesthetics to native language supports.'}
                 {activeSection === 'privacy' && 'Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.'}
@@ -109,7 +114,7 @@ export default function SettingsScreen({ onClose }) {
             </button>
           </div>
 
-          <div className='flex-1 overflow-y-auto px-10 pb-10'>
+          <div ref={contentScrollRef} className='flex-1 overflow-y-auto px-10 pb-10'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}

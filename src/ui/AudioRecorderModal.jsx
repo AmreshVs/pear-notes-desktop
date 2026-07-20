@@ -105,7 +105,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
               </div>
               <div className='flex flex-col'>
                 <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>Record Audio</h2>
-                <span className='text-[10px] font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>Voice Capture</span>
+                <span className='text-xs font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>Voice Capture</span>
               </div>
             </div>
             <button

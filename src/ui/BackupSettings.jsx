@@ -202,7 +202,7 @@ export default function BackupSettings() {
           <button
             onClick={handleExport}
             disabled={isExporting || isImporting}
-            className='group relative px-8 py-3.5 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 overflow-hidden'
+            className='group relative px-8 py-3.5 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 overflow-hidden'
           >
             <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
             <HardDrive className='w-4 h-4' />
@@ -211,7 +211,7 @@ export default function BackupSettings() {
           <button
             onClick={handleImport}
             disabled={isExporting || isImporting}
-            className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-[15px] hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+            className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
           >
             <Upload className='w-4 h-4' />
             Restore Data
@@ -226,7 +226,7 @@ export default function BackupSettings() {
             <Database className='w-5 h-5 text-accent-primary' />
           </div>
           <div>
-            <p className='text-[10px] uppercase tracking-widest font-bold text-text-tertiary mb-1'>
+            <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
               Notes Size
             </p>
             <p className='text-text-primary font-bold text-base'>{formatBytes(totalSize)}</p>
@@ -238,7 +238,7 @@ export default function BackupSettings() {
             <Lock className='w-5 h-5 text-accent-primary' />
           </div>
           <div>
-            <p className='text-[10px] uppercase tracking-widest font-bold text-text-tertiary mb-1'>
+            <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
               Encryption
             </p>
             <p className='text-text-primary font-bold text-base'>AES-256</p>
@@ -249,7 +249,7 @@ export default function BackupSettings() {
       <div className='bg-bg-panel-secondary/40 border border-border-primary rounded-2xl p-6 space-y-3 relative overflow-hidden hover:border-border-secondary transition-colors'>
         <div className='flex items-center gap-3'>
           <Lock className='w-5 h-5 text-accent-primary' />
-          <h4 className='text-text-primary font-bold text-[15px]'>Password Protected</h4>
+          <h4 className='text-text-primary font-bold text-base'>Password Protected</h4>
         </div>
         <p className='text-text-tertiary text-xs leading-relaxed'>
           You choose a password when creating a backup, and it encrypts the file. You&apos;ll need that same password to restore — it is never stored, so keep it somewhere safe.
@@ -323,7 +323,7 @@ export default function BackupSettings() {
 
               {!isDone && !isError && (
                 <div className='w-full space-y-2'>
-                  <div className='flex justify-between text-[11px] text-text-tertiary font-medium'>
+                  <div className='flex justify-between text-xs text-text-tertiary font-medium'>
                     <span>{progressStep.replace(/_/g, ' ')}</span>
                     <span>{Math.round(progressValue)}%</span>
                   </div>
@@ -340,7 +340,7 @@ export default function BackupSettings() {
                 {isDone || isError ? (
                   <button
                     onClick={handleDismiss}
-                    className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-[15px] shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+                    className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
                   >
                     Dismiss
                   </button>

@@ -10,6 +10,7 @@ import FramedStream from 'framed-stream'
 import HRPC from '@pear-notes/core/spec/hrpc/index.js'
 import { setRPC } from '@pear-notes/core/rpc.js'
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -47,6 +48,8 @@ if (!globalThis.production) {
 window.addEventListener('beforeunload', () => {
   backendApi.destroy()
 })
+
+themeStorage.apply(themeStorage.load())
 
 const container = document.getElementById('root')
 const root = createRoot(container)

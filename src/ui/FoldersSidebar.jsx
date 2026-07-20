@@ -176,10 +176,11 @@ export default function FoldersSidebar({
                   onBlur={handleSubmitRename}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
-                  className={`w-full bg-transparent border-none outline-none text-[14px] text-text-primary p-0 m-0 tracking-tight leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}
+                  aria-label='Folder name'
+                  className={`w-full bg-bg-panel text-base text-text-primary tracking-tight leading-[20px] h-6 px-1.5 rounded-md border border-accent-primary ${isSelected ? 'font-bold' : 'font-medium'}`}
                 />
               ) : (
-                <span className={`block text-[14px] tracking-tight whitespace-nowrap truncate transition-none duration-0 leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}>
+                <span className={`block text-base tracking-tight whitespace-nowrap truncate transition-none duration-0 leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}>
                   {folder.name || DEFAULT_FOLDER_NAME}
                 </span>
               )}
@@ -188,7 +189,7 @@ export default function FoldersSidebar({
           
           {count > 0 && (
             <div className={`flex items-center flex-shrink-0 ml-2 ${isEditing ? 'opacity-0 pointer-events-none' : ''}`}>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap transition-none duration-0 ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}>
                 {count}
               </span>
             </div>
@@ -202,7 +203,7 @@ export default function FoldersSidebar({
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative transition-none'>
       <div className="px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none">
         <div className='flex items-center justify-between h-[40px] transition-none'>
-          <h2 className="text-[20px] font-bold text-text-primary tracking-tight transition-none">Folders</h2>
+          <h2 className="text-title font-bold text-text-primary tracking-tight transition-none">Folders</h2>
           <button
             onClick={handleCreateNewFolder}
             className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
@@ -221,7 +222,7 @@ export default function FoldersSidebar({
           {topFolders.slice(1).map(renderFolderItem)}
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
-          <div className='text-[10px] font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
+          <div className='text-xs font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
             Archive
           </div>
           <div className="transition-none">
@@ -239,7 +240,7 @@ export default function FoldersSidebar({
             aria-label='Settings'
           >
             <Settings className="w-4 h-4 flex-shrink-0 transition-none" />
-            <span className='text-[14px] font-medium whitespace-nowrap transition-none'>Settings</span>
+            <span className='text-base font-medium whitespace-nowrap transition-none'>Settings</span>
           </button>
         </div>
       </div>

@@ -115,7 +115,7 @@ export default function MediaPreviewModal({
               title={isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
             >
               {isDownloading ? (
-                <span className='text-[10px] font-bold text-white'>{downloadProgress}%</span>
+                <span className='text-xs font-bold text-white'>{downloadProgress}%</span>
               ) : (
                 <Download className='w-5 h-5' />
               )}

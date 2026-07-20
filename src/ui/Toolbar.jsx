@@ -23,7 +23,7 @@ export default function Toolbar({ searchQuery, onSearchChange }) {
             placeholder='Search'
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='w-full pl-9 pr-3 py-1.5 rounded-md text-[13px] focus:outline-none bg-bg-tertiary text-text-primary placeholder-text-tertiary transition-all'
+            className='w-full pl-9 pr-3 py-1.5 rounded-md text-sm focus:outline-none bg-bg-tertiary text-text-primary placeholder-text-tertiary transition-all'
           />
         </div>
       </div>

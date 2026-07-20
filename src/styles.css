@@ -33,6 +33,7 @@
   --color-accent-primary: var(--accent-primary);
   --color-accent-primary-hover: var(--accent-primary-hover);
   --color-accent-on-primary: var(--accent-on-primary);
+  --color-accent-primary-text: var(--accent-primary-text);
   --color-accent-success: var(--accent-success);
   --color-accent-danger: var(--accent-danger);
   --color-accent-warning: var(--accent-warning);
@@ -75,6 +76,7 @@
   --text-sm: var(--font-size-sm);
   --text-base: var(--font-size-base);
   --text-lg: var(--font-size-lg);
+  --text-title: var(--font-size-title);
   --text-xl: var(--font-size-xl);
   --text-2xl: var(--font-size-2xl);
 
@@ -340,10 +342,33 @@
     background-clip: padding-box;
   }
 
-  /* Input and textarea focus styles */
   input:focus,
   textarea:focus {
     outline: none;
+  }
+
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: inherit;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  [contenteditable]:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Better text selection */
@@ -404,3 +429,10 @@
   }
 }
 
+
+.text-accent-primary,
+.hover\:text-accent-primary:hover,
+.group:hover .group-hover\:text-accent-primary,
+.group\/select:hover .group-hover\/select\:text-accent-primary {
+  color: var(--accent-primary-text);
+}

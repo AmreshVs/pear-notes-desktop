@@ -57,7 +57,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             }`}
             title='Formatting'
           >
-            <span className='font-serif text-[18px] font-black tracking-tighter'>Aa</span>
+            <span className='font-serif text-lg font-black tracking-tighter'>Aa</span>
           </button>
 
           {showFormatMenu && (
@@ -151,7 +151,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                   onClick={() => editor?.chain().focus().toggleOrderedList().run()}
                   isActive={editorState.isOrderedList}
                   label='Numbered List'
-                  icon={<span className='text-[10px] font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>1.</span>}
+                  icon={<span className='text-xs font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>1.</span>}
                 />
 
                 <div className='h-px bg-divider-light my-2 mx-1' />
@@ -209,8 +209,10 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <div className='relative'>
           <Button
             ref={attachmentButtonRef}
-            onClick={() => setShowAttachmentMenu(true)}
+            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
             isActive={showAttachmentMenu}
+            hasPopup='menu'
+            expanded={showAttachmentMenu}
             title='Attachments'
             className='w-9 h-9'
           >
@@ -269,10 +271,12 @@ export default function FormattingToolbar({ editor, noteKey }) {
   )
 }
 
-const Button = forwardRef(({ onClick, isActive, disabled, title, children, className = '' }, ref) => (
+const Button = forwardRef(({ onClick, isActive, disabled, title, children, className = '', hasPopup, expanded }, ref) => (
   <button
     ref={ref}
     onClick={onClick}
+    aria-haspopup={hasPopup}
+    aria-expanded={hasPopup ? !!expanded : undefined}
     className={`rounded-lg transition-all flex-shrink-0 flex items-center justify-center active:scale-95 duration-200 ${
       isActive
         ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
@@ -313,7 +317,7 @@ const ListButton = ({ onClick, isActive, label, icon, showCheck, style }) => (
   >
     <div className='flex items-center'>
       {icon}
-      <span className={`text-[14px] tracking-tight ${style || (isActive ? 'font-bold' : 'font-medium')}`}>{label}</span>
+      <span className={`text-base tracking-tight ${style || (isActive ? 'font-bold' : 'font-medium')}`}>{label}</span>
     </div>
     {(isActive || showCheck) && (
       <svg className='w-4 h-4 text-accent-primary' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
