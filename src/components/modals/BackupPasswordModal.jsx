@@ -4,7 +4,7 @@ import { Check, Eye, EyeOff, Lock, X } from 'lucide-react'
 
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
 
-import { getPasswordStrengthUi, PASSWORD_RULES } from '../../utils/passwordStrength'
+import { getPasswordRules, getPasswordStrengthUi } from '../../utils/passwordStrength'
 
 const STRENGTH_BAR_COLORS = [
   'bg-accent-danger',
@@ -120,7 +120,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                     </span>
                   </div>
                   <ul className='grid grid-cols-2 gap-x-3 gap-y-1'>
-                    {PASSWORD_RULES.map((rule) => {
+                    {getPasswordRules(t).map((rule) => {
                       const met = strength.checks[rule.key]
                       return (
                         <li

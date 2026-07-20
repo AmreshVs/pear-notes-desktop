@@ -8,6 +8,7 @@ import {
   Link2,
   Loader2,
   Monitor,
+  Pencil,
   Plus,
   ShieldAlert,
   ShieldCheck,
@@ -32,9 +33,11 @@ import {
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
-import { getDeviceDisplayName } from '@pear-notes/core/utils.js'
+import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
 import MergeConfirmModal from '../modals/MergeConfirmModal'
+
+const DEVICE_KEY_TAIL_LENGTH = 5
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -325,6 +328,11 @@ function DeviceItem({ device, isOther }) {
   const [isExiting, setIsExiting] = useState(false)
   const [editedTitle, setEditedTitle] = useState(device.title || '')
 
+  const hasCustomTitle = device.title && !isRawDeviceKey(device.title)
+  const fullDeviceName = hasCustomTitle ? device.title : device.key || getDeviceDisplayName(device)
+  const deviceNameTail = hasCustomTitle ? '' : fullDeviceName.slice(-DEVICE_KEY_TAIL_LENGTH)
+  const deviceNameHead = deviceNameTail ? fullDeviceName.slice(0, -DEVICE_KEY_TAIL_LENGTH) : fullDeviceName
+
   const handleCloseDelete = () => {
     setIsExiting(true)
     setTimeout(() => {
@@ -333,11 +341,15 @@ function DeviceItem({ device, isOther }) {
     }, 300)
   }
 
-  const handleDoubleClick = () => {
+  const handleStartRename = () => {
     if (!isOther) {
       setIsEditing(true)
       setEditedTitle(device.title || '')
     }
+  }
+
+  const handleActionMouseDown = (e) => {
+    if (isEditing) e.preventDefault()
   }
 
   const handleBlur = () => {
@@ -375,23 +387,35 @@ function DeviceItem({ device, isOther }) {
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               autoFocus
-              className='w-full font-bold text-text-primary text-base bg-bg-panel border border-accent-primary rounded px-3 py-2 outline-none'
+              aria-label={t('sync.devices.rename')}
+              className='block w-full h-9 px-2 font-bold text-text-primary text-base leading-9 bg-bg-panel border border-accent-primary rounded-md outline-none'
             />
           ) : (
-            <div>
-              <span
-                className='font-bold text-text-primary text-base truncate cursor-pointer block'
-                onDoubleClick={handleDoubleClick}
-                title={device.isLocal ? t('folders.doubleClickToRename') : getDeviceDisplayName(device)}
-              >
-                {getDeviceDisplayName(device)}
-              </span>
-              <p className='text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
-                {t(`sync.platforms.${getPlatformName(device.platform)}`, getPlatformName(device.platform))}
-              </p>
-            </div>
+            <span
+              className='flex w-full h-9 px-2 items-center font-bold text-text-primary text-base leading-9 border border-transparent rounded-md cursor-pointer'
+              onDoubleClick={handleStartRename}
+              title={device.isLocal ? t('folders.doubleClickToRename') : device.key || getDeviceDisplayName(device)}
+            >
+              <span className='truncate'>{deviceNameHead}</span>
+              {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
+            </span>
           )}
+          <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
+            {t(`sync.platforms.${getPlatformName(device.platform)}`, getPlatformName(device.platform))}
+          </p>
         </div>
+
+        {device.isLocal && (
+          <button
+            onClick={isEditing ? handleBlur : handleStartRename}
+            onMouseDown={handleActionMouseDown}
+            aria-label={isEditing ? t('sync.devices.confirmRename') : t('sync.devices.rename')}
+            title={isEditing ? t('sync.devices.confirmRename') : t('sync.devices.rename')}
+            className={`p-2 rounded-lg text-accent-primary hover:bg-accent-primary/10 transition-all flex items-center gap-2 ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
+          >
+            {isEditing ? <Check className='w-4 h-4' /> : <Pencil className='w-4 h-4' />}
+          </button>
+        )}
 
         {isOther && (
           <button

@@ -12,7 +12,7 @@ import {
   createDownloadLink,
   deleteHyperdriveFile,
   downloadAsBlob
-} from '../lib/fileManager'
+} from '../../lib/fileManager'
 
 import AudioPlayer from './AudioPlayer'
 

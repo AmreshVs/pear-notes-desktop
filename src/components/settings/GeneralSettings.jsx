@@ -21,7 +21,7 @@ import {
   getAppBehaviorPreference,
   setAppBehaviorPreference,
   START_AT_LOGIN_KEY
-} from '../lib/appBehavior'
+} from '../../lib/appBehavior'
 
 export default function GeneralSettings() {
   const { t } = useTranslation()

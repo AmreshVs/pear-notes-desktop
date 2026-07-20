@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 
 import { useDialog } from '../../hooks/useDialog'
-import { version as appVersion } from '../../package.json'
+import { version as appVersion } from '../../../package.json'
 
 import BackupSettings from './BackupSettings'
 import GeneralSettings from './GeneralSettings'

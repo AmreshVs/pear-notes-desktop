@@ -1,4 +1,4 @@
-import '../styles/tiptap.css'
+import '../../styles/tiptap.css'
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
