@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { ChevronDown } from 'lucide-react'
 
@@ -23,6 +24,7 @@ import {
 } from '../lib/appBehavior'
 
 export default function GeneralSettings() {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const theme = useSelector(getTheme)
   const fontFamily = useSelector(getFontFamily)
@@ -86,13 +88,13 @@ export default function GeneralSettings() {
     <div className='space-y-12 max-w-2xl mx-auto'>
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Interface
+          {t('settings.general.interface')}
         </h3>
 
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>App Theme</label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.appTheme')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Select your preferred aesthetic.
               </p>
@@ -108,7 +110,7 @@ export default function GeneralSettings() {
                       : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
                   }`}
                 >
-                  {option}
+                  {t(`settings.general.themes.${option.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -118,12 +120,12 @@ export default function GeneralSettings() {
 
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Notes List
+          {t('settings.general.notesList')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>Sort notes by</label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.sortNotesBy')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Choose your preferred sorting order.
               </p>
@@ -134,9 +136,9 @@ export default function GeneralSettings() {
                 onChange={(e) => handleUpdateSetting('sortBy', e.target.value)}
                 className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
-                <option value='updatedAt'>Date Edited</option>
-                <option value='createdAt'>Date Created</option>
-                <option value='title'>Title</option>
+                <option value='updatedAt'>{t('settings.general.sortOptions.updatedAt')}</option>
+                <option value='createdAt'>{t('settings.general.sortOptions.createdAt')}</option>
+                <option value='title'>{t('settings.general.sortOptions.title')}</option>
               </select>
               <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary pointer-events-none group-hover/select:text-accent-primary transition-colors' />
             </div>
@@ -146,12 +148,12 @@ export default function GeneralSettings() {
 
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Editor
+          {t('settings.general.editor')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>Font Family</label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.fontFamily')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Primary typeface for notes.
               </p>
@@ -162,14 +164,14 @@ export default function GeneralSettings() {
                 onChange={(e) => handleUpdateSetting('fontFamily', e.target.value)}
                 className='appearance-none bg-bg-tertiary/50 border border-border-primary text-text-primary text-sm font-bold py-2.5 pl-4 pr-10 rounded-xl outline-none focus:border-accent-primary/50 transition-all cursor-pointer hover:bg-bg-tertiary'
               >
-                <option value='Inter'>Inter</option>
-                <option value='Outfit'>Outfit</option>
-                <option value='Lora'>Lora</option>
-                <option value='Newsreader'>Newsreader</option>
-                <option value='IBM Plex Mono'>IBM Plex Mono</option>
-                <option value='System'>System Default</option>
-                <option value='Serif'>Serif</option>
-                <option value='Mono'>Monospace</option>
+                <option value='Inter'>{t('settings.general.fontOptions.Inter')}</option>
+                <option value='Outfit'>{t('settings.general.fontOptions.Outfit')}</option>
+                <option value='Lora'>{t('settings.general.fontOptions.Lora')}</option>
+                <option value='Newsreader'>{t('settings.general.fontOptions.Newsreader')}</option>
+                <option value='IBM Plex Mono'>{t('settings.general.fontOptions.IBM Plex Mono')}</option>
+                <option value='System'>{t('settings.general.fontOptions.System')}</option>
+                <option value='Serif'>{t('settings.general.fontOptions.Serif')}</option>
+                <option value='Mono'>{t('settings.general.fontOptions.Mono')}</option>
               </select>
               <ChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary pointer-events-none group-hover/select:text-accent-primary transition-colors' />
             </div>
@@ -179,7 +181,7 @@ export default function GeneralSettings() {
             <div className='flex items-center justify-between'>
               <div className='space-y-1'>
                 <label className='block text-text-primary text-base font-bold'>
-                  Default text size
+                  {t('settings.general.textSize')}
                 </label>
                 <p className='text-sm text-text-tertiary font-medium opacity-60'>
                   Adjust the editor&apos;s base font size.
@@ -220,15 +222,11 @@ export default function GeneralSettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Startup & Background
-        </h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>{t('settings.general.startupAndBackground')}</h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                Keep Running in Background
-              </label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.keepRunning')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Closing the window keeps PearNotes running in the tray so your notes stay in sync.
               </p>
@@ -245,7 +243,7 @@ export default function GeneralSettings() {
 
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>Start at Login</label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.startAtLogin')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Launch PearNotes automatically when you sign in to this device.
               </p>
@@ -264,16 +262,16 @@ export default function GeneralSettings() {
 
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Media Sync
+          {t('settings.mediaSync.title')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'>
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
               <label className='block text-text-primary text-base font-bold'>
-                Pause Media Transfers
+                {t('settings.mediaSync.pauseMedia')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Hold photos, video, and file transfers. Notes, folders, and settings keep syncing.
+                {t('settings.mediaSync.pauseMediaDesc')}
               </p>
             </div>
             <button
@@ -288,9 +286,7 @@ export default function GeneralSettings() {
 
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                Metered Connection
-              </label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.general.meteredConnection')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Also holds media transfers. Desktop cannot detect metered networks automatically, so
                 set this yourself.
@@ -308,7 +304,7 @@ export default function GeneralSettings() {
         </div>
         {(mediaPaused || metered) && (
           <p className='text-sm text-text-tertiary ml-2 mt-2'>
-            Media transfers are held. Queued items resume automatically once media is allowed again.
+            {t('settings.mediaSync.heldNotice')}
           </p>
         )}
       </div>

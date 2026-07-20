@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import i18next from 'i18next'
 import { AlertTriangle } from 'lucide-react'
 
 export default class ErrorBoundary extends Component {
@@ -32,11 +33,10 @@ export default class ErrorBoundary extends Component {
 
             <div className='space-y-2'>
               <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-                Something went wrong
+                {i18next.t('errorBoundary.title')}
               </h3>
               <p className='text-text-tertiary text-sm leading-relaxed'>
-                The app hit an unexpected error. Reloading will recover your notes without data
-                loss.
+                {i18next.t('errorBoundary.description')}
               </p>
               {this.state.error?.message && (
                 <p className='text-text-tertiary/70 text-xs font-mono mt-2 break-words'>
@@ -49,7 +49,7 @@ export default class ErrorBoundary extends Component {
               onClick={this.handleReload}
               className='w-full py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base hover:bg-accent-primary-hover transition-all active:scale-95'
             >
-              Reload
+              {i18next.t('errorBoundary.reload')}
             </button>
           </div>
         </div>

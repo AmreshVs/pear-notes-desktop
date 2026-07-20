@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Download } from 'lucide-react'
 
 export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
+  const { t } = useTranslation()
   const handleUpdate = () => {
     window.electronBridge.openExternal(downloadUrl)
   }
@@ -19,10 +21,11 @@ export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>Update Required</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('update.overlay.title')}</h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              A required update is available{latestVersion ? ` (v${latestVersion})` : ''}. Please
-              update PearNotes to continue.
+              {latestVersion
+                ? t('update.overlay.description', { version: latestVersion })
+                : t('update.overlay.description').replace(' (v{{version}})', '')}
             </p>
           </div>
 
@@ -30,7 +33,7 @@ export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
             onClick={handleUpdate}
             className='w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
           >
-            Update Now
+            {t('update.overlay.updateButton')}
           </button>
         </div>
       </div>

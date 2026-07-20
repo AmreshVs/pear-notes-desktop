@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Image, Mic, Paperclip } from 'lucide-react'
 
 export default function AttachmentMenu({
@@ -8,6 +9,7 @@ export default function AttachmentMenu({
   onRecordAudio,
   buttonRef
 }) {
+  const { t } = useTranslation()
   const menuRef = useRef(null)
   const imageInputRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -76,7 +78,7 @@ export default function AttachmentMenu({
     <div
       ref={menuRef}
       role='menu'
-      aria-label='Insert attachment'
+      aria-label={t('attachmentMenu.ariaLabel')}
       onKeyDown={handleMenuKeyDown}
       className='absolute top-full left-0 mt-3 bg-bg-panel backdrop-blur-2xl border border-overlay-medium rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-56 animate-in zoom-in-95 fade-in duration-300 origin-top-left overflow-hidden z-[120]'
     >
@@ -111,9 +113,7 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Image className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>
-            Photos or Videos
-          </span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.photoVideo')}</span>
         </button>
 
         <button
@@ -125,7 +125,7 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Paperclip className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>Attach File</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.chooseFile')}</span>
         </button>
 
         <div className='h-px bg-overlay-soft my-1 mx-2' />
@@ -139,7 +139,7 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Mic className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>Record Audio</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.recordAudio')}</span>
         </button>
       </div>
     </div>

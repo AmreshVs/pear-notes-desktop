@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { AlertCircle, CheckCircle2, CloudDownload, Loader2, Upload } from 'lucide-react'
 
 import { getExportStatus, getImportStatus } from '@pear-notes/core/store/slices/backupSlice.js'
 
 export default function BackupProgressBanner() {
+  const { t } = useTranslation()
   const exportStatus = useSelector(getExportStatus)
   const importStatus = useSelector(getImportStatus)
 
@@ -56,14 +58,14 @@ export default function BackupProgressBanner() {
         <div className='flex-1 min-w-0'>
           <h4 className='text-text-primary font-semibold text-sm truncate'>
             {isError
-              ? 'Error'
+              ? t('common.error')
               : isDone
                 ? isExport
-                  ? 'Backup Complete'
-                  : 'Restore Complete'
+                  ? t('backup.progress.completeTitle')
+                  : t('backup.restoreComplete')
                 : isExport
-                  ? 'Backing Up Data...'
-                  : 'Restoring Data...'}
+                  ? t('backup.progress.backingUp')
+                  : t('backup.progress.restoring')}
           </h4>
           <p className='text-text-tertiary text-xs truncate'>
             {isError ? status.message : progressMessage}

@@ -1,6 +1,7 @@
 import 'react-resizable/css/styles.css'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Resizable } from 'react-resizable'
 import { NodeViewWrapper } from '@tiptap/react'
@@ -14,6 +15,7 @@ import { deleteHyperdriveFile } from '../lib/fileManager'
 import MediaPreviewModal from './MediaPreviewModal'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
+  const { t } = useTranslation()
   const { src, alt, title, width: initialWidth, height: initialHeight } = node.attrs
   const resolvedUrl = useSelector((state) =>
     src && src.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, src) : src
@@ -82,7 +84,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
           <button
             onClick={handleDelete}
             className='absolute -top-3 -right-3 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-accent-danger hover:bg-accent-danger hover:text-white transition-colors z-30 pointer-events-auto'
-            title='Delete Image'
+            title={t('imageView.deleteImage')}
           >
             <Trash2 className='w-4 h-4' />
           </button>
@@ -124,7 +126,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
       {isPreviewOpen && (
         <MediaPreviewModal
           url={resolvedUrl}
-          fileName={title || alt || 'Image'}
+          fileName={title || alt || t('imageView.imageDefault')}
           fileType='image/*'
           onClose={closePreview}
         />

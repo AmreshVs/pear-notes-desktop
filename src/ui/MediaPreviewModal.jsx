@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Download, FileQuestion, X } from 'lucide-react'
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'heic', 'avif']
@@ -31,6 +32,8 @@ export default function MediaPreviewModal({
   isDownloading,
   downloadProgress
 }) {
+  const { t } = useTranslation()
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose()
@@ -49,7 +52,7 @@ export default function MediaPreviewModal({
         return (
           <img
             src={url}
-            alt={fileName || 'Preview'}
+            alt={fileName || t('mediaPreview.preview')}
             className='max-w-full max-h-full object-contain rounded-lg shadow-xl'
           />
         )
@@ -58,7 +61,7 @@ export default function MediaPreviewModal({
         return (
           <iframe
             src={url}
-            title={fileName || 'Preview'}
+            title={fileName || t('mediaPreview.preview')}
             className='w-full h-full bg-white rounded-lg shadow-xl border-none'
           />
         )
@@ -79,7 +82,7 @@ export default function MediaPreviewModal({
           <div className='flex flex-col items-center gap-4 bg-bg-secondary border border-border-primary rounded-xl p-10 shadow-xl'>
             <FileQuestion className='w-12 h-12 text-text-tertiary' />
             <p className='text-sm text-text-secondary text-center'>
-              This file type cannot be previewed.
+              {t('mediaPreview.cannotPreview')}
             </p>
             {onDownload && (
               <button
@@ -88,7 +91,7 @@ export default function MediaPreviewModal({
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-accent-on-primary text-sm font-semibold transition-colors ${isDownloading ? 'cursor-wait opacity-70' : 'hover:bg-accent-primary-hover'}`}
               >
                 <Download className='w-4 h-4' />
-                {isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
+                {isDownloading ? t('mediaPreview.downloadingProgress', { progress: downloadProgress }) : t('common.download')}
               </button>
             )}
           </div>
@@ -103,7 +106,7 @@ export default function MediaPreviewModal({
     >
       <div className='flex items-center justify-between px-8 py-5 flex-shrink-0 z-30'>
         <p className='text-base font-bold text-white/95 truncate pr-8 select-none'>
-          {fileName || 'Preview'}
+          {fileName || t('mediaPreview.preview')}
         </p>
         <div className='flex items-center gap-3'>
           {onDownload && (
@@ -114,7 +117,7 @@ export default function MediaPreviewModal({
               }}
               disabled={isDownloading}
               className={`w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center shadow-md ${isDownloading ? 'cursor-wait' : 'cursor-pointer'}`}
-              title={isDownloading ? `Downloading… ${downloadProgress}%` : 'Download'}
+              title={isDownloading ? t('mediaPreview.downloadingProgress', { progress: downloadProgress }) : t('common.download')}
             >
               {isDownloading ? (
                 <span className='text-xs font-bold text-white'>{downloadProgress}%</span>
@@ -126,7 +129,7 @@ export default function MediaPreviewModal({
           <button
             onClick={onClose}
             className='w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer shadow-md'
-            title='Close'
+            title={t('common.close')}
           >
             <X className='w-5 h-5' />
           </button>

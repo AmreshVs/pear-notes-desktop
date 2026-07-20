@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Fingerprint, KeyRound, LockKeyhole } from 'lucide-react'
 
@@ -30,9 +31,8 @@ function getAuthMethodLabel() {
   return AUTH_METHOD_LABELS.linux
 }
 
-const CHANGE_METHOD_REASON = 'Authenticate to change the note lock method'
-
 export default function PrivacySettings() {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const lockMethod = useSelector(getLockMethod)
   const { requestUnlockPassword } = useNoteLockPassword()
@@ -68,7 +68,7 @@ export default function PrivacySettings() {
       if (!ok) return
     } else {
       if (!lockAvailable) return
-      const ok = await authenticate(CHANGE_METHOD_REASON)
+      const ok = await authenticate(t('settings.privacy.changeMethodReason'))
       if (!ok) return
     }
     setShowPasswordModal(true)
@@ -91,7 +91,7 @@ export default function PrivacySettings() {
     <div className='space-y-12 max-w-2xl mx-auto'>
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Note Lock
+          {t('settings.privacy.noteLock')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-start justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
@@ -100,13 +100,13 @@ export default function PrivacySettings() {
                 <LockKeyhole className='w-5 h-5 text-accent-primary' />
               </div>
               <div className='space-y-1 min-w-0'>
-                <label className='block text-text-primary text-base font-bold'>Note Lock</label>
+                <label className='block text-text-primary text-base font-bold'>{t('settings.privacy.noteLock')}</label>
                 <p className='text-sm text-text-tertiary font-medium opacity-60'>
                   {lockMethod === 'password'
-                    ? 'Locked notes unlock with your custom password on all synced devices.'
+                    ? t('settings.privacy.noteLockPasswordDesc')
                     : lockAvailable
-                      ? `Locked notes unlock with ${getAuthMethodLabel()}.`
-                      : 'Device authentication isn’t set up on this device. Change the lock method from another synced device.'}
+                      ? t('settings.privacy.noteLockDesc', { method: getAuthMethodLabel() })
+                      : t('settings.privacy.noteLockUnavailableDesc')}
                 </p>
               </div>
             </div>
@@ -114,9 +114,9 @@ export default function PrivacySettings() {
 
           <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>Unlock Method</label>
+              <label className='block text-text-primary text-base font-bold'>{t('settings.privacy.unlockMethod')}</label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Choose how locked notes are unlocked.
+                {t('settings.privacy.unlockMethodDesc')}
               </p>
             </div>
             <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary shrink-0'>
@@ -130,7 +130,7 @@ export default function PrivacySettings() {
                 }`}
               >
                 <Fingerprint className='w-4 h-4' />
-                Biometric
+                {t('settings.privacy.biometric')}
               </button>
               <button
                 onClick={handleSelectPassword}
@@ -142,7 +142,7 @@ export default function PrivacySettings() {
                 }`}
               >
                 <KeyRound className='w-4 h-4' />
-                Password
+                {t('settings.privacy.password')}
               </button>
             </div>
           </div>
@@ -150,11 +150,10 @@ export default function PrivacySettings() {
           <div className='p-6 flex items-center justify-between gap-6'>
             <div className='space-y-1 min-w-0'>
               <label className='block text-text-primary text-base font-bold'>
-                Block Screenshots
+                {t('settings.privacy.blockScreenshots')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Exclude the window from screenshots, screen recordings, and window previews while
-                viewing a locked note.
+                {t('settings.privacy.blockScreenshotsDesc')}
               </p>
             </div>
             <button

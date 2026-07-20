@@ -1,7 +1,9 @@
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Link2 } from 'lucide-react'
 
 export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
+  const { t } = useTranslation()
   if (!open) return null
 
   return createPortal(
@@ -22,11 +24,10 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
 
           <div className='space-y-2'>
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-              Combine This Device?
+              {t('mergeConfirm.title')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              Notes, folders, and media on this device will be merged into the linked vault. Nothing
-              on this device will be deleted.
+              {t('mergeConfirm.description')}
             </p>
           </div>
 
@@ -35,13 +36,13 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
               onClick={onCancel}
               className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={onConfirm}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
             >
-              Combine &amp; Link
+              {t('mergeConfirm.combineBtn')}
             </button>
           </div>
         </div>

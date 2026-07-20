@@ -1,16 +1,18 @@
+import i18next from 'i18next'
+
 import { BACKUP_ERROR } from '@pear-notes/core/constant.js'
 
-const BACKUP_ERROR_MESSAGES = {
-  [BACKUP_ERROR.INVALID_FILE]: "This file isn't a valid Pear Notes backup.",
-  [BACKUP_ERROR.INCORRECT_RECOVERY_KEY]:
-    'Incorrect recovery key. Please check the key and try again.',
-  [BACKUP_ERROR.INCORRECT_PASSWORD]:
-    'Incorrect password. Please check your backup password and try again.',
-  [BACKUP_ERROR.PASSWORD_REQUIRED]: 'This backup is password-protected. Please enter its password.',
-  [BACKUP_ERROR.UNSUPPORTED_VERSION]:
-    'This backup was made with an incompatible version and cannot be restored.'
+const BACKUP_ERROR_KEYS = {
+  [BACKUP_ERROR.INVALID_FILE]: 'backup.errors.invalidFile',
+  [BACKUP_ERROR.INCORRECT_RECOVERY_KEY]: 'backup.errors.incorrectRecoveryKey',
+  [BACKUP_ERROR.INCORRECT_PASSWORD]: 'backup.errors.incorrectPassword',
+  [BACKUP_ERROR.PASSWORD_REQUIRED]: 'backup.errors.passwordRequired',
+  [BACKUP_ERROR.UNSUPPORTED_VERSION]: 'backup.errors.unsupportedVersion'
 }
 
-export function getBackupErrorMessage(code) {
-  return BACKUP_ERROR_MESSAGES[code] || code
+export function getBackupErrorMessage(code, t) {
+  const key = BACKUP_ERROR_KEYS[code]
+  if (!key) return code
+  if (t) return t(key)
+  return i18next.t(key)
 }

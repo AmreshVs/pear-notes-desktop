@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link2, X } from 'lucide-react'
 
 export default function LinkModal({ onClose, onSetLink, currentUrl = '', currentText = '' }) {
+  const { t } = useTranslation()
   const [url, setUrl] = useState(currentUrl)
   const [text, setText] = useState(currentText)
   const urlInputRef = useRef(null)
@@ -56,7 +58,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
         <div className='bg-bg-panel-secondary border-b border-border-primary flex items-center justify-between px-6 py-4'>
           <div className='flex items-center gap-2'>
             <Link2 className='w-5 h-5 text-text-primary' />
-            <h2 className='text-text-primary text-xl font-semibold'>Add Link</h2>
+            <h2 className='text-text-primary text-xl font-semibold'>{t('linkModal.addLink')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -69,18 +71,18 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
         <form onSubmit={handleSubmit} className='p-6 bg-bg-panel'>
           <div className='space-y-4'>
             <div>
-              <label className='block text-text-primary text-sm mb-2 font-medium'>Link Text</label>
+              <label className='block text-text-primary text-sm mb-2 font-medium'>{t('linkModal.linkText')}</label>
               <input
                 type='text'
                 value={text}
                 onChange={handleTextChange}
-                placeholder='Link text'
+                placeholder={t('linkModal.linkTextPlaceholder')}
                 className='w-full px-4 py-2.5 rounded-lg text-sm bg-bg-tertiary border border-border-tertiary text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary'
                 maxLength={100}
               />
             </div>
             <div>
-              <label className='block text-text-primary text-sm mb-2 font-medium'>URL</label>
+              <label className='block text-text-primary text-sm mb-2 font-medium'>{t('linkModal.url')}</label>
               <input
                 ref={urlInputRef}
                 type='url'
@@ -90,7 +92,7 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
                 className='w-full px-4 py-2.5 rounded-lg text-sm bg-bg-tertiary border border-border-tertiary text-text-primary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary'
                 required
               />
-              <p className='text-xs mt-2 text-text-tertiary'>Enter the web address</p>
+              <p className='text-xs mt-2 text-text-tertiary'>{t('linkModal.enterWebAddress')}</p>
             </div>
           </div>
 
@@ -100,24 +102,20 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
                 type='button'
                 onClick={handleRemove}
                 className='px-4 py-2.5 rounded-lg transition-all text-sm font-medium text-accent-danger hover:bg-accent-danger/10'
-              >
-                Remove Link
-              </button>
+              >{t('linkModal.removeLink')}</button>
             )}
             <div className='flex items-center gap-3 ml-auto'>
               <button
                 type='button'
                 onClick={onClose}
                 className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium bg-bg-panel-tertiary hover:bg-bg-panel-secondary text-text-secondary hover:text-text-primary border border-border-tertiary hover:border-border-secondary'
-              >
-                Cancel
-              </button>
+              >{t('common.cancel')}</button>
               <button
                 type='submit'
                 disabled={!url.trim()}
                 className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow-md bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent-primary'
               >
-                Add Link
+                {t('linkModal.addLink')}
               </button>
             </div>
           </div>

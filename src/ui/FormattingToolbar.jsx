@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Bold,
   Code as CodeIcon,
@@ -21,6 +22,7 @@ import AudioRecorderModal from './AudioRecorderModal'
 import LinkModal from './LinkModal'
 
 export default function FormattingToolbar({ editor, noteKey }) {
+  const { t } = useTranslation()
   const {
     editorState,
     showFormatMenu,
@@ -60,7 +62,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 ? 'bg-accent-primary text-accent-on-primary shadow-[0_0_15px_rgba(var(--accent-primary),0.2)]'
                 : 'text-text-primary hover:bg-bg-tertiary/50 hover:text-text-primary'
             }`}
-            title='Formatting'
+            title={t('formatting.title')}
           >
             <span className='font-serif text-lg font-black tracking-tighter'>Aa</span>
           </button>
@@ -73,28 +75,28 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleBold().run()}
                   isActive={editorState.isBold}
-                  title='Bold'
+                  title={t('formatting.bold')}
                 >
                   <Bold className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleItalic().run()}
                   isActive={editorState.isItalic}
-                  title='Italic'
+                  title={t('formatting.italic')}
                 >
                   <Italic className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleUnderline().run()}
                   isActive={editorState.isUnderline}
-                  title='Underline'
+                  title={t('formatting.underline')}
                 >
                   <Underline className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleStrike().run()}
                   isActive={editorState.isStrike}
-                  title='Strikethrough'
+                  title={t('formatting.strikethrough')}
                 >
                   <Strikethrough className='w-4 h-4' strokeWidth={2.5} />
                 </MenuButton>
@@ -102,7 +104,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <MenuButton
                   onClick={() => editor?.chain().focus().toggleHighlight().run()}
                   isActive={editorState.isHighlight}
-                  title='Highlight'
+                  title={t('formatting.highlight')}
                 >
                   <div className='relative'>
                     <Highlighter className='w-4 h-4' strokeWidth={2.5} />
@@ -115,19 +117,19 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <ListButton
                   onClick={() => handleHeadingClick(1)}
                   isActive={editorState.headingLevel === 1}
-                  label='Title'
+                  label={t('formatting.types.title')}
                   style='text-2xl font-black tracking-tight'
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(2)}
                   isActive={editorState.headingLevel === 2}
-                  label='Heading'
+                  label={t('formatting.types.heading')}
                   style='text-xl font-bold tracking-tight'
                 />
                 <ListButton
                   onClick={() => handleHeadingClick(3)}
                   isActive={editorState.headingLevel === 3}
-                  label='Subheading'
+                  label={t('formatting.types.subheading')}
                   style='text-lg font-bold opacity-90'
                 />
                 <ListButton
@@ -137,7 +139,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                     !editorState.isCodeBlock &&
                     !editorState.isCode
                   }
-                  label='Body Text'
+                  label={t('formatting.types.bodyText')}
                   showCheck={
                     editorState.headingLevel === 0 &&
                     !editorState.isCodeBlock &&
@@ -148,7 +150,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleCode().run()}
                   isActive={editorState.isCode}
-                  label='Monospaced'
+                  label={t('formatting.types.monospaced')}
                   style='font-mono text-sm opacity-80'
                 />
 
@@ -157,7 +159,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBulletList().run()}
                   isActive={editorState.isBulletList}
-                  label='Bulleted List'
+                  label={t('formatting.types.bulletedList')}
                   icon={
                     <div className='w-1.5 h-1.5 rounded-full bg-text-tertiary/70 mr-3 ml-1 group-hover:bg-accent-primary transition-colors' />
                   }
@@ -165,7 +167,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleOrderedList().run()}
                   isActive={editorState.isOrderedList}
-                  label='Numbered List'
+                  label={t('formatting.types.numberedList')}
                   icon={
                     <span className='text-xs font-bold text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'>
                       1.
@@ -178,7 +180,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <ListButton
                   onClick={() => editor?.chain().focus().toggleBlockquote().run()}
                   isActive={editorState.isBlockquote}
-                  label='Quote Block'
+                  label={t('formatting.types.quoteBlock')}
                   icon={
                     <div className='w-1 h-3 bg-text-tertiary/50 rounded-full mr-3.5 ml-1 group-hover:bg-accent-primary transition-colors' />
                   }
@@ -193,7 +195,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <Button
           onClick={handleToggleCodeBlock}
           isActive={editorState.isCodeBlock}
-          title='Code Block'
+          title={t('formatting.codeBlock')}
           className='w-9 h-9'
         >
           <CodeIcon className='w-4 h-4' strokeWidth={2.5} />
@@ -204,7 +206,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <Button
           onClick={() => editor?.chain().focus().toggleTaskList().run()}
           isActive={editorState.isTaskList}
-          title='Checklist'
+          title={t('formatting.checklist')}
           className='w-9 h-9'
         >
           <Square className='w-4 h-4' strokeWidth={2.5} />
@@ -213,7 +215,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <Button
           onClick={() => setShowLinkModal(true)}
           isActive={editorState.isLink}
-          title='Link'
+          title={t('formatting.link')}
           className='w-9 h-9'
         >
           <Link2 className='w-4 h-4' strokeWidth={2.5} />
@@ -223,7 +225,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
           onClick={() =>
             editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
           }
-          title='Insert Table'
+          title={t('formatting.insertTable')}
           className='w-9 h-9'
         >
           <TableIcon className='w-4 h-4' strokeWidth={2.5} />
@@ -236,7 +238,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             isActive={showAttachmentMenu}
             hasPopup='menu'
             expanded={showAttachmentMenu}
-            title='Attachments'
+            title={t('formatting.attachments')}
             className='w-9 h-9'
           >
             <Paperclip className='w-4 h-4' strokeWidth={2.5} />
@@ -260,7 +262,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             onClick={() => editor?.chain().focus().undo().run()}
             disabled={!editorState.canUndo}
             className='p-2 text-text-primary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
-            title='Undo'
+            title={t('formatting.undo')}
           >
             <Undo className='w-4 h-4' />
           </button>
@@ -268,7 +270,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
             onClick={() => editor?.chain().focus().redo().run()}
             disabled={!editorState.canRedo}
             className='p-2 text-text-primary hover:text-text-primary hover:bg-bg-tertiary/50 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
-            title='Redo'
+            title={t('formatting.redo')}
           >
             <Redo className='w-4 h-4' />
           </button>

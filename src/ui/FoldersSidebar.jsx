@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Briefcase,
@@ -39,6 +40,7 @@ export default function FoldersSidebar({
   onSettingsClick,
   onDeleteFolder
 }) {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const [editingFolderId, setEditingFolderId] = useState(null)
   const [newFolderId, setNewFolderId] = useState(null)
@@ -94,7 +96,7 @@ export default function FoldersSidebar({
 
   const handleCreateNewFolder = () => {
     dispatch(setShouldAutoRenameNextFolder(true))
-    onCreateFolder('Untitled')
+    onCreateFolder(t('folders.untitled'))
   }
 
   const handleMenuAction = (action, folder) => {
@@ -111,7 +113,7 @@ export default function FoldersSidebar({
         setEditName(folder.name)
         break
       case 'delete':
-        if (window.confirm(`Are you sure you want to delete "${folder.name}"?`)) {
+        if (window.confirm(`${t('folders.deleteDescription')} "${folder.name}"?`)) {
           setDeletingFolderId(folder.id)
           setTimeout(() => {
             onDeleteFolder(folder.id)
@@ -125,14 +127,14 @@ export default function FoldersSidebar({
     e.preventDefault()
     e.stopPropagation()
     const items = [
-      { id: 'new-note', label: 'New Note' },
-      { id: 'new-folder', label: 'New Folder' }
+      { id: 'new-note', label: t('folders.a11y.newNote') },
+      { id: 'new-folder', label: t('folders.newFolder') }
     ]
     if (!folder.isSystem) {
       items.push(
         { type: 'separator' },
-        { id: 'rename', label: 'Rename' },
-        { id: 'delete', label: 'Delete' }
+        { id: 'rename', label: t('folders.buttons.rename') },
+        { id: 'delete', label: t('folders.buttons.delete') }
       )
     }
     const result = await showContextMenu(items)
@@ -165,7 +167,7 @@ export default function FoldersSidebar({
                 ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
                 : 'bg-transparent text-text-secondary hover:bg-bg-tertiary border border-transparent'
             }`}
-          title={isEditing ? '' : 'Double click to rename'}
+          title={isEditing ? '' : t('folders.doubleClickToRename')}
         >
           <div className='flex items-center gap-4 min-w-0 flex-1'>
             <Icon
@@ -181,7 +183,7 @@ export default function FoldersSidebar({
                   onBlur={handleSubmitRename}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
-                  aria-label='Folder name'
+                  aria-label={t('folders.renameLabel')}
                   className={`w-full bg-bg-panel text-base text-text-primary tracking-tight leading-[20px] h-6 px-1.5 rounded-md border border-accent-primary ${isSelected ? 'font-bold' : 'font-medium'}`}
                 />
               ) : (
@@ -215,13 +217,13 @@ export default function FoldersSidebar({
       <div className='px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none'>
         <div className='flex items-center justify-between h-[40px] transition-none'>
           <h2 className='text-title font-bold text-text-primary tracking-tight transition-none'>
-            Folders
+            {t('folders.title')}
           </h2>
           <button
             onClick={handleCreateNewFolder}
             className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
-            title='New Folder'
-            aria-label='New Folder'
+            title={t('folders.newFolder')}
+            aria-label={t('folders.newFolder')}
           >
             <FolderPlus className='w-5 h-5 transition-none' />
           </button>
@@ -236,7 +238,7 @@ export default function FoldersSidebar({
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
           <div className='text-xs font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
-            Archive
+            {t('folders.archiveHeader')}
           </div>
           <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
         </div>
@@ -247,12 +249,12 @@ export default function FoldersSidebar({
           <button
             onClick={onSettingsClick}
             className='flex items-center justify-center transition-none font-medium bg-bg-tertiary/40 text-text-secondary border border-border-primary/50 hover:bg-bg-tertiary hover:border-border-secondary active:scale-95 w-full gap-3 px-3 py-3 rounded-2xl'
-            title='Settings'
-            aria-label='Settings'
+            title={t('settings.title')}
+            aria-label={t('settings.title')}
           >
             <Settings className='w-4 h-4 flex-shrink-0 transition-none' />
             <span className='text-base font-medium whitespace-nowrap transition-none'>
-              Settings
+              {t('settings.title')}
             </span>
           </button>
         </div>

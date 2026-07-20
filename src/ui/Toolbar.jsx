@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreHorizontal, Search } from 'lucide-react'
 
 export default function Toolbar({ searchQuery, onSearchChange }) {
+  const { t } = useTranslation()
   return (
     <div className='h-12 flex items-center px-5 gap-4 bg-bg-secondary border-b border-border-primary'>
       <div className='flex items-center gap-2'>
@@ -20,7 +22,7 @@ export default function Toolbar({ searchQuery, onSearchChange }) {
           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-text-secondary group-focus-within:text-accent-primary transition-colors' />
           <input
             type='text'
-            placeholder='Search'
+            placeholder={t('search.placeholder')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className='w-full pl-9 pr-3 py-1.5 rounded-md text-sm focus:outline-none bg-bg-tertiary text-text-primary placeholder-text-tertiary transition-all'

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
@@ -48,6 +49,7 @@ function getPlatformName(platform) {
 }
 
 export default function SyncSettings({ onClose }) {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const inviteCode = useSelector(getInvite)
   const expiresAt = useSelector(getInviteExpiresAt)
@@ -102,7 +104,7 @@ export default function SyncSettings({ onClose }) {
     const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp
     const date = new Date(ms)
     if (isNaN(date.getTime())) return ''
-    return `Expires at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    return t('sync.invite.expiry', { time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
   }
 
   return (
@@ -116,7 +118,7 @@ export default function SyncSettings({ onClose }) {
               : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
           }`}
         >
-          Link Device
+          {t('sync.tabs.link')}
         </button>
         <button
           onClick={() => setSyncTab('manage')}
@@ -126,7 +128,7 @@ export default function SyncSettings({ onClose }) {
               : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
           }`}
         >
-          My Devices
+          {t('sync.tabs.devices')}
         </button>
       </div>
 
@@ -139,10 +141,9 @@ export default function SyncSettings({ onClose }) {
                   <Globe className='w-10 h-10 text-accent-primary' />
                 </div>
                 <div className='space-y-2'>
-                  <h3 className='text-text-primary font-bold text-xl'>Link Your Devices</h3>
+                  <h3 className='text-text-primary font-bold text-xl'>{t('sync.hero.title')}</h3>
                   <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-                    Create a secure, end-to-end encrypted connection to sync your notes across
-                    devices instantly.
+                    {t('sync.hero.description')}
                   </p>
                 </div>
                 <button
@@ -152,7 +153,7 @@ export default function SyncSettings({ onClose }) {
                 >
                   <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
                   {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                  {isLoading ? 'Preparing Secure Link...' : 'Generate Invite'}
+                  {isLoading ? t('sync.hero.preparing') : t('sync.hero.generateBtn')}
                 </button>
               </div>
             ) : (
@@ -165,9 +166,9 @@ export default function SyncSettings({ onClose }) {
                       <ShieldCheck className='w-5 h-5 text-accent-primary' />
                     </div>
                     <div>
-                      <h4 className='text-text-primary font-semibold'>Invitation Ready</h4>
+                      <h4 className='text-text-primary font-semibold'>{t('sync.invite.header')}</h4>
                       <p className='text-xs text-text-tertiary font-medium bg-bg-panel-tertiary/50 px-2 py-0.5 rounded-full inline-block mt-1'>
-                        {expiresAt ? formatExpiration(expiresAt) : 'Permanent Link'}
+                        {expiresAt ? formatExpiration(expiresAt) : t('sync.invite.permanent')}
                       </p>
                     </div>
                   </div>
@@ -182,17 +183,16 @@ export default function SyncSettings({ onClose }) {
                       />
                     </div>
                     <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-base'>Scan to link faster</h5>
+                      <h5 className='text-text-primary font-bold text-base'>{t('sync.invite.qrTitle')}</h5>
                       <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                        Open the link screen on your other device and scan this QR code to paste the
-                        invite instantly.
+                        {t('sync.invite.qrDescription')}
                       </p>
                     </div>
                   </div>
 
                   <div className='space-y-3'>
                     <label className='text-xs uppercase tracking-wider font-bold text-text-tertiary ml-1'>
-                      Secure Pair Code
+                      {t('sync.invite.codeLabel')}
                     </label>
                     <div className='relative group'>
                       <input
@@ -214,11 +214,11 @@ export default function SyncSettings({ onClose }) {
                   >
                     {copied ? (
                       <>
-                        <Check className='w-4 h-4' strokeWidth={2.5} /> Code Copied!
+                        <Check className='w-4 h-4' strokeWidth={2.5} /> {t('sync.invite.copied')}
                       </>
                     ) : (
                       <>
-                        <Link2 className='w-4 h-4' /> Copy Invite Code
+                        <Link2 className='w-4 h-4' /> {t('sync.invite.copyBtn')}
                       </>
                     )}
                   </button>
@@ -227,8 +227,7 @@ export default function SyncSettings({ onClose }) {
                 <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-start'>
                   <Info className='w-5 h-5 text-accent-primary shrink-0' />
                   <p className='text-xs text-text-tertiary leading-relaxed'>
-                    For security, don&apos;t share this code in public channels as it grants full
-                    access to your notes.
+                    {t('sync.invite.warning')}
                   </p>
                 </div>
               </div>
@@ -238,7 +237,7 @@ export default function SyncSettings({ onClose }) {
               <div className='pt-6 border-t border-border-primary space-y-4'>
                 <div className='flex items-center gap-2 ml-1'>
                   <Plus className='w-4 h-4 text-accent-primary' />
-                  <h4 className='font-bold text-sm text-text-primary'>Already have an invite?</h4>
+                  <h4 className='font-bold text-sm text-text-primary'>{t('sync.paste.header')}</h4>
                 </div>
 
                 <div className='relative flex gap-2'>
@@ -246,7 +245,7 @@ export default function SyncSettings({ onClose }) {
                     type='text'
                     value={pasteCode}
                     onChange={(e) => setPasteCode(e.target.value)}
-                    placeholder='Paste invite code here...'
+                    placeholder={t('sync.paste.placeholder')}
                     className='flex-1 px-4 py-3 rounded-xl bg-bg-panel-secondary/50 border border-border-primary text-text-primary text-sm focus:outline-none focus:border-accent-primary transition-colors placeholder:text-text-tertiary/50'
                   />
                   <button
@@ -255,7 +254,7 @@ export default function SyncSettings({ onClose }) {
                     className='px-6 py-4 bg-accent-primary text-accent-on-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-base font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
                   >
                     {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                    Link Device
+                    {t('sync.paste.linkBtn')}
                   </button>
                 </div>
               </div>
@@ -265,7 +264,7 @@ export default function SyncSettings({ onClose }) {
           <div className='space-y-6'>
             <div className='space-y-1'>
               <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
-                This Device
+                {t('sync.devices.thisDevice')}
               </h4>
               <div className='grid gap-4'>
                 {syncedDevices
@@ -278,7 +277,7 @@ export default function SyncSettings({ onClose }) {
 
             <div className='space-y-1'>
               <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
-                Other Devices
+                {t('sync.devices.otherDevices')}
               </h4>
               <div className='grid gap-4'>
                 {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
@@ -291,7 +290,7 @@ export default function SyncSettings({ onClose }) {
                       <Smartphone className='w-5 h-5 opacity-50' />
                     </div>
                     <p className='text-xs text-text-tertiary italic'>
-                      No other devices connected yet.
+                      {t('sync.devices.empty')}
                     </p>
                   </div>
                 )}
@@ -303,8 +302,7 @@ export default function SyncSettings({ onClose }) {
         <div className='pt-2'>
           <p className='text-center text-xs text-text-tertiary px-4'>
             <ShieldCheck className='w-3.5 h-3.5 text-accent-primary inline mr-1.5 opacity-60' />
-            Your data moves directly between devices using encrypted Hypercore logs. No central
-            server involved.
+            {t('sync.footer')}
           </p>
         </div>
       </div>
@@ -319,6 +317,7 @@ export default function SyncSettings({ onClose }) {
 }
 
 function DeviceItem({ device, isOther }) {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const Icon = device.deviceType === 'desktop' ? Monitor : Smartphone
   const [isEditing, setIsEditing] = useState(false)
@@ -383,12 +382,12 @@ function DeviceItem({ device, isOther }) {
               <span
                 className='font-bold text-text-primary text-base truncate cursor-pointer block'
                 onDoubleClick={handleDoubleClick}
-                title={device.isLocal ? 'Double-click to rename' : getDeviceDisplayName(device)}
+                title={device.isLocal ? t('folders.doubleClickToRename') : getDeviceDisplayName(device)}
               >
                 {getDeviceDisplayName(device)}
               </span>
               <p className='text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
-                {getPlatformName(device.platform)}
+                {t(`sync.platforms.${getPlatformName(device.platform)}`, getPlatformName(device.platform))}
               </p>
             </div>
           )}
@@ -397,7 +396,7 @@ function DeviceItem({ device, isOther }) {
         {isOther && (
           <button
             onClick={() => setIsConfirmingDelete(true)}
-            aria-label={`Remove ${getDeviceDisplayName(device)}`}
+            aria-label={t('sync.devices.removeDevice', { name: getDeviceDisplayName(device) })}
             className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-accent-danger/10 rounded-lg text-accent-danger transition-all flex items-center gap-2'
           >
             <Trash2 className='w-4 h-4' />
@@ -425,10 +424,10 @@ function DeviceItem({ device, isOther }) {
 
               <div className='space-y-2'>
                 <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-                  Remove Device?
+                  {t('sync.delete.title')}
                 </h3>
                 <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                  The device will lose the data sync and will remove all the data from the device.
+                  {t('sync.delete.description')}
                 </p>
               </div>
 
@@ -437,7 +436,7 @@ function DeviceItem({ device, isOther }) {
                   onClick={handleCloseDelete}
                   className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
                 >
-                  Cancel
+                  {t('sync.delete.cancel')}
                 </button>
                 <button
                   onClick={() => {
@@ -446,7 +445,7 @@ function DeviceItem({ device, isOther }) {
                   }}
                   className='flex-1 py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
                 >
-                  Confirm
+                  {t('common.confirm')}
                 </button>
               </div>
             </div>

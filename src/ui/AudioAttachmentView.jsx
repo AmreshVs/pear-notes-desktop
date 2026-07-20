@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { NodeViewWrapper } from '@tiptap/react'
 import { Download, Trash2 } from 'lucide-react'
@@ -16,6 +17,7 @@ import {
 import AudioPlayer from './AudioPlayer'
 
 export default function AudioAttachmentView({ node, deleteNode }) {
+  const { t } = useTranslation()
   const { audioData, duration, url, fileName } = node.attrs
   const resolvedUrl = useSelector((state) =>
     url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
@@ -64,7 +66,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
         <AudioPlayer
           src={resolvedUrl || audioData}
           duration={duration}
-          title={fileName || 'Audio Recording'}
+          title={fileName || t('attachments.audioRecording')}
         />
 
         {isDownloading && (
@@ -79,7 +81,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
             <button
               onClick={handleDownload}
               className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-panel transition-all duration-200'
-              title='Download'
+              title={t('common.download')}
             >
               <Download className='w-4 h-4 text-text-secondary hover:text-text-primary transition-colors' />
             </button>
@@ -87,7 +89,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
           <button
             onClick={handleDelete}
             className='flex-shrink-0 p-2.5 rounded-lg hover:bg-accent-danger/10 transition-all duration-200'
-            title='Delete'
+            title={t('common.delete')}
           >
             <Trash2 className='w-4 h-4 text-accent-danger' />
           </button>

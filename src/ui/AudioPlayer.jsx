@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Pause, Play } from 'lucide-react'
 
 import { formatTime } from '../utils/formatters'
 
-export default function AudioPlayer({ src, duration: propDuration, title = 'Audio Recording' }) {
+export default function AudioPlayer({ src, duration: propDuration, title }) {
+  const { t } = useTranslation()
+  const displayTitle = title || t('attachments.audioRecording')
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [internalDuration, setInternalDuration] = useState(propDuration || 0)
@@ -125,10 +128,10 @@ export default function AudioPlayer({ src, duration: propDuration, title = 'Audi
         </button>
 
         <div className='flex-1 min-w-0'>
-          <p className='text-sm font-semibold text-text-primary truncate mb-1'>{title}</p>
+          <p className='text-sm font-semibold text-text-primary truncate mb-1'>{displayTitle}</p>
           <div className='flex items-center gap-2'>
             <span className='text-xs font-medium text-text-tertiary bg-bg-tertiary px-2 py-0.5 rounded-md'>
-              AUDIO
+              {t('audioPlayer.label')}
             </span>
             <span className='text-xs text-text-tertiary'>•</span>
             <span className='text-xs text-text-tertiary font-mono'>

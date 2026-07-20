@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
@@ -50,6 +51,7 @@ import UpdateRequiredModal from './ui/UpdateRequiredModal'
 import { getDbEncryptionKey } from './utils.js'
 
 function App() {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const { width } = useWindowSize()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(width < 1000)
@@ -137,7 +139,7 @@ function App() {
     <div className='flex-1 flex items-center justify-center'>
       <div className='text-center'>
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
-        <p className='text-base text-text-tertiary'>Loading...</p>
+        <p className='text-base text-text-tertiary'>{t('common.loading')}</p>
       </div>
     </div>
   ) : (

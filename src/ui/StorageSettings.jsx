@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   AlertTriangle,
@@ -99,6 +100,7 @@ function Tooltip({ text, children }) {
 }
 
 function NoteRow({ note, onDeleteMedia }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   return (
     <div className='border-b border-overlay-light last:border-0'>
@@ -113,7 +115,7 @@ function NoteRow({ note, onDeleteMedia }) {
             <ChevronRight className='w-3.5 h-3.5 text-text-tertiary flex-shrink-0' />
           )}
           <span className='text-base font-medium text-text-primary truncate'>
-            {note.title || 'Untitled'}
+            {note.title || t('folders.untitled')}
           </span>
         </div>
         <span className='text-sm font-bold text-text-tertiary flex-shrink-0 ml-4'>
@@ -126,7 +128,7 @@ function NoteRow({ note, onDeleteMedia }) {
           <div className='flex items-center justify-between py-2 px-3 rounded-xl hover:bg-overlay-subtle transition-colors'>
             <div className='flex items-center gap-2 min-w-0'>
               <PenLine className='w-4 h-4 text-text-tertiary flex-shrink-0' />
-              <span className='text-sm text-text-secondary truncate'>Text</span>
+              <span className='text-sm text-text-secondary truncate'>{t('backup.text')}</span>
               <span className='text-sm text-text-tertiary flex-shrink-0'>
                 {formatBytes(note.contentSize)}
               </span>
@@ -155,7 +157,7 @@ function NoteRow({ note, onDeleteMedia }) {
                 <button
                   onClick={() => onDeleteMedia(note.key, m.path)}
                   className='opacity-0 group-hover/item:opacity-100 p-1.5 rounded-lg hover:bg-accent-danger/10 text-text-tertiary hover:text-accent-danger transition-all ml-2 flex-shrink-0'
-                  title='Remove from note'
+                  title={t('storage.removeFromNote')}
                 >
                   <X className='w-3.5 h-3.5' />
                 </button>
@@ -169,6 +171,7 @@ function NoteRow({ note, onDeleteMedia }) {
 }
 
 function DownloadRow({ download, onRetry, onPause }) {
+  const { t } = useTranslation()
   const pct =
     download.totalBytes > 0
       ? Math.min(100, Math.round((download.downloadedBytes / download.totalBytes) * 100))
@@ -176,13 +179,13 @@ function DownloadRow({ download, onRetry, onPause }) {
   const isStuck =
     download.status === 'error' || (download.status === 'downloading' && download.stalled)
   const statusLabel = !download.sourceOnline
-    ? 'Waiting for the source device to come online'
+    ? t('storage.waitingForDevice')
     : download.status === 'error'
-      ? 'Transfer failed — retry to try again'
+      ? t('storage.transferFailed')
       : download.status === 'paused'
-        ? 'Paused'
+        ? t('storage.paused')
         : download.stalled
-          ? 'Stalled — retry to try again'
+          ? t('storage.stalled')
           : null
 
   return (
@@ -191,10 +194,10 @@ function DownloadRow({ download, onRetry, onPause }) {
         <div className='flex items-center gap-2 min-w-0'>
           <CloudDownload className='w-4 h-4 text-accent-primary flex-shrink-0' />
           <span className='text-sm font-medium text-text-primary truncate'>
-            {download.fileName || 'Attachment'}
+            {download.fileName || t('storage.attachment')}
           </span>
           {!download.sourceOnline && (
-            <span title='Waiting for the other device to come online'>
+            <span title={t('storage.waitingOnlineTooltip')}>
               <WifiOff className='w-3.5 h-3.5 text-text-tertiary/60 flex-shrink-0' />
             </span>
           )}
@@ -206,7 +209,7 @@ function DownloadRow({ download, onRetry, onPause }) {
           {download.status === 'downloading' && !download.stalled && (
             <button
               onClick={() => onPause(download.url)}
-              title='Pause'
+              title={t('common.pause')}
               className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
             >
               <Pause className='w-3.5 h-3.5' />
@@ -215,7 +218,7 @@ function DownloadRow({ download, onRetry, onPause }) {
           {download.status === 'paused' && (
             <button
               onClick={() => onRetry(download.url)}
-              title='Resume'
+              title={t('common.resume')}
               className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
             >
               <Play className='w-3.5 h-3.5' />
@@ -224,7 +227,7 @@ function DownloadRow({ download, onRetry, onPause }) {
           {isStuck && (
             <button
               onClick={() => onRetry(download.url)}
-              title='Restart'
+              title={t('common.restart')}
               className='p-1 rounded-lg hover:bg-overlay-subtle text-accent-primary transition-colors'
             >
               <RotateCw className='w-3.5 h-3.5' />
@@ -244,6 +247,7 @@ function DownloadRow({ download, onRetry, onPause }) {
 }
 
 function UploadRow({ upload }) {
+  const { t } = useTranslation()
   const pct =
     upload.totalBytes > 0
       ? Math.min(100, Math.round((upload.uploadedBytes / upload.totalBytes) * 100))
@@ -255,7 +259,7 @@ function UploadRow({ upload }) {
         <div className='flex items-center gap-2 min-w-0'>
           <CloudUpload className='w-4 h-4 text-accent-primary flex-shrink-0' />
           <span className='text-sm font-medium text-text-primary truncate'>
-            {upload.fileName || 'Attachment'}
+            {upload.fileName || t('storage.attachment')}
           </span>
         </div>
         <span className='text-sm font-bold text-text-tertiary flex-shrink-0'>
@@ -284,6 +288,7 @@ function TransferNoteGroup({ group, renderRow }) {
 }
 
 export default function StorageSettings() {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
@@ -305,12 +310,12 @@ export default function StorageSettings() {
   }, [notesStorageInfo])
 
   const downloadGroups = useMemo(
-    () => groupTransfersByNote(activeDownloads, noteTitleByKey, 'Untitled'),
-    [activeDownloads, noteTitleByKey]
+    () => groupTransfersByNote(activeDownloads, noteTitleByKey, t('folders.untitled')),
+    [activeDownloads, noteTitleByKey, t]
   )
   const uploadGroups = useMemo(
-    () => groupTransfersByNote(activeUploads, noteTitleByKey, 'Untitled'),
-    [activeUploads, noteTitleByKey]
+    () => groupTransfersByNote(activeUploads, noteTitleByKey, t('folders.untitled')),
+    [activeUploads, noteTitleByKey, t]
   )
 
   useEffect(() => {
@@ -359,7 +364,7 @@ export default function StorageSettings() {
       {activeDownloads.length > 0 && (
         <div className='space-y-1'>
           <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-            Syncing from other devices ({activeDownloads.length})
+            {t('storage.syncingFromDevices')} ({activeDownloads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
             {downloadGroups.map((group) => (
@@ -383,7 +388,7 @@ export default function StorageSettings() {
       {activeUploads.length > 0 && (
         <div className='space-y-1'>
           <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-            Syncing to other devices ({activeUploads.length})
+            {t('storage.syncingToDevices')} ({activeUploads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
             {uploadGroups.map((group) => (
@@ -399,7 +404,7 @@ export default function StorageSettings() {
 
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Usage
+          {t('storage.usage')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           {isLoading && totalBlobBytes === 0 ? (
@@ -429,8 +434,8 @@ export default function StorageSettings() {
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
                 <div className='flex items-center gap-2'>
                   <Database className='w-4 h-4 text-text-tertiary' />
-                  <span className='text-base font-semibold text-text-primary'>Notes data</span>
-                  <Tooltip text='Total size of media currently referenced by your notes.'>
+                  <span className='text-base font-semibold text-text-primary'>{t('storage.notesData')}</span>
+                  <Tooltip text={t('storage.notesDataTooltip')}>
                     <Info className='w-3.5 h-3.5 text-text-tertiary/50 cursor-default' />
                   </Tooltip>
                 </div>
@@ -443,9 +448,9 @@ export default function StorageSettings() {
                 <div className='flex items-center gap-2'>
                   <HardDrive className='w-4 h-4 text-text-tertiary' />
                   <span className='text-base font-semibold text-text-secondary'>
-                    On-disk footprint
+                    {t('storage.diskFootprint')}
                   </span>
-                  <Tooltip text='Physical bytes hypercore has allocated on disk. Deleting media compacts this automatically; use Reclaim below if it looks stale.'>
+                  <Tooltip text={t('storage.diskFootprintTooltip')}>
                     <Info className='w-3.5 h-3.5 text-text-tertiary/50 cursor-default' />
                   </Tooltip>
                 </div>
@@ -457,12 +462,12 @@ export default function StorageSettings() {
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
                 <div className='flex flex-col'>
                   <span className='text-base font-semibold text-text-tertiary'>
-                    {reclaimableBytes > 0 ? 'Reclaimable' : 'Compact storage'}
+                    {reclaimableBytes > 0 ? t('storage.reclaimable') : t('storage.compact')}
                   </span>
                   <span className='text-sm text-text-tertiary/70'>
                     {reclaimableBytes > 0
-                      ? 'Deleted attachments still on disk'
-                      : 'Force a compaction pass to reclaim freed disk space'}
+                      ? t('storage.reclaimableDesc')
+                      : t('storage.compactDesc')}
                   </span>
                 </div>
                 <div className='flex items-center gap-3'>
@@ -476,14 +481,14 @@ export default function StorageSettings() {
                     disabled={isReclaiming}
                     className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
-                    {isReclaiming ? 'Reclaiming…' : 'Reclaim now'}
+                    {isReclaiming ? t('storage.reclaiming') : (reclaimableBytes > 0 ? t('storage.reclaimNow') : t('storage.compactNow'))}
                   </button>
                 </div>
               </div>
 
               <div className='px-6 py-4 space-y-2'>
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-text-tertiary font-medium'>Live media on disk</span>
+                  <span className='text-text-tertiary font-medium'>{t('storage.liveMediaOnDisk')}</span>
                   <span className='text-text-secondary font-bold'>{blobPct}%</span>
                 </div>
                 <div
@@ -492,7 +497,7 @@ export default function StorageSettings() {
                   aria-valuenow={blobPct}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label='Live media as a share of on-disk storage'
+                  aria-label={t('storage.liveMediaProgressLabel')}
                 >
                   <div
                     className='h-full bg-accent-primary rounded-full transition-all duration-500'
@@ -508,7 +513,7 @@ export default function StorageSettings() {
       {buckets && (
         <div className='space-y-1'>
           <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-            Breakdown by type
+            {t('backup.breakdownByType')}
           </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
             {isLoading && totalBlobBytes === 0 ? null : (
@@ -517,9 +522,9 @@ export default function StorageSettings() {
                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
                     <div className='flex items-center gap-3'>
                       <ImageIcon className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>Images</span>
+                      <span className='text-base font-medium text-text-primary'>{t('backup.images')}</span>
                       <span className='text-sm text-text-tertiary'>
-                        {buckets.image.count} items
+                        {t('backup.items', { count: buckets.image.count })}
                       </span>
                     </div>
                     <span className='text-base font-bold text-text-secondary'>
@@ -531,9 +536,9 @@ export default function StorageSettings() {
                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
                     <div className='flex items-center gap-3'>
                       <Film className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>Videos</span>
+                      <span className='text-base font-medium text-text-primary'>{t('backup.videos')}</span>
                       <span className='text-sm text-text-tertiary'>
-                        {buckets.video.count} items
+                        {t('backup.items', { count: buckets.video.count })}
                       </span>
                     </div>
                     <span className='text-base font-bold text-text-secondary'>
@@ -545,9 +550,9 @@ export default function StorageSettings() {
                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
                     <div className='flex items-center gap-3'>
                       <Mic className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>Voice notes</span>
+                      <span className='text-base font-medium text-text-primary'>{t('backup.voiceNotes')}</span>
                       <span className='text-sm text-text-tertiary'>
-                        {buckets.audio.count} items
+                        {t('backup.items', { count: buckets.audio.count })}
                       </span>
                     </div>
                     <span className='text-base font-bold text-text-secondary'>
@@ -559,8 +564,8 @@ export default function StorageSettings() {
                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
                     <div className='flex items-center gap-3'>
                       <FileText className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>Files</span>
-                      <span className='text-sm text-text-tertiary'>{buckets.file.count} items</span>
+                      <span className='text-base font-medium text-text-primary'>{t('backup.files')}</span>
+                      <span className='text-sm text-text-tertiary'>{t('backup.items', { count: buckets.file.count })}</span>
                     </div>
                     <span className='text-base font-bold text-text-secondary'>
                       {formatBytes(buckets.file.size)}
@@ -571,8 +576,8 @@ export default function StorageSettings() {
                   <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
                     <div className='flex items-center gap-3'>
                       <PenLine className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>Text</span>
-                      <span className='text-sm text-text-tertiary'>(all notes)</span>
+                      <span className='text-base font-medium text-text-primary'>{t('backup.text')}</span>
+                      <span className='text-sm text-text-tertiary'>{t('backup.textAllNotesDesc')}</span>
                     </div>
                     <span className='text-base font-bold text-text-secondary'>
                       {formatBytes(buckets.text.size)}
@@ -587,9 +592,7 @@ export default function StorageSettings() {
 
       {notesStorageInfo.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-            Per-Note Breakdown
-          </h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>{t('storage.perNoteBreakdown')}</h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
@@ -600,14 +603,14 @@ export default function StorageSettings() {
 
       <div className='space-y-1'>
         <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          Danger Zone
+          {t('storage.dangerZone')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
           <div className='px-6 py-5 flex items-center justify-between'>
             <div className='space-y-1'>
-              <p className='text-base font-bold text-text-primary'>Clear All Data</p>
+              <p className='text-base font-bold text-text-primary'>{t('storage.clearAllData')}</p>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Permanently deletes all notes, folders, settings, and media.
+                {t('storage.clearAllDataDesc')}
               </p>
             </div>
             <button
@@ -615,7 +618,7 @@ export default function StorageSettings() {
               className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             >
               <Trash2 className='w-3.5 h-3.5' />
-              Clear Storage
+              {t('storage.clearStorage')}
             </button>
           </div>
         </div>
@@ -633,10 +636,9 @@ export default function StorageSettings() {
                 <Trash2 className='w-6 h-6 text-accent-danger' />
               </div>
               <div className='space-y-2'>
-                <h3 className='text-lg font-bold text-text-primary'>Clear All Data?</h3>
+                <h3 className='text-lg font-bold text-text-primary'>{t('backup.clearAllDataTitle')}</h3>
                 <p className='text-sm text-text-tertiary leading-relaxed'>
-                  This will permanently delete ALL notes, folders, settings, and media. This cannot
-                  be undone.
+                  {t('backup.clearAllDataDesc')}
                 </p>
               </div>
               <div className='flex gap-3 w-full pt-2'>
@@ -644,13 +646,13 @@ export default function StorageSettings() {
                   onClick={() => setConfirmClear(false)}
                   className='flex-1 py-3 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium transition-all active:scale-95'
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleClearStorage}
                   className='flex-1 py-3 bg-accent-danger text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 shadow-[0_4px_15px_rgba(var(--accent-danger-rgb),0.3)]'
                 >
-                  Clear
+                  {t('common.clear')}
                 </button>
               </div>
             </div>

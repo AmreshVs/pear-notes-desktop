@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Mic, Square, X } from 'lucide-react'
 
 import { formatTime } from '../utils/formatters'
@@ -6,6 +7,7 @@ import { formatTime } from '../utils/formatters'
 import AudioPlayer from './AudioPlayer'
 
 export default function AudioRecorderModal({ onClose, onSaveAudio }) {
+  const { t } = useTranslation()
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [audioBlob, setAudioBlob] = useState(null)
@@ -60,7 +62,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
       }, 1000)
     } catch (error) {
       console.error('Error accessing microphone:', error)
-      alert('Could not access microphone. Please check permissions.')
+      alert(t('audioRecorderModal.accessError'))
     }
   }
 
@@ -105,10 +107,10 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
               </div>
               <div className='flex flex-col'>
                 <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>
-                  Record Audio
+                  {t('audioRecorderModal.title')}
                 </h2>
                 <span className='text-xs font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>
-                  Voice Capture
+                  {t('audioRecorderModal.subtitle')}
                 </span>
               </div>
             </div>
@@ -118,7 +120,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
               className={`w-8 h-8 flex items-center justify-center bg-overlay-subtle hover:bg-overlay-medium text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-overlay-soft ${
                 isRecording ? 'opacity-30 cursor-not-allowed' : ''
               }`}
-              title='Close'
+              title={t('common.close')}
             >
               <X className='w-4 h-4' />
             </button>
@@ -138,7 +140,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                       ? 'bg-accent-danger shadow-[0_0_30px_rgba(239,68,68,0.3)]'
                       : 'bg-accent-primary shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgba(220,163,35,0.3)] hover:scale-105 active:scale-95'
                   }`}
-                  title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                  title={isRecording ? t('audioRecorderModal.stop') : t('audioRecorderModal.start')}
                 >
                   <div
                     className={`absolute inset-0 rounded-full ${isRecording ? 'animate-soft-ping' : 'group-hover:animate-soft-ping'}`}
@@ -157,7 +159,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                   <AudioPlayer
                     src={audioDataUrl}
                     duration={recordingTime}
-                    title='Preview Recording'
+                    title={t('audioRecorderModal.previewTitle')}
                   />
                 </div>
               )}
@@ -173,7 +175,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                 disabled={isSaving}
                 className='flex-1 px-4 py-3 rounded-xl bg-bg-tertiary/40 hover:bg-bg-tertiary/60 text-text-secondary hover:text-text-primary transition-all font-bold text-sm tracking-tight border border-overlay-soft disabled:opacity-50 disabled:cursor-not-allowed active:scale-95'
               >
-                Re-record
+                {t('audioRecorderModal.rerecord')}
               </button>
               <button
                 onClick={handleSave}
@@ -187,10 +189,10 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                 {isSaving ? (
                   <>
                     <div className='w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-                    Saving...
+                    {t('audioRecorderModal.saving')}
                   </>
                 ) : (
-                  <>Insert</>
+                  <>{t('audioRecorderModal.insert')}</>
                 )}
               </button>
             </div>

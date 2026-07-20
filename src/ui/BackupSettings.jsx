@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
 
@@ -21,6 +22,7 @@ import BackupPasswordModal from './BackupPasswordModal'
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
 export default function BackupSettings() {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const exportStatus = useSelector(getExportStatus)
   const importStatus = useSelector(getImportStatus)
@@ -204,7 +206,7 @@ export default function BackupSettings() {
       error: false,
       errorMessage: ''
     })
-    dispatch(setImportStatus({ step: 'reading', progress: 5, message: 'Reading backup file...' }))
+    dispatch(setImportStatus({ step: 'reading', progress: 5, message: t('backup.readingBackup') }))
 
     dispatch(resetImport())
     dispatch(startImportBackup({ filePath: file.filePath, password }))
@@ -254,10 +256,9 @@ export default function BackupSettings() {
         </div>
 
         <div className='space-y-2'>
-          <h3 className='text-text-primary font-bold text-xl'>Secure Your Vault</h3>
+          <h3 className='text-text-primary font-bold text-xl'>{t('backup.hero.title')}</h3>
           <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-            Export a fully encrypted backup of all your notes, folders, and media. Restore anytime
-            to recover your data.
+            {t('backup.hero.description')}
           </p>
         </div>
 
@@ -269,7 +270,7 @@ export default function BackupSettings() {
           >
             <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
             <HardDrive className='w-4 h-4' />
-            Create Backup
+            {t('backup.createBackup')}
           </button>
           <button
             onClick={handleImport}
@@ -277,7 +278,7 @@ export default function BackupSettings() {
             className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
           >
             <Upload className='w-4 h-4' />
-            Restore Data
+            {t('backup.restoreData')}
           </button>
         </div>
       </div>
@@ -289,7 +290,7 @@ export default function BackupSettings() {
           </div>
           <div>
             <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
-              Notes Size
+              {t('backup.notesSize')}
             </p>
             <p className='text-text-primary font-bold text-base'>{formatBytes(totalSize)}</p>
           </div>
@@ -301,9 +302,9 @@ export default function BackupSettings() {
           </div>
           <div>
             <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
-              Encryption
+              {t('backup.encryption')}
             </p>
-            <p className='text-text-primary font-bold text-base'>AES-256</p>
+            <p className='text-text-primary font-bold text-base'>{t('backup.encryptionValue')}</p>
           </div>
         </div>
       </div>
@@ -311,11 +312,10 @@ export default function BackupSettings() {
       <div className='bg-bg-panel-secondary/40 border border-border-primary rounded-2xl p-6 space-y-3 relative overflow-hidden hover:border-border-secondary transition-colors'>
         <div className='flex items-center gap-3'>
           <Lock className='w-5 h-5 text-accent-primary' />
-          <h4 className='text-text-primary font-bold text-base'>Password Protected</h4>
+          <h4 className='text-text-primary font-bold text-base'>{t('backup.protectedTitle')}</h4>
         </div>
         <p className='text-text-tertiary text-xs leading-relaxed'>
-          You choose a password when creating a backup, and it encrypts the file. You&apos;ll need
-          that same password to restore — it is never stored, so keep it somewhere safe.
+          {t('backup.protectedDesc')}
         </p>
       </div>
 
@@ -323,7 +323,7 @@ export default function BackupSettings() {
         <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-center'>
           <Shield className='w-5 h-5 text-accent-primary shrink-0' />
           <p className='text-xs text-text-tertiary leading-relaxed'>
-            Last backup:{' '}
+            {t('backup.lastBackup')}:{' '}
             <span className='text-text-primary font-semibold'>{formatLastBackup(lastBackup)}</span>
           </p>
         </div>
@@ -372,12 +372,12 @@ export default function BackupSettings() {
               <div className='space-y-2 w-full'>
                 <h3 className='text-xl font-bold text-text-primary tracking-tight'>
                   {isError
-                    ? 'Something went wrong'
+                    ? t('backup.progress.errorTitle')
                     : isDone
-                      ? 'All done!'
+                      ? (modalState.doneType === 'export' ? t('backup.progress.completeTitle') : t('backup.progress.restoredTitle'))
                       : modalState.doneType === 'export' || isExporting
-                        ? 'Creating Backup...'
-                        : 'Restoring Data...'}
+                        ? t('backup.progress.creatingTitle')
+                        : t('backup.progress.restoringTitle')}
                 </h3>
                 {(isError ? modalState.errorMessage : progressMessage) ? (
                   <p className='text-text-tertiary text-sm leading-relaxed'>
@@ -407,14 +407,14 @@ export default function BackupSettings() {
                     onClick={handleDismiss}
                     className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
                   >
-                    Dismiss
+                    {t('backup.progress.dismiss')}
                   </button>
                 ) : (
                   <button
                     onClick={handleCancel}
                     className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
                   >
-                    Cancel
+                    {t('backup.progress.cancel')}
                   </button>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
 
@@ -36,6 +37,7 @@ import RichTextEditor from './RichTextEditor'
 import UploadProgressToast from './UploadProgressToast'
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
+  const { t } = useTranslation()
   const dispatch = useDispatch()
   const selectedNoteKey = useSelector(getSelectedNote)
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
@@ -166,7 +168,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const handleCopy = () => {
     if (!noteData) return null
     const currentText = editorInstance?.getText() || contentText
-    const safeTitle = title || 'Untitled Note'
+    const safeTitle = title || t('noteEditor.untitled')
     const titleHtml = `<h1 style="font-size: 2em; font-weight: 800; margin-bottom: 0.5em;">${safeTitle}</h1>`
     const fullHtml = `${titleHtml}${content || ''}`
 
@@ -203,19 +205,19 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     const moveSubmenu =
       moveTargets.length > 0
         ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
-        : [{ label: 'No other lists', enabled: false }]
+        : [{ label: t('noteEditor.contextMenu.noOtherLists'), enabled: false }]
     const result = await showContextMenu([
-      { role: 'cut', label: 'Cut' },
-      { role: 'copy', label: 'Copy' },
-      { role: 'paste', label: 'Paste' },
-      { role: 'selectAll', label: 'Select All' },
+      { role: 'cut', label: t('noteEditor.contextMenu.cut') },
+      { role: 'copy', label: t('noteEditor.contextMenu.copy') },
+      { role: 'paste', label: t('noteEditor.contextMenu.paste') },
+      { role: 'selectAll', label: t('noteEditor.contextMenu.selectAll') },
       { type: 'separator' },
-      { label: 'Move to', submenu: moveSubmenu },
-      { id: 'copyNote', label: 'Copy Note' },
-      { id: 'togglePin', label: isPinned ? 'Unpin Note' : 'Pin Note' },
-      { id: 'toggleLock', label: isLocked ? 'Remove Lock' : 'Lock Note' },
+      { label: t('noteEditor.contextMenu.moveTo'), submenu: moveSubmenu },
+      { id: 'copyNote', label: t('noteEditor.contextMenu.copyNote') },
+      { id: 'togglePin', label: isPinned ? t('noteEditor.contextMenu.unpinNote') : t('noteEditor.contextMenu.pinNote') },
+      { id: 'toggleLock', label: isLocked ? t('noteEditor.contextMenu.removeLock') : t('noteEditor.contextMenu.lockNote') },
       { type: 'separator' },
-      { id: 'delete', label: 'Delete' }
+      { id: 'delete', label: t('noteEditor.contextMenu.delete') }
     ])
     if (!result) return
     if (result.startsWith('move:')) {
@@ -255,10 +257,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
 
           <div className='space-y-3 max-w-[390px]'>
-            <h3 className='text-3xl font-black text-text-primary tracking-tight'>Nothing open</h3>
-            <p className='text-base text-text-tertiary leading-relaxed'>
-              Pick a note from the list, or start a new one with the compose button.
-            </p>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>{t('noteEditor.emptyState.title')}</h3>
+            <p className='text-base text-text-tertiary leading-relaxed'>{t('noteEditor.emptyState.description')}</p>
           </div>
         </div>
       </div>
@@ -274,13 +274,13 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             <Lock className='w-10 h-10 text-accent-primary' />
           </div>
           <div className='space-y-3 max-w-[390px]'>
-            <h3 className='text-3xl font-black text-text-primary tracking-tight'>Locked Note</h3>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>{t('noteCard.lockedTitle')}</h3>
             <p className='text-base text-text-tertiary leading-relaxed'>
               {lockMethod === 'password'
-                ? 'This note is protected. Enter your note lock password to view it.'
+                ? t('noteEditor.lock.passwordProtected')
                 : authSupported
-                  ? 'This note is protected. Use Touch ID or your login password to authenticate and view it.'
-                  : "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."}
+                  ? t('noteEditor.lock.authProtected')
+                  : t('noteEditor.lock.unavailable')}
             </p>
           </div>
           {(lockMethod === 'password' || authSupported) && (
@@ -290,7 +290,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               <Lock className='w-4 h-4' />
-              {unlocking ? 'Authenticating…' : 'Unlock'}
+              {unlocking ? t('noteEditor.authenticating') : t('noteCard.unlock')}
             </button>
           )}
         </div>
@@ -318,8 +318,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             type='text'
             value={title}
             onChange={handleTitleChange}
-            placeholder='Title'
-            aria-label='Note title'
+            placeholder={t('noteEditor.titlePlaceholder')}
+            aria-label={t('noteEditor.titlePlaceholder')}
             className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
             style={{
               fontSize: `${editorFontSize * 2}px`,
@@ -332,7 +332,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               ref={richTextEditorRef}
               content={content}
               onChange={handleContentChange}
-              placeholder='Start writing...'
+              placeholder={t('noteEditor.placeholder')}
               localDevice={localDevice}
             />
           </div>
@@ -341,8 +341,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       <UploadProgressToast />
 
       <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
-          edited {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
+        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>{t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>
     </div>

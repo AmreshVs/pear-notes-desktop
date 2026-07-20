@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 
@@ -8,6 +9,7 @@ import LockUnavailableModal from './LockUnavailableModal'
 import NoteLockPasswordModal from './NoteLockPasswordModal'
 
 export default function NoteLockPasswordProvider({ children }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
   const [unavailableOpen, setUnavailableOpen] = useState(false)
@@ -35,12 +37,12 @@ export default function NoteLockPasswordProvider({ children }) {
       if (valid) {
         settle(true)
       } else if (retryAfter > 0) {
-        setError(`Too many attempts. Try again in ${retryAfter}s.`)
+        setError(t('noteLockPassword.tooManyAttempts', { seconds: retryAfter }))
       } else {
-        setError('Incorrect password')
+        setError(t('noteLockPassword.incorrectPassword'))
       }
     },
-    [settle]
+    [settle, t]
   )
 
   const handleCancel = useCallback(() => settle(false), [settle])

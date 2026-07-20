@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Download, X } from 'lucide-react'
 
 const DISMISSED_VERSION_KEY = 'pear-notes:update-banner-dismissed-version'
 
 export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
+  const { t } = useTranslation()
   const [dismissed, setDismissed] = useState(
     () => localStorage.getItem(DISMISSED_VERSION_KEY) === latestVersion
   )
@@ -27,16 +29,16 @@ export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
         </div>
 
         <div className='flex-1 min-w-0'>
-          <h4 className='text-text-primary font-semibold text-sm truncate'>Update available</h4>
+          <h4 className='text-text-primary font-semibold text-sm truncate'>{t('update.banner.title')}</h4>
           <p className='text-text-tertiary text-xs truncate'>
-            Version {latestVersion} is ready to install
+            {t('update.banner.description', { version: latestVersion })}
           </p>
         </div>
 
         <button
           onClick={handleDismiss}
           className='w-7 h-7 rounded-full flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary transition-all shrink-0'
-          title='Dismiss'
+          title={t('update.banner.dismiss')}
         >
           <X className='w-4 h-4' />
         </button>
@@ -46,7 +48,7 @@ export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
         onClick={handleUpdate}
         className='w-full py-2 bg-accent-primary text-accent-on-primary rounded-lg font-semibold text-sm hover:bg-accent-primary-hover transition-all active:scale-95'
       >
-        Update Now
+        {t('update.banner.updateButton')}
       </button>
     </div>
   )

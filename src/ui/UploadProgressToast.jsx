@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, ChevronDown, ChevronUp, Clock, Upload, X } from 'lucide-react'
 
 import { cancelAllUploads, cancelUploadItem, useUploadQueue } from '../lib/uploadRegistry'
 
 function QueueRow({ item, onCancel }) {
+  const { t } = useTranslation()
   if (item.status === 'cancelled') return null
   const isDone = item.status === 'done'
   const isUploading = item.status === 'uploading'
@@ -19,13 +21,13 @@ function QueueRow({ item, onCancel }) {
       )}
       <span className='flex-1 min-w-0 text-sm text-text-secondary truncate'>{item.fileName}</span>
       <span className='text-xs font-semibold text-text-tertiary shrink-0'>
-        {isDone ? 'Done' : isUploading ? `${item.progress}%` : 'Queued'}
+        {isDone ? t('uploadToast.done') : isUploading ? `${item.progress}%` : t('uploadToast.queued')}
       </span>
       {!isDone && (
         <button
           onClick={() => onCancel(item.id)}
           className='w-5 h-5 rounded flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary transition-all shrink-0'
-          title='Cancel upload'
+          title={t('uploadToast.cancelUpload')}
         >
           <X className='w-3 h-3' />
         </button>
@@ -35,6 +37,7 @@ function QueueRow({ item, onCancel }) {
 }
 
 export default function UploadProgressToast() {
+  const { t } = useTranslation()
   const queue = useUploadQueue()
   const [expanded, setExpanded] = useState(false)
 
@@ -52,7 +55,7 @@ export default function UploadProgressToast() {
 
   const active = queue.activeItem
   const currentIndex = Math.min(queue.completedCount + 1, queue.totalCount)
-  const headerLabel = isBatch ? `Uploading ${currentIndex} of ${queue.totalCount}` : 'Uploading…'
+  const headerLabel = isBatch ? t('uploadToast.uploadingProgress', { current: currentIndex, total: queue.totalCount }) : t('uploadToast.uploading')
   const showExpanded = expanded && isBatch
 
   return (
@@ -66,7 +69,7 @@ export default function UploadProgressToast() {
           onClick={isBatch ? () => setExpanded((value) => !value) : undefined}
           disabled={!isBatch}
           className='flex-1 min-w-0 text-left disabled:cursor-default'
-          title={isBatch ? (showExpanded ? 'Hide upload queue' : 'Show upload queue') : undefined}
+          title={isBatch ? (showExpanded ? t('uploadToast.hideQueue') : t('uploadToast.showQueue')) : undefined}
         >
           <h4 className='text-text-primary font-semibold text-sm truncate flex items-center gap-1'>
             {headerLabel}
@@ -91,7 +94,7 @@ export default function UploadProgressToast() {
         <button
           onClick={cancelAllUploads}
           className='w-7 h-7 rounded-full flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary transition-all shrink-0'
-          title={isBatch ? 'Cancel all uploads' : 'Cancel'}
+          title={isBatch ? t('uploadToast.cancelAll') : t('common.cancel')}
         >
           <X className='w-4 h-4' />
         </button>

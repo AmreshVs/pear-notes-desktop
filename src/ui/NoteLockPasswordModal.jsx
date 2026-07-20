@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, Eye, EyeOff, Lock, TriangleAlert, X } from 'lucide-react'
 
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
 
-import { getPasswordStrengthUi, PASSWORD_RULES } from '../utils/passwordStrength'
+import { getPasswordRules, getPasswordStrengthUi } from '../utils/passwordStrength'
 
 const STRENGTH_BAR_COLORS = [
   'bg-accent-danger',
@@ -15,12 +16,13 @@ const STRENGTH_BAR_COLORS = [
 ]
 
 export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onCancel }) {
+  const { t } = useTranslation()
   const isCreate = mode === 'create'
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [visible, setVisible] = useState(false)
 
-  const strength = useMemo(() => getPasswordStrengthUi(password), [password])
+  const strength = useMemo(() => getPasswordStrengthUi(password, t), [password, t])
   const passwordsMatch = password === confirm
   const canSubmit = isCreate
     ? isValidBackupPassword(password) && passwordsMatch
@@ -66,23 +68,17 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
               <Lock className='w-6 h-6 text-accent-primary' />
             </div>
             <h3 className='text-lg font-bold text-text-primary'>
-              {isCreate ? 'Set a Note Lock Password' : 'Enter Note Lock Password'}
+              {isCreate ? t('noteLockPassword.createTitle') : t('noteLockPassword.enterTitle')}
             </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              {isCreate
-                ? 'This password will be required to open locked notes on all your synced devices.'
-                : 'Enter your note lock password to unlock this note.'}
+              {isCreate ? t('noteLockPassword.createDesc') : t('noteLockPassword.enterDesc')}
             </p>
           </div>
 
           {isCreate && (
             <div className='flex items-start gap-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-3'>
               <TriangleAlert className='w-4 h-4 text-yellow-500 shrink-0 mt-0.5' />
-              <p className='text-xs text-yellow-500/90 leading-relaxed'>
-                Your password itself is never stored — only a secure verification hash. It cannot be
-                recovered, so if you forget it, locked notes cannot be opened. Write it down and
-                keep it safe.
-              </p>
+              <p className='text-xs text-yellow-500/90 leading-relaxed'>{t('noteLockPassword.warning')}</p>
             </div>
           )}
 
@@ -93,7 +89,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isCreate ? 'Create a strong password' : 'Note lock password'}
+                placeholder={isCreate ? t('noteLockPassword.placeholderCreate') : t('noteLockPassword.placeholder')}
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -112,7 +108,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder='Confirm password'
+                  placeholder={t('noteLockPassword.confirmPlaceholder')}
                   className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
                 />
 
@@ -129,7 +125,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                     </span>
                   </div>
                   <ul className='grid grid-cols-2 gap-x-3 gap-y-1'>
-                    {PASSWORD_RULES.map((rule) => {
+                    {getPasswordRules(t).map((rule) => {
                       const met = strength.checks[rule.key]
                       return (
                         <li
@@ -149,7 +145,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-xs text-accent-danger/80 ml-1'>Passwords do not match</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>{t('noteLockPassword.mismatch')}</p>
                 )}
               </>
             )}
@@ -161,15 +157,13 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
             <button
               onClick={handleCancel}
               className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-            >
-              Cancel
-            </button>
+            >{t('common.cancel')}</button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
             >
-              {isCreate ? 'Set Password' : 'Unlock'}
+              {isCreate ? t('noteLockPassword.createButton') : t('noteLockPassword.unlockButton')}
             </button>
           </div>
         </div>

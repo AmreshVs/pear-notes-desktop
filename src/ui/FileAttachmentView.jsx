@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { NodeViewWrapper } from '@tiptap/react'
 import {
@@ -30,6 +31,7 @@ import AudioPlayer from './AudioPlayer'
 import MediaPreviewModal from './MediaPreviewModal'
 
 export default function FileAttachmentView({ node, deleteNode }) {
+  const { t } = useTranslation()
   const { fileName, fileSize, fileType, fileData, url } = node.attrs
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -217,7 +219,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   }
 
   const formatFileSize = (bytes) => {
-    if (!bytes) return 'Unknown size'
+    if (!bytes) return t('fileAttachment.unknownSize')
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -241,7 +243,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
       setDownloadProgress(0)
       try {
         const blob = await downloadAsBlob(resolvedUrl, setDownloadProgress)
-        createDownloadLink(blob, fileName || 'download')
+        createDownloadLink(blob, fileName || t('fileAttachment.downloadDefault'))
       } catch (error) {
         console.error('Download failed:', error)
       } finally {
@@ -254,7 +256,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
     if (!fileData) return
     try {
       const blob = base64ToBlob(fileData)
-      createDownloadLink(blob, fileName || 'download')
+      createDownloadLink(blob, fileName || t('fileAttachment.downloadDefault'))
     } catch (error) {
       console.error('Error downloading file:', error)
     }
@@ -263,7 +265,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const handleDelete = async (e) => {
     e.stopPropagation()
 
-    if (!window.confirm(`Delete "${fileName || 'this file'}"? This cannot be undone.`)) return
+    if (!window.confirm(t('fileAttachment.deleteConfirm', { name: fileName || t('fileAttachment.thisFile') }))) return
 
     try {
       await deleteHyperdriveFile(url)
@@ -282,7 +284,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
           <AudioPlayer
             src={resolvedUrl || fileData}
             duration={node.attrs.duration || 0}
-            title={fileName || 'Audio Attachment'}
+            title={fileName || t('attachments.audioAttachment')}
           />
 
           {isDownloading && (
@@ -297,7 +299,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
               <button
                 onClick={handleDownload}
                 className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'
-                title='Download'
+                title={t('common.download')}
               >
                 <Download className='w-4 h-4 text-text-secondary' />
               </button>
@@ -305,7 +307,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
             <button
               onClick={handleDelete}
               className='flex-shrink-0 p-2.5 rounded-lg hover:bg-accent-danger/10 transition-all duration-200'
-              title='Delete'
+              title={t('common.delete')}
             >
               <Trash2 className='w-4 h-4 text-accent-danger' />
             </button>
@@ -320,7 +322,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
             (isFullscreen ? (
               <>
                 <div className='relative aspect-video bg-bg-tertiary w-full flex items-center justify-center text-text-tertiary text-xs select-none rounded-t-xl border-b border-border-primary'>
-                  Playing in fullscreen
+                  {t('fileAttachment.playingFullscreen')}
                 </div>
                 {createPortal(
                   <div
@@ -384,7 +386,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                           <button
                             onClick={togglePlayPause}
                             className='hover:text-accent-primary transition-colors p-1'
-                            title={isPlaying ? 'Pause' : 'Play'}
+                            title={isPlaying ? t('common.pause') : t('common.play')}
                           >
                             {isPlaying ? (
                               <Pause className='w-4 h-4 fill-white' />
@@ -401,7 +403,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                           <button
                             onClick={toggleFullscreen}
                             className='hover:text-accent-primary transition-colors p-1'
-                            title='Exit Fullscreen'
+                            title={t('fileAttachment.exitFullscreen')}
                           >
                             <Minimize2 className='w-4 h-4 text-white' />
                           </button>
@@ -474,7 +476,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                       <button
                         onClick={togglePlayPause}
                         className='hover:text-accent-primary transition-colors p-1'
-                        title={isPlaying ? 'Pause' : 'Play'}
+                        title={isPlaying ? t('common.pause') : t('common.play')}
                       >
                         {isPlaying ? (
                           <Pause className='w-4 h-4 fill-white' />
@@ -491,7 +493,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                       <button
                         onClick={toggleFullscreen}
                         className='hover:text-accent-primary transition-colors p-1'
-                        title='Fullscreen'
+                        title={t('fileAttachment.fullscreen')}
                       >
                         <Maximize2 className='w-4 h-4 text-white' />
                       </button>
@@ -518,7 +520,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
             <div className='flex-1 min-w-0'>
               <p className='text-sm font-semibold text-text-primary truncate mb-1'>
-                {fileName || 'Untitled File'}
+                {fileName || t('fileAttachment.untitledFile')}
               </p>
               <div className='flex items-center gap-2'>
                 <span className='text-xs font-medium text-text-tertiary bg-bg-tertiary px-2 py-0.5 rounded-md'>
@@ -534,7 +536,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 <button
                   onClick={handleDownload}
                   className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'
-                  title='Download'
+                  title={t('common.download')}
                 >
                   <Download className='w-4 h-4 text-text-secondary' />
                 </button>
@@ -542,7 +544,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
               <button
                 onClick={handleDelete}
                 className='flex-shrink-0 p-2.5 rounded-lg hover:bg-accent-danger/10 transition-all duration-200'
-                title='Delete'
+                title={t('common.delete')}
               >
                 <Trash2 className='w-4 h-4 text-accent-danger' />
               </button>
@@ -553,7 +555,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
       {isPreviewOpen && (
         <MediaPreviewModal
           url={resolvedUrl || fileData}
-          fileName={fileName || 'File'}
+          fileName={fileName || t('fileAttachment.fileDefault')}
           fileType={fileType}
           onClose={closePreview}
           onDownload={handleDownload}

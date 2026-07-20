@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, Eye, EyeOff, Lock, X } from 'lucide-react'
 
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
@@ -15,6 +16,7 @@ const STRENGTH_BAR_COLORS = [
 ]
 
 export default function BackupPasswordModal({ open, mode, error, onSubmit, onCancel }) {
+  const { t } = useTranslation()
   const isCreate = mode === 'create'
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -66,12 +68,12 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
               <Lock className='w-6 h-6 text-accent-primary' />
             </div>
             <h3 className='text-lg font-bold text-text-primary'>
-              {isCreate ? 'Set a Backup Password' : 'Enter Backup Password'}
+              {isCreate ? t('backup.password.createTitle') : t('backup.password.enterTitle')}
             </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
               {isCreate
-                ? 'This password encrypts your backup. You will need it to restore — it cannot be recovered if lost.'
-                : 'Enter the password used to create this backup to decrypt your data.'}
+                ? t('backup.password.createDesc')
+                : t('backup.password.enterDesc')}
             </p>
           </div>
 
@@ -82,7 +84,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isCreate ? 'Create a strong password' : 'Backup password'}
+                placeholder={isCreate ? t('backup.password.createPlaceholder') : t('backup.password.placeholder')}
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -101,7 +103,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder='Confirm password'
+                  placeholder={t('backup.password.confirmPlaceholder')}
                   className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
                 />
 
@@ -138,7 +140,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-xs text-accent-danger/80 ml-1'>Passwords do not match</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>{t('backup.password.mismatch')}</p>
                 )}
               </>
             )}
@@ -151,14 +153,14 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
               onClick={handleCancel}
               className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
             >
-              {isCreate ? 'Create Backup' : 'Restore'}
+              {isCreate ? t('backup.password.createButton') : t('backup.password.restoreButton')}
             </button>
           </div>
         </div>

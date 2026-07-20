@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Database,
   HardDrive,
@@ -18,6 +19,7 @@ import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
 
 export default function SettingsScreen({ onClose }) {
+  const { t } = useTranslation()
   const [activeSection, setActiveSection] = useState('general')
   const [isExiting, setIsExiting] = useState(false)
   const contentScrollRef = useRef(null)
@@ -34,11 +36,11 @@ export default function SettingsScreen({ onClose }) {
   const dialogRef = useDialog(handleAnimatedClose)
 
   const sections = [
-    { id: 'general', name: 'General', icon: SettingsIcon },
-    { id: 'privacy', name: 'Privacy & Security', icon: ShieldCheck },
-    { id: 'sync', name: 'Link & Sync', icon: RefreshCw },
-    { id: 'backup', name: 'Backup & Restore', icon: HardDrive },
-    { id: 'storage', name: 'Storage', icon: Database }
+    { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
+    { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
+    { id: 'sync', name: t('layouts.linkAndSync'), icon: RefreshCw },
+    { id: 'backup', name: t('layouts.backupRestore'), icon: HardDrive },
+    { id: 'storage', name: t('layouts.storage'), icon: Database }
   ]
 
   return (
@@ -52,7 +54,7 @@ export default function SettingsScreen({ onClose }) {
         ref={dialogRef}
         role='dialog'
         aria-modal='true'
-        aria-label='Settings'
+        aria-label={t('settings.title')}
         tabIndex={-1}
         className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden outline-none animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}
       >
@@ -61,7 +63,7 @@ export default function SettingsScreen({ onClose }) {
 
         <div className='w-72 bg-overlay-faint border-r border-border-primary flex flex-col relative z-10'>
           <div className='p-8'>
-            <h2 className='text-text-primary font-black text-2xl tracking-tighter'>Settings</h2>
+            <h2 className='text-text-primary font-black text-2xl tracking-tighter'>{t('settings.title')}</h2>
           </div>
 
           <div className='flex-1 overflow-y-auto px-4 space-y-2'>
@@ -101,19 +103,19 @@ export default function SettingsScreen({ onClose }) {
           <div className='px-10 py-10 flex items-center justify-between'>
             <div>
               <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
-                {sections.find((s) => s.id === activeSection)?.name || 'Settings'}
+                {sections.find((s) => s.id === activeSection)?.name || t('settings.title')}
               </h2>
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' &&
-                  'Customize your personal workspace experience, from aesthetics to native language supports.'}
+                  t('settings.descriptions.general')}
                 {activeSection === 'privacy' &&
-                  'Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.'}
+                  t('settings.privacy.screenDesc')}
                 {activeSection === 'sync' &&
-                  'Manage your secure peer-to-peer network and linked devices with end-to-end encryption.'}
+                  t('settings.descriptions.sync')}
                 {activeSection === 'backup' &&
-                  'Create encrypted backups of your notes and media, or restore from a previous backup file.'}
+                  t('settings.descriptions.backup')}
                 {activeSection === 'storage' &&
-                  'Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.'}
+                  t('settings.descriptions.storage')}
               </p>
             </div>
             <button

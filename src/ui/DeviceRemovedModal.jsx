@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { ShieldAlert } from 'lucide-react'
 
@@ -5,6 +6,7 @@ import { clearStorage, getDeviceRemoved } from '@pear-notes/core/store/slices/sy
 
 export default function DeviceRemovedModal() {
   const dispatch = useDispatch()
+  const { t } = useTranslation()
   const deviceRemoved = useSelector(getDeviceRemoved)
 
   if (!deviceRemoved) return null
@@ -28,10 +30,9 @@ export default function DeviceRemovedModal() {
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>Device Removed</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('pairing.overlay.deviceRemovedTitle')}</h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              This device has been removed from the synced cluster. Press Okay to clear local synced
-              data and reset common storage.
+              {t('pairing.overlay.deviceRemovedDesc')}
             </p>
           </div>
 
@@ -39,7 +40,7 @@ export default function DeviceRemovedModal() {
             onClick={handleRestart}
             className='w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
           >
-            Okay
+            {t('pairing.overlay.okay')}
           </button>
         </div>
       </div>

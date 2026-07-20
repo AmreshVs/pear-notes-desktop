@@ -1,6 +1,7 @@
 import '../styles/tiptap.css'
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu'
@@ -83,6 +84,7 @@ function seedGenesisFromHtml(ydoc, schema, html) {
 
 const RichTextEditor = forwardRef(
   ({ content, onChange, placeholder = 'Start writing...', localDevice }, ref) => {
+    const { t } = useTranslation()
     const dispatch = useDispatch()
     const currentNoteKey = useSelector(getSelectedNote)
     const fontFamily = useSelector(getFontFamily)
@@ -491,19 +493,19 @@ const RichTextEditor = forwardRef(
             <div className='flex items-center gap-1 border-r border-border-primary pr-1 mr-1'>
               <BubbleButton
                 onClick={() => editor.chain().focus().addRowBefore().run()}
-                title='Add Row Above'
+                title={t('editor.table.addRowAbove')}
               >
                 <ChevronUp className='w-4 h-4 text-text-secondary' />
               </BubbleButton>
               <BubbleButton
                 onClick={() => editor.chain().focus().addRowAfter().run()}
-                title='Add Row Below'
+                title={t('editor.table.addRowBelow')}
               >
                 <ChevronDown className='w-4 h-4 text-text-secondary' />
               </BubbleButton>
               <BubbleButton
                 onClick={() => editor.chain().focus().deleteRow().run()}
-                title='Delete Row'
+                title={t('editor.table.deleteRow')}
                 className='hover:bg-accent-danger/10 hover:text-accent-danger'
               >
                 <Trash2 className='w-4 h-4' />
@@ -513,19 +515,19 @@ const RichTextEditor = forwardRef(
             <div className='flex items-center gap-1 border-r border-border-primary pr-1 mr-1'>
               <BubbleButton
                 onClick={() => editor.chain().focus().addColumnBefore().run()}
-                title='Add Column Before'
+                title={t('editor.table.addColumnBefore')}
               >
                 <ChevronLeft className='w-4 h-4 text-text-secondary' />
               </BubbleButton>
               <BubbleButton
                 onClick={() => editor.chain().focus().addColumnAfter().run()}
-                title='Add Column After'
+                title={t('editor.table.addColumnAfter')}
               >
                 <ChevronRight className='w-4 h-4 text-text-secondary' />
               </BubbleButton>
               <BubbleButton
                 onClick={() => editor.chain().focus().deleteColumn().run()}
-                title='Delete Column'
+                title={t('editor.table.deleteColumn')}
                 className='hover:bg-accent-danger/10 hover:text-accent-danger'
               >
                 <Trash2 className='w-4 h-4' />
@@ -534,14 +536,14 @@ const RichTextEditor = forwardRef(
 
             <BubbleButton
               onClick={() => editor.chain().focus().mergeCells().run()}
-              title='Merge Cells'
+              title={t('editor.table.mergeCells')}
             >
               <Split className='w-4 h-4 text-text-secondary' />
             </BubbleButton>
 
             <BubbleButton
               onClick={() => editor.chain().focus().deleteTable().run()}
-              title='Delete Table'
+              title={t('editor.table.deleteTable')}
               className='hover:bg-accent-danger/10 text-accent-danger'
             >
               <Trash2 className='w-4 h-4' />

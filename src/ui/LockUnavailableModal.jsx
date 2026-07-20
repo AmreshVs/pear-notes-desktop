@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Fingerprint } from 'lucide-react'
 
 export default function LockUnavailableModal({ open, onCancel }) {
+  const { t } = useTranslation()
   if (!open) return null
 
   return (
@@ -19,20 +21,16 @@ export default function LockUnavailableModal({ open, onCancel }) {
             <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
               <Fingerprint className='w-6 h-6 text-accent-primary' />
             </div>
-            <h3 className='text-lg font-bold text-text-primary'>Device Lock Unavailable</h3>
+            <h3 className='text-lg font-bold text-text-primary'>{t('noteCard.authUnavailableTitle')}</h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              This device has no biometric authentication or login password set up, so notes
-              can&apos;t be locked or unlocked here. Set up device security, or change the lock
-              method from another synced device.
+              {t('noteCard.authUnavailableDesc')}
             </p>
           </div>
 
           <button
             onClick={onCancel}
             className='w-full py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
-          >
-            OK
-          </button>
+          >{t('common.ok')}</button>
         </div>
       </div>
     </div>
