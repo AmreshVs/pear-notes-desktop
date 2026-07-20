@@ -15,9 +15,8 @@ import {
 import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
-import { getBackupErrorMessage } from '../utils/backupErrors'
-
-import BackupPasswordModal from './BackupPasswordModal'
+import { getBackupErrorMessage } from '../../utils/backupErrors'
+import BackupPasswordModal from '../modals/BackupPasswordModal'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 

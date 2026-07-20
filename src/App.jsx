@@ -27,6 +27,18 @@ import {
 } from '@pear-notes/core/store/slices/uiSlice.js'
 import { debounce } from '@pear-notes/core/utils.js'
 
+import BackupProgressBanner from './components/common/BackupProgressBanner'
+import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
+import PairingStatusOverlay from './components/common/PairingStatusOverlay'
+import TitleBar from './components/common/TitleBar'
+import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
+import NoteEditor from './components/editor/NoteEditor'
+import DeviceRemovedModal from './components/modals/DeviceRemovedModal'
+import UpdateRequiredModal from './components/modals/UpdateRequiredModal'
+import SettingsScreen from './components/settings/SettingsScreen'
+import FoldersSidebar from './components/sidebar/FoldersSidebar'
+import NotesList from './components/sidebar/NotesList'
+import ResizablePanel from './components/sidebar/ResizablePanel'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
   applyCloseToTray,
@@ -36,18 +48,6 @@ import {
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
 import { useAppUpdateStatus } from './lib/appUpdateCheck'
-import BackupProgressBanner from './ui/BackupProgressBanner'
-import DeviceRemovedModal from './ui/DeviceRemovedModal'
-import FoldersSidebar from './ui/FoldersSidebar'
-import NoteEditor from './ui/NoteEditor'
-import NoteLockPasswordProvider from './ui/NoteLockPasswordProvider'
-import NotesList from './ui/NotesList'
-import PairingStatusOverlay from './ui/PairingStatusOverlay'
-import ResizablePanel from './ui/ResizablePanel'
-import SettingsScreen from './ui/SettingsScreen'
-import TitleBar from './ui/TitleBar'
-import UpdateAvailableBanner from './ui/UpdateAvailableBanner'
-import UpdateRequiredModal from './ui/UpdateRequiredModal'
 import { getDbEncryptionKey } from './utils.js'
 
 function App() {

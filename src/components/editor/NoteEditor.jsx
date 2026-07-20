@@ -23,18 +23,18 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
-import { useLockedNoteProtection } from '../hooks/useLockedNoteProtection'
-import { showContextMenu } from '../lib/contextMenu'
-import { isDeviceAuthSupported } from '../lib/deviceAuth'
-import { isNoteUnlocked, markNoteUnlocked, unlockNote, useNoteLockVersion } from '../lib/noteLock'
-import { toggleNoteLock } from '../lib/noteLockActions'
-import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
-import { getFontFamilyValue } from '../utils/fonts'
-import { formatRelativeDate } from '../utils/formatters'
+import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
+import { showContextMenu } from '../../lib/contextMenu'
+import { isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { isNoteUnlocked, markNoteUnlocked, unlockNote, useNoteLockVersion } from '../../lib/noteLock'
+import { toggleNoteLock } from '../../lib/noteLockActions'
+import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import { getFontFamilyValue } from '../../utils/fonts'
+import { formatRelativeDate } from '../../utils/formatters'
+import UploadProgressToast from '../common/UploadProgressToast'
 
 import FormattingToolbar from './FormattingToolbar'
 import RichTextEditor from './RichTextEditor'
-import UploadProgressToast from './UploadProgressToast'
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const { t } = useTranslation()

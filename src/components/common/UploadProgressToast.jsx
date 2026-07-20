@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, ChevronDown, ChevronUp, Clock, Upload, X } from 'lucide-react'
 
-import { cancelAllUploads, cancelUploadItem, useUploadQueue } from '../lib/uploadRegistry'
+import { cancelAllUploads, cancelUploadItem, useUploadQueue } from '../../lib/uploadRegistry'
 
 function QueueRow({ item, onCancel }) {
   const { t } = useTranslation()

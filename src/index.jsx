@@ -3,6 +3,7 @@ import './styles.css'
 
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
+import { Buffer } from 'buffer'
 import FramedStream from 'framed-stream'
 import { Duplex } from 'stream'
 
@@ -12,7 +13,7 @@ import HRPC from '@pear-notes/core/spec/hrpc/index.js'
 import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
 import { store } from '@pear-notes/core/store/store.js'
 
-import ErrorBoundary from './ui/ErrorBoundary.jsx'
+import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 import App from './App.jsx'
 
 const { ipcRenderer } = window.require('electron')

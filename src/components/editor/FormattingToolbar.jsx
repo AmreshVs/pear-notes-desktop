@@ -15,11 +15,11 @@ import {
   Undo
 } from 'lucide-react'
 
-import { useFormattingToolbar } from '../hooks/useFormattingToolbar'
+import { useFormattingToolbar } from '../../hooks/useFormattingToolbar'
+import AudioRecorderModal from '../modals/AudioRecorderModal'
+import LinkModal from '../modals/LinkModal'
 
 import AttachmentMenu from './AttachmentMenu'
-import AudioRecorderModal from './AudioRecorderModal'
-import LinkModal from './LinkModal'
 
 export default function FormattingToolbar({ editor, noteKey }) {
   const { t } = useTranslation()

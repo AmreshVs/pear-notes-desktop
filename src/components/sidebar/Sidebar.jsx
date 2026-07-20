@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Search, Trash2 } from 'lucide-react'
 
-import { formatRelativeDate } from '../utils/formatters'
+import { formatRelativeDate } from '../../utils/formatters'
 
 function getPreview(content, t) {
   if (!content) return t('noteCard.noAdditionalText')

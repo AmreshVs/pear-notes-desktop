@@ -1,3 +1,4 @@
+/* global require, module */
 const bindings = require('bindings')
 
 let native = null

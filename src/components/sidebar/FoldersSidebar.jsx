@@ -20,7 +20,7 @@ import {
   setShouldAutoRenameNextFolder
 } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { showContextMenu } from '../lib/contextMenu'
+import { showContextMenu } from '../../lib/contextMenu'
 
 const ICON_MAP = {
   FileText,

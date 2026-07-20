@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Eye, EyeOff, Lock, TriangleAlert, X } from 'lucide-react'
+import { Check, Eye, EyeOff, Lock, X } from 'lucide-react'
 
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
 
-import { getPasswordRules, getPasswordStrengthUi } from '../utils/passwordStrength'
+import { getPasswordStrengthUi, PASSWORD_RULES } from '../../utils/passwordStrength'
 
 const STRENGTH_BAR_COLORS = [
   'bg-accent-danger',
@@ -15,14 +15,14 @@ const STRENGTH_BAR_COLORS = [
   'bg-accent-success'
 ]
 
-export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onCancel }) {
+export default function BackupPasswordModal({ open, mode, error, onSubmit, onCancel }) {
   const { t } = useTranslation()
   const isCreate = mode === 'create'
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [visible, setVisible] = useState(false)
 
-  const strength = useMemo(() => getPasswordStrengthUi(password, t), [password, t])
+  const strength = useMemo(() => getPasswordStrengthUi(password), [password])
   const passwordsMatch = password === confirm
   const canSubmit = isCreate
     ? isValidBackupPassword(password) && passwordsMatch
@@ -68,19 +68,14 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
               <Lock className='w-6 h-6 text-accent-primary' />
             </div>
             <h3 className='text-lg font-bold text-text-primary'>
-              {isCreate ? t('noteLockPassword.createTitle') : t('noteLockPassword.enterTitle')}
+              {isCreate ? t('backup.password.createTitle') : t('backup.password.enterTitle')}
             </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              {isCreate ? t('noteLockPassword.createDesc') : t('noteLockPassword.enterDesc')}
+              {isCreate
+                ? t('backup.password.createDesc')
+                : t('backup.password.enterDesc')}
             </p>
           </div>
-
-          {isCreate && (
-            <div className='flex items-start gap-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-3'>
-              <TriangleAlert className='w-4 h-4 text-yellow-500 shrink-0 mt-0.5' />
-              <p className='text-xs text-yellow-500/90 leading-relaxed'>{t('noteLockPassword.warning')}</p>
-            </div>
-          )}
 
           <div className='space-y-3'>
             <div className='relative'>
@@ -89,7 +84,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isCreate ? t('noteLockPassword.placeholderCreate') : t('noteLockPassword.placeholder')}
+                placeholder={isCreate ? t('backup.password.createPlaceholder') : t('backup.password.placeholder')}
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -108,7 +103,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={t('noteLockPassword.confirmPlaceholder')}
+                  placeholder={t('backup.password.confirmPlaceholder')}
                   className='w-full px-4 py-3 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
                 />
 
@@ -125,7 +120,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                     </span>
                   </div>
                   <ul className='grid grid-cols-2 gap-x-3 gap-y-1'>
-                    {getPasswordRules(t).map((rule) => {
+                    {PASSWORD_RULES.map((rule) => {
                       const met = strength.checks[rule.key]
                       return (
                         <li
@@ -145,7 +140,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-xs text-accent-danger/80 ml-1'>{t('noteLockPassword.mismatch')}</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>{t('backup.password.mismatch')}</p>
                 )}
               </>
             )}
@@ -157,13 +152,15 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
             <button
               onClick={handleCancel}
               className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-            >{t('common.cancel')}</button>
+            >
+              {t('common.cancel')}
+            </button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
             >
-              {isCreate ? t('noteLockPassword.createButton') : t('noteLockPassword.unlockButton')}
+              {isCreate ? t('backup.password.createButton') : t('backup.password.restoreButton')}
             </button>
           </div>
         </div>

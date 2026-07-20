@@ -25,10 +25,10 @@ import {
   createDownloadLink,
   deleteHyperdriveFile,
   downloadAsBlob
-} from '../lib/fileManager'
+} from '../../lib/fileManager'
+import MediaPreviewModal from '../modals/MediaPreviewModal'
 
 import AudioPlayer from './AudioPlayer'
-import MediaPreviewModal from './MediaPreviewModal'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { t } = useTranslation()

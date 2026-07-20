@@ -3,10 +3,9 @@ import { useTranslation } from 'react-i18next'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 
-import { NoteLockPasswordContext } from '../lib/noteLockPasswordContext'
-
-import LockUnavailableModal from './LockUnavailableModal'
-import NoteLockPasswordModal from './NoteLockPasswordModal'
+import { NoteLockPasswordContext } from '../../lib/noteLockPasswordContext'
+import LockUnavailableModal from '../modals/LockUnavailableModal'
+import NoteLockPasswordModal from '../modals/NoteLockPasswordModal'
 
 export default function NoteLockPasswordProvider({ children }) {
   const { t } = useTranslation()

@@ -12,11 +12,10 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLockPrivacyPreference, setLockPrivacyPreference } from '@pear-notes/core/utils.js'
 
-import { authenticate, isDeviceAuthSupported } from '../lib/deviceAuth'
-import { clearUnlockedNotes } from '../lib/noteLock'
-import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
-
-import NoteLockPasswordModal from './NoteLockPasswordModal'
+import { authenticate, isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { clearUnlockedNotes } from '../../lib/noteLock'
+import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import NoteLockPasswordModal from '../modals/NoteLockPasswordModal'
 
 const AUTH_METHOD_LABELS = {
   mac: 'Touch ID or your macOS password',

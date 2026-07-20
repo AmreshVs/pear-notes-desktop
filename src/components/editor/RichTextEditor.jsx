@@ -54,9 +54,9 @@ import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
 
-import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
-import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
-import { getFontClass, getFontFamilyValue } from '../utils/fonts'
+import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
+import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
+import { getFontClass, getFontFamilyValue } from '../../utils/fonts'
 
 import AudioAttachment from './AudioAttachment'
 import FileAttachment from './FileAttachment'

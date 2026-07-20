@@ -34,7 +34,7 @@ import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
 import { getDeviceDisplayName } from '@pear-notes/core/utils.js'
 
-import MergeConfirmModal from './MergeConfirmModal'
+import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',

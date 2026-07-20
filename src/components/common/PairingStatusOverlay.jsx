@@ -16,7 +16,7 @@ import {
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getFingerprint } from '@pear-notes/core/utils.js'
 
-import MergeConfirmModal from './MergeConfirmModal'
+import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 export default function PairingStatusOverlay() {
   const { t } = useTranslation()

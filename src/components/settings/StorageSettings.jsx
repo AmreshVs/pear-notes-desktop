@@ -45,7 +45,7 @@ import {
 import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
-import { deleteDbEncryptionKey } from '../utils.js'
+import { deleteDbEncryptionKey } from '../../utils.js'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px] backdrop-blur-md'

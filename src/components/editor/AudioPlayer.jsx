@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pause, Play } from 'lucide-react'
 
-import { formatTime } from '../utils/formatters'
+import { formatTime } from '../../utils/formatters'
 
 export default function AudioPlayer({ src, duration: propDuration, title }) {
   const { t } = useTranslation()
@@ -28,6 +28,7 @@ export default function AudioPlayer({ src, duration: propDuration, title }) {
     media.addEventListener('loadedmetadata', updateDuration)
     media.addEventListener('durationchange', updateDuration)
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentTime(0)
     setIsPlaying(false)
     playStartRef.current = null

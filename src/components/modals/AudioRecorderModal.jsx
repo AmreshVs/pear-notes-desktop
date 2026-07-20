@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Mic, Square, X } from 'lucide-react'
 
-import { formatTime } from '../utils/formatters'
-
-import AudioPlayer from './AudioPlayer'
+import { formatTime } from '../../utils/formatters'
+import AudioPlayer from '../editor/AudioPlayer'
 
 export default function AudioRecorderModal({ onClose, onSaveAudio }) {
   const { t } = useTranslation()
@@ -19,6 +18,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
 
   useEffect(() => {
     if (!audioBlob) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAudioDataUrl(null)
       return
     }

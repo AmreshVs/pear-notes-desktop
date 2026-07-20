@@ -10,9 +10,8 @@ import { Trash2 } from 'lucide-react'
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { deleteHyperdriveFile } from '../lib/fileManager'
-
-import MediaPreviewModal from './MediaPreviewModal'
+import { deleteHyperdriveFile } from '../../lib/fileManager'
+import MediaPreviewModal from '../modals/MediaPreviewModal'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
   const { t } = useTranslation()

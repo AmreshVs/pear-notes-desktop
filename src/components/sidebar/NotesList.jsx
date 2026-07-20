@@ -38,10 +38,10 @@ import {
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
-import { showContextMenu } from '../lib/contextMenu'
-import { isNoteUnlocked, useNoteLockVersion } from '../lib/noteLock'
-import { toggleNoteLock } from '../lib/noteLockActions'
-import { useNoteLockPassword } from '../lib/noteLockPasswordContext'
+import { showContextMenu } from '../../lib/contextMenu'
+import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
+import { toggleNoteLock } from '../../lib/noteLockActions'
+import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 
 const ATTACHMENT_ICONS = {
   image: ImageIcon,
