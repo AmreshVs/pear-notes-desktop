@@ -164,7 +164,7 @@ export default function FoldersSidebar({
           className={`flex items-center group relative mb-2 w-full px-4 py-3 justify-between rounded-xl transition-colors duration-0
             ${
               isSelected
-                ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
+                ? 'bg-[var(--accent-selected-bg)] text-accent-primary border border-[var(--accent-selected-border)] shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
                 : 'bg-transparent text-text-secondary hover:bg-bg-tertiary border border-transparent'
             }`}
           title={isEditing ? '' : t('folders.doubleClickToRename')}

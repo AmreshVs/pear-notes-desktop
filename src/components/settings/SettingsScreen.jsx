@@ -77,8 +77,8 @@ export default function SettingsScreen({ onClose }) {
                   className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
                     ${
                       isActive
-                        ? 'bg-accent-primary/10 text-accent-primary'
-                        : 'text-text-secondary hover:bg-overlay-light hover:text-text-primary'
+                        ? 'bg-[var(--accent-selected-bg)] text-accent-primary border border-[var(--accent-selected-border)]'
+                        : 'text-text-secondary hover:bg-overlay-light hover:text-text-primary border border-transparent'
                     }`}
                 >
                   <Icon

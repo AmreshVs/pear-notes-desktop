@@ -184,7 +184,7 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
         className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
           ${
             isSelected
-              ? 'bg-accent-primary/5 shadow-inner'
+              ? 'bg-[var(--accent-selected-bg)] shadow-inner'
               : 'bg-transparent hover:bg-overlay-faint'
           }`}
       >
@@ -192,7 +192,7 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
           <div className='flex-1 min-w-0 flex flex-col justify-center'>
             <h3
               className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
-                ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary/80'}`}
+                ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary'}`}
             >
               {noteData?.pinned && !isTrash && (
                 <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
