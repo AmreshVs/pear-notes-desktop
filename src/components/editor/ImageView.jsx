@@ -8,6 +8,7 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
 import { deleteHyperdriveFile } from '../../lib/fileManager'
@@ -19,6 +20,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
   const resolvedUrl = useSelector((state) =>
     src && src.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, src) : src
   )
+  const noteKey = useSelector(getSelectedNote)
 
   const [width, setWidth] = useState(initialWidth || 300)
   const [height, setHeight] = useState(initialHeight || 'auto')
@@ -63,7 +65,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
     e.stopPropagation()
 
     try {
-      await deleteHyperdriveFile(src)
+      await deleteHyperdriveFile(noteKey, src)
     } catch (error) {
       console.error('Error deleting image from backend:', error)
     }

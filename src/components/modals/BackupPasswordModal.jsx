@@ -22,7 +22,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
   const [confirm, setConfirm] = useState('')
   const [visible, setVisible] = useState(false)
 
-  const strength = useMemo(() => getPasswordStrengthUi(password), [password])
+  const strength = useMemo(() => getPasswordStrengthUi(password, t), [password, t])
   const passwordsMatch = password === confirm
   const canSubmit = isCreate
     ? isValidBackupPassword(password) && passwordsMatch

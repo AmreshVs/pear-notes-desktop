@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
 import {
@@ -56,6 +57,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const resolvedUrl = useSelector((state) =>
     url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
   )
+  const noteKey = useSelector(getSelectedNote)
 
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')
@@ -268,7 +270,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
     if (!window.confirm(t('fileAttachment.deleteConfirm', { name: fileName || t('fileAttachment.thisFile') }))) return
 
     try {
-      await deleteHyperdriveFile(url)
+      await deleteHyperdriveFile(noteKey, url)
     } catch (error) {
       console.error('Error deleting file from backend:', error)
       return

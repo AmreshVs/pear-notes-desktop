@@ -70,10 +70,14 @@ export function createProgressUpload({ noteKey, file, fileName, onProgress }) {
   return { promise, cancel }
 }
 
-export async function deleteHyperdriveFile(url) {
-  if (!url || !url.startsWith(HYPERDRIVE_URL_PREFIX)) return
-  const key = url.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
-  await backendApi.deleteFile(key)
+export async function deleteHyperdriveFile(noteKey, url) {
+  if (!noteKey || !url || !url.startsWith(HYPERDRIVE_URL_PREFIX)) return
+  const queryIdx = url.indexOf('?')
+  const mediaPath =
+    queryIdx !== -1 && url.slice(queryIdx).includes('blob=')
+      ? url
+      : url.replace(HYPERDRIVE_URL_PREFIX, '').replace(/^\//, '')
+  await backendApi.deleteNoteFile({ noteKey, mediaPath })
 }
 
 export async function downloadAsBlob(url, onProgress) {

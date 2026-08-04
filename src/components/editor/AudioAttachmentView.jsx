@@ -5,6 +5,7 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { Download, Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
 import {
@@ -22,6 +23,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
   const resolvedUrl = useSelector((state) =>
     url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
   )
+  const noteKey = useSelector(getSelectedNote)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
 
@@ -52,7 +54,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
     e.stopPropagation()
 
     try {
-      await deleteHyperdriveFile(url)
+      await deleteHyperdriveFile(noteKey, url)
     } catch (error) {
       console.error('Error deleting audio from backend:', error)
     }

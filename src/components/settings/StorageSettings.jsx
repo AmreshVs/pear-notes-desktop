@@ -302,6 +302,11 @@ export default function StorageSettings() {
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [frozenReclaimableBytes, setFrozenReclaimableBytes] = useState(null)
+
+  const displayReclaimableBytes =
+    isReclaiming && frozenReclaimableBytes !== null ? frozenReclaimableBytes : reclaimableBytes
+  const hasReclaimable = displayReclaimableBytes > 0
 
   const noteTitleByKey = useMemo(() => {
     const map = {}
@@ -347,10 +352,16 @@ export default function StorageSettings() {
   }
 
   const handleReclaim = () => {
+    setFrozenReclaimableBytes(reclaimableBytes)
     dispatch(reclaimStorage())
   }
 
-  const blobPct = totalOnDiskBytes > 0 ? Math.round((totalBlobBytes / totalOnDiskBytes) * 100) : 0
+  useEffect(() => {
+    if (!isReclaiming) setFrozenReclaimableBytes(null)
+  }, [isReclaiming])
+
+  const liveOnDiskBytes = Math.max(0, totalOnDiskBytes - reclaimableBytes)
+  const blobPct = totalOnDiskBytes > 0 ? Math.round((liveOnDiskBytes / totalOnDiskBytes) * 100) : 0
 
   return (
     <div className='max-w-2xl mx-auto space-y-6'>
@@ -462,18 +473,18 @@ export default function StorageSettings() {
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
                 <div className='flex flex-col'>
                   <span className='text-base font-semibold text-text-tertiary'>
-                    {reclaimableBytes > 0 ? t('storage.reclaimable') : t('storage.compact')}
+                    {hasReclaimable ? t('storage.reclaimable') : t('storage.compact')}
                   </span>
                   <span className='text-sm text-text-tertiary/70'>
-                    {reclaimableBytes > 0
+                    {hasReclaimable
                       ? t('storage.reclaimableDesc')
                       : t('storage.compactDesc')}
                   </span>
                 </div>
                 <div className='flex items-center gap-3'>
-                  {reclaimableBytes > 0 && (
+                  {hasReclaimable && (
                     <span className='text-base font-bold text-accent-primary'>
-                      {formatBytes(reclaimableBytes)}
+                      {formatBytes(displayReclaimableBytes)}
                     </span>
                   )}
                   <button
@@ -481,7 +492,7 @@ export default function StorageSettings() {
                     disabled={isReclaiming}
                     className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
-                    {isReclaiming ? t('storage.reclaiming') : (reclaimableBytes > 0 ? t('storage.reclaimNow') : t('storage.compactNow'))}
+                    {isReclaiming ? t('storage.reclaiming') : (hasReclaimable ? t('storage.reclaimNow') : t('storage.compactNow'))}
                   </button>
                 </div>
               </div>
