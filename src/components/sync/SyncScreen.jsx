@@ -47,7 +47,9 @@ export default function SyncScreen({ onClose }) {
                 ? 'border-accent-primary text-text-primary'
                 : 'border-transparent text-text-tertiary hover:text-text-primary'
             }`}
-          >{t('sync.tabs.link')}</button>
+          >
+            {t('sync.tabs.link')}
+          </button>
           <button
             onClick={() => setActiveTab('manage')}
             className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
@@ -55,25 +57,35 @@ export default function SyncScreen({ onClose }) {
                 ? 'border-accent-primary text-text-primary'
                 : 'border-transparent text-text-tertiary hover:text-text-primary'
             }`}
-          >{t('sync.tabs.devices')}</button>
+          >
+            {t('sync.tabs.devices')}
+          </button>
         </div>
 
         <div className='p-6 bg-bg-panel'>
           {activeTab === 'invite' ? (
             <div>
-              <h3 className='text-text-primary font-semibold text-lg mb-2'>{t('sync.hero.title')}</h3>
+              <h3 className='text-text-primary font-semibold text-lg mb-2'>
+                {t('sync.hero.title')}
+              </h3>
               <p className='text-sm mb-6 text-text-tertiary'>{t('sync.hero.description')}</p>
 
               <div className='flex gap-6'>
                 <div className='w-48 h-48 bg-bg-panel-secondary rounded-lg flex items-center justify-center border border-border-tertiary'>
-                  <div className='text-xs text-center text-text-tertiary'>{t('sync.invite.qrTitle')}<br />{t('sync.invite.qrDescription')}</div>
+                  <div className='text-xs text-center text-text-tertiary'>
+                    {t('sync.invite.qrTitle')}
+                    <br />
+                    {t('sync.invite.qrDescription')}
+                  </div>
                 </div>
 
                 <div className='flex-1'>
                   <div className='bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4'>
                     <div className='flex items-start gap-3'>
                       <Check className='w-5 h-5 text-green-500 flex-shrink-0 mt-0.5' />
-                      <p className='text-green-600 dark:text-green-400 text-sm'>{t('settings.e2eEncrypted')}</p>
+                      <p className='text-green-600 dark:text-green-400 text-sm'>
+                        {t('settings.e2eEncrypted')}
+                      </p>
                     </div>
                   </div>
 
@@ -83,17 +95,23 @@ export default function SyncScreen({ onClose }) {
                   >
                     {copied ? (
                       <>
-                        <Check className='w-4 h-4' />{t('sync.invite.copied')} </>
+                        <Check className='w-4 h-4' />
+                        {t('sync.invite.copied')}{' '}
+                      </>
                     ) : (
                       <>
-                        <Link2 className='w-4 h-4' />{t('sync.invite.copyBtn')} </>
+                        <Link2 className='w-4 h-4' />
+                        {t('sync.invite.copyBtn')}{' '}
+                      </>
                     )}
                   </button>
                 </div>
               </div>
 
               <div className='mt-8 pt-8 border-t border-border-primary'>
-                <h3 className='text-text-primary font-semibold text-lg mb-2'>{t('sync.paste.header')}</h3>
+                <h3 className='text-text-primary font-semibold text-lg mb-2'>
+                  {t('sync.paste.header')}
+                </h3>
                 <p className='text-sm mb-4 text-text-tertiary'>{t('sync.scanner.description')}</p>
                 <div className='flex gap-2'>
                   <input
@@ -107,18 +125,24 @@ export default function SyncScreen({ onClose }) {
                     onClick={handleConnect}
                     disabled={!pasteCode.trim()}
                     className='px-6 py-4 rounded-xl transition-colors font-bold text-base bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] active:scale-95'
-                  >{t('sync.paste.linkBtn')}</button>
+                  >
+                    {t('sync.paste.linkBtn')}
+                  </button>
                 </div>
               </div>
             </div>
           ) : (
             <div>
-              <h3 className='text-text-primary font-semibold text-lg mb-4'>{t('sync.tabs.devices')}</h3>
+              <h3 className='text-text-primary font-semibold text-lg mb-4'>
+                {t('sync.tabs.devices')}
+              </h3>
               <div className='space-y-3'>
                 <div className='p-4 bg-bg-panel-secondary rounded-lg border border-border-tertiary'>
                   <div className='flex items-center justify-between'>
                     <div>
-                      <p className='text-text-primary font-medium'>{t('sync.devices.thisDevice')}</p>
+                      <p className='text-text-primary font-medium'>
+                        {t('sync.devices.thisDevice')}
+                      </p>
                       <p className='text-sm text-text-tertiary'>{t('sync.devices.empty')}</p>
                     </div>
                     <span className='px-3 py-1 bg-green-500/10 text-green-600 dark:text-green-400 text-xs rounded-full border border-green-500/20'>
@@ -126,7 +150,9 @@ export default function SyncScreen({ onClose }) {
                     </span>
                   </div>
                 </div>
-                <p className='text-sm text-center py-4 text-text-tertiary'>{t('sync.devices.empty')}</p>
+                <p className='text-sm text-center py-4 text-text-tertiary'>
+                  {t('sync.devices.empty')}
+                </p>
               </div>
             </div>
           )}

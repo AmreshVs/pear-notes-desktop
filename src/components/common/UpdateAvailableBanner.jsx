@@ -29,7 +29,9 @@ export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
         </div>
 
         <div className='flex-1 min-w-0'>
-          <h4 className='text-text-primary font-semibold text-sm truncate'>{t('update.banner.title')}</h4>
+          <h4 className='text-text-primary font-semibold text-sm truncate'>
+            {t('update.banner.title')}
+          </h4>
           <p className='text-text-tertiary text-xs truncate'>
             {t('update.banner.description', { version: latestVersion })}
           </p>

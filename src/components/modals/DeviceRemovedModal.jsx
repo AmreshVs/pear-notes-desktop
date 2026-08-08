@@ -30,7 +30,9 @@ export default function DeviceRemovedModal() {
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('pairing.overlay.deviceRemovedTitle')}</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+              {t('pairing.overlay.deviceRemovedTitle')}
+            </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
               {t('pairing.overlay.deviceRemovedDesc')}
             </p>

@@ -91,7 +91,9 @@ export default function MediaPreviewModal({
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-primary text-accent-on-primary text-sm font-semibold transition-colors ${isDownloading ? 'cursor-wait opacity-70' : 'hover:bg-accent-primary-hover'}`}
               >
                 <Download className='w-4 h-4' />
-                {isDownloading ? t('mediaPreview.downloadingProgress', { progress: downloadProgress }) : t('common.download')}
+                {isDownloading
+                  ? t('mediaPreview.downloadingProgress', { progress: downloadProgress })
+                  : t('common.download')}
               </button>
             )}
           </div>
@@ -117,7 +119,11 @@ export default function MediaPreviewModal({
               }}
               disabled={isDownloading}
               className={`w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/20 bg-white/10 active:scale-90 transition-all flex items-center justify-center shadow-md ${isDownloading ? 'cursor-wait' : 'cursor-pointer'}`}
-              title={isDownloading ? t('mediaPreview.downloadingProgress', { progress: downloadProgress }) : t('common.download')}
+              title={
+                isDownloading
+                  ? t('mediaPreview.downloadingProgress', { progress: downloadProgress })
+                  : t('common.download')
+              }
             >
               {isDownloading ? (
                 <span className='text-xs font-bold text-white'>{downloadProgress}%</span>

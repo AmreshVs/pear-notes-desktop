@@ -193,7 +193,12 @@ function App() {
           <TitleBar />
           {content}
         </div>
-        {showSettings && <SettingsScreen onClose={() => dispatch(setShowSettings(false))} />}
+        {showSettings && (
+          <SettingsScreen
+            initialSection={typeof showSettings === 'string' ? showSettings : 'general'}
+            onClose={() => dispatch(setShowSettings(false))}
+          />
+        )}
         <PairingStatusOverlay />
         <DeviceRemovedModal />
         <BackupProgressBanner />

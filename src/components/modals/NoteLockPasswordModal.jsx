@@ -78,7 +78,9 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
           {isCreate && (
             <div className='flex items-start gap-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 p-3'>
               <TriangleAlert className='w-4 h-4 text-yellow-500 shrink-0 mt-0.5' />
-              <p className='text-xs text-yellow-500/90 leading-relaxed'>{t('noteLockPassword.warning')}</p>
+              <p className='text-xs text-yellow-500/90 leading-relaxed'>
+                {t('noteLockPassword.warning')}
+              </p>
             </div>
           )}
 
@@ -89,7 +91,11 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isCreate ? t('noteLockPassword.placeholderCreate') : t('noteLockPassword.placeholder')}
+                placeholder={
+                  isCreate
+                    ? t('noteLockPassword.placeholderCreate')
+                    : t('noteLockPassword.placeholder')
+                }
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -145,7 +151,9 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-xs text-accent-danger/80 ml-1'>{t('noteLockPassword.mismatch')}</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>
+                    {t('noteLockPassword.mismatch')}
+                  </p>
                 )}
               </>
             )}
@@ -157,7 +165,9 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
             <button
               onClick={handleCancel}
               className='flex-1 py-3 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-            >{t('common.cancel')}</button>
+            >
+              {t('common.cancel')}
+            </button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}

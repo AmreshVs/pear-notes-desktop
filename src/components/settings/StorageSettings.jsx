@@ -360,6 +360,11 @@ export default function StorageSettings() {
     if (!isReclaiming) setFrozenReclaimableBytes(null)
   }, [isReclaiming])
 
+  const hasBreakdown = useMemo(
+    () => Boolean(buckets) && Object.values(buckets).some((bucket) => bucket.count > 0),
+    [buckets]
+  )
+
   const liveOnDiskBytes = Math.max(0, totalOnDiskBytes - reclaimableBytes)
   const blobPct = totalOnDiskBytes > 0 ? Math.round((liveOnDiskBytes / totalOnDiskBytes) * 100) : 0
 
@@ -445,7 +450,9 @@ export default function StorageSettings() {
               <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
                 <div className='flex items-center gap-2'>
                   <Database className='w-4 h-4 text-text-tertiary' />
-                  <span className='text-base font-semibold text-text-primary'>{t('storage.notesData')}</span>
+                  <span className='text-base font-semibold text-text-primary'>
+                    {t('storage.notesData')}
+                  </span>
                   <Tooltip text={t('storage.notesDataTooltip')}>
                     <Info className='w-3.5 h-3.5 text-text-tertiary/50 cursor-default' />
                   </Tooltip>
@@ -476,9 +483,7 @@ export default function StorageSettings() {
                     {hasReclaimable ? t('storage.reclaimable') : t('storage.compact')}
                   </span>
                   <span className='text-sm text-text-tertiary/70'>
-                    {hasReclaimable
-                      ? t('storage.reclaimableDesc')
-                      : t('storage.compactDesc')}
+                    {hasReclaimable ? t('storage.reclaimableDesc') : t('storage.compactDesc')}
                   </span>
                 </div>
                 <div className='flex items-center gap-3'>
@@ -492,14 +497,20 @@ export default function StorageSettings() {
                     disabled={isReclaiming}
                     className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                   >
-                    {isReclaiming ? t('storage.reclaiming') : (hasReclaimable ? t('storage.reclaimNow') : t('storage.compactNow'))}
+                    {isReclaiming
+                      ? t('storage.reclaiming')
+                      : hasReclaimable
+                        ? t('storage.reclaimNow')
+                        : t('storage.compactNow')}
                   </button>
                 </div>
               </div>
 
               <div className='px-6 py-4 space-y-2'>
                 <div className='flex items-center justify-between text-sm'>
-                  <span className='text-text-tertiary font-medium'>{t('storage.liveMediaOnDisk')}</span>
+                  <span className='text-text-tertiary font-medium'>
+                    {t('storage.liveMediaOnDisk')}
+                  </span>
                   <span className='text-text-secondary font-bold'>{blobPct}%</span>
                 </div>
                 <div
@@ -521,89 +532,103 @@ export default function StorageSettings() {
         </div>
       </div>
 
-      {buckets && (
+      {hasBreakdown && (
         <div className='space-y-1'>
           <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
             {t('backup.breakdownByType')}
           </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
-            {isLoading && totalBlobBytes === 0 ? null : (
-              <div className='p-2'>
-                {buckets.image.count > 0 && (
-                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                    <div className='flex items-center gap-3'>
-                      <ImageIcon className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>{t('backup.images')}</span>
-                      <span className='text-sm text-text-tertiary'>
-                        {t('backup.items', { count: buckets.image.count })}
-                      </span>
-                    </div>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(buckets.image.size)}
+            <div className='p-2'>
+              {buckets.image.count > 0 && (
+                <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                  <div className='flex items-center gap-3'>
+                    <ImageIcon className='w-4 h-4 text-text-tertiary' />
+                    <span className='text-base font-medium text-text-primary'>
+                      {t('backup.images')}
+                    </span>
+                    <span className='text-sm text-text-tertiary'>
+                      {t('backup.items', { count: buckets.image.count })}
                     </span>
                   </div>
-                )}
-                {buckets.video.count > 0 && (
-                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                    <div className='flex items-center gap-3'>
-                      <Film className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>{t('backup.videos')}</span>
-                      <span className='text-sm text-text-tertiary'>
-                        {t('backup.items', { count: buckets.video.count })}
-                      </span>
-                    </div>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(buckets.video.size)}
+                  <span className='text-base font-bold text-text-secondary'>
+                    {formatBytes(buckets.image.size)}
+                  </span>
+                </div>
+              )}
+              {buckets.video.count > 0 && (
+                <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                  <div className='flex items-center gap-3'>
+                    <Film className='w-4 h-4 text-text-tertiary' />
+                    <span className='text-base font-medium text-text-primary'>
+                      {t('backup.videos')}
+                    </span>
+                    <span className='text-sm text-text-tertiary'>
+                      {t('backup.items', { count: buckets.video.count })}
                     </span>
                   </div>
-                )}
-                {buckets.audio.count > 0 && (
-                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                    <div className='flex items-center gap-3'>
-                      <Mic className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>{t('backup.voiceNotes')}</span>
-                      <span className='text-sm text-text-tertiary'>
-                        {t('backup.items', { count: buckets.audio.count })}
-                      </span>
-                    </div>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(buckets.audio.size)}
+                  <span className='text-base font-bold text-text-secondary'>
+                    {formatBytes(buckets.video.size)}
+                  </span>
+                </div>
+              )}
+              {buckets.audio.count > 0 && (
+                <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                  <div className='flex items-center gap-3'>
+                    <Mic className='w-4 h-4 text-text-tertiary' />
+                    <span className='text-base font-medium text-text-primary'>
+                      {t('backup.voiceNotes')}
+                    </span>
+                    <span className='text-sm text-text-tertiary'>
+                      {t('backup.items', { count: buckets.audio.count })}
                     </span>
                   </div>
-                )}
-                {buckets.file.count > 0 && (
-                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                    <div className='flex items-center gap-3'>
-                      <FileText className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>{t('backup.files')}</span>
-                      <span className='text-sm text-text-tertiary'>{t('backup.items', { count: buckets.file.count })}</span>
-                    </div>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(buckets.file.size)}
+                  <span className='text-base font-bold text-text-secondary'>
+                    {formatBytes(buckets.audio.size)}
+                  </span>
+                </div>
+              )}
+              {buckets.file.count > 0 && (
+                <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                  <div className='flex items-center gap-3'>
+                    <FileText className='w-4 h-4 text-text-tertiary' />
+                    <span className='text-base font-medium text-text-primary'>
+                      {t('backup.files')}
+                    </span>
+                    <span className='text-sm text-text-tertiary'>
+                      {t('backup.items', { count: buckets.file.count })}
                     </span>
                   </div>
-                )}
-                {buckets.text.count > 0 && (
-                  <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
-                    <div className='flex items-center gap-3'>
-                      <PenLine className='w-4 h-4 text-text-tertiary' />
-                      <span className='text-base font-medium text-text-primary'>{t('backup.text')}</span>
-                      <span className='text-sm text-text-tertiary'>{t('backup.textAllNotesDesc')}</span>
-                    </div>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(buckets.text.size)}
+                  <span className='text-base font-bold text-text-secondary'>
+                    {formatBytes(buckets.file.size)}
+                  </span>
+                </div>
+              )}
+              {buckets.text.count > 0 && (
+                <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
+                  <div className='flex items-center gap-3'>
+                    <PenLine className='w-4 h-4 text-text-tertiary' />
+                    <span className='text-base font-medium text-text-primary'>
+                      {t('backup.text')}
+                    </span>
+                    <span className='text-sm text-text-tertiary'>
+                      {t('backup.textAllNotesDesc')}
                     </span>
                   </div>
-                )}
-              </div>
-            )}
+                  <span className='text-base font-bold text-text-secondary'>
+                    {formatBytes(buckets.text.size)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {notesStorageInfo.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>{t('storage.perNoteBreakdown')}</h3>
+          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+            {t('storage.perNoteBreakdown')}
+          </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
@@ -647,7 +672,9 @@ export default function StorageSettings() {
                 <Trash2 className='w-6 h-6 text-accent-danger' />
               </div>
               <div className='space-y-2'>
-                <h3 className='text-lg font-bold text-text-primary'>{t('backup.clearAllDataTitle')}</h3>
+                <h3 className='text-lg font-bold text-text-primary'>
+                  {t('backup.clearAllDataTitle')}
+                </h3>
                 <p className='text-sm text-text-tertiary leading-relaxed'>
                   {t('backup.clearAllDataDesc')}
                 </p>

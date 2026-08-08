@@ -113,7 +113,9 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Image className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.photoVideo')}</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>
+            {t('attachmentMenu.photoVideo')}
+          </span>
         </button>
 
         <button
@@ -125,7 +127,9 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Paperclip className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.chooseFile')}</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>
+            {t('attachmentMenu.chooseFile')}
+          </span>
         </button>
 
         <div className='h-px bg-overlay-soft my-1 mx-2' />
@@ -139,7 +143,9 @@ export default function AttachmentMenu({
           <span className='w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center text-accent-primary group-hover:bg-accent-primary/20 transition-colors'>
             <Mic className='w-4 h-4' />
           </span>
-          <span className='text-sm font-bold text-text-primary tracking-tight'>{t('attachmentMenu.recordAudio')}</span>
+          <span className='text-sm font-bold text-text-primary tracking-tight'>
+            {t('attachmentMenu.recordAudio')}
+          </span>
         </button>
       </div>
     </div>

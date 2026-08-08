@@ -21,7 +21,9 @@ export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('update.overlay.title')}</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+              {t('update.overlay.title')}
+            </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
               {latestVersion
                 ? t('update.overlay.description', { version: latestVersion })

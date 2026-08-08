@@ -26,7 +26,12 @@ import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSli
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
-import { isNoteUnlocked, markNoteUnlocked, unlockNote, useNoteLockVersion } from '../../lib/noteLock'
+import {
+  isNoteUnlocked,
+  markNoteUnlocked,
+  unlockNote,
+  useNoteLockVersion
+} from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { getFontFamilyValue } from '../../utils/fonts'
@@ -214,8 +219,18 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { type: 'separator' },
       { label: t('noteEditor.contextMenu.moveTo'), submenu: moveSubmenu },
       { id: 'copyNote', label: t('noteEditor.contextMenu.copyNote') },
-      { id: 'togglePin', label: isPinned ? t('noteEditor.contextMenu.unpinNote') : t('noteEditor.contextMenu.pinNote') },
-      { id: 'toggleLock', label: isLocked ? t('noteEditor.contextMenu.removeLock') : t('noteEditor.contextMenu.lockNote') },
+      {
+        id: 'togglePin',
+        label: isPinned
+          ? t('noteEditor.contextMenu.unpinNote')
+          : t('noteEditor.contextMenu.pinNote')
+      },
+      {
+        id: 'toggleLock',
+        label: isLocked
+          ? t('noteEditor.contextMenu.removeLock')
+          : t('noteEditor.contextMenu.lockNote')
+      },
       { type: 'separator' },
       { id: 'delete', label: t('noteEditor.contextMenu.delete') }
     ])
@@ -257,8 +272,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
 
           <div className='space-y-3 max-w-[390px]'>
-            <h3 className='text-3xl font-black text-text-primary tracking-tight'>{t('noteEditor.emptyState.title')}</h3>
-            <p className='text-base text-text-tertiary leading-relaxed'>{t('noteEditor.emptyState.description')}</p>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>
+              {t('noteEditor.emptyState.title')}
+            </h3>
+            <p className='text-base text-text-tertiary leading-relaxed'>
+              {t('noteEditor.emptyState.description')}
+            </p>
           </div>
         </div>
       </div>
@@ -274,7 +293,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             <Lock className='w-10 h-10 text-accent-primary' />
           </div>
           <div className='space-y-3 max-w-[390px]'>
-            <h3 className='text-3xl font-black text-text-primary tracking-tight'>{t('noteCard.lockedTitle')}</h3>
+            <h3 className='text-3xl font-black text-text-primary tracking-tight'>
+              {t('noteCard.lockedTitle')}
+            </h3>
             <p className='text-base text-text-tertiary leading-relaxed'>
               {lockMethod === 'password'
                 ? t('noteEditor.lock.passwordProtected')
@@ -341,7 +362,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       <UploadProgressToast />
 
       <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>{t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
+        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
+          {t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
         </span>
       </div>
     </div>

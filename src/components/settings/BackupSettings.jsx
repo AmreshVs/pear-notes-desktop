@@ -313,9 +313,7 @@ export default function BackupSettings() {
           <Lock className='w-5 h-5 text-accent-primary' />
           <h4 className='text-text-primary font-bold text-base'>{t('backup.protectedTitle')}</h4>
         </div>
-        <p className='text-text-tertiary text-xs leading-relaxed'>
-          {t('backup.protectedDesc')}
-        </p>
+        <p className='text-text-tertiary text-xs leading-relaxed'>{t('backup.protectedDesc')}</p>
       </div>
 
       {lastBackup && (
@@ -373,7 +371,9 @@ export default function BackupSettings() {
                   {isError
                     ? t('backup.progress.errorTitle')
                     : isDone
-                      ? (modalState.doneType === 'export' ? t('backup.progress.completeTitle') : t('backup.progress.restoredTitle'))
+                      ? modalState.doneType === 'export'
+                        ? t('backup.progress.completeTitle')
+                        : t('backup.progress.restoredTitle')
                       : modalState.doneType === 'export' || isExporting
                         ? t('backup.progress.creatingTitle')
                         : t('backup.progress.restoringTitle')}

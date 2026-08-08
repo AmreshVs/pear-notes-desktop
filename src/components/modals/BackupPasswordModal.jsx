@@ -71,9 +71,7 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
               {isCreate ? t('backup.password.createTitle') : t('backup.password.enterTitle')}
             </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              {isCreate
-                ? t('backup.password.createDesc')
-                : t('backup.password.enterDesc')}
+              {isCreate ? t('backup.password.createDesc') : t('backup.password.enterDesc')}
             </p>
           </div>
 
@@ -84,7 +82,11 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isCreate ? t('backup.password.createPlaceholder') : t('backup.password.placeholder')}
+                placeholder={
+                  isCreate
+                    ? t('backup.password.createPlaceholder')
+                    : t('backup.password.placeholder')
+                }
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -140,7 +142,9 @@ export default function BackupPasswordModal({ open, mode, error, onSubmit, onCan
                 </div>
 
                 {confirm.length > 0 && !passwordsMatch && (
-                  <p className='text-xs text-accent-danger/80 ml-1'>{t('backup.password.mismatch')}</p>
+                  <p className='text-xs text-accent-danger/80 ml-1'>
+                    {t('backup.password.mismatch')}
+                  </p>
                 )}
               </>
             )}

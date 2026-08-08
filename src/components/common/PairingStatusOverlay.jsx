@@ -172,16 +172,22 @@ export default function PairingStatusOverlay() {
           </div>
           <div className='space-y-2'>
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-              {isRejected ? t('pairing.overlay.pairingRejectedTitle') : t('pairing.overlay.pairingFailedTitle')}
+              {isRejected
+                ? t('pairing.overlay.pairingRejectedTitle')
+                : t('pairing.overlay.pairingFailedTitle')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {isRejected ? t('pairing.overlay.pairingRejectedDesc') : t('pairing.overlay.pairingFailedDesc')}
+              {isRejected
+                ? t('pairing.overlay.pairingRejectedDesc')
+                : t('pairing.overlay.pairingFailedDesc')}
             </p>
           </div>
           <button
             onClick={handleResetAfterFailedPairing}
             className='w-full py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-base hover:bg-accent-danger/20 transition-all active:scale-95'
-          >{t('pairing.overlay.okay')}</button>
+          >
+            {t('pairing.overlay.okay')}
+          </button>
         </div>
       )
     }
@@ -191,7 +197,9 @@ export default function PairingStatusOverlay() {
         <div className='flex flex-col items-center text-center space-y-6'>
           {renderStatusIcon()}
           <div className='space-y-2'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('pairing.overlay.linkedTitle')}</h3>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+              {t('pairing.overlay.linkedTitle')}
+            </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
               {isInviter ? t('pairing.overlay.linkedInviter') : t('pairing.overlay.linkedReceiver')}
             </p>
@@ -211,8 +219,12 @@ export default function PairingStatusOverlay() {
         <div className='flex flex-col items-center text-center space-y-8'>
           {renderStatusIcon()}
           <div className='space-y-3'>
-            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{t('pairing.overlay.syncingTitle')}</h3>
-            <p className='text-text-tertiary text-sm max-w-[240px] leading-relaxed'>{t('pairing.overlay.syncingDesc')}</p>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
+              {t('pairing.overlay.syncingTitle')}
+            </h3>
+            <p className='text-text-tertiary text-sm max-w-[240px] leading-relaxed'>
+              {t('pairing.overlay.syncingDesc')}
+            </p>
           </div>
 
           <div className='w-full space-y-3'>
@@ -281,11 +293,15 @@ export default function PairingStatusOverlay() {
             <button
               onClick={handleReject}
               className='flex-1 py-4 bg-accent-danger/10 border border-accent-danger/20 text-accent-danger rounded-xl font-bold text-sm hover:bg-accent-danger/20 transition-all active:scale-95'
-            >{t('pairing.overlay.rejectBtn')}</button>
+            >
+              {t('pairing.overlay.rejectBtn')}
+            </button>
             <button
               onClick={handleConfirm}
               className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
-            >{t('pairing.overlay.verifyBtn')}</button>
+            >
+              {t('pairing.overlay.verifyBtn')}
+            </button>
           </div>
         ) : (
           <div className='w-full space-y-3 pt-2'>
@@ -296,7 +312,9 @@ export default function PairingStatusOverlay() {
               />
             </div>
             <div className='flex justify-center items-center text-xs font-bold tracking-widest uppercase opacity-40'>
-              <span className='text-text-tertiary'>{message || t('pairing.status.establishing')}</span>
+              <span className='text-text-tertiary'>
+                {message || t('pairing.status.establishing')}
+              </span>
             </div>
           </div>
         )}
@@ -328,12 +346,16 @@ export default function PairingStatusOverlay() {
                 <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
                   {t('pairing.overlay.linkTitle')}
                 </h3>
-                <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>{t('pairing.overlay.linkDesc')}</p>
+                <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
+                  {t('pairing.overlay.linkDesc')}
+                </p>
               </div>
 
               <div className='w-full space-y-4'>
                 <div className='space-y-2'>
-                  <label className='text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>{t('pairing.overlay.inviteCode')}</label>
+                  <label className='text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
+                    {t('pairing.overlay.inviteCode')}
+                  </label>
                   <input
                     type='text'
                     value={pasteCode}
@@ -349,12 +371,16 @@ export default function PairingStatusOverlay() {
                   <button
                     onClick={handleCloseInput}
                     className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-                  >{t('common.cancel')}</button>
+                  >
+                    {t('common.cancel')}
+                  </button>
                   <button
                     onClick={handleConnect}
                     disabled={!pasteCode.trim()}
                     className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
-                  >{t('pairing.overlay.connectBtn')}</button>
+                  >
+                    {t('pairing.overlay.connectBtn')}
+                  </button>
                 </div>
               </div>
             </div>

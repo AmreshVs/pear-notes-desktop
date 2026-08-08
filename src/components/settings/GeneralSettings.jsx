@@ -94,7 +94,9 @@ export default function GeneralSettings() {
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.appTheme')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.appTheme')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Select your preferred aesthetic.
               </p>
@@ -125,7 +127,9 @@ export default function GeneralSettings() {
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.sortNotesBy')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.sortNotesBy')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Choose your preferred sorting order.
               </p>
@@ -153,7 +157,9 @@ export default function GeneralSettings() {
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.fontFamily')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.fontFamily')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Primary typeface for notes.
               </p>
@@ -168,7 +174,9 @@ export default function GeneralSettings() {
                 <option value='Outfit'>{t('settings.general.fontOptions.Outfit')}</option>
                 <option value='Lora'>{t('settings.general.fontOptions.Lora')}</option>
                 <option value='Newsreader'>{t('settings.general.fontOptions.Newsreader')}</option>
-                <option value='IBM Plex Mono'>{t('settings.general.fontOptions.IBM Plex Mono')}</option>
+                <option value='IBM Plex Mono'>
+                  {t('settings.general.fontOptions.IBM Plex Mono')}
+                </option>
                 <option value='System'>{t('settings.general.fontOptions.System')}</option>
                 <option value='Serif'>{t('settings.general.fontOptions.Serif')}</option>
                 <option value='Mono'>{t('settings.general.fontOptions.Mono')}</option>
@@ -222,11 +230,15 @@ export default function GeneralSettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>{t('settings.general.startupAndBackground')}</h3>
+        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          {t('settings.general.startupAndBackground')}
+        </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.keepRunning')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.keepRunning')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Closing the window keeps PearNotes running in the tray so your notes stay in sync.
               </p>
@@ -243,7 +255,9 @@ export default function GeneralSettings() {
 
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.startAtLogin')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.startAtLogin')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Launch PearNotes automatically when you sign in to this device.
               </p>
@@ -286,7 +300,9 @@ export default function GeneralSettings() {
 
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>{t('settings.general.meteredConnection')}</label>
+              <label className='block text-text-primary text-base font-bold'>
+                {t('settings.general.meteredConnection')}
+              </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
                 Also holds media transfers. Desktop cannot detect metered networks automatically, so
                 set this yourself.

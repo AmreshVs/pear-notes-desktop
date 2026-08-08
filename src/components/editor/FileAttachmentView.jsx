@@ -267,7 +267,12 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const handleDelete = async (e) => {
     e.stopPropagation()
 
-    if (!window.confirm(t('fileAttachment.deleteConfirm', { name: fileName || t('fileAttachment.thisFile') }))) return
+    if (
+      !window.confirm(
+        t('fileAttachment.deleteConfirm', { name: fileName || t('fileAttachment.thisFile') })
+      )
+    )
+      return
 
     try {
       await deleteHyperdriveFile(noteKey, url)

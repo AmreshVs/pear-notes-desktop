@@ -107,7 +107,9 @@ export default function SyncSettings({ onClose }) {
     const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp
     const date = new Date(ms)
     if (isNaN(date.getTime())) return ''
-    return t('sync.invite.expiry', { time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
+    return t('sync.invite.expiry', {
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    })
   }
 
   return (
@@ -186,7 +188,9 @@ export default function SyncSettings({ onClose }) {
                       />
                     </div>
                     <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-base'>{t('sync.invite.qrTitle')}</h5>
+                      <h5 className='text-text-primary font-bold text-base'>
+                        {t('sync.invite.qrTitle')}
+                      </h5>
                       <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
                         {t('sync.invite.qrDescription')}
                       </p>
@@ -292,9 +296,7 @@ export default function SyncSettings({ onClose }) {
                     <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
                       <Smartphone className='w-5 h-5 opacity-50' />
                     </div>
-                    <p className='text-xs text-text-tertiary italic'>
-                      {t('sync.devices.empty')}
-                    </p>
+                    <p className='text-xs text-text-tertiary italic'>{t('sync.devices.empty')}</p>
                   </div>
                 )}
               </div>
@@ -331,7 +333,9 @@ function DeviceItem({ device, isOther }) {
   const hasCustomTitle = device.title && !isRawDeviceKey(device.title)
   const fullDeviceName = hasCustomTitle ? device.title : device.key || getDeviceDisplayName(device)
   const deviceNameTail = hasCustomTitle ? '' : fullDeviceName.slice(-DEVICE_KEY_TAIL_LENGTH)
-  const deviceNameHead = deviceNameTail ? fullDeviceName.slice(0, -DEVICE_KEY_TAIL_LENGTH) : fullDeviceName
+  const deviceNameHead = deviceNameTail
+    ? fullDeviceName.slice(0, -DEVICE_KEY_TAIL_LENGTH)
+    : fullDeviceName
 
   const handleCloseDelete = () => {
     setIsExiting(true)
@@ -394,14 +398,21 @@ function DeviceItem({ device, isOther }) {
             <span
               className='flex w-full h-9 px-2 items-center font-bold text-text-primary text-base leading-9 border border-transparent rounded-md cursor-pointer'
               onDoubleClick={handleStartRename}
-              title={device.isLocal ? t('folders.doubleClickToRename') : device.key || getDeviceDisplayName(device)}
+              title={
+                device.isLocal
+                  ? t('folders.doubleClickToRename')
+                  : device.key || getDeviceDisplayName(device)
+              }
             >
               <span className='truncate'>{deviceNameHead}</span>
               {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
             </span>
           )}
           <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
-            {t(`sync.platforms.${getPlatformName(device.platform)}`, getPlatformName(device.platform))}
+            {t(
+              `sync.platforms.${getPlatformName(device.platform)}`,
+              getPlatformName(device.platform)
+            )}
           </p>
         </div>
 

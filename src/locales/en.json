@@ -239,9 +239,10 @@
       "trashEmptyTitle": "No Deleted Notes",
       "trashEmptySubtitle": "Notes you delete will appear here for recovery.",
       "onboardingTitle": "Start your first note",
-      "onboardingSubtitle": "Write something new or connect another device to sync your existing notes.",
+      "onboardingSubtitle": "Write something new, connect another device to sync, or restore from a backup file.",
       "newNoteBtn": "New note",
       "connectBtn": "Connect device",
+      "restoreBtn": "Restore from backup",
       "noNotesHint": "Tap + to create a note in this folder"
     },
     "sections": {

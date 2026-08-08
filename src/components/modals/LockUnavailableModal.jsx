@@ -21,7 +21,9 @@ export default function LockUnavailableModal({ open, onCancel }) {
             <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
               <Fingerprint className='w-6 h-6 text-accent-primary' />
             </div>
-            <h3 className='text-lg font-bold text-text-primary'>{t('noteCard.authUnavailableTitle')}</h3>
+            <h3 className='text-lg font-bold text-text-primary'>
+              {t('noteCard.authUnavailableTitle')}
+            </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
               {t('noteCard.authUnavailableDesc')}
             </p>
@@ -30,7 +32,9 @@ export default function LockUnavailableModal({ open, onCancel }) {
           <button
             onClick={onCancel}
             className='w-full py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
-          >{t('common.ok')}</button>
+          >
+            {t('common.ok')}
+          </button>
         </div>
       </div>
     </div>

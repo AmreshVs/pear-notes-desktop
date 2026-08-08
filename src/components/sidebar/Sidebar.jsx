@@ -78,7 +78,9 @@ export default function Sidebar({
     <div className='sidebar flex flex-col h-full bg-bg-secondary border-r border-border-primary'>
       <div className='px-3 pt-4 pb-3 border-b border-border-primary'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-lg font-semibold text-text-primary tracking-tight'>{t('sidebar.title')}</h1>
+          <h1 className='text-lg font-semibold text-text-primary tracking-tight'>
+            {t('sidebar.title')}
+          </h1>
           <button
             onClick={onCreateNote}
             className='p-1.5 rounded-md hover:bg-bg-tertiary active:bg-bg-tertiary transition-colors'

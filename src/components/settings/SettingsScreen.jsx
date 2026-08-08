@@ -18,9 +18,9 @@ import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
 
-export default function SettingsScreen({ onClose }) {
+export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
-  const [activeSection, setActiveSection] = useState('general')
+  const [activeSection, setActiveSection] = useState(initialSection)
   const [isExiting, setIsExiting] = useState(false)
   const contentScrollRef = useRef(null)
 
@@ -63,7 +63,9 @@ export default function SettingsScreen({ onClose }) {
 
         <div className='w-72 bg-overlay-faint border-r border-border-primary flex flex-col relative z-10'>
           <div className='p-8'>
-            <h2 className='text-text-primary font-black text-2xl tracking-tighter'>{t('settings.title')}</h2>
+            <h2 className='text-text-primary font-black text-2xl tracking-tighter'>
+              {t('settings.title')}
+            </h2>
           </div>
 
           <div className='flex-1 overflow-y-auto px-4 space-y-2'>
@@ -106,16 +108,11 @@ export default function SettingsScreen({ onClose }) {
                 {sections.find((s) => s.id === activeSection)?.name || t('settings.title')}
               </h2>
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
-                {activeSection === 'general' &&
-                  t('settings.descriptions.general')}
-                {activeSection === 'privacy' &&
-                  t('settings.privacy.screenDesc')}
-                {activeSection === 'sync' &&
-                  t('settings.descriptions.sync')}
-                {activeSection === 'backup' &&
-                  t('settings.descriptions.backup')}
-                {activeSection === 'storage' &&
-                  t('settings.descriptions.storage')}
+                {activeSection === 'general' && t('settings.descriptions.general')}
+                {activeSection === 'privacy' && t('settings.privacy.screenDesc')}
+                {activeSection === 'sync' && t('settings.descriptions.sync')}
+                {activeSection === 'backup' && t('settings.descriptions.backup')}
+                {activeSection === 'storage' && t('settings.descriptions.storage')}
               </p>
             </div>
             <button

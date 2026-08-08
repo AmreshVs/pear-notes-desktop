@@ -4,7 +4,7 @@ import i18n from 'i18next'
 import en from './en.json'
 
 const resources = {
-  en: { translation: en },
+  en: { translation: en }
 }
 
 i18n.use(initReactI18next).init({
@@ -12,8 +12,8 @@ i18n.use(initReactI18next).init({
   lng: navigator.language.split('-')[0] || 'en',
   fallbackLng: 'en',
   interpolation: {
-    escapeValue: false,
-  },
+    escapeValue: false
+  }
 })
 
 export default i18n

@@ -21,7 +21,11 @@ function QueueRow({ item, onCancel }) {
       )}
       <span className='flex-1 min-w-0 text-sm text-text-secondary truncate'>{item.fileName}</span>
       <span className='text-xs font-semibold text-text-tertiary shrink-0'>
-        {isDone ? t('uploadToast.done') : isUploading ? `${item.progress}%` : t('uploadToast.queued')}
+        {isDone
+          ? t('uploadToast.done')
+          : isUploading
+            ? `${item.progress}%`
+            : t('uploadToast.queued')}
       </span>
       {!isDone && (
         <button
@@ -55,7 +59,9 @@ export default function UploadProgressToast() {
 
   const active = queue.activeItem
   const currentIndex = Math.min(queue.completedCount + 1, queue.totalCount)
-  const headerLabel = isBatch ? t('uploadToast.uploadingProgress', { current: currentIndex, total: queue.totalCount }) : t('uploadToast.uploading')
+  const headerLabel = isBatch
+    ? t('uploadToast.uploadingProgress', { current: currentIndex, total: queue.totalCount })
+    : t('uploadToast.uploading')
   const showExpanded = expanded && isBatch
 
   return (
@@ -69,7 +75,13 @@ export default function UploadProgressToast() {
           onClick={isBatch ? () => setExpanded((value) => !value) : undefined}
           disabled={!isBatch}
           className='flex-1 min-w-0 text-left disabled:cursor-default'
-          title={isBatch ? (showExpanded ? t('uploadToast.hideQueue') : t('uploadToast.showQueue')) : undefined}
+          title={
+            isBatch
+              ? showExpanded
+                ? t('uploadToast.hideQueue')
+                : t('uploadToast.showQueue')
+              : undefined
+          }
         >
           <h4 className='text-text-primary font-semibold text-sm truncate flex items-center gap-1'>
             {headerLabel}

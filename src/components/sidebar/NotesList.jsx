@@ -11,6 +11,7 @@ import {
   Mic,
   Paperclip,
   Pin,
+  RotateCcw,
   Search,
   SquarePen
 } from 'lucide-react'
@@ -28,7 +29,7 @@ import {
 import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
-import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
+import { getHyperdriveAddress, setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import {
   formatDate,
   getAttachmentInfo,
@@ -57,22 +58,32 @@ const AttachmentPreview = ({ info, isSelected }) => {
   let label = ''
   switch (info.kind) {
     case 'image':
-      label = t('noteCard.attachment.image_' + (info.count === 1 ? 'one' : 'other'), { count: info.count })
+      label = t('noteCard.attachment.image_' + (info.count === 1 ? 'one' : 'other'), {
+        count: info.count
+      })
       break
     case 'video':
-      label = t('noteCard.attachment.video_' + (info.count === 1 ? 'one' : 'other'), { count: info.count })
+      label = t('noteCard.attachment.video_' + (info.count === 1 ? 'one' : 'other'), {
+        count: info.count
+      })
       break
     case 'audio':
-      label = t('noteCard.attachment.audio_' + (info.count === 1 ? 'one' : 'other'), { count: info.count })
+      label = t('noteCard.attachment.audio_' + (info.count === 1 ? 'one' : 'other'), {
+        count: info.count
+      })
       break
     case 'file':
-      label = t('noteCard.attachment.file_' + (info.count === 1 ? 'one' : 'other'), { count: info.count })
+      label = t('noteCard.attachment.file_' + (info.count === 1 ? 'one' : 'other'), {
+        count: info.count
+      })
       break
     case 'mixed':
       label = t('noteCard.attachment.mixed', { count: info.count })
       break
     default:
-      label = t('noteCard.attachment.file_' + (info.count === 1 ? 'one' : 'other'), { count: info.count })
+      label = t('noteCard.attachment.file_' + (info.count === 1 ? 'one' : 'other'), {
+        count: info.count
+      })
   }
 
   return (
@@ -135,13 +146,19 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
         ...(isTrash
           ? []
           : [
-              { id: 'togglePin', label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin') },
+              {
+                id: 'togglePin',
+                label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin')
+              },
               { type: 'separator' }
             ]),
         { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
         { type: 'separator' },
         { id: 'copy', label: t('noteCard.actions.copyNote') },
-        { id: 'toggleLock', label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock') },
+        {
+          id: 'toggleLock',
+          label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
+        },
         { type: 'separator' },
         { id: 'delete', label: t('noteCard.actions.delete') }
       ])
@@ -221,7 +238,8 @@ const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder
                   <div className='flex items-center gap-1.5 min-w-0'>
                     <Folder className='w-3 h-3 flex-shrink-0' />
                     <span className='truncate'>
-                      {allFolders.find((f) => f.id === noteData.folderKey)?.name || t('folders.title')}
+                      {allFolders.find((f) => f.id === noteData.folderKey)?.name ||
+                        t('folders.title')}
                     </span>
                   </div>
                   <span className='flex-shrink-0'>•</span>
@@ -271,10 +289,15 @@ export default function NotesList({
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
   const syncing = step === 'syncing'
-  const currentFolderName = folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
+  const currentFolderName =
+    folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
 
   const handleLinkDevice = useCallback(() => {
     dispatch(setShowPairingInput(true))
+  }, [dispatch])
+
+  const handleRestoreBackup = useCallback(() => {
+    dispatch(setShowSettings('backup'))
   }, [dispatch])
 
   const groupOrder = useMemo(
@@ -394,13 +417,19 @@ export default function NotesList({
   )
 
   const getGroupName = (group) => {
-    switch(group) {
-      case NOTES_LIST_GROUP.PINNED: return t('folderView.sections.pinned')
-      case NOTES_LIST_GROUP.TODAY: return t('folderView.sections.today')
-      case NOTES_LIST_GROUP.YESTERDAY: return t('folderView.sections.yesterday')
-      case NOTES_LIST_GROUP.L7DAYS: return t('folderView.sections.last7Days')
-      case NOTES_LIST_GROUP.L30DAYS: return t('folderView.sections.older')
-      default: return group
+    switch (group) {
+      case NOTES_LIST_GROUP.PINNED:
+        return t('folderView.sections.pinned')
+      case NOTES_LIST_GROUP.TODAY:
+        return t('folderView.sections.today')
+      case NOTES_LIST_GROUP.YESTERDAY:
+        return t('folderView.sections.yesterday')
+      case NOTES_LIST_GROUP.L7DAYS:
+        return t('folderView.sections.last7Days')
+      case NOTES_LIST_GROUP.L30DAYS:
+        return t('folderView.sections.older')
+      default:
+        return group
     }
   }
 
@@ -447,7 +476,9 @@ export default function NotesList({
                 aria-live='polite'
                 className='text-xs font-bold text-text-secondary uppercase tracking-wider'
               >
-                {filteredNotes.length === 1 ? t('folderView.noteCount_one', { count: 1 }) : t('folderView.noteCount_other', { count: filteredNotes.length })}
+                {filteredNotes.length === 1
+                  ? t('folderView.noteCount_one', { count: 1 })
+                  : t('folderView.noteCount_other', { count: filteredNotes.length })}
               </span>
             </div>
           </div>
@@ -490,7 +521,9 @@ export default function NotesList({
               <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
                 <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
                 <div className='space-y-1 text-center'>
-                  <p className='text-base text-text-primary font-bold'>{t('pairing.overlay.syncingTitle')}</p>
+                  <p className='text-base text-text-primary font-bold'>
+                    {t('pairing.overlay.syncingTitle')}
+                  </p>
                   <p className='text-sm text-text-tertiary leading-relaxed px-10'>
                     {t('pairing.overlay.syncingDesc')}
                   </p>
@@ -555,6 +588,14 @@ export default function NotesList({
                           className='w-full py-3 rounded-xl font-bold text-base bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95'
                         >
                           {t('folderView.empty.connectBtn')}
+                        </button>
+
+                        <button
+                          onClick={handleRestoreBackup}
+                          className='w-full py-2.5 rounded-xl font-semibold text-sm text-text-tertiary hover:text-text-primary hover:bg-overlay-subtle transition-colors active:scale-95 flex items-center justify-center gap-2'
+                        >
+                          <RotateCcw className='w-4 h-4' />
+                          {t('folderView.empty.restoreBtn')}
                         </button>
                       </div>
                     )}

@@ -71,7 +71,9 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
         <form onSubmit={handleSubmit} className='p-6 bg-bg-panel'>
           <div className='space-y-4'>
             <div>
-              <label className='block text-text-primary text-sm mb-2 font-medium'>{t('linkModal.linkText')}</label>
+              <label className='block text-text-primary text-sm mb-2 font-medium'>
+                {t('linkModal.linkText')}
+              </label>
               <input
                 type='text'
                 value={text}
@@ -82,7 +84,9 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
               />
             </div>
             <div>
-              <label className='block text-text-primary text-sm mb-2 font-medium'>{t('linkModal.url')}</label>
+              <label className='block text-text-primary text-sm mb-2 font-medium'>
+                {t('linkModal.url')}
+              </label>
               <input
                 ref={urlInputRef}
                 type='url'
@@ -102,14 +106,18 @@ export default function LinkModal({ onClose, onSetLink, currentUrl = '', current
                 type='button'
                 onClick={handleRemove}
                 className='px-4 py-2.5 rounded-lg transition-all text-sm font-medium text-accent-danger hover:bg-accent-danger/10'
-              >{t('linkModal.removeLink')}</button>
+              >
+                {t('linkModal.removeLink')}
+              </button>
             )}
             <div className='flex items-center gap-3 ml-auto'>
               <button
                 type='button'
                 onClick={onClose}
                 className='px-6 py-2.5 rounded-lg transition-all text-sm font-medium bg-bg-panel-tertiary hover:bg-bg-panel-secondary text-text-secondary hover:text-text-primary border border-border-tertiary hover:border-border-secondary'
-              >{t('common.cancel')}</button>
+              >
+                {t('common.cancel')}
+              </button>
               <button
                 type='submit'
                 disabled={!url.trim()}
