@@ -9,7 +9,8 @@ const {
   Tray,
   nativeImage,
   powerSaveBlocker,
-  shell
+  shell,
+  clipboard
 } = require('electron')
 const os = require('os')
 const path = require('path')
@@ -278,6 +279,13 @@ function setupIPC() {
 
   ipcMain.handle('shell:open-external', (event, url) => {
     return shell.openExternal(url)
+  })
+
+  ipcMain.handle('clipboard:write', (event, { text, html } = {}) => {
+    if (typeof text !== 'string') return false
+    if (typeof html === 'string' && html) clipboard.write({ text, html })
+    else clipboard.writeText(text)
+    return true
   })
 }
 

@@ -408,7 +408,11 @@
       "startingReplication": "Starting data replication...",
       "receiving": "Receiving data...",
       "receivingWithCount": "Receiving data... ({{count}} notes found)",
-      "establishing": "Establishing Link..."
+      "establishing": "Establishing Link...",
+      "confirmation": "Waiting for confirmation...",
+      "done": "Devices linked",
+      "waiting": "Waiting for device...",
+      "readyToPair": "Ready to pair"
     },
     "overlay": {
       "deviceRemovedTitle": "Device Removed",
@@ -495,7 +499,8 @@
     "chooseFile": "Attach File",
     "scanDocument": "Scan Document",
     "recordAudio": "Record Audio",
-    "audioRecording": "Audio Recording"
+    "audioRecording": "Audio Recording",
+    "audioAttachment": "Audio Attachment"
   },
   "common": {
     "cancel": "Cancel",
@@ -699,7 +704,9 @@
     "untitled": "Untitled"
   },
   "attachmentMenu": {
-    "attachFile": "Attach File",
+    "ariaLabel": "Add Attachment",
+    "photoVideo": "Photos or Videos",
+    "chooseFile": "Attach File",
     "recordAudio": "Record Audio"
   },
   "lockUnavailableModal": {

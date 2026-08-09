@@ -39,6 +39,7 @@ import {
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
+import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
@@ -353,7 +354,7 @@ export default function NotesList({
             const parser = new DOMParser()
             const doc = parser.parseFromString(text, 'text/html')
             const cleanText = doc.body.textContent || doc.body.innerText || ''
-            await navigator.clipboard.writeText(cleanText)
+            await copyToClipboard(cleanText)
           } catch (e) {
             console.error('Failed to copy', e)
           }

@@ -35,6 +35,7 @@ import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
+import { copyToClipboard } from '../../lib/clipboard'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
@@ -69,9 +70,10 @@ export default function SyncSettings({ onClose }) {
   const [pasteCode, setPasteCode] = useState('')
   const [pendingInvite, setPendingInvite] = useState(null)
 
-  const handleCopyInvite = () => {
+  const handleCopyInvite = async () => {
     if (!isInviteGenerated) return
-    navigator.clipboard.writeText(inviteCode)
+    const copiedOk = await copyToClipboard(inviteCode)
+    if (!copiedOk) return
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

@@ -36,5 +36,7 @@ window.electronBridge = {
   showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options),
 
   checkAppUpdate: () => ipcRenderer.invoke('app-update:check-manifest'),
-  openExternal: (url) => ipcRenderer.invoke('shell:open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
+
+  writeClipboard: (payload) => ipcRenderer.invoke('clipboard:write', payload)
 }

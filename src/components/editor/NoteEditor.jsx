@@ -24,6 +24,7 @@ import {
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
+import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
 import {
@@ -186,20 +187,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const copyNoteToClipboard = async () => {
     const data = handleCopy()
     if (!data) return
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': new Blob([data.html], { type: 'text/html' }),
-          'text/plain': new Blob([data.text], { type: 'text/plain' })
-        })
-      ])
-    } catch {
-      try {
-        await navigator.clipboard.writeText(data.text)
-      } catch {
-        // ignore
-      }
-    }
+    await copyToClipboard(data.text, data.html)
   }
 
   const handleEditorContextMenu = async (e) => {
@@ -333,7 +321,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         className='flex-1 overflow-y-auto custom-scrollbar pt-16'
         onContextMenu={handleEditorContextMenu}
       >
-        <div className='max-w-4xl mx-auto px-6 py-4 w-full min-h-full bg-bg-primary'>
+        <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
           <input
             ref={titleRef}
             type='text'

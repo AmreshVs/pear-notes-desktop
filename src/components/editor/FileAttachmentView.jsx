@@ -322,7 +322,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
         </div>
       ) : (
         <div
-          className={`flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden ${isVideo ? 'max-w-2xl w-full mx-auto shadow-md' : ''}`}
+          className={`flex flex-col my-3 bg-bg-secondary border border-border-primary rounded-xl group transition-all duration-300 overflow-hidden ${isVideo ? 'max-w-2xl w-full shadow-md' : ''}`}
         >
           {isVideo &&
             (resolvedUrl || fileData) &&
