@@ -10,3 +10,4 @@ src/store/*.md
 .claude
 native/pear-device-auth/build/*
 native/pear-device-auth/bin/*
+.release.mac.env

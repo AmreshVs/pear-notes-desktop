@@ -3,7 +3,6 @@ const {
   BrowserWindow,
   ipcMain,
   session,
-  systemPreferences,
   Menu,
   dialog,
   Tray,
@@ -21,6 +20,7 @@ const { isMac, isLinux } = require('which-runtime')
 const pkg = require('../package.json')
 const appName = pkg.productName ?? pkg.name
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+const isMas = process.mas === true
 
 let deviceAuth = null
 try {
@@ -35,6 +35,7 @@ let tray = null
 let closeToTray = true
 let isQuitting = false
 let powerSaveBlockerId = null
+let workerFailureReported = false
 
 function getStoragePath() {
   const dirName = isDev ? `${appName}-dev` : appName
@@ -61,11 +62,30 @@ function ensureStorageDir() {
   return storagePath
 }
 
+function reportWorkerFailure(err) {
+  console.error('[worker] failed to start', err)
+  worker = null
+  if (workerFailureReported) return
+  workerFailureReported = true
+  dialog.showErrorBox(
+    `${appName} could not start its backend`,
+    `The Bare sidecar process could not be launched.\n\n${err.message}\n\nReinstalling dependencies (npm install) usually restores it.`
+  )
+}
+
 function startWorker() {
   const workerPath = require.resolve('../workers/main.js')
   const storagePath = ensureStorageDir()
 
-  worker = PearRuntime.run(workerPath, [storagePath])
+  try {
+    worker = PearRuntime.run(workerPath, [storagePath])
+  } catch (err) {
+    reportWorkerFailure(err)
+    return
+  }
+
+  worker.on('error', reportWorkerFailure)
+  if (worker._process) worker._process.on('error', reportWorkerFailure)
 
   worker.stdout.on('data', (data) => {
     console.log('[worker]', data.toString().trim())
@@ -187,6 +207,10 @@ function setupIPC() {
     event.returnValue = getAppDir()
   })
 
+  ipcMain.on('get-app-flags', (event) => {
+    event.returnValue = { isMas }
+  })
+
   ipcMain.on('app-reload', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.reload()
@@ -236,9 +260,15 @@ function setupIPC() {
   })
 
   ipcMain.handle('login-item:set', (event, enabled) => {
-    app.setLoginItemSettings({ openAtLogin: enabled === true })
-    return true
+    try {
+      app.setLoginItemSettings({ openAtLogin: enabled === true })
+    } catch (err) {
+      console.error('[login-item] could not update', err)
+    }
+    return app.getLoginItemSettings().openAtLogin === true
   })
+
+  ipcMain.handle('login-item:get', () => app.getLoginItemSettings().openAtLogin === true)
 
   ipcMain.handle('ui:context-menu', (event, items) => {
     return new Promise((resolve) => {
@@ -266,6 +296,7 @@ function setupIPC() {
   })
 
   ipcMain.handle('app-update:check-manifest', async () => {
+    if (isMas) return null
     try {
       const { APP_UPDATE_MANIFEST_URL } = await import('@pear-notes/core/constant.js')
       const res = await fetch(APP_UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(5000) })
@@ -331,14 +362,6 @@ if (!lock) {
       if (permission === 'media' || permission === 'microphone') return true
       return false
     })
-
-    if (process.platform === 'darwin') {
-      try {
-        await systemPreferences.askForMediaAccess('microphone')
-      } catch (err) {
-        console.error('Microphone access request failed:', err)
-      }
-    }
 
     setupIPC()
     createWindow()

@@ -23,6 +23,7 @@
   --accent-primary-text: #e3ad33;
   --accent-selected-bg: rgba(220, 163, 35, 0.08);
   --accent-selected-border: rgba(220, 163, 35, 0.22);
+  --selection-bg: rgba(220, 163, 35, 0.32);
   --accent-success: #30d158;
   --accent-danger: #ff453a;
   --accent-warning: #ff9f0a;
@@ -130,6 +131,7 @@
   --accent-primary-text: oklch(0.58 0.16 85);
   --accent-selected-bg: oklch(0.58 0.16 85 / 0.16);
   --accent-selected-border: oklch(0.58 0.16 85 / 0.5);
+  --selection-bg: oklch(0.58 0.16 85 / 0.28);
   --focus-ring: 2px solid oklch(0.58 0.16 85);
   --accent-success: #34c759;
   --accent-danger: #ff3b30;

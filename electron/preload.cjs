@@ -11,6 +11,7 @@ window.electronBridge = {
 
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
   getAppDir: () => ipcRenderer.sendSync('get-app-dir'),
+  getAppFlags: () => ipcRenderer.sendSync('get-app-flags'),
   reload: () => ipcRenderer.send('app-reload'),
   quit: () => ipcRenderer.send('app-quit'),
 
@@ -28,6 +29,7 @@ window.electronBridge = {
 
   setCloseToTray: (enabled) => ipcRenderer.send('close-to-tray:set', enabled),
   setStartAtLogin: (enabled) => ipcRenderer.invoke('login-item:set', enabled),
+  getStartAtLogin: () => ipcRenderer.invoke('login-item:get'),
   setPowerSaveBlocker: (enabled) => ipcRenderer.send('power-save-blocker:set', enabled),
 
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),

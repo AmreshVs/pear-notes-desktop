@@ -30,7 +30,22 @@ import StarterKit from '@tiptap/starter-kit'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 import { all, createLowlight } from 'lowlight'
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Split, Trash2 } from 'lucide-react'
+import {
+  Bold as BoldIcon,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Code as CodeIcon,
+  Highlighter as HighlighterIcon,
+  Italic as ItalicIcon,
+  Rows3 as HeaderRowIcon,
+  Split,
+  SplitSquareHorizontal as SplitCellIcon,
+  Strikethrough as StrikethroughIcon,
+  Trash2,
+  Underline as UnderlineIcon
+} from 'lucide-react'
 import { prosemirrorToYXmlFragment } from 'y-prosemirror'
 import {
   applyAwarenessUpdate,
@@ -486,6 +501,57 @@ const RichTextEditor = forwardRef(
         {editor && (
           <BubbleMenu
             editor={editor}
+            pluginKey='textSelectionMenu'
+            tippyOptions={{ duration: 100 }}
+            shouldShow={({ editor, state, from, to }) =>
+              from !== to &&
+              !state.selection.empty &&
+              !editor.isActive('table') &&
+              !editor.isActive('codeBlock') &&
+              state.doc.textBetween(from, to).trim().length > 0
+            }
+            className='flex items-center gap-0.5 p-1 bg-bg-panel border border-border-secondary rounded-lg shadow-xl z-[60]'
+          >
+            <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} title={t('formatting.bold')}>
+              <BoldIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              title={t('formatting.italic')}
+            >
+              <ItalicIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              title={t('formatting.underline')}
+            >
+              <UnderlineIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              title={t('formatting.strikethrough')}
+            >
+              <StrikethroughIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              title={t('formatting.highlight')}
+            >
+              <HighlighterIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              title={t('formatting.types.monospaced')}
+            >
+              <CodeIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
+            </BubbleButton>
+          </BubbleMenu>
+        )}
+
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            pluginKey='tableMenu'
             tippyOptions={{ duration: 100 }}
             shouldShow={({ editor }) => editor.isActive('table')}
             className='flex items-center gap-1 p-1 bg-bg-panel border border-border-secondary rounded-lg shadow-xl z-[60]'
@@ -535,10 +601,24 @@ const RichTextEditor = forwardRef(
             </div>
 
             <BubbleButton
+              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              title={t('editor.table.toggleHeaderRow')}
+            >
+              <HeaderRowIcon className='w-4 h-4 text-text-secondary' />
+            </BubbleButton>
+
+            <BubbleButton
               onClick={() => editor.chain().focus().mergeCells().run()}
               title={t('editor.table.mergeCells')}
             >
               <Split className='w-4 h-4 text-text-secondary' />
+            </BubbleButton>
+
+            <BubbleButton
+              onClick={() => editor.chain().focus().splitCell().run()}
+              title={t('editor.table.splitCell')}
+            >
+              <SplitCellIcon className='w-4 h-4 text-text-secondary' />
             </BubbleButton>
 
             <BubbleButton

@@ -197,10 +197,11 @@ export default function FileAttachmentView({ node, deleteNode }) {
         const tempFilePath = path.join(tempDir, safeName)
         fs.writeFileSync(tempFilePath, buffer)
 
-        await shell.openPath(tempFilePath)
+        const openError = await shell.openPath(tempFilePath)
+        if (openError) throw new Error(openError)
       } catch (error) {
         console.error('Failed to open PDF natively:', error)
-        window.open(resolvedUrl || fileData, '_blank')
+        setIsPreviewOpen(true)
       }
       return
     }

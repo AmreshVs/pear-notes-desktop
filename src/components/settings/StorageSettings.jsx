@@ -30,7 +30,6 @@ import {
   getActiveUploads,
   getIsReclaiming,
   getNotesStorageInfo,
-  getReclaimableBytes,
   getStorageError,
   getStorageIsLoading,
   getTotalBlobBytes,
@@ -292,7 +291,6 @@ export default function StorageSettings() {
   const dispatch = useDispatch()
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
-  const reclaimableBytes = useSelector(getReclaimableBytes)
   const isReclaiming = useSelector(getIsReclaiming)
   const activeDownloads = useSelector(getActiveDownloads)
   const activeUploads = useSelector(getActiveUploads)
@@ -302,11 +300,6 @@ export default function StorageSettings() {
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
   const [confirmClear, setConfirmClear] = useState(false)
-  const [frozenReclaimableBytes, setFrozenReclaimableBytes] = useState(null)
-
-  const displayReclaimableBytes =
-    isReclaiming && frozenReclaimableBytes !== null ? frozenReclaimableBytes : reclaimableBytes
-  const hasReclaimable = displayReclaimableBytes > 0
 
   const noteTitleByKey = useMemo(() => {
     const map = {}
@@ -352,21 +345,13 @@ export default function StorageSettings() {
   }
 
   const handleReclaim = () => {
-    setFrozenReclaimableBytes(reclaimableBytes)
     dispatch(reclaimStorage())
   }
-
-  useEffect(() => {
-    if (!isReclaiming) setFrozenReclaimableBytes(null)
-  }, [isReclaiming])
 
   const hasBreakdown = useMemo(
     () => Boolean(buckets) && Object.values(buckets).some((bucket) => bucket.count > 0),
     [buckets]
   )
-
-  const liveOnDiskBytes = Math.max(0, totalOnDiskBytes - reclaimableBytes)
-  const blobPct = totalOnDiskBytes > 0 ? Math.round((liveOnDiskBytes / totalOnDiskBytes) * 100) : 0
 
   return (
     <div className='max-w-2xl mx-auto space-y-6'>
@@ -477,55 +462,20 @@ export default function StorageSettings() {
                 </span>
               </div>
 
-              <div className='px-6 py-5 flex items-center justify-between border-b border-border-primary'>
+              <div className='px-6 py-5 flex items-center justify-between'>
                 <div className='flex flex-col'>
                   <span className='text-base font-semibold text-text-tertiary'>
-                    {hasReclaimable ? t('storage.reclaimable') : t('storage.compact')}
+                    {t('storage.compact')}
                   </span>
-                  <span className='text-sm text-text-tertiary/70'>
-                    {hasReclaimable ? t('storage.reclaimableDesc') : t('storage.compactDesc')}
-                  </span>
+                  <span className='text-sm text-text-tertiary/70'>{t('storage.compactDesc')}</span>
                 </div>
-                <div className='flex items-center gap-3'>
-                  {hasReclaimable && (
-                    <span className='text-base font-bold text-accent-primary'>
-                      {formatBytes(displayReclaimableBytes)}
-                    </span>
-                  )}
-                  <button
-                    onClick={handleReclaim}
-                    disabled={isReclaiming}
-                    className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                  >
-                    {isReclaiming
-                      ? t('storage.reclaiming')
-                      : hasReclaimable
-                        ? t('storage.reclaimNow')
-                        : t('storage.compactNow')}
-                  </button>
-                </div>
-              </div>
-
-              <div className='px-6 py-4 space-y-2'>
-                <div className='flex items-center justify-between text-sm'>
-                  <span className='text-text-tertiary font-medium'>
-                    {t('storage.liveMediaOnDisk')}
-                  </span>
-                  <span className='text-text-secondary font-bold'>{blobPct}%</span>
-                </div>
-                <div
-                  className='w-full h-1.5 bg-overlay-soft rounded-full overflow-hidden'
-                  role='progressbar'
-                  aria-valuenow={blobPct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={t('storage.liveMediaProgressLabel')}
+                <button
+                  onClick={handleReclaim}
+                  disabled={isReclaiming}
+                  className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  <div
-                    className='h-full bg-accent-primary rounded-full transition-all duration-500'
-                    style={{ width: `${blobPct}%` }}
-                  />
-                </div>
+                  {isReclaiming ? t('storage.compacting') : t('storage.compactNow')}
+                </button>
               </div>
             </>
           )}

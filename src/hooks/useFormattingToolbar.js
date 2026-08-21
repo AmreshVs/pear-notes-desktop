@@ -12,6 +12,9 @@ export function useFormattingToolbar(editor, noteKey) {
     isUnderline: false,
     isStrike: false,
     isHighlight: false,
+    highlightColor: null,
+    isSubscript: false,
+    isSuperscript: false,
     isBulletList: false,
     isOrderedList: false,
     isTaskList: false,
@@ -60,6 +63,9 @@ export function useFormattingToolbar(editor, noteKey) {
         isUnderline: editor.isActive('underline'),
         isStrike: editor.isActive('strike'),
         isHighlight: editor.isActive('highlight'),
+        highlightColor: editor.getAttributes('highlight').color || null,
+        isSubscript: editor.isActive('subscript'),
+        isSuperscript: editor.isActive('superscript'),
         isBulletList: editor.isActive('bulletList'),
         isOrderedList: editor.isActive('orderedList'),
         isTaskList: editor.isActive('taskList'),
@@ -119,6 +125,15 @@ export function useFormattingToolbar(editor, noteKey) {
       editor.chain().focus().unsetLink().run()
     }
     setShowLinkModal(false)
+  }
+
+  const handleSetHighlight = (color) => {
+    if (!editor) return
+    if (color) {
+      editor.chain().focus().setHighlight({ color }).run()
+    } else {
+      editor.chain().focus().unsetHighlight().run()
+    }
   }
 
   const handleHeadingClick = (level) => {
@@ -257,7 +272,11 @@ export function useFormattingToolbar(editor, noteKey) {
       const text = editor.state.doc.textBetween(from, to, '\n')
 
       if (text.trim()) {
-        editor.chain().focus().deleteSelection().setCodeBlock().insertContent(text).run()
+        try {
+          editor.chain().focus().deleteSelection().setCodeBlock().insertContent(text).run()
+        } catch {
+          editor.chain().focus().toggleCodeBlock().run()
+        }
       } else {
         editor.chain().focus().toggleCodeBlock().run()
       }
@@ -277,6 +296,7 @@ export function useFormattingToolbar(editor, noteKey) {
     formatMenuRef,
     attachmentButtonRef,
     handleSetLink,
+    handleSetHighlight,
     handleHeadingClick,
     getCurrentLink,
     handleInsertImage,

@@ -761,6 +761,23 @@
     "attachments": "Attachments",
     "undo": "Undo",
     "redo": "Redo",
+    "subscript": "Subscript",
+    "superscript": "Superscript",
+    "horizontalRule": "Divider",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "alignJustify": "Justify",
+    "alignment": "Alignment",
+    "highlightNone": "No Highlight",
+    "highlightColors": {
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "pink": "Pink",
+      "orange": "Orange",
+      "purple": "Purple"
+    },
     "types": {
       "title": "Title",
       "heading": "Heading",
@@ -798,7 +815,9 @@
       "addColumnAfter": "Add Column After",
       "deleteColumn": "Delete Column",
       "mergeCells": "Merge Cells",
-      "deleteTable": "Delete Table"
+      "deleteTable": "Delete Table",
+      "toggleHeaderRow": "Toggle Header Row",
+      "splitCell": "Split Cell"
     }
   },
   "uploadToast": {

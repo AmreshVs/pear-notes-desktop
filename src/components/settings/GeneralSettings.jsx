@@ -19,6 +19,7 @@ import {
   applyStartAtLogin,
   CLOSE_TO_TRAY_KEY,
   getAppBehaviorPreference,
+  readStartAtLogin,
   setAppBehaviorPreference,
   START_AT_LOGIN_KEY
 } from '../../lib/appBehavior'
@@ -40,7 +41,7 @@ export default function GeneralSettings() {
     getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true).then((v) => {
       if (active) setCloseToTray(v)
     })
-    getAppBehaviorPreference(START_AT_LOGIN_KEY, false).then((v) => {
+    readStartAtLogin(false).then((v) => {
       if (active) setStartAtLogin(v)
     })
     getMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY).then((v) => {
@@ -77,11 +78,12 @@ export default function GeneralSettings() {
     applyCloseToTray(next)
   }
 
-  const handleToggleStartAtLogin = () => {
+  const handleToggleStartAtLogin = async () => {
     const next = !startAtLogin
     setStartAtLogin(next)
-    setAppBehaviorPreference(START_AT_LOGIN_KEY, next)
-    applyStartAtLogin(next)
+    const applied = await applyStartAtLogin(next)
+    setStartAtLogin(applied)
+    setAppBehaviorPreference(START_AT_LOGIN_KEY, applied)
   }
 
   return (
@@ -234,7 +236,7 @@ export default function GeneralSettings() {
           {t('settings.general.startupAndBackground')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
-          <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
+          <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors border-b border-border-primary'>
             <div className='space-y-1 min-w-0'>
               <label className='block text-text-primary text-base font-bold'>
                 {t('settings.general.keepRunning')}

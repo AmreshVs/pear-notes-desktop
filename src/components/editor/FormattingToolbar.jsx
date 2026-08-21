@@ -1,15 +1,22 @@
 import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
   Bold,
   Code as CodeIcon,
   Highlighter,
   Italic,
   Link2,
+  Minus,
   Paperclip,
   Redo,
   Square,
   Strikethrough,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
   Table as TableIcon,
   Underline,
   Undo
@@ -20,6 +27,22 @@ import AudioRecorderModal from '../modals/AudioRecorderModal'
 import LinkModal from '../modals/LinkModal'
 
 import AttachmentMenu from './AttachmentMenu'
+
+const HIGHLIGHT_COLORS = [
+  { key: 'yellow', color: 'rgba(250, 204, 21, 0.4)', swatch: '#facc15' },
+  { key: 'green', color: 'rgba(34, 197, 94, 0.35)', swatch: '#22c55e' },
+  { key: 'blue', color: 'rgba(59, 130, 246, 0.35)', swatch: '#3b82f6' },
+  { key: 'pink', color: 'rgba(236, 72, 153, 0.35)', swatch: '#ec4899' },
+  { key: 'orange', color: 'rgba(249, 115, 22, 0.35)', swatch: '#f97316' },
+  { key: 'purple', color: 'rgba(168, 85, 247, 0.35)', swatch: '#a855f7' }
+]
+
+const TEXT_ALIGNMENTS = [
+  { value: 'left', labelKey: 'formatting.alignLeft', Icon: AlignLeft },
+  { value: 'center', labelKey: 'formatting.alignCenter', Icon: AlignCenter },
+  { value: 'right', labelKey: 'formatting.alignRight', Icon: AlignRight },
+  { value: 'justify', labelKey: 'formatting.alignJustify', Icon: AlignJustify }
+]
 
 export default function FormattingToolbar({ editor, noteKey }) {
   const { t } = useTranslation()
@@ -36,6 +59,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
     formatMenuRef,
     attachmentButtonRef,
     handleSetLink,
+    handleSetHighlight,
     handleHeadingClick,
     getCurrentLink,
     handleInsertImage,
@@ -111,6 +135,38 @@ export default function FormattingToolbar({ editor, noteKey }) {
                     <div className='absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_5px_var(--accent-primary)]' />
                   </div>
                 </MenuButton>
+                <div className='w-px h-5 bg-overlay-strong mx-1' />
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleSubscript().run()}
+                  isActive={editorState.isSubscript}
+                  title={t('formatting.subscript')}
+                >
+                  <SubscriptIcon className='w-4 h-4' strokeWidth={2.5} />
+                </MenuButton>
+                <MenuButton
+                  onClick={() => editor?.chain().focus().toggleSuperscript().run()}
+                  isActive={editorState.isSuperscript}
+                  title={t('formatting.superscript')}
+                >
+                  <SuperscriptIcon className='w-4 h-4' strokeWidth={2.5} />
+                </MenuButton>
+              </div>
+
+              <div className='flex items-center gap-1.5 px-2 py-2 border-b border-divider-light relative z-10'>
+                <SwatchButton
+                  onClick={() => handleSetHighlight(null)}
+                  isActive={editorState.isHighlight && !editorState.highlightColor}
+                  title={t('formatting.highlightNone')}
+                />
+                {HIGHLIGHT_COLORS.map(({ key, color, swatch }) => (
+                  <SwatchButton
+                    key={key}
+                    onClick={() => handleSetHighlight(color)}
+                    isActive={editorState.highlightColor === color}
+                    title={t(`formatting.highlightColors.${key}`)}
+                    swatch={swatch}
+                  />
+                ))}
               </div>
 
               <div className='p-2 max-h-[400px] overflow-y-auto custom-scrollbar space-y-1 relative z-10'>
@@ -185,6 +241,39 @@ export default function FormattingToolbar({ editor, noteKey }) {
                     <div className='w-1 h-3 bg-text-tertiary/50 rounded-full mr-3.5 ml-1 group-hover:bg-accent-primary transition-colors' />
                   }
                 />
+                <ListButton
+                  onClick={() => {
+                    editor?.chain().focus().setHorizontalRule().run()
+                    setShowFormatMenu(false)
+                  }}
+                  label={t('formatting.horizontalRule')}
+                  icon={
+                    <Minus
+                      className='w-3.5 h-3.5 text-text-tertiary/70 mr-3 ml-0.5 group-hover:text-accent-primary transition-colors'
+                      strokeWidth={3}
+                    />
+                  }
+                />
+
+                <div className='h-px bg-divider-light my-2 mx-1' />
+
+                <div className='flex items-center justify-between px-1.5 py-0.5'>
+                  <span className='text-xs font-semibold text-text-tertiary/80 tracking-wide uppercase'>
+                    {t('formatting.alignment')}
+                  </span>
+                  <div className='flex items-center gap-0.5'>
+                    {TEXT_ALIGNMENTS.map(({ value, labelKey, Icon }) => (
+                      <MenuButton
+                        key={value}
+                        onClick={() => editor?.chain().focus().setTextAlign(value).run()}
+                        isActive={editorState.textAlign === value}
+                        title={t(labelKey)}
+                      >
+                        <Icon className='w-4 h-4' strokeWidth={2.5} />
+                      </MenuButton>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -332,6 +421,23 @@ const MenuButton = ({ onClick, isActive, title, children }) => (
     aria-label={title}
   >
     {children}
+  </button>
+)
+
+const SwatchButton = ({ onClick, isActive, title, swatch }) => (
+  <button
+    onClick={onClick}
+    className={`w-5 h-5 rounded-full border transition-all active:scale-90 duration-200 flex items-center justify-center ${
+      isActive
+        ? 'border-accent-primary ring-2 ring-accent-primary/40'
+        : 'border-border-primary hover:border-border-secondary'
+    }`}
+    style={swatch ? { backgroundColor: swatch } : undefined}
+    title={title}
+    aria-label={title}
+    aria-pressed={isActive}
+  >
+    {!swatch && <Minus className='w-3 h-3 text-text-tertiary' strokeWidth={3} />}
   </button>
 )
 

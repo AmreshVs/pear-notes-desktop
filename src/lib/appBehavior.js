@@ -31,12 +31,23 @@ export function applyCloseToTray(enabled) {
   }
 }
 
-export function applyStartAtLogin(enabled) {
+export async function applyStartAtLogin(enabled) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null
-  if (!bridge || typeof bridge.setStartAtLogin !== 'function') return
+  if (!bridge || typeof bridge.setStartAtLogin !== 'function') return enabled === true
   try {
-    bridge.setStartAtLogin(enabled === true)
+    return (await bridge.setStartAtLogin(enabled === true)) === true
   } catch (e) {
     console.error('applyStartAtLogin failed', e)
+    return false
+  }
+}
+
+export async function readStartAtLogin(defaultValue = false) {
+  const bridge = typeof window !== 'undefined' ? window.electronBridge : null
+  if (!bridge || typeof bridge.getStartAtLogin !== 'function') return defaultValue
+  try {
+    return (await bridge.getStartAtLogin()) === true
+  } catch {
+    return defaultValue
   }
 }
