@@ -18,7 +18,13 @@ const UPLOAD_REQUIRED = ['ASC_KEY_ID', 'ASC_ISSUER_ID']
 const NETWORK_RETRY_PATTERN = /ECONNRESET|ETIMEDOUT|socket hang up|EAI_AGAIN/i
 const BUILD_ATTEMPTS = 3
 
-const ansi = { red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', dim: '\x1b[2m', reset: '\x1b[0m' }
+const ansi = {
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  dim: '\x1b[2m',
+  reset: '\x1b[0m'
+}
 const ok = (m) => console.log(`${ansi.green}  ok${ansi.reset}  ${m}`)
 const warn = (m) => console.log(`${ansi.yellow}  !!${ansi.reset}  ${m}`)
 const step = (m) => console.log(`\n${ansi.dim}==>${ansi.reset} ${m}`)
@@ -49,7 +55,10 @@ function loadConfig() {
       const eq = trimmed.indexOf('=')
       if (eq === -1) continue
       const key = trimmed.slice(0, eq).trim()
-      const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '')
+      const value = trimmed
+        .slice(eq + 1)
+        .trim()
+        .replace(/^["']|["']$/g, '')
       config[key] = value
     }
   }
@@ -89,12 +98,14 @@ function readProfile(profilePath) {
     )
   }
   const decoded = run('security', ['cms', '-D', '-i', profilePath], { maxBuffer: 1 << 24 })
-  if (decoded.status !== 0) throw new ReleaseError(`Could not decode provisioning profile: ${profilePath}`)
+  if (decoded.status !== 0)
+    throw new ReleaseError(`Could not decode provisioning profile: ${profilePath}`)
 
   const tmp = path.join(process.env.TMPDIR ?? '/tmp', `release-mac-${process.pid}.plist`)
   fs.writeFileSync(tmp, decoded.stdout)
   try {
-    const extract = (key, format) => run('plutil', ['-extract', key, format, '-o', '-', tmp]).stdout.trim()
+    const extract = (key, format) =>
+      run('plutil', ['-extract', key, format, '-o', '-', tmp]).stdout.trim()
     return {
       name: extract('Name', 'raw'),
       expires: extract('ExpirationDate', 'raw'),
@@ -120,13 +131,18 @@ function checkProfile(config) {
 
   const daysLeft = Math.floor((Date.parse(profile.expires) - Date.now()) / 86400000)
   if (daysLeft < 0) {
-    throw new ReleaseError(`Provisioning profile expired ${-daysLeft} days ago`, 'Regenerate it on developer.apple.com')
+    throw new ReleaseError(
+      `Provisioning profile expired ${-daysLeft} days ago`,
+      'Regenerate it on developer.apple.com'
+    )
   }
   if (daysLeft < 30) warn(`profile "${profile.name}" expires in ${daysLeft} days`)
 
   const groups = profile.entitlements['com.apple.security.application-groups'] ?? []
   const injected = `${team}.${config.APPLE_BUNDLE_ID}`
-  const covered = groups.some((g) => g === injected || (g.endsWith('.*') && injected.startsWith(g.slice(0, -1))))
+  const covered = groups.some(
+    (g) => g === injected || (g.endsWith('.*') && injected.startsWith(g.slice(0, -1)))
+  )
   if (!covered) {
     throw new ReleaseError(
       `Profile does not authorize the app group "${injected}"`,
@@ -227,7 +243,9 @@ function build(config) {
 function locateArtifacts() {
   const appDir = path.join(root, 'out', 'PearNotes-mas-arm64', 'PearNotes.app')
   const makeDir = path.join(root, 'out', 'make')
-  const pkgName = fs.existsSync(makeDir) ? fs.readdirSync(makeDir).find((f) => f.endsWith('.pkg')) : null
+  const pkgName = fs.existsSync(makeDir)
+    ? fs.readdirSync(makeDir).find((f) => f.endsWith('.pkg'))
+    : null
   if (!fs.existsSync(appDir) || !pkgName) throw new ReleaseError('Build produced no .app/.pkg')
   return { appDir, pkgPath: path.join(makeDir, pkgName) }
 }
@@ -259,7 +277,10 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
 
   const frameworks = path.join(appDir, 'Contents', 'Frameworks')
   const helpers = fs.existsSync(frameworks)
-    ? fs.readdirSync(frameworks).filter((n) => n.endsWith('.app')).map((n) => path.join(frameworks, n))
+    ? fs
+        .readdirSync(frameworks)
+        .filter((n) => n.endsWith('.app'))
+        .map((n) => path.join(frameworks, n))
     : []
   for (const target of [sidecar, ...helpers]) {
     const entitlements = run('codesign', ['-d', '--entitlements', '-', target]).output
@@ -277,11 +298,27 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
   ok(`nested code signed with inherit + allow-jit (${helpers.length} helpers + sidecar)`)
 
   const plist = path.join(appDir, 'Contents', 'Info.plist')
-  const bundleId = run('plutil', ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', plist]).stdout.trim()
+  const bundleId = run('plutil', [
+    '-extract',
+    'CFBundleIdentifier',
+    'raw',
+    '-o',
+    '-',
+    plist
+  ]).stdout.trim()
   if (bundleId !== config.APPLE_BUNDLE_ID) {
-    throw new ReleaseError(`Built bundle id "${bundleId}" does not match APPLE_BUNDLE_ID "${config.APPLE_BUNDLE_ID}"`)
+    throw new ReleaseError(
+      `Built bundle id "${bundleId}" does not match APPLE_BUNDLE_ID "${config.APPLE_BUNDLE_ID}"`
+    )
   }
-  const buildNumber = run('plutil', ['-extract', 'CFBundleVersion', 'raw', '-o', '-', plist]).stdout.trim()
+  const buildNumber = run('plutil', [
+    '-extract',
+    'CFBundleVersion',
+    'raw',
+    '-o',
+    '-',
+    plist
+  ]).stdout.trim()
   const sizeMb = Math.round(fs.statSync(pkgPath).size / 1e6)
   ok(`${bundleId} build ${buildNumber} — ${path.basename(pkgPath)} (${sizeMb} MB)`)
 }
@@ -292,10 +329,14 @@ function altool(config, action, pkgPath) {
     [
       'altool',
       action,
-      '-f', pkgPath,
-      '-t', 'macos',
-      '--apiKey', config.ASC_KEY_ID,
-      '--apiIssuer', config.ASC_ISSUER_ID
+      '-f',
+      pkgPath,
+      '-t',
+      'macos',
+      '--apiKey',
+      config.ASC_KEY_ID,
+      '--apiIssuer',
+      config.ASC_ISSUER_ID
     ],
     { cwd: root, encoding: 'utf8' }
   )
@@ -312,9 +353,10 @@ async function main() {
   const config = loadConfig()
 
   step('Preflight')
-  const missing = [...REQUIRED, ...(args.upload || !args.skipValidate ? UPLOAD_REQUIRED : [])].filter(
-    (key) => !config[key]
-  )
+  const missing = [
+    ...REQUIRED,
+    ...(args.upload || !args.skipValidate ? UPLOAD_REQUIRED : [])
+  ].filter((key) => !config[key])
   if (missing.length) {
     throw new ReleaseError(
       `Missing configuration: ${missing.join(', ')}`,

@@ -512,7 +512,10 @@ const RichTextEditor = forwardRef(
             }
             className='flex items-center gap-0.5 p-1 bg-bg-panel border border-border-secondary rounded-lg shadow-xl z-[60]'
           >
-            <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} title={t('formatting.bold')}>
+            <BubbleButton
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              title={t('formatting.bold')}
+            >
               <BoldIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
             </BubbleButton>
             <BubbleButton
