@@ -22,6 +22,20 @@ const appName = pkg.productName ?? pkg.name
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 const isMas = process.mas === true
 
+const fallbackBuildNumber = String(pkg.masBuildNumber ?? '1')
+
+function getBuildNumber() {
+  if (!app.isPackaged || !isMac) return fallbackBuildNumber
+  try {
+    const plistPath = path.join(path.dirname(app.getPath('exe')), '..', 'Info.plist')
+    const plist = fs.readFileSync(plistPath, 'utf8')
+    const match = plist.match(/<key>CFBundleVersion<\/key>\s*<string>([^<]*)<\/string>/)
+    return match?.[1]?.trim() || fallbackBuildNumber
+  } catch {
+    return fallbackBuildNumber
+  }
+}
+
 let deviceAuth = null
 try {
   deviceAuth = require('../native/pear-device-auth')
@@ -73,6 +87,15 @@ function reportWorkerFailure(err) {
   )
 }
 
+function reportWorkerExit(code) {
+  if (isQuitting || workerFailureReported) return
+  workerFailureReported = true
+  dialog.showErrorBox(
+    `${appName} could not start its backend`,
+    `The Bare sidecar process stopped unexpectedly (exit code ${code}).\n\nAnother copy of ${appName} may still be running and holding your local database. Quit it, or log out and back in, then reopen ${appName}.`
+  )
+}
+
 function startWorker() {
   const workerPath = require.resolve('../workers/main.js')
   const storagePath = ensureStorageDir()
@@ -104,6 +127,7 @@ function startWorker() {
   worker.on('exit', (code) => {
     console.log('[worker] exited with code', code)
     worker = null
+    if (code !== 0) reportWorkerExit(code)
   })
 }
 
@@ -208,7 +232,7 @@ function setupIPC() {
   })
 
   ipcMain.on('get-app-flags', (event) => {
-    event.returnValue = { isMas }
+    event.returnValue = { isMas, buildNumber: getBuildNumber() }
   })
 
   ipcMain.on('app-reload', () => {

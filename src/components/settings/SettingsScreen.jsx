@@ -9,8 +9,9 @@ import {
   X
 } from 'lucide-react'
 
-import { useDialog } from '../../hooks/useDialog'
 import { version as appVersion } from '../../../package.json'
+import { useDialog } from '../../hooks/useDialog'
+import { getAppVersionLabel } from '../../lib/appFlags'
 
 import BackupSettings from './BackupSettings'
 import GeneralSettings from './GeneralSettings'
@@ -97,7 +98,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           </div>
 
           <div className='px-6 pb-6'>
-            <p className='text-text-tertiary text-xs text-center opacity-50'>v{appVersion}</p>
+            <p className='text-text-tertiary text-xs text-center opacity-50'>
+              {getAppVersionLabel(appVersion)}
+            </p>
           </div>
         </div>
 
