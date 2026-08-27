@@ -1,6 +1,6 @@
 {
   "name": "pear-notes-desktop",
-  "productName": "PearNotes",
+  "productName": "Pear Notes",
   "version": "1.0.0",
   "main": "electron/main.cjs",
   "type": "module",
@@ -99,5 +99,5 @@
     "tailwindcss": "^4.1.11",
     "vite": "^7.1.3"
   },
-  "masBuildNumber": "7"
+  "masBuildNumber": "8"
 }

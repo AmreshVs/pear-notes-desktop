@@ -41,9 +41,9 @@
       "textSizeDesc": "Adjust the editor's base font size.",
       "startupAndBackground": "Startup & Background",
       "keepRunning": "Keep Running in Background",
-      "keepRunningDesc": "Closing the window keeps PearNotes running in the tray so your notes stay in sync.",
+      "keepRunningDesc": "Closing the window keeps Pear Notes running in the tray so your notes stay in sync.",
       "startAtLogin": "Start at Login",
-      "startAtLoginDesc": "Launch PearNotes automatically when you sign in to this device.",
+      "startAtLoginDesc": "Launch Pear Notes automatically when you sign in to this device.",
       "meteredConnection": "Metered Connection",
       "meteredConnectionDesc": "Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself."
     },
@@ -675,7 +675,7 @@
   "update": {
     "overlay": {
       "title": "Update Required",
-      "description": "A required update is available (v{{version}}). Please update PearNotes to continue.",
+      "description": "A required update is available (v{{version}}). Please update Pear Notes to continue.",
       "updateButton": "Update Now"
     },
     "banner": {

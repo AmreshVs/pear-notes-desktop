@@ -19,6 +19,10 @@ const { isMac, isLinux } = require('which-runtime')
 
 const pkg = require('../package.json')
 const appName = pkg.productName ?? pkg.name
+// Pinned to the original product name and deliberately not derived from appName:
+// the storage directory is where every existing install keeps its notes, keys and
+// pairing state, so renaming the app must not move it.
+const storageDirName = 'PearNotes'
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 const isMas = process.mas === true
 
@@ -52,7 +56,7 @@ let powerSaveBlockerId = null
 let workerFailureReported = false
 
 function getStoragePath() {
-  const dirName = isDev ? `${appName}-dev` : appName
+  const dirName = isDev ? `${storageDirName}-dev` : storageDirName
   const isSnap = !!process.env.SNAP_USER_COMMON
   const linuxConfigHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
   return isMac
@@ -180,7 +184,7 @@ function createTray() {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'Open PearNotes',
+      label: `Open ${appName}`,
       click: () => {
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.show()

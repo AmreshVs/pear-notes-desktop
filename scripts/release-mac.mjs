@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const configPath = path.join(root, '.release.mac.env')
 const packagePath = path.join(root, 'package.json')
+const appName = JSON.parse(fs.readFileSync(packagePath, 'utf8')).productName
 
 const REQUIRED = [
   'APPLE_BUNDLE_ID',
@@ -241,7 +242,7 @@ function build(config) {
 }
 
 function locateArtifacts() {
-  const appDir = path.join(root, 'out', 'PearNotes-mas-arm64', 'PearNotes.app')
+  const appDir = path.join(root, 'out', `${appName}-mas-arm64`, `${appName}.app`)
   const makeDir = path.join(root, 'out', 'make')
   const pkgName = fs.existsSync(makeDir)
     ? fs.readdirSync(makeDir).find((f) => f.endsWith('.pkg'))

@@ -242,7 +242,7 @@ export default function GeneralSettings() {
                 {t('settings.general.keepRunning')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Closing the window keeps PearNotes running in the tray so your notes stay in sync.
+                Closing the window keeps Pear Notes running in the tray so your notes stay in sync.
               </p>
             </div>
             <button
@@ -261,7 +261,7 @@ export default function GeneralSettings() {
                 {t('settings.general.startAtLogin')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Launch PearNotes automatically when you sign in to this device.
+                Launch Pear Notes automatically when you sign in to this device.
               </p>
             </div>
             <button
