@@ -1,10 +1,13 @@
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
+  Check,
   Film,
   Folder,
+  FolderInput,
   Image as ImageIcon,
+  ListChecks,
   Loader2,
   Lock,
   LockOpen,
@@ -13,16 +16,20 @@ import {
   Pin,
   RotateCcw,
   Search,
-  SquarePen
+  SquarePen,
+  Trash2,
+  X
 } from 'lucide-react'
 
 import { ALL_NOTES_KEY, RECENTLY_DELETED_KEY } from '@pear-notes/core/constant.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
   deleteNote,
+  deleteNotes,
   getFilteredNotes,
   getNoteData,
   getSelectedNote,
+  moveNotes,
   setSelectedNote,
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -98,177 +105,237 @@ const AttachmentPreview = ({ info, isSelected }) => {
   )
 }
 
-const NotesItem = memo(({ noteKey: key, onMenuAction, allFolders, selectedFolder, isLast }) => {
-  const { t } = useTranslation()
-  const dispatch = useDispatch()
-  const noteData = useSelector(getNoteData(key))
-  const selectedNote = useSelector(getSelectedNote)
+const NotesItem = memo(
+  ({
+    noteKey: key,
+    onMenuAction,
+    allFolders,
+    selectedFolder,
+    isLast,
+    isSelecting,
+    isChecked,
+    onToggleSelect
+  }) => {
+    const { t } = useTranslation()
+    const dispatch = useDispatch()
+    const noteData = useSelector(getNoteData(key))
+    const selectedNote = useSelector(getSelectedNote)
 
-  useNoteLockVersion()
-  const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
+    useNoteLockVersion()
+    const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
 
-  const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
-  const resolvedImgSrc = useSelector((state) => getHyperdriveAddress(state, rawImgSrc))
-  const imgSrc = isMasked ? null : resolvedImgSrc
+    const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
+    const resolvedImgSrc = useSelector((state) => getHyperdriveAddress(state, rawImgSrc))
+    const imgSrc = isMasked ? null : resolvedImgSrc
 
-  const rawPreviewText = useMemo(() => getPreview(noteData?.note, noteData?.note), [noteData?.note])
-  const attachmentInfo = useMemo(() => getAttachmentInfo(noteData?.note), [noteData?.note])
-  const showAttachmentPreview = !isMasked && !rawPreviewText && !!attachmentInfo
-  const previewText = isMasked
-    ? t('noteCard.lockedSummary')
-    : rawPreviewText || t('noteCard.noAdditionalText')
+    const rawPreviewText = useMemo(
+      () => getPreview(noteData?.note, noteData?.note),
+      [noteData?.note]
+    )
+    const attachmentInfo = useMemo(() => getAttachmentInfo(noteData?.note), [noteData?.note])
+    const showAttachmentPreview = !isMasked && !rawPreviewText && !!attachmentInfo
+    const previewText = isMasked
+      ? t('noteCard.lockedSummary')
+      : rawPreviewText || t('noteCard.noAdditionalText')
 
-  const isSelected = selectedNote === key
+    const isSelected = selectedNote === key
 
-  const availableMoveFolders = allFolders.filter(
-    (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
-  )
+    const availableMoveFolders = allFolders.filter(
+      (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
+    )
 
-  const handleSelectNote = useCallback(
-    (key) => {
-      dispatch(setSelectedNote(key))
-    },
-    [dispatch]
-  )
+    const handleRowClick = useCallback(
+      (event) => {
+        if (isSelecting || event.metaKey || event.ctrlKey || event.shiftKey) {
+          event.preventDefault()
+          onToggleSelect(key, event)
+          return
+        }
+        dispatch(setSelectedNote(key))
+      },
+      [dispatch, isSelecting, onToggleSelect, key]
+    )
 
-  const isTrash = selectedFolder === RECENTLY_DELETED_KEY
+    const isTrash = selectedFolder === RECENTLY_DELETED_KEY
 
-  const handleContextMenu = useCallback(
-    async (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const locked = noteData?.locked === true
-      const pinned = noteData?.pinned === true
-      const moveSubmenu =
-        availableMoveFolders.length > 0
-          ? availableMoveFolders.map((f) => ({ id: `move:${f.id}`, label: f.name }))
-          : [{ label: t('noteCard.actions.noFolders'), enabled: false }]
-      const result = await showContextMenu([
-        ...(isTrash
-          ? []
-          : [
-              {
-                id: 'togglePin',
-                label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin')
-              },
-              { type: 'separator' }
-            ]),
-        { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
-        { type: 'separator' },
-        { id: 'copy', label: t('noteCard.actions.copyNote') },
-        {
-          id: 'toggleLock',
-          label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
-        },
-        { type: 'separator' },
-        { id: 'delete', label: t('noteCard.actions.delete') }
-      ])
-      if (!result) return
-      if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
-      else onMenuAction(result, key)
-    },
-    [availableMoveFolders, noteData?.locked, noteData?.pinned, isTrash, onMenuAction, key, t]
-  )
+    const handleContextMenu = useCallback(
+      async (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        const locked = noteData?.locked === true
+        const pinned = noteData?.pinned === true
+        const moveSubmenu =
+          availableMoveFolders.length > 0
+            ? availableMoveFolders.map((f) => ({ id: `move:${f.id}`, label: f.name }))
+            : [{ label: t('noteCard.actions.noFolders'), enabled: false }]
 
-  const handleRowKeyDown = useCallback(
-    (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
+        if (isSelecting && isChecked) {
+          const bulkResult = await showContextMenu([
+            { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
+            { type: 'separator' },
+            { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
+          ])
+          if (!bulkResult) return
+          if (bulkResult.startsWith('move:')) onMenuAction('bulkMove', key, bulkResult.slice(5))
+          else onMenuAction(bulkResult, key)
+          return
+        }
+
+        const result = await showContextMenu([
+          ...(isTrash
+            ? []
+            : [
+                {
+                  id: 'togglePin',
+                  label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin')
+                },
+                { type: 'separator' }
+              ]),
+          { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
+          { type: 'separator' },
+          { id: 'copy', label: t('noteCard.actions.copyNote') },
+          {
+            id: 'toggleLock',
+            label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
+          },
+          { type: 'separator' },
+          { id: 'delete', label: t('noteCard.actions.delete') }
+        ])
+        if (!result) return
+        if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
+        else onMenuAction(result, key)
+      },
+      [
+        availableMoveFolders,
+        noteData?.locked,
+        noteData?.pinned,
+        isTrash,
+        isSelecting,
+        isChecked,
+        onMenuAction,
+        key,
+        t
+      ]
+    )
+
+    const handleRowKeyDown = useCallback(
+      (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          if (isSelecting) {
+            onToggleSelect(key, event)
+            return
+          }
+          dispatch(setSelectedNote(key))
+          return
+        }
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
         event.preventDefault()
-        handleSelectNote(key)
-        return
-      }
-      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
-      event.preventDefault()
-      const rows = Array.from(
-        event.currentTarget.closest('[role="listbox"]')?.querySelectorAll('[role="option"]') || []
-      )
-      const index = rows.indexOf(event.currentTarget)
-      const next = rows[event.key === 'ArrowDown' ? index + 1 : index - 1]
-      if (next) next.focus()
-    },
-    [handleSelectNote, key]
-  )
+        const rows = Array.from(
+          event.currentTarget.closest('[role="listbox"]')?.querySelectorAll('[role="option"]') || []
+        )
+        const index = rows.indexOf(event.currentTarget)
+        const next = rows[event.key === 'ArrowDown' ? index + 1 : index - 1]
+        if (next) next.focus()
+      },
+      [dispatch, isSelecting, onToggleSelect, key]
+    )
 
-  return (
-    <div className='relative'>
-      <div
-        key={key}
-        role='option'
-        tabIndex={isSelected ? 0 : -1}
-        aria-selected={isSelected}
-        onClick={() => handleSelectNote(key)}
-        onKeyDown={handleRowKeyDown}
-        onContextMenu={handleContextMenu}
-        className={`relative pl-6 pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
+    return (
+      <div className='relative'>
+        <div
+          key={key}
+          role='option'
+          tabIndex={isSelected ? 0 : -1}
+          aria-selected={isSelecting ? isChecked : isSelected}
+          onClick={handleRowClick}
+          onKeyDown={handleRowKeyDown}
+          onContextMenu={handleContextMenu}
+          className={`relative ${isSelecting ? 'pl-3' : 'pl-6'} pr-2 py-3 cursor-pointer transition-colors duration-0 group ${!isLast ? 'border-b border-overlay-subtle' : ''}
           ${
-            isSelected
+            isChecked || (!isSelecting && isSelected)
               ? 'bg-[var(--accent-selected-bg)] shadow-inner'
               : 'bg-transparent hover:bg-overlay-faint'
           }`}
-      >
-        <div className='flex items-stretch justify-between gap-3'>
-          <div className='flex-1 min-w-0 flex flex-col justify-center'>
-            <h3
-              className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
-                ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary'}`}
-            >
-              {noteData?.pinned && !isTrash && (
-                <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
-              )}
-              {noteData?.locked &&
-                (isMasked ? (
-                  <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
-                ) : (
-                  <LockOpen className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
-                ))}
-              <span className='truncate'>{noteData?.title || t('noteCard.untitled')}</span>
-            </h3>
-            {showAttachmentPreview ? (
-              <AttachmentPreview info={attachmentInfo} isSelected={isSelected} />
-            ) : (
-              <p
-                className={`text-sm line-clamp-2 leading-relaxed opacity-80
-                  ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
-              >
-                {previewText}
-              </p>
+        >
+          <div className='flex items-stretch justify-between gap-3'>
+            {isSelecting && (
+              <div className='flex items-center pr-1 flex-shrink-0'>
+                <div
+                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors
+                  ${
+                    isChecked
+                      ? 'bg-accent-primary border-accent-primary text-accent-on-primary'
+                      : 'border-border-secondary text-transparent'
+                  }`}
+                >
+                  <Check className='w-3.5 h-3.5' strokeWidth={3} />
+                </div>
+              </div>
             )}
-            <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold uppercase tracking-wider'>
-              {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
-                <>
-                  <div className='flex items-center gap-1.5 min-w-0'>
-                    <Folder className='w-3 h-3 flex-shrink-0' />
-                    <span className='truncate'>
-                      {allFolders.find((f) => f.id === noteData.folderKey)?.name ||
-                        t('folders.title')}
-                    </span>
-                  </div>
-                  <span className='flex-shrink-0'>•</span>
-                </>
+            <div className='flex-1 min-w-0 flex flex-col justify-center'>
+              <h3
+                className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
+                ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary'}`}
+              >
+                {noteData?.pinned && !isTrash && (
+                  <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
+                )}
+                {noteData?.locked &&
+                  (isMasked ? (
+                    <Lock className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
+                  ) : (
+                    <LockOpen className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
+                  ))}
+                <span className='truncate'>{noteData?.title || t('noteCard.untitled')}</span>
+              </h3>
+              {showAttachmentPreview ? (
+                <AttachmentPreview info={attachmentInfo} isSelected={isSelected} />
+              ) : (
+                <p
+                  className={`text-sm line-clamp-2 leading-relaxed opacity-80
+                  ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
+                >
+                  {previewText}
+                </p>
               )}
-              <span className='flex-shrink-0 whitespace-nowrap'>
-                {formatDate(noteData?.updatedAt || noteData?.createdAt)}
-              </span>
-            </div>
-          </div>
-
-          {imgSrc && (
-            <div className='flex items-center gap-1 ml-2 flex-shrink-0 relative'>
-              <div className='relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated'>
-                <img
-                  src={imgSrc}
-                  alt='Note attachment'
-                  className='w-full h-full object-cover'
-                  decoding='async'
-                />
+              <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold uppercase tracking-wider'>
+                {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
+                  <>
+                    <div className='flex items-center gap-1.5 min-w-0'>
+                      <Folder className='w-3 h-3 flex-shrink-0' />
+                      <span className='truncate'>
+                        {allFolders.find((f) => f.id === noteData.folderKey)?.name ||
+                          t('folders.title')}
+                      </span>
+                    </div>
+                    <span className='flex-shrink-0'>•</span>
+                  </>
+                )}
+                <span className='flex-shrink-0 whitespace-nowrap'>
+                  {formatDate(noteData?.updatedAt || noteData?.createdAt)}
+                </span>
               </div>
             </div>
-          )}
+
+            {imgSrc && (
+              <div className='flex items-center gap-1 ml-2 flex-shrink-0 relative'>
+                <div className='relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated'>
+                  <img
+                    src={imgSrc}
+                    alt='Note attachment'
+                    className='w-full h-full object-cover'
+                    decoding='async'
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  )
-})
+    )
+  }
+)
 
 NotesItem.displayName = 'NotesItem'
 
@@ -292,6 +359,10 @@ export default function NotesList({
   const syncing = step === 'syncing'
   const currentFolderName =
     folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
+
+  const [selection, setSelection] = useState({ folder: null, active: false, keys: [] })
+  const anchorKeyRef = useRef(null)
+  const isSelecting = selection.active && selection.folder === selectedFolder
 
   const handleLinkDevice = useCallback(() => {
     dispatch(setShowPairingInput(true))
@@ -335,11 +406,126 @@ export default function NotesList({
     })
   }, [groupedNotes, groupOrder])
 
+  const orderedKeys = useMemo(
+    () => sortedGroups.flatMap((group) => groupedNotes[group].map((note) => note.key)),
+    [sortedGroups, groupedNotes]
+  )
+
+  const checkedKeys = useMemo(
+    () => (isSelecting ? selection.keys.filter((key) => orderedKeys.includes(key)) : []),
+    [isSelecting, selection.keys, orderedKeys]
+  )
+
+  const exitSelection = useCallback(() => {
+    anchorKeyRef.current = null
+    setSelection({ folder: null, active: false, keys: [] })
+  }, [])
+
+  const handleToggleSelect = useCallback(
+    (key, event) => {
+      setSelection((prev) => {
+        const active = prev.active && prev.folder === selectedFolder
+        const keys = active ? prev.keys : []
+        const anchorKey = active ? anchorKeyRef.current : null
+
+        if (event?.shiftKey && anchorKey && anchorKey !== key) {
+          const from = orderedKeys.indexOf(anchorKey)
+          const to = orderedKeys.indexOf(key)
+          if (from !== -1 && to !== -1) {
+            const range = orderedKeys.slice(Math.min(from, to), Math.max(from, to) + 1)
+            return { folder: selectedFolder, active: true, keys: [...new Set([...keys, ...range])] }
+          }
+        }
+
+        anchorKeyRef.current = key
+        return {
+          folder: selectedFolder,
+          active: true,
+          keys: keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key]
+        }
+      })
+    },
+    [orderedKeys, selectedFolder]
+  )
+
+  const handleStartSelecting = useCallback(() => {
+    anchorKeyRef.current = null
+    setSelection({ folder: selectedFolder, active: true, keys: [] })
+  }, [selectedFolder])
+
+  const handleSelectAll = useCallback(() => {
+    anchorKeyRef.current = null
+    setSelection({ folder: selectedFolder, active: true, keys: orderedKeys })
+  }, [orderedKeys, selectedFolder])
+
+  const handleDeselectAll = useCallback(() => {
+    anchorKeyRef.current = null
+    setSelection((prev) => ({ ...prev, keys: [] }))
+  }, [])
+
+  const handleBulkDelete = useCallback(() => {
+    if (checkedKeys.length === 0) return
+    const message = isTrash
+      ? t('notesList.selection.confirmPermanentDelete', { count: checkedKeys.length })
+      : t('notesList.selection.confirmDelete', { count: checkedKeys.length })
+    if (!window.confirm(message)) return
+    dispatch(deleteNotes(checkedKeys))
+    exitSelection()
+  }, [checkedKeys, dispatch, exitSelection, isTrash, t])
+
+  const handleBulkMove = useCallback(
+    async (folderId) => {
+      if (checkedKeys.length === 0) return
+      let targetFolder = folderId
+      if (!targetFolder) {
+        const moveFolders = folders.filter(
+          (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== selectedFolder
+        )
+        const result = await showContextMenu(
+          moveFolders.length > 0
+            ? moveFolders.map((f) => ({ id: `move:${f.id}`, label: f.name }))
+            : [{ label: t('noteCard.actions.noFolders'), enabled: false }]
+        )
+        if (!result || !result.startsWith('move:')) return
+        targetFolder = result.slice(5)
+      }
+      dispatch(moveNotes({ keys: checkedKeys, folderKey: targetFolder }))
+      exitSelection()
+    },
+    [checkedKeys, dispatch, exitSelection, folders, selectedFolder, t]
+  )
+
+  useEffect(() => {
+    if (!isSelecting) return
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        exitSelection()
+        return
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+        const tag = document.activeElement?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) {
+          return
+        }
+        event.preventDefault()
+        handleSelectAll()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isSelecting, exitSelection, handleSelectAll])
+
   const handleMenuAction = useCallback(
     async (action, noteKey, folderId) => {
       const noteData = filteredNotes.find((n) => n.key === noteKey)
 
       switch (action) {
+        case 'bulkMove':
+          await handleBulkMove(folderId)
+          break
+        case 'bulkDelete':
+          handleBulkDelete()
+          break
         case 'move':
           dispatch(
             updateNote({
@@ -396,6 +582,8 @@ export default function NotesList({
       lockMethod,
       requestUnlockPassword,
       showLockUnavailable,
+      handleBulkMove,
+      handleBulkDelete,
       t
     ]
   )
@@ -411,10 +599,13 @@ export default function NotesList({
           allFolders={folders}
           selectedFolder={selectedFolder}
           isLast={isLast}
+          isSelecting={isSelecting}
+          isChecked={checkedKeys.includes(note.key)}
+          onToggleSelect={handleToggleSelect}
         />
       )
     },
-    [folders, handleMenuAction, selectedFolder]
+    [folders, handleMenuAction, selectedFolder, isSelecting, checkedKeys, handleToggleSelect]
   )
 
   const getGroupName = (group) => {
@@ -477,22 +668,61 @@ export default function NotesList({
                 aria-live='polite'
                 className='text-xs font-bold text-text-secondary uppercase tracking-wider'
               >
-                {filteredNotes.length === 1
-                  ? t('folderView.noteCount_one', { count: 1 })
-                  : t('folderView.noteCount_other', { count: filteredNotes.length })}
+                {isSelecting
+                  ? t('notesList.selection.selectedCount', { count: checkedKeys.length })
+                  : filteredNotes.length === 1
+                    ? t('folderView.noteCount_one', { count: 1 })
+                    : t('folderView.noteCount_other', { count: filteredNotes.length })}
               </span>
             </div>
           </div>
 
           <div className='flex items-center gap-1.5'>
-            <button
-              onClick={onCreateNote}
-              className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
-              title={t('folders.a11y.newNote')}
-              aria-label={t('folders.a11y.newNote')}
-            >
-              <SquarePen className='w-5 h-5' />
-            </button>
+            {isSelecting ? (
+              <>
+                <button
+                  onClick={
+                    checkedKeys.length === orderedKeys.length && orderedKeys.length > 0
+                      ? handleDeselectAll
+                      : handleSelectAll
+                  }
+                  disabled={orderedKeys.length === 0}
+                  className='px-3 py-2 rounded-lg text-sm font-bold bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed'
+                >
+                  {checkedKeys.length === orderedKeys.length && orderedKeys.length > 0
+                    ? t('notesList.selection.deselectAll')
+                    : t('notesList.selection.selectAll')}
+                </button>
+                <button
+                  onClick={exitSelection}
+                  className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
+                  title={t('notesList.selection.done')}
+                  aria-label={t('notesList.selection.done')}
+                >
+                  <X className='w-5 h-5' />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleStartSelecting}
+                  disabled={filteredNotes.length === 0}
+                  className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed'
+                  title={t('notesList.selection.select')}
+                  aria-label={t('notesList.selection.select')}
+                >
+                  <ListChecks className='w-5 h-5' />
+                </button>
+                <button
+                  onClick={onCreateNote}
+                  className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
+                  title={t('folders.a11y.newNote')}
+                  aria-label={t('folders.a11y.newNote')}
+                >
+                  <SquarePen className='w-5 h-5' />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -514,6 +744,7 @@ export default function NotesList({
       <div
         className='flex-1 overflow-y-auto py-2 scrollbar-hide'
         role={filteredNotes.length === 0 ? undefined : 'listbox'}
+        aria-multiselectable={isSelecting || undefined}
         aria-label={t('folders.systemIcons.all')}
       >
         {filteredNotes.length === 0 ? (
@@ -622,6 +853,27 @@ export default function NotesList({
           </div>
         )}
       </div>
+
+      {isSelecting && (
+        <div className='px-4 py-3 border-t border-border-primary/40 bg-bg-secondary/95 backdrop-blur-xl flex items-center gap-2'>
+          <button
+            onClick={() => handleBulkMove()}
+            disabled={checkedKeys.length === 0}
+            className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+          >
+            <FolderInput className='w-4 h-4' />
+            {isTrash ? t('notesList.selection.restore') : t('notesList.selection.move')}
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            disabled={checkedKeys.length === 0}
+            className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-danger/10 text-accent-danger border border-accent-danger/20 hover:bg-accent-danger/20 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+          >
+            <Trash2 className='w-4 h-4' />
+            {t('noteCard.actions.delete')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

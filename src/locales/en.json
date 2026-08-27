@@ -804,7 +804,23 @@
     "combineBtn": "Combine & Link"
   },
   "notesList": {
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "selection": {
+      "select": "Select Notes",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "done": "Done selecting",
+      "selectedCount_one": "{{count}} SELECTED",
+      "selectedCount_other": "{{count}} SELECTED",
+      "move": "Move to",
+      "restore": "Restore to",
+      "moveSelected": "Move Selected to Folder",
+      "deleteSelected": "Delete Selected",
+      "confirmDelete_one": "Move 1 note to Recently Deleted?",
+      "confirmDelete_other": "Move {{count}} notes to Recently Deleted?",
+      "confirmPermanentDelete_one": "Permanently delete 1 note? This cannot be undone.",
+      "confirmPermanentDelete_other": "Permanently delete {{count}} notes? This cannot be undone."
+    }
   },
   "editor": {
     "table": {
