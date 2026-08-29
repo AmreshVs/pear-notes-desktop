@@ -284,26 +284,30 @@ export default function BackupSettings() {
 
       <div className='grid grid-cols-2 gap-4'>
         <div className='bg-bg-secondary border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
-          <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20'>
-            <Database className='w-5 h-5 text-accent-primary' />
+          <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20 shrink-0'>
+            <Shield className='w-5 h-5 text-accent-primary' />
           </div>
-          <div>
+          <div className='min-w-0'>
             <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
-              {t('backup.notesSize')}
+              {t('backup.lastBackup')}
             </p>
-            <p className='text-text-primary font-bold text-base'>{formatBytes(totalSize)}</p>
+            <p className='text-text-primary font-bold text-base truncate'>
+              {lastBackup ? formatLastBackup(lastBackup) : t('backup.noBackup')}
+            </p>
           </div>
         </div>
 
         <div className='bg-bg-secondary border border-border-primary rounded-2xl p-5 flex items-center gap-4'>
-          <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20'>
-            <Lock className='w-5 h-5 text-accent-primary' />
+          <div className='w-11 h-11 bg-accent-primary/10 rounded-xl flex items-center justify-center ring-1 ring-accent-primary/20 shrink-0'>
+            <Database className='w-5 h-5 text-accent-primary' />
           </div>
-          <div>
+          <div className='min-w-0'>
             <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
-              {t('backup.encryption')}
+              {t('backup.notesSize')}
             </p>
-            <p className='text-text-primary font-bold text-base'>{t('backup.encryptionValue')}</p>
+            <p className='text-text-primary font-bold text-base truncate'>
+              {formatBytes(totalSize)}
+            </p>
           </div>
         </div>
       </div>
@@ -315,16 +319,6 @@ export default function BackupSettings() {
         </div>
         <p className='text-text-tertiary text-xs leading-relaxed'>{t('backup.protectedDesc')}</p>
       </div>
-
-      {lastBackup && (
-        <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-center'>
-          <Shield className='w-5 h-5 text-accent-primary shrink-0' />
-          <p className='text-xs text-text-tertiary leading-relaxed'>
-            {t('backup.lastBackup')}:{' '}
-            <span className='text-text-primary font-semibold'>{formatLastBackup(lastBackup)}</span>
-          </p>
-        </div>
-      )}
 
       <BackupPasswordModal
         open={showExportPasswordModal}

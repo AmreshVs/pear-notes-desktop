@@ -12,6 +12,7 @@ import {
   setTheme,
   updateSetting
 } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getMediaSyncFlag, setMediaSyncFlag } from '@pear-notes/core/utils.js'
 
 import {
@@ -31,6 +32,7 @@ export default function GeneralSettings() {
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
   const sortBy = useSelector(getSortBy)
+  const hasLinkedDevices = useSelector(getHasLinkedDevices)
   const [closeToTray, setCloseToTray] = useState(true)
   const [startAtLogin, setStartAtLogin] = useState(false)
   const [mediaPaused, setMediaPaused] = useState(false)
@@ -67,11 +69,14 @@ export default function GeneralSettings() {
     setMediaSyncFlag(METERED_CONNECTION_KEY, next)
   }
 
+  const isCloseToTrayOn = closeToTray && hasLinkedDevices
+
   const handleUpdateSetting = (key, value) => {
     dispatch(updateSetting({ key, value }))
   }
 
   const handleToggleCloseToTray = () => {
+    if (!hasLinkedDevices) return
     const next = !closeToTray
     setCloseToTray(next)
     setAppBehaviorPreference(CLOSE_TO_TRAY_KEY, next)
@@ -237,20 +242,23 @@ export default function GeneralSettings() {
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
           <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors border-b border-border-primary'>
-            <div className='space-y-1 min-w-0'>
+            <div className={`space-y-1 min-w-0 ${hasLinkedDevices ? '' : 'opacity-50'}`}>
               <label className='block text-text-primary text-base font-bold'>
                 {t('settings.general.keepRunning')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Closing the window keeps Pear Notes running in the tray so your notes stay in sync.
+                {hasLinkedDevices
+                  ? t('settings.general.keepRunningDesc')
+                  : t('settings.general.keepRunningUnlinked')}
               </p>
             </div>
             <button
               onClick={handleToggleCloseToTray}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${closeToTray ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+              disabled={!hasLinkedDevices}
+              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${isCloseToTrayOn ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
             >
               <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${closeToTray ? 'translate-x-5' : ''}`}
+                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${isCloseToTrayOn ? 'translate-x-5' : ''}`}
               />
             </button>
           </div>
@@ -261,7 +269,7 @@ export default function GeneralSettings() {
                 {t('settings.general.startAtLogin')}
               </label>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Launch Pear Notes automatically when you sign in to this device.
+                {t('settings.general.startAtLoginDesc')}
               </p>
             </div>
             <button

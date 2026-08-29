@@ -18,10 +18,15 @@ import {
   Search,
   SquarePen,
   Trash2,
+  Undo2,
   X
 } from 'lucide-react'
 
-import { ALL_NOTES_KEY, RECENTLY_DELETED_KEY } from '@pear-notes/core/constant.js'
+import {
+  ALL_NOTES_KEY,
+  RECENTLY_DELETED_KEY,
+  TRASH_RETENTION_DAYS
+} from '@pear-notes/core/constant.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
   deleteNote,
@@ -30,6 +35,9 @@ import {
   getNoteData,
   getSelectedNote,
   moveNotes,
+  purgeExpiredTrash,
+  restoreNote,
+  restoreNotes,
   setSelectedNote,
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -170,37 +178,49 @@ const NotesItem = memo(
             : [{ label: t('noteCard.actions.noFolders'), enabled: false }]
 
         if (isSelecting && isChecked) {
-          const bulkResult = await showContextMenu([
-            { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
-            { type: 'separator' },
-            { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
-          ])
+          const bulkResult = await showContextMenu(
+            isTrash
+              ? [
+                  { id: 'bulkRestore', label: t('notesList.selection.restoreSelected') },
+                  { type: 'separator' },
+                  { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
+                ]
+              : [
+                  { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
+                  { type: 'separator' },
+                  { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
+                ]
+          )
           if (!bulkResult) return
           if (bulkResult.startsWith('move:')) onMenuAction('bulkMove', key, bulkResult.slice(5))
           else onMenuAction(bulkResult, key)
           return
         }
 
-        const result = await showContextMenu([
-          ...(isTrash
-            ? []
+        const result = await showContextMenu(
+          isTrash
+            ? [
+                { id: 'restore', label: t('noteCard.actions.restore') },
+                { type: 'separator' },
+                { id: 'delete', label: t('folderView.permanentlyDeleteTitle') }
+              ]
             : [
                 {
                   id: 'togglePin',
                   label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin')
                 },
-                { type: 'separator' }
-              ]),
-          { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
-          { type: 'separator' },
-          { id: 'copy', label: t('noteCard.actions.copyNote') },
-          {
-            id: 'toggleLock',
-            label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
-          },
-          { type: 'separator' },
-          { id: 'delete', label: t('noteCard.actions.delete') }
-        ])
+                { type: 'separator' },
+                { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
+                { type: 'separator' },
+                { id: 'copy', label: t('noteCard.actions.copyNote') },
+                {
+                  id: 'toggleLock',
+                  label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
+                },
+                { type: 'separator' },
+                { id: 'delete', label: t('noteCard.actions.delete') }
+              ]
+        )
         if (!result) return
         if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
         else onMenuAction(result, key)
@@ -473,6 +493,12 @@ export default function NotesList({
     exitSelection()
   }, [checkedKeys, dispatch, exitSelection, isTrash, t])
 
+  const handleBulkRestore = useCallback(() => {
+    if (checkedKeys.length === 0) return
+    dispatch(restoreNotes(checkedKeys))
+    exitSelection()
+  }, [checkedKeys, dispatch, exitSelection])
+
   const handleBulkMove = useCallback(
     async (folderId) => {
       if (checkedKeys.length === 0) return
@@ -494,6 +520,10 @@ export default function NotesList({
     },
     [checkedKeys, dispatch, exitSelection, folders, selectedFolder, t]
   )
+
+  useEffect(() => {
+    if (isTrash) dispatch(purgeExpiredTrash())
+  }, [isTrash, dispatch])
 
   useEffect(() => {
     if (!isSelecting) return
@@ -564,6 +594,12 @@ export default function NotesList({
             })
           )
           break
+        case 'restore':
+          dispatch(restoreNote(noteKey))
+          break
+        case 'bulkRestore':
+          handleBulkRestore()
+          break
         case 'delete':
           if (selectedFolder === RECENTLY_DELETED_KEY) {
             if (window.confirm(t('folderView.permanentlyDeleteTitle') + '?')) {
@@ -584,6 +620,7 @@ export default function NotesList({
       showLockUnavailable,
       handleBulkMove,
       handleBulkDelete,
+      handleBulkRestore,
       t
     ]
   )
@@ -782,7 +819,7 @@ export default function NotesList({
                           {t('folderView.empty.trashEmptyTitle')}
                         </p>
                         <p className='text-sm text-text-tertiary leading-relaxed'>
-                          {t('folderView.empty.trashEmptySubtitle')}
+                          {t('folderView.empty.trashEmptySubtitle', { days: TRASH_RETENTION_DAYS })}
                         </p>
                       </div>
                     ) : (
@@ -838,6 +875,11 @@ export default function NotesList({
           </div>
         ) : (
           <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4'>
+            {isTrash && (
+              <p className='px-6 pb-3 text-xs text-text-tertiary leading-relaxed'>
+                {t('folderView.trashRetentionNotice', { days: TRASH_RETENTION_DAYS })}
+              </p>
+            )}
             {sortedGroups.map((group) => (
               <div key={group} className='mb-6'>
                 <h3 className='px-6 py-2 text-xs font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
@@ -857,11 +899,11 @@ export default function NotesList({
       {isSelecting && (
         <div className='px-4 py-3 border-t border-border-primary/40 bg-bg-secondary/95 backdrop-blur-xl flex items-center gap-2'>
           <button
-            onClick={() => handleBulkMove()}
+            onClick={isTrash ? handleBulkRestore : () => handleBulkMove()}
             disabled={checkedKeys.length === 0}
             className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
           >
-            <FolderInput className='w-4 h-4' />
+            {isTrash ? <Undo2 className='w-4 h-4' /> : <FolderInput className='w-4 h-4' />}
             {isTrash ? t('notesList.selection.restore') : t('notesList.selection.move')}
           </button>
           <button
@@ -870,7 +912,7 @@ export default function NotesList({
             className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-accent-danger/10 text-accent-danger border border-accent-danger/20 hover:bg-accent-danger/20 transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
           >
             <Trash2 className='w-4 h-4' />
-            {t('noteCard.actions.delete')}
+            {isTrash ? t('folderView.permanentlyDeleteTitle') : t('noteCard.actions.delete')}
           </button>
         </div>
       )}

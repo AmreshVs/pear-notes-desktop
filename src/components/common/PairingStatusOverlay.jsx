@@ -75,6 +75,7 @@ export default function PairingStatusOverlay() {
   const isDone = step === 'done'
   const isError = step === 'error'
   const isRejected = step === 'rejected'
+  const isExpired = step === 'expired'
   const isStepSyncing = [
     'initializing_storage',
     'replicating_data',
@@ -164,7 +165,7 @@ export default function PairingStatusOverlay() {
   }
 
   const renderContent = () => {
-    if (isError || isRejected) {
+    if (isError || isRejected || isExpired) {
       return (
         <div className='flex flex-col items-center text-center space-y-6'>
           <div className='w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2'>
@@ -172,14 +173,18 @@ export default function PairingStatusOverlay() {
           </div>
           <div className='space-y-2'>
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-              {isRejected
-                ? t('pairing.overlay.pairingRejectedTitle')
-                : t('pairing.overlay.pairingFailedTitle')}
+              {isExpired
+                ? t('pairing.overlay.pairingExpiredTitle')
+                : isRejected
+                  ? t('pairing.overlay.pairingRejectedTitle')
+                  : t('pairing.overlay.pairingFailedTitle')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {isRejected
-                ? t('pairing.overlay.pairingRejectedDesc')
-                : t('pairing.overlay.pairingFailedDesc')}
+              {isExpired
+                ? t('pairing.overlay.pairingExpiredDesc')
+                : isRejected
+                  ? t('pairing.overlay.pairingRejectedDesc')
+                  : t('pairing.overlay.pairingFailedDesc')}
             </p>
           </div>
           <button

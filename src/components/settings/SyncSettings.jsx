@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 
+import { INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
 import {
   deleteSyncedDevice,
   getLocalPreferences,
@@ -32,13 +33,19 @@ import {
   subscribePairUser
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
-import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
+import {
+  extractInvite,
+  formatInviteCountdown,
+  getInviteRemainingMs,
+  isValidInvite
+} from '@pear-notes/core/utils.js'
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
+const INVITE_COUNTDOWN_TICK_MS = 1000
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -63,12 +70,27 @@ export default function SyncSettings({ onClose }) {
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
 
-  const isInviteGenerated = !!inviteCode
+  const [countdownTick, setCountdownTick] = useState(0)
+
+  const inviteRemainingMs = useMemo(
+    () => getInviteRemainingMs(expiresAt),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [expiresAt, countdownTick]
+  )
+
+  const inviteExpired = !!inviteCode && !!expiresAt && inviteRemainingMs <= 0
+  const isInviteGenerated = !!inviteCode && !inviteExpired
 
   const [syncTab, setSyncTab] = useState('invite')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
   const [pendingInvite, setPendingInvite] = useState(null)
+
+  useEffect(() => {
+    if (!inviteCode || !expiresAt) return
+    const timer = setInterval(() => setCountdownTick((n) => n + 1), INVITE_COUNTDOWN_TICK_MS)
+    return () => clearInterval(timer)
+  }, [inviteCode, expiresAt])
 
   const handleCopyInvite = async () => {
     if (!isInviteGenerated) return
@@ -104,15 +126,6 @@ export default function SyncSettings({ onClose }) {
     setPendingInvite(null)
   }
 
-  const formatExpiration = (timestamp) => {
-    if (!timestamp) return ''
-    const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp
-    const date = new Date(ms)
-    if (isNaN(date.getTime())) return ''
-    return t('sync.invite.expiry', {
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    })
-  }
 
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
@@ -148,9 +161,13 @@ export default function SyncSettings({ onClose }) {
                   <Globe className='w-10 h-10 text-accent-primary' />
                 </div>
                 <div className='space-y-2'>
-                  <h3 className='text-text-primary font-bold text-xl'>{t('sync.hero.title')}</h3>
+                  <h3 className='text-text-primary font-bold text-xl'>
+                    {inviteExpired ? t('sync.invite.expiredTitle') : t('sync.hero.title')}
+                  </h3>
                   <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-                    {t('sync.hero.description')}
+                    {inviteExpired
+                      ? t('sync.invite.expiredDesc', { minutes: INVITE_EXPIRY_MINUTES })
+                      : t('sync.hero.description')}
                   </p>
                 </div>
                 <button
@@ -160,7 +177,11 @@ export default function SyncSettings({ onClose }) {
                 >
                   <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
                   {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                  {isLoading ? t('sync.hero.preparing') : t('sync.hero.generateBtn')}
+                  {isLoading
+                    ? t('sync.hero.preparing')
+                    : inviteExpired
+                      ? t('sync.invite.regenerateBtn')
+                      : t('sync.hero.generateBtn')}
                 </button>
               </div>
             ) : (
@@ -175,7 +196,9 @@ export default function SyncSettings({ onClose }) {
                     <div>
                       <h4 className='text-text-primary font-semibold'>{t('sync.invite.header')}</h4>
                       <p className='text-xs text-text-tertiary font-medium bg-bg-panel-tertiary/50 px-2 py-0.5 rounded-full inline-block mt-1'>
-                        {expiresAt ? formatExpiration(expiresAt) : t('sync.invite.permanent')}
+                        {t('sync.invite.expiresIn', {
+                          countdown: formatInviteCountdown(inviteRemainingMs)
+                        })}
                       </p>
                     </div>
                   </div>

@@ -65,6 +65,22 @@ export function getDbEncryptionKey() {
   }
 }
 
+export function setDbEncryptionKey(key) {
+  try {
+    if (!key) return false
+    const storageDir = window.electronBridge.getStoragePath()
+    const configFile = path.join(storageDir, 'desktop-config.json')
+    if (!fs.existsSync(storageDir)) {
+      fs.mkdirSync(storageDir, { recursive: true })
+    }
+    fs.writeFileSync(configFile, JSON.stringify({ encryptionKey: key }), 'utf-8')
+    return true
+  } catch (e) {
+    console.error('Error in setDbEncryptionKey', e)
+    return false
+  }
+}
+
 export function deleteDbEncryptionKey() {
   try {
     const storageDir = window.electronBridge.getStoragePath()

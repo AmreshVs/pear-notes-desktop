@@ -17,6 +17,8 @@ import {
   getSelectedNote,
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+import { getReceiverStatus } from '@pear-notes/core/store/slices/syncSlice.js'
 import {
   appReady,
   getSearchQuery,
@@ -48,7 +50,7 @@ import {
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
 import { useAppUpdateStatus } from './lib/appUpdateCheck'
-import { getDbEncryptionKey } from './utils.js'
+import { getDbEncryptionKey, setDbEncryptionKey } from './utils.js'
 
 function App() {
   const { t } = useTranslation()
@@ -84,18 +86,28 @@ function App() {
     load()
   }, [dispatch])
 
+  const hasLinkedDevices = useSelector(getHasLinkedDevices)
+  const pairedEncryptionKey = useSelector(getReceiverStatus)?.encryptionKey
+  const savedEncryptionKeyRef = useRef(null)
+
+  useEffect(() => {
+    if (!pairedEncryptionKey || pairedEncryptionKey === savedEncryptionKeyRef.current) return
+    savedEncryptionKeyRef.current = pairedEncryptionKey
+    setDbEncryptionKey(pairedEncryptionKey)
+  }, [pairedEncryptionKey])
+
   useEffect(() => {
     const syncAppBehavior = async () => {
       const [closeToTray, startAtLogin] = await Promise.all([
         getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true),
         getAppBehaviorPreference(START_AT_LOGIN_KEY, false)
       ])
-      applyCloseToTray(closeToTray)
+      applyCloseToTray(closeToTray && hasLinkedDevices)
       applyStartAtLogin(startAtLogin)
     }
 
     syncAppBehavior()
-  }, [])
+  }, [hasLinkedDevices])
 
   const handleCreateNote = () => {
     const newNote = {
