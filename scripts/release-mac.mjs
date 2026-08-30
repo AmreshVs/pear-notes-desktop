@@ -59,7 +59,8 @@ function parseArgs(argv) {
     checkOnly: flags.has('--check'),
     upload: flags.has('--upload'),
     skipValidate: flags.has('--skip-validate'),
-    bump: !flags.has('--no-bump')
+    bump: !flags.has('--no-bump'),
+    commit: !flags.has('--no-commit')
   }
 }
 
@@ -232,6 +233,42 @@ function currentBuildNumber() {
   return String(JSON.parse(fs.readFileSync(packagePath, 'utf8')).masBuildNumber ?? '1')
 }
 
+function isGitRepo() {
+  return run('git', ['-C', root, 'rev-parse', '--git-dir']).status === 0
+}
+
+function commitBuildNumber(buildNumber) {
+  if (!isGitRepo()) {
+    return warn(`not a git repository - build ${buildNumber} is not recorded in history`)
+  }
+
+  const staged = run('git', ['-C', root, 'diff', '--quiet', '--', 'package.json'])
+  if (staged.status === 0) {
+    return ok(`package.json already matches build ${buildNumber}`)
+  }
+
+  const commit = run('git', [
+    '-C',
+    root,
+    'commit',
+    '--only',
+    'package.json',
+    '-m',
+    `Bump build to ${buildNumber}`
+  ])
+
+  if (commit.status !== 0) {
+    process.stdout.write(commit.output)
+    throw new ReleaseError(
+      `could not commit the build number bump`,
+      'Commit package.json yourself, or re-run with --no-commit to leave it dirty'
+    )
+  }
+
+  const sha = run('git', ['-C', root, 'rev-parse', '--short', 'HEAD']).stdout.trim()
+  ok(`committed build ${buildNumber} as ${sha}`)
+}
+
 async function build(config) {
   const env = {
     ...process.env,
@@ -371,7 +408,12 @@ async function main() {
   const args = parseArgs(process.argv.slice(2))
   const config = loadConfig()
 
-  stepCount = args.checkOnly ? 1 : 3 + (args.skipValidate ? 0 : 1) + (args.upload ? 1 : 0)
+  stepCount = args.checkOnly
+    ? 1
+    : 3 +
+      (args.bump && args.commit ? 1 : 0) +
+      (args.skipValidate ? 0 : 1) +
+      (args.upload ? 1 : 0)
 
   step('Preflight')
   const missing = [
@@ -396,6 +438,12 @@ async function main() {
   }
 
   const buildNumber = args.bump ? bumpBuildNumber() : currentBuildNumber()
+
+  if (args.bump && args.commit) {
+    step(`Recording build ${buildNumber}`)
+    commitBuildNumber(buildNumber)
+  }
+
   step(`Building ${config.APPLE_BUNDLE_ID} build ${buildNumber}`)
   await build(config)
 
