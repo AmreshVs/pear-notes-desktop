@@ -4,6 +4,8 @@ import path from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
+import { formatDuration, streamCommand } from './progress.mjs'
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const configPath = path.join(root, '.release.mac.env')
 const packagePath = path.join(root, 'package.json')
@@ -24,11 +26,25 @@ const ansi = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   dim: '\x1b[2m',
+  bold: '\x1b[1m',
   reset: '\x1b[0m'
 }
 const ok = (m) => console.log(`${ansi.green}  ok${ansi.reset}  ${m}`)
 const warn = (m) => console.log(`${ansi.yellow}  !!${ansi.reset}  ${m}`)
-const step = (m) => console.log(`\n${ansi.dim}==>${ansi.reset} ${m}`)
+
+const startedAt = Date.now()
+let stepIndex = 0
+let stepCount = 0
+
+const step = (m) => {
+  stepIndex += 1
+  const counter = stepCount ? ` ${stepIndex}/${stepCount}` : ''
+  console.log(
+    `\n${ansi.dim}==>${ansi.reset}${ansi.bold}${counter}${ansi.reset} ${m} ${ansi.dim}(${formatDuration(Date.now() - startedAt)} in)${ansi.reset}`
+  )
+}
+
+const took = (ms) => console.log(`${ansi.dim}      took ${formatDuration(ms)}${ansi.reset}`)
 
 class ReleaseError extends Error {
   constructor(message, hint) {
@@ -216,7 +232,7 @@ function currentBuildNumber() {
   return String(JSON.parse(fs.readFileSync(packagePath, 'utf8')).masBuildNumber ?? '1')
 }
 
-function build(config) {
+async function build(config) {
   const env = {
     ...process.env,
     APPLE_BUNDLE_ID: config.APPLE_BUNDLE_ID,
@@ -228,16 +244,20 @@ function build(config) {
 
   for (let attempt = 1; attempt <= BUILD_ATTEMPTS; attempt++) {
     fs.rmSync(path.join(root, 'out', 'make'), { recursive: true, force: true })
-    const result = spawnSync('npm', ['run', 'make:mas'], { cwd: root, env, encoding: 'utf8' })
-    const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
-    if (result.status === 0) return
+
+    const { status, output, durationMs } = await streamCommand('npm', ['run', 'make:mas'], {
+      cwd: root,
+      env,
+      heartbeat: 'still building'
+    })
+
+    if (status === 0) return took(durationMs)
 
     if (NETWORK_RETRY_PATTERN.test(output) && attempt < BUILD_ATTEMPTS) {
       warn(`network error during build (attempt ${attempt}/${BUILD_ATTEMPTS}), retrying`)
       continue
     }
-    process.stdout.write(output)
-    throw new ReleaseError('Build failed')
+    throw new ReleaseError(`Build failed after ${formatDuration(durationMs)}`)
   }
 }
 
@@ -324,8 +344,8 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
   ok(`${bundleId} build ${buildNumber} — ${path.basename(pkgPath)} (${sizeMb} MB)`)
 }
 
-function altool(config, action, pkgPath) {
-  const result = spawnSync(
+async function altool(config, action, pkgPath, heartbeat) {
+  const { status, output, durationMs } = await streamCommand(
     'xcrun',
     [
       'altool',
@@ -339,19 +359,19 @@ function altool(config, action, pkgPath) {
       '--apiIssuer',
       config.ASC_ISSUER_ID
     ],
-    { cwd: root, encoding: 'utf8' }
+    { cwd: root, heartbeat }
   )
-  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
-  if (result.status !== 0) {
-    process.stdout.write(output)
-    throw new ReleaseError(`altool ${action} failed`)
-  }
+
+  if (status !== 0) throw new ReleaseError(`altool ${action} failed`)
+  took(durationMs)
   return output
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const config = loadConfig()
+
+  stepCount = args.checkOnly ? 1 : 3 + (args.skipValidate ? 0 : 1) + (args.upload ? 1 : 0)
 
   step('Preflight')
   const missing = [
@@ -377,7 +397,7 @@ async function main() {
 
   const buildNumber = args.bump ? bumpBuildNumber() : currentBuildNumber()
   step(`Building ${config.APPLE_BUNDLE_ID} build ${buildNumber}`)
-  build(config)
+  await build(config)
 
   step('Verifying artifacts')
   const artifacts = locateArtifacts()
@@ -385,19 +405,21 @@ async function main() {
 
   if (!args.skipValidate) {
     step('Validating with App Store Connect')
-    altool(config, '--validate-app', artifacts.pkgPath)
+    await altool(config, '--validate-app', artifacts.pkgPath, 'still validating')
     ok('validation passed')
   }
 
   if (args.upload) {
     step('Uploading')
-    altool(config, '--upload-app', artifacts.pkgPath)
+    await altool(config, '--upload-app', artifacts.pkgPath, 'still uploading')
     ok(`uploaded build ${buildNumber}`)
     console.log('\nThe build appears under TestFlight once processing finishes.')
   } else {
     console.log(`\n${artifacts.pkgPath}`)
     console.log('Re-run with --upload to send it to App Store Connect.')
   }
+
+  console.log(`${ansi.dim}\nTotal time ${formatDuration(Date.now() - startedAt)}${ansi.reset}`)
 }
 
 main().catch((error) => {
