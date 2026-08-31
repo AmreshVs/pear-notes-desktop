@@ -117,7 +117,8 @@
       "general": "Customize your personal workspace experience, from aesthetics to native language supports.",
       "sync": "Manage your secure peer-to-peer network and linked devices with end-to-end encryption.",
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
-      "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media."
+      "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
+      "activity": "See what each linked device has created, changed and removed."
     }
   },
   "sync": {
@@ -168,7 +169,10 @@
       "empty": "No other devices connected yet.",
       "removeDevice": "Remove {{name}}",
       "rename": "Rename this device",
-      "confirmRename": "Save device name"
+      "confirmRename": "Save device name",
+      "online": "Online",
+      "offline": "Offline",
+      "presenceUnknown": "Status unavailable"
     },
     "permissions": {
       "cameraTitle": "Camera access needed",
@@ -199,6 +203,16 @@
       "notificationMessage": "Keeping your notes in sync…",
       "permissionTitle": "Notification access needed",
       "permissionDescription": "Allow notifications so Pear Notes can show a persistent sync status while running in the background."
+    },
+    "confirm": {
+      "requestedAt": "Requested {{time}}",
+      "justNow": "just now",
+      "minutesAgo_one": "{{count}} minute ago",
+      "minutesAgo_other": "{{count}} minutes ago",
+      "hoursAgo_one": "{{count}} hour ago",
+      "hoursAgo_other": "{{count}} hours ago",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago"
     }
   },
   "folders": {
@@ -228,7 +242,11 @@
       "newNote": "New note"
     },
     "doubleClickToRename": "Double click to rename",
-    "newFolder": "New Folder"
+    "newFolder": "New Folder",
+    "errors": {
+      "duplicateName": "A folder named “{{name}}” already exists.",
+      "emptyName": "Enter a folder name."
+    }
   },
   "folderView": {
     "searchPlaceholder": "Search notes...",
@@ -290,7 +308,8 @@
       "share": "Share",
       "lock": "Lock Note",
       "unlock": "Remove Lock",
-      "restore": "Restore"
+      "restore": "Restore",
+      "noteHistory": "Note History"
     },
     "deleteConfirmation": "Are you sure you want to delete this note?",
     "unlockReason": "Unlock this note",
@@ -393,7 +412,8 @@
       "pinNote": "Pin Note",
       "removeLock": "Remove Lock",
       "lockNote": "Lock Note",
-      "delete": "Delete"
+      "delete": "Delete",
+      "noteHistory": "Note History"
     },
     "lock": {
       "passwordProtected": "This note is protected. Enter your note lock password to view it.",
@@ -476,7 +496,8 @@
     "backupPassword": "Backup Password",
     "noteLockPassword": "Note Lock Password",
     "privacyAndSecurity": "Privacy & Security",
-    "storage": "Storage"
+    "storage": "Storage",
+    "activity": "Activity"
   },
   "noteLockPassword": {
     "createTitle": "Set Note Lock Password",
@@ -492,7 +513,21 @@
     "createButton": "Set Password",
     "unlockButton": "Unlock",
     "placeholderCreate": "Create a strong password",
-    "incorrectPassword": "Incorrect password"
+    "incorrectPassword": "Incorrect password",
+    "rules": {
+      "length": "At least 10 characters",
+      "uppercase": "An uppercase letter",
+      "lowercase": "A lowercase letter",
+      "number": "A number",
+      "symbol": "A symbol"
+    },
+    "strength": {
+      "veryWeak": "Very weak",
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    }
   },
   "tabs": {
     "home": "Home",
@@ -510,6 +545,7 @@
     "audioAttachment": "Audio Attachment"
   },
   "common": {
+    "active": "Active",
     "cancel": "Cancel",
     "clear": "Clear",
     "close": "Close",
@@ -855,5 +891,104 @@
   "formatters": {
     "todayAt": "Today at {{time}}",
     "yesterdayAt": "Yesterday at {{time}}"
+  },
+  "activity": {
+    "timeline": "Timeline",
+    "noteHistory": "Note History",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "loadMore": "Load more",
+    "locked": "Locked",
+    "lockedNote": "a locked note",
+    "untitledNote": "Untitled",
+    "unknownDevice": "Unknown device",
+    "unknownPlatform": "unknown",
+    "saveCount_one": "{{count}} save",
+    "saveCount_other": "{{count}} saves",
+    "settings": {
+      "title": "Recording",
+      "record": "Record activity",
+      "recordDesc": "Log what each device creates, edits and deletes.",
+      "retention": "Keep entries for",
+      "retentionDesc": "Older entries are removed automatically.",
+      "keepEverything": "Keep everything",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "syncNotice": "Activity syncs to every linked device, so each one stores its own copy. Long retention on large notes will use noticeably more space.",
+      "clear": "Clear activity log",
+      "clearYes": "Clear",
+      "clearConfirm": "This removes every entry on all linked devices. It cannot be undone.",
+      "stored_one": "{{count}} entry · {{size}}",
+      "stored_other": "{{count}} entries · {{size}}"
+    },
+    "filters": {
+      "all": "All",
+      "notes": "Notes",
+      "folders": "Folders",
+      "devices": "Devices & invites",
+      "anyDevice": "Any device"
+    },
+    "empty": {
+      "title": "Nothing recorded yet",
+      "description": "Changes made on this device and any device linked to it will show up here.",
+      "disabledTitle": "Activity recording is off",
+      "disabledDescription": "Turn on recording above to start keeping a history of what each device changes.",
+      "noteTitle": "No history for this note",
+      "noteDescription": "Edits made from here on will be listed with the device that made them."
+    },
+    "diff": {
+      "plainText": "Plain text",
+      "formattingOnly": "Only formatting changed — no text was added or removed.",
+      "unchangedLines_one": "{{count}} unchanged line",
+      "unchangedLines_other": "{{count}} unchanged lines",
+      "loading": "Loading changes…",
+      "unavailable": "The changes for this entry are no longer available.",
+      "truncated": "This note is too large to diff line by line."
+    },
+    "events": {
+      "note.created": "created {{target}}",
+      "note.edited": "edited {{target}}",
+      "note.renamed": "renamed {{from}} to {{to}}",
+      "note.moved": "moved {{target}} to {{to}}",
+      "note.trashed": "moved {{target}} to Recently Deleted",
+      "note.restored": "restored {{target}}",
+      "note.deleted": "permanently deleted {{target}}",
+      "note.pinned": "pinned {{target}}",
+      "note.unpinned": "unpinned {{target}}",
+      "note.locked": "locked {{target}}",
+      "note.unlocked": "unlocked {{target}}",
+      "note.attachment_added": "attached {{fileName}} to {{target}}",
+      "note.attachment_removed": "removed {{fileName}} from {{target}}",
+      "folder.created": "created the folder {{target}}",
+      "folder.renamed": "renamed the folder {{from}} to {{to}}",
+      "folder.deleted": "deleted the folder {{target}}",
+      "invite.created": "created an invite",
+      "invite.expired": "let an invite expire",
+      "device.approved": "approved a new {{platform}} device",
+      "device.rejected": "turned down a pairing request from a {{platform}} device",
+      "device.renamed": "renamed a device to {{to}}",
+      "device.removed": "removed a device from the vault",
+      "backup.restored": "restored a backup"
+    },
+    "eventsShort": {
+      "note.created": "created this note",
+      "note.edited": "edited this note",
+      "note.renamed": "renamed this note from {{from}} to {{to}}",
+      "note.moved": "moved this note to {{to}}",
+      "note.trashed": "moved this note to Recently Deleted",
+      "note.restored": "restored this note",
+      "note.pinned": "pinned this note",
+      "note.unpinned": "unpinned this note",
+      "note.locked": "locked this note",
+      "note.unlocked": "unlocked this note",
+      "note.attachment_added": "attached {{fileName}}",
+      "note.attachment_removed": "removed {{fileName}}"
+    },
+    "attachmentKinds": {
+      "image": "an image",
+      "video": "a video",
+      "audio": "an audio recording",
+      "file": "a file"
+    }
   }
 }

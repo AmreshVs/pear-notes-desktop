@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 import {
   Database,
   HardDrive,
+  History,
   RefreshCw,
   Settings as SettingsIcon,
   ShieldCheck,
   X
 } from 'lucide-react'
 
+import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+
 import { version as appVersion } from '../../../package.json'
 import { useDialog } from '../../hooks/useDialog'
 import { getAppVersionLabel } from '../../lib/appFlags'
 
+import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
 import GeneralSettings from './GeneralSettings'
 import PrivacySettings from './PrivacySettings'
@@ -21,9 +26,13 @@ import SyncSettings from './SyncSettings'
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
-  const [activeSection, setActiveSection] = useState(initialSection)
+  const hasLinkedDevices = useSelector(getHasLinkedDevices)
+  const [selectedSection, setSelectedSection] = useState(initialSection)
   const [isExiting, setIsExiting] = useState(false)
   const contentScrollRef = useRef(null)
+
+  const activeSection =
+    !hasLinkedDevices && selectedSection === 'activity' ? 'general' : selectedSection
 
   useEffect(() => {
     if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0
@@ -40,9 +49,14 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
     { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
     { id: 'sync', name: t('layouts.linkAndSync'), icon: RefreshCw },
+    ...(hasLinkedDevices
+      ? [{ id: 'activity', name: t('layouts.activity'), icon: History }]
+      : []),
     { id: 'backup', name: t('layouts.backupRestore'), icon: HardDrive },
     { id: 'storage', name: t('layouts.storage'), icon: Database }
   ]
+
+
 
   return (
     <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
@@ -76,7 +90,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
               return (
                 <button
                   key={section.id}
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => setSelectedSection(section.id)}
                   className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
                     ${
                       isActive
@@ -114,6 +128,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
                 {activeSection === 'general' && t('settings.descriptions.general')}
                 {activeSection === 'privacy' && t('settings.privacy.screenDesc')}
                 {activeSection === 'sync' && t('settings.descriptions.sync')}
+                {activeSection === 'activity' && t('settings.descriptions.activity')}
                 {activeSection === 'backup' && t('settings.descriptions.backup')}
                 {activeSection === 'storage' && t('settings.descriptions.storage')}
               </p>
@@ -130,6 +145,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
             {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
+            {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && <StorageSettings />}
           </div>

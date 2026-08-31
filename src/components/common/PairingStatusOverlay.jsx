@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Check, Globe, Link2, Loader2, ShieldCheck } from 'lucide-react'
@@ -16,7 +16,10 @@ import {
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getFingerprint } from '@pear-notes/core/utils.js'
 
+import { getRelativeTime } from '../../utils/relativeTime'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
+
+const REQUESTED_AGE_TICK_MS = 30000
 
 export default function PairingStatusOverlay() {
   const { t } = useTranslation()
@@ -24,6 +27,7 @@ export default function PairingStatusOverlay() {
   const [isExiting, setIsExiting] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
   const [pendingInvite, setPendingInvite] = useState(null)
+  const [presenceNow, setPresenceNow] = useState(() => Date.now())
 
   const inviterStatus = useSelector(getInviterStatus)
   const receiverStatus = useSelector(getReceiverStatus)
@@ -31,12 +35,20 @@ export default function PairingStatusOverlay() {
 
   const isInviterActive = inviterStatus.step !== 'idle'
   const isReceiverActive = receiverStatus.step !== 'idle'
+  const awaitingConfirmation =
+    inviterStatus.step === 'confirmation' || receiverStatus.step === 'confirmation'
+
+  useEffect(() => {
+    if (!awaitingConfirmation) return
+    const timer = setInterval(() => setPresenceNow(Date.now()), REQUESTED_AGE_TICK_MS)
+    return () => clearInterval(timer)
+  }, [awaitingConfirmation])
 
   if (!isInviterActive && !isReceiverActive && !showPairingInput && !isExiting) return null
 
   const activeStatus = isInviterActive ? inviterStatus : receiverStatus
   const isInviter = isInviterActive
-  const { step, progress, userData, localKey, data } = activeStatus
+  const { step, progress, userData, localKey, data, requestedAt } = activeStatus
 
   const getMessage = () => {
     switch (step) {
@@ -83,6 +95,9 @@ export default function PairingStatusOverlay() {
     'receiving_data'
   ].includes(step)
   const isConfirmation = step === 'confirmation'
+  const requestedTime = isConfirmation
+    ? getRelativeTime(requestedAt, Math.max(presenceNow, requestedAt || 0))
+    : null
 
   const handleAnimatedClose = () => {
     setIsExiting(true)
@@ -291,6 +306,17 @@ export default function PairingStatusOverlay() {
               </div>
             )}
           </div>
+        )}
+
+        {isConfirmation && requestedTime && (
+          <p className='text-xs font-medium text-text-tertiary'>
+            {t('sync.confirm.requestedAt', {
+              time:
+                requestedTime.count === 0
+                  ? t(requestedTime.key)
+                  : t(requestedTime.key, { count: requestedTime.count })
+            })}
+          </p>
         )}
 
         {isConfirmation ? (

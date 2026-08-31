@@ -13,11 +13,12 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
+  Timer,
   Trash2
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 
-import { INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
+import { DEVICE_NAME_MAX_LENGTH, INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
 import {
   deleteSyncedDevice,
   getLocalPreferences,
@@ -46,6 +47,7 @@ import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
 const INVITE_COUNTDOWN_TICK_MS = 1000
+const INVITE_EXPIRY_WARNING_MS = 60 * 1000
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -79,6 +81,8 @@ export default function SyncSettings({ onClose }) {
   )
 
   const inviteExpired = !!inviteCode && !!expiresAt && inviteRemainingMs <= 0
+  const inviteExpiringSoon =
+    !inviteExpired && inviteRemainingMs > 0 && inviteRemainingMs <= INVITE_EXPIRY_WARNING_MS
   const isInviteGenerated = !!inviteCode && !inviteExpired
 
   const [syncTab, setSyncTab] = useState('invite')
@@ -195,7 +199,14 @@ export default function SyncSettings({ onClose }) {
                     </div>
                     <div>
                       <h4 className='text-text-primary font-semibold'>{t('sync.invite.header')}</h4>
-                      <p className='text-xs text-text-tertiary font-medium bg-bg-panel-tertiary/50 px-2 py-0.5 rounded-full inline-block mt-1'>
+                      <p
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 mt-1 ${
+                          inviteExpiringSoon
+                            ? 'text-accent-danger bg-accent-danger/10'
+                            : 'text-accent-primary bg-accent-primary/10'
+                        }`}
+                      >
+                        <Timer className='w-3.5 h-3.5' />
                         {t('sync.invite.expiresIn', {
                           countdown: formatInviteCountdown(inviteRemainingMs)
                         })}
@@ -355,6 +366,12 @@ function DeviceItem({ device, isOther }) {
   const [isExiting, setIsExiting] = useState(false)
   const [editedTitle, setEditedTitle] = useState(device.title || '')
 
+  const presenceLabelKey = !device.presenceKnown
+    ? 'sync.devices.presenceUnknown'
+    : device.isOnline
+      ? 'sync.devices.online'
+      : 'sync.devices.offline'
+
   const hasCustomTitle = device.title && !isRawDeviceKey(device.title)
   const fullDeviceName = hasCustomTitle ? device.title : device.key || getDeviceDisplayName(device)
   const deviceNameTail = hasCustomTitle ? '' : fullDeviceName.slice(-DEVICE_KEY_TAIL_LENGTH)
@@ -402,8 +419,11 @@ function DeviceItem({ device, isOther }) {
       <div className='group relative p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
         <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
           <Icon className='w-7 h-7' />
-          {device.isLocal && (
-            <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success border-2 border-bg-panel-secondary rounded-full shadow-sm' />
+          {device.presenceKnown && (
+            <div
+              title={t(presenceLabelKey)}
+              className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-bg-panel-secondary rounded-full shadow-sm ${device.isOnline ? 'bg-accent-success' : 'bg-text-tertiary'}`}
+            />
           )}
         </div>
 
@@ -415,6 +435,7 @@ function DeviceItem({ device, isOther }) {
               onChange={(e) => setEditedTitle(e.target.value)}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
+              maxLength={DEVICE_NAME_MAX_LENGTH}
               autoFocus
               aria-label={t('sync.devices.rename')}
               className='block w-full h-9 px-2 font-bold text-text-primary text-base leading-9 bg-bg-panel border border-accent-primary rounded-md outline-none'
@@ -433,11 +454,12 @@ function DeviceItem({ device, isOther }) {
               {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
             </span>
           )}
-          <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5'>
+          <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5 truncate'>
             {t(
               `sync.platforms.${getPlatformName(device.platform)}`,
               getPlatformName(device.platform)
             )}
+            <span className='normal-case font-medium'>{` · ${t(presenceLabelKey)}`}</span>
           </p>
         </div>
 

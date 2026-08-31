@@ -1,6 +1,6 @@
 :root {
-  --bg-primary: #202020;
-  --bg-secondary: #1c1c1e;
+  --bg-primary: #090909;
+  --bg-secondary: #1b1b1d;
   --bg-tertiary: #2c2c2e;
   --bg-quaternary: #3a3a3c;
   --bg-panel: #202020;
@@ -13,7 +13,7 @@
   --text-tertiary: #808085;
   --text-muted: #606065;
 
-  --border-primary: #38383a;
+  --border-primary: #262627;
   --border-secondary: #2c2c2e;
   --border-tertiary: #1c1c1e;
 

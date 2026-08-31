@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Eye, EyeOff, Lock, TriangleAlert, X } from 'lucide-react'
 
+import { PASSWORD_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { isValidBackupPassword } from '@pear-notes/core/utils.js'
 
 import { getPasswordRules, getPasswordStrengthUi } from '../../utils/passwordStrength'
@@ -88,6 +89,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
             <div className='relative'>
               <input
                 type={visible ? 'text' : 'password'}
+                maxLength={PASSWORD_MAX_LENGTH}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -111,6 +113,7 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
               <>
                 <input
                   type={visible ? 'text' : 'password'}
+                  maxLength={PASSWORD_MAX_LENGTH}
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   onKeyDown={handleKeyDown}

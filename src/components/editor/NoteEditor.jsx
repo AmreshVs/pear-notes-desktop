@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
 
-import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
+import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
+import {
+  closeNoteHistory,
+  getHistoryNoteKey,
+  openNoteHistory
+} from '@pear-notes/core/store/slices/activitySlice.js'
 import {
   getEditorContent,
   getEditorContentText,
@@ -17,6 +22,7 @@ import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
+  getActivityLogEnabled,
   getEditorFontSize,
   getFontFamily,
   getLockMethod
@@ -40,6 +46,7 @@ import { formatRelativeDate } from '../../utils/formatters'
 import UploadProgressToast from '../common/UploadProgressToast'
 
 import FormattingToolbar from './FormattingToolbar'
+import NoteHistoryPanel from './NoteHistoryPanel'
 import RichTextEditor from './RichTextEditor'
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
@@ -62,6 +69,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const folders = useSelector(getFolders)
   const syncedDevices = useSelector(getSyncedDevices)
   const localDevice = useMemo(() => syncedDevices.find((d) => d.isLocal), [syncedDevices])
+
+  const activityEnabled = useSelector(getActivityLogEnabled)
+  const historyNoteKey = useSelector(getHistoryNoteKey)
+  const showHistory = !!historyNoteKey && historyNoteKey === selectedNoteKey
 
   useNoteLockVersion()
   const [unlocking, setUnlocking] = useState(false)
@@ -207,6 +218,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { type: 'separator' },
       { label: t('noteEditor.contextMenu.moveTo'), submenu: moveSubmenu },
       { id: 'copyNote', label: t('noteEditor.contextMenu.copyNote') },
+      ...(activityEnabled
+        ? [{ id: 'history', label: t('noteEditor.contextMenu.noteHistory') }]
+        : []),
       {
         id: 'togglePin',
         label: isPinned
@@ -227,6 +241,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       handleMoveTo(result.slice(5))
     } else if (result === 'copyNote') {
       copyNoteToClipboard()
+    } else if (result === 'history') {
+      dispatch(openNoteHistory(selectedNoteKey))
     } else if (result === 'togglePin') {
       handleTogglePin()
     } else if (result === 'toggleLock') {
@@ -308,8 +324,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   }
 
   return (
-    <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
-      <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
+    <div className='flex-1 flex overflow-hidden min-w-0'>
+      <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
+        <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
         <div className='flex-1 min-w-0 pointer-events-auto'>
           <div className='pb-2'>
             <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
@@ -327,6 +344,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             type='text'
             value={title}
             onChange={handleTitleChange}
+            maxLength={NOTE_TITLE_MAX_LENGTH}
             placeholder={t('noteEditor.titlePlaceholder')}
             aria-label={t('noteEditor.titlePlaceholder')}
             className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
@@ -349,11 +367,20 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       </div>
       <UploadProgressToast />
 
-      <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-        <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
-          {t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
-        </span>
+        <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
+          <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
+            {t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
+          </span>
+        </div>
       </div>
+
+      {showHistory && (
+        <NoteHistoryPanel
+          noteKey={selectedNoteKey}
+          noteTitle={title}
+          onClose={() => dispatch(closeNoteHistory())}
+        />
+      )}
     </div>
   )
 }

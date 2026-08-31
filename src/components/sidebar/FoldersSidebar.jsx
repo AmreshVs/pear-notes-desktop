@@ -12,13 +12,18 @@ import {
   User
 } from 'lucide-react'
 
-import { DEFAULT_FOLDER_NAME } from '@pear-notes/core/constant.js'
+import {
+  DEFAULT_FOLDER_NAME,
+  FOLDER_ERROR,
+  FOLDER_NAME_MAX_LENGTH
+} from '@pear-notes/core/constant.js'
 import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { getNoteCountsPerFolder } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getShouldAutoRenameNextFolder,
   setShouldAutoRenameNextFolder
 } from '@pear-notes/core/store/slices/uiSlice.js'
+import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
 import { showContextMenu } from '../../lib/contextMenu'
 
@@ -47,6 +52,7 @@ export default function FoldersSidebar({
   const [deletingFolderId, setDeletingFolderId] = useState(null)
   const shouldAutoRenameNextFolder = useSelector(getShouldAutoRenameNextFolder)
   const [editName, setEditName] = useState('')
+  const [renameError, setRenameError] = useState(null)
   const inputRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
   const foldersRef = useRef(folders)
@@ -78,25 +84,56 @@ export default function FoldersSidebar({
     if (folder.isSystem) return
     setEditingFolderId(folder.id)
     setEditName(folder.name)
+    setRenameError(null)
+  }
+
+  const handleCancelRename = () => {
+    setEditingFolderId(null)
+    setEditName('')
+    setRenameError(null)
   }
 
   const handleSubmitRename = () => {
-    if (editingFolderId && editName.trim()) {
-      dispatch(updateFolder({ id: editingFolderId, name: editName.trim() }))
+    if (!editingFolderId) return handleCancelRename()
+    const result = validateFolderName(folders, editName, editingFolderId)
+    if (!result.valid) {
+      setRenameError(
+        result.error === FOLDER_ERROR.DUPLICATE_NAME
+          ? t('folders.errors.duplicateName', { name: result.name })
+          : t('folders.errors.emptyName')
+      )
+      return
     }
-    setEditingFolderId(null)
-    setEditName('')
+    dispatch(updateFolder({ id: editingFolderId, name: result.name }))
+    handleCancelRename()
+  }
+
+  const handleChangeEditName = (e) => {
+    setEditName(e.target.value)
+    setRenameError(null)
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === 'Escape') {
+    if (e.key === 'Escape') {
+      handleCancelRename()
+      return
+    }
+    if (e.key === 'Enter') {
       handleSubmitRename()
     }
   }
 
+  const nextAvailableFolderName = () => {
+    const base = t('folders.untitled')
+    if (!findDuplicateFolder(folders, base)) return base
+    let suffix = 2
+    while (findDuplicateFolder(folders, `${base} ${suffix}`)) suffix += 1
+    return `${base} ${suffix}`
+  }
+
   const handleCreateNewFolder = () => {
     dispatch(setShouldAutoRenameNextFolder(true))
-    onCreateFolder(t('folders.untitled'))
+    onCreateFolder(nextAvailableFolderName())
   }
 
   const handleMenuAction = (action, folder) => {
@@ -179,12 +216,15 @@ export default function FoldersSidebar({
                   ref={inputRef}
                   type='text'
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  onChange={handleChangeEditName}
                   onBlur={handleSubmitRename}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
+                  maxLength={FOLDER_NAME_MAX_LENGTH}
                   aria-label={t('folders.renameLabel')}
-                  className={`w-full bg-bg-panel text-base text-text-primary tracking-tight leading-[20px] h-6 px-1.5 rounded-md border border-accent-primary ${isSelected ? 'font-bold' : 'font-medium'}`}
+                  aria-invalid={!!renameError}
+                  title={renameError || ''}
+                  className={`w-full bg-bg-panel text-base text-text-primary tracking-tight leading-[20px] h-6 px-1.5 rounded-md border ${renameError ? 'border-red-500' : 'border-accent-primary'} ${isSelected ? 'font-bold' : 'font-medium'}`}
                 />
               ) : (
                 <span
@@ -208,6 +248,9 @@ export default function FoldersSidebar({
             </div>
           )}
         </button>
+        {isEditing && renameError && (
+          <div className='px-4 pb-2 -mt-1 text-xs font-medium text-red-500'>{renameError}</div>
+        )}
       </div>
     )
   }

@@ -14,6 +14,7 @@ import {
   HardDrive,
   Image as ImageIcon,
   Info,
+  Loader2,
   Mic,
   Pause,
   PenLine,
@@ -300,6 +301,7 @@ export default function StorageSettings() {
   const error = useSelector(getStorageError)
   const needsReload = useSelector(getNeedsReload)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   const noteTitleByKey = useMemo(() => {
     const map = {}
@@ -340,6 +342,7 @@ export default function StorageSettings() {
 
   const handleClearStorage = () => {
     setConfirmClear(false)
+    setIsClearing(true)
     deleteDbEncryptionKey()
     dispatch(clearStorage())
   }
@@ -609,6 +612,18 @@ export default function StorageSettings() {
           </div>
         </div>
       </div>
+
+      {isClearing && (
+        <div className='fixed inset-0 z-[400] flex flex-col items-center justify-center gap-4 bg-backdrop-medium backdrop-blur-xl'>
+          <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
+          <h3 className='text-lg font-bold text-text-primary'>
+            {t('pairing.overlay.resettingTitle')}
+          </h3>
+          <p className='text-sm text-text-tertiary max-w-xs text-center leading-relaxed'>
+            {t('pairing.overlay.resettingDesc')}
+          </p>
+        </div>
+      )}
 
       {confirmClear && (
         <div className='fixed inset-0 z-[300] flex items-center justify-center p-6'>

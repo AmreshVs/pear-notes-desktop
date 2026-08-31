@@ -25,8 +25,10 @@ import {
 import {
   ALL_NOTES_KEY,
   RECENTLY_DELETED_KEY,
+  SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
 } from '@pear-notes/core/constant.js'
+import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
   deleteNote,
@@ -42,6 +44,7 @@ import {
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { getActivityLogEnabled } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getHyperdriveAddress, setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
@@ -59,6 +62,8 @@ import { showContextMenu } from '../../lib/contextMenu'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+
+const MIN_NOTES_FOR_MULTI_SELECT = 2
 
 const ATTACHMENT_ICONS = {
   image: ImageIcon,
@@ -165,6 +170,7 @@ const NotesItem = memo(
     )
 
     const isTrash = selectedFolder === RECENTLY_DELETED_KEY
+    const activityEnabled = useSelector(getActivityLogEnabled)
 
     const handleContextMenu = useCallback(
       async (e) => {
@@ -213,6 +219,9 @@ const NotesItem = memo(
                 { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
                 { type: 'separator' },
                 { id: 'copy', label: t('noteCard.actions.copyNote') },
+                ...(activityEnabled
+                  ? [{ id: 'history', label: t('noteCard.actions.noteHistory') }]
+                  : []),
                 {
                   id: 'toggleLock',
                   label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
@@ -229,6 +238,7 @@ const NotesItem = memo(
         availableMoveFolders,
         noteData?.locked,
         noteData?.pinned,
+        activityEnabled,
         isTrash,
         isSelecting,
         isChecked,
@@ -576,6 +586,10 @@ export default function NotesList({
           }
           break
         }
+        case 'history':
+          dispatch(setSelectedNote(noteKey))
+          dispatch(openNoteHistory(noteKey))
+          break
         case 'toggleLock':
           await toggleNoteLock({
             key: noteKey,
@@ -743,7 +757,7 @@ export default function NotesList({
               <>
                 <button
                   onClick={handleStartSelecting}
-                  disabled={filteredNotes.length === 0}
+                  disabled={filteredNotes.length < MIN_NOTES_FOR_MULTI_SELECT}
                   className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed'
                   title={t('notesList.selection.select')}
                   aria-label={t('notesList.selection.select')}
@@ -771,6 +785,7 @@ export default function NotesList({
               aria-label={t('search.title')}
               placeholder={t('folderView.searchPlaceholder')}
               value={searchQuery}
+              maxLength={SEARCH_QUERY_MAX_LENGTH}
               onChange={(e) => onSearchChange(e.target.value)}
               className='w-full pl-9 pr-4 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
             />
