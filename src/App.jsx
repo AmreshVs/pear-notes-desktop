@@ -41,6 +41,7 @@ import SettingsScreen from './components/settings/SettingsScreen'
 import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
 import ResizablePanel from './components/sidebar/ResizablePanel'
+import { useAppReload } from './hooks/useAppReload'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
   applyCloseToTray,
@@ -66,6 +67,8 @@ function App() {
     }
     prevWidth.current = width
   }, [width])
+
+  useAppReload()
 
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)

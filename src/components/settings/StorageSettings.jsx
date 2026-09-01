@@ -42,7 +42,7 @@ import {
   selectStorageByKind,
   subscribeStorageInfo
 } from '@pear-notes/core/store/slices/storageSlice.js'
-import { clearStorage, getNeedsReload } from '@pear-notes/core/store/slices/syncSlice.js'
+import { clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
 import { deleteDbEncryptionKey } from '../../utils.js'
@@ -299,7 +299,6 @@ export default function StorageSettings() {
   const buckets = useSelector(selectStorageByKind)
   const isLoading = useSelector(getStorageIsLoading)
   const error = useSelector(getStorageError)
-  const needsReload = useSelector(getNeedsReload)
   const [confirmClear, setConfirmClear] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
 
@@ -321,12 +320,6 @@ export default function StorageSettings() {
   useEffect(() => {
     dispatch(subscribeStorageInfo())
   }, [dispatch])
-
-  useEffect(() => {
-    if (needsReload) {
-      window.electronBridge.reload()
-    }
-  }, [needsReload])
 
   const handleDeleteMedia = (noteKey, mediaPath) => {
     dispatch(deleteNoteMedia({ noteKey, mediaPath }))
