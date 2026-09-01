@@ -372,6 +372,12 @@ function DeviceItem({ device, isOther }) {
       ? 'sync.devices.online'
       : 'sync.devices.offline'
 
+  const presenceDotColor = !device.presenceKnown
+    ? 'bg-text-tertiary'
+    : device.isOnline
+      ? 'bg-accent-success'
+      : 'bg-accent-danger'
+
   const hasCustomTitle = device.title && !isRawDeviceKey(device.title)
   const fullDeviceName = hasCustomTitle ? device.title : device.key || getDeviceDisplayName(device)
   const deviceNameTail = hasCustomTitle ? '' : fullDeviceName.slice(-DEVICE_KEY_TAIL_LENGTH)
@@ -419,12 +425,12 @@ function DeviceItem({ device, isOther }) {
       <div className='group relative p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
         <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
           <Icon className='w-7 h-7' />
-          {device.presenceKnown && (
-            <div
-              title={t(presenceLabelKey)}
-              className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-bg-panel-secondary rounded-full shadow-sm ${device.isOnline ? 'bg-accent-success' : 'bg-text-tertiary'}`}
-            />
-          )}
+          <div
+            role='img'
+            aria-label={t(presenceLabelKey)}
+            title={t(presenceLabelKey)}
+            className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-bg-panel-secondary rounded-full shadow-sm ${presenceDotColor}`}
+          />
         </div>
 
         <div className='flex-1 min-w-0'>
@@ -459,7 +465,6 @@ function DeviceItem({ device, isOther }) {
               `sync.platforms.${getPlatformName(device.platform)}`,
               getPlatformName(device.platform)
             )}
-            <span className='normal-case font-medium'>{` · ${t(presenceLabelKey)}`}</span>
           </p>
         </div>
 
