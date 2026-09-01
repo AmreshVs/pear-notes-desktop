@@ -144,7 +144,7 @@
     }
   },
   "sync": {
-    "title": "Link and Sync",
+    "title": "Link Devices",
     "tabs": {
       "link": "Link Device",
       "devices": "My Devices"

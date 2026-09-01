@@ -8,6 +8,7 @@ const {
   Tray,
   nativeImage,
   powerSaveBlocker,
+  screen,
   shell,
   clipboard
 } = require('electron')
@@ -135,12 +136,39 @@ function startWorker() {
   })
 }
 
+const MIN_WINDOW_WIDTH = 880
+const MIN_WINDOW_HEIGHT = 620
+const MAX_DEFAULT_WINDOW_WIDTH = 1600
+const MAX_DEFAULT_WINDOW_HEIGHT = 1200
+
+// Size to the display rather than to a fixed number: a hardcoded default is either
+// clamped down on a laptop or leaves half a large monitor unused.
+function defaultWindowSize() {
+  const { workAreaSize } = screen.getPrimaryDisplay()
+  const clamp = (min, value, max) => Math.max(min, Math.min(max, value))
+
+  return {
+    width: clamp(
+      MIN_WINDOW_WIDTH,
+      Math.round(workAreaSize.width * 0.85),
+      MAX_DEFAULT_WINDOW_WIDTH
+    ),
+    height: clamp(
+      MIN_WINDOW_HEIGHT,
+      Math.round(workAreaSize.height * 0.85),
+      MAX_DEFAULT_WINDOW_HEIGHT
+    )
+  }
+}
+
 function createWindow() {
+  const { width, height } = defaultWindowSize()
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 1280,
-    minWidth: 720,
-    minHeight: 560,
+    width,
+    height,
+    minWidth: MIN_WINDOW_WIDTH,
+    minHeight: MIN_WINDOW_HEIGHT,
     backgroundColor: '#1F2430',
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 12, y: 14 },

@@ -160,9 +160,10 @@ function App() {
   ) : (
     <div className='flex-1 flex overflow-hidden relative z-10'>
       <ResizablePanel
-        defaultWidth={260}
-        minWidth={260}
-        maxWidth={400}
+        storageKey='folders'
+        defaultWidth={280}
+        minWidth={240}
+        maxWidth={420}
         collapsed={isSidebarCollapsed}
         collapsedWidth={0}
       >
@@ -178,7 +179,7 @@ function App() {
         />
       </ResizablePanel>
 
-      <ResizablePanel defaultWidth={340} minWidth={320} maxWidth={500}>
+      <ResizablePanel storageKey='notesList' defaultWidth={380} minWidth={320} maxWidth={560}>
         <NotesList
           selectedFolder={selectedFolder}
           searchQuery={searchQuery}

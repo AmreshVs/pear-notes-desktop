@@ -1,31 +1,56 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+function storedWidth(storageKey, defaultWidth, minWidth, maxWidth) {
+  if (!storageKey) return defaultWidth
+
+  try {
+    const saved = Number(window.localStorage.getItem(`panelWidth:${storageKey}`))
+    if (!Number.isFinite(saved) || saved <= 0) return defaultWidth
+    return Math.max(minWidth, Math.min(maxWidth, saved))
+  } catch {
+    return defaultWidth
+  }
+}
+
 export default function ResizablePanel({
   children,
+  storageKey,
   defaultWidth = 256,
   minWidth = 200,
   maxWidth = 500,
   collapsed = false,
   collapsedWidth = 60
 }) {
-  const [baseWidth, setBaseWidth] = useState(defaultWidth)
+  const [baseWidth, setBaseWidth] = useState(() =>
+    storedWidth(storageKey, defaultWidth, minWidth, maxWidth)
+  )
   const [isResizing, setIsResizing] = useState(false)
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
+  const currentWidthRef = useRef(baseWidth)
 
   const handleMouseMove = useCallback(
     (e) => {
       if (!isResizing) return
       const diff = e.clientX - startXRef.current
       const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + diff))
+      currentWidthRef.current = newWidth
       setBaseWidth(newWidth)
     },
     [isResizing, minWidth, maxWidth]
   )
 
+  // Persist once the drag ends rather than on every mousemove.
   const handleMouseUp = useCallback(() => {
     setIsResizing(false)
-  }, [])
+    if (!storageKey) return
+
+    try {
+      window.localStorage.setItem(`panelWidth:${storageKey}`, String(currentWidthRef.current))
+    } catch {
+      // Storage unavailable — the width just reverts to the default next launch.
+    }
+  }, [storageKey])
 
   useEffect(() => {
     if (isResizing) {
@@ -48,6 +73,7 @@ export default function ResizablePanel({
     setIsResizing(true)
     startXRef.current = e.clientX
     startWidthRef.current = baseWidth
+    currentWidthRef.current = baseWidth
   }
 
   const displayWidth = collapsed ? collapsedWidth : baseWidth
