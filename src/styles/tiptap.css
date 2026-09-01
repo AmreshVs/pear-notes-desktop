@@ -216,6 +216,12 @@
   width: 1em;
   height: 1em;
   margin-top: 0.2em;
+  accent-color: var(--accent-primary);
+}
+
+.ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+  opacity: 0.55;
+  text-decoration: line-through;
 }
 
 /* Selection */
