@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 
-import { backendApi } from '@pear-notes/core/backend/api.js'
+import { backendApi, setLocalDeviceName } from '@pear-notes/core/backend/api.js'
 import {
   createFolder,
   deleteFolder,
@@ -82,6 +82,7 @@ function App() {
     const load = async () => {
       const key = getDbEncryptionKey()
       const storagePath = window.electronBridge.getStoragePath()
+      setLocalDeviceName(window.electronBridge.getDeviceName())
       await backendApi.ready({ storage: storagePath, encryption: key })
       dispatch(appReady())
     }

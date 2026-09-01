@@ -56,6 +56,12 @@ let isQuitting = false
 let powerSaveBlockerId = null
 let workerFailureReported = false
 
+function getDeviceName() {
+  const hostname = (os.hostname() || '').replace(/\.local$/i, '').trim()
+  if (!hostname || hostname.toLowerCase() === 'localhost') return `${appName} Desktop`
+  return hostname
+}
+
 function getStoragePath() {
   const dirName = isDev ? `${storageDirName}-dev` : storageDirName
   const isSnap = !!process.env.SNAP_USER_COMMON
@@ -261,6 +267,10 @@ function setupIPC() {
 
   ipcMain.on('get-app-dir', (event) => {
     event.returnValue = getAppDir()
+  })
+
+  ipcMain.on('get-device-name', (event) => {
+    event.returnValue = getDeviceName()
   })
 
   ipcMain.on('get-app-flags', (event) => {

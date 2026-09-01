@@ -10,6 +10,7 @@ window.electronBridge = {
   },
 
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
+  getDeviceName: () => ipcRenderer.sendSync('get-device-name'),
   getAppDir: () => ipcRenderer.sendSync('get-app-dir'),
   getAppFlags: () => ipcRenderer.sendSync('get-app-flags'),
   reload: () => ipcRenderer.send('app-reload'),
