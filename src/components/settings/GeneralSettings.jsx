@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { ChevronDown } from 'lucide-react'
 
-import { MEDIA_SYNC_PAUSED_KEY, METERED_CONNECTION_KEY } from '@pear-notes/core/constant.js'
 import {
   getEditorFontSize,
   getFontFamily,
@@ -12,18 +10,6 @@ import {
   setTheme,
   updateSetting
 } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
-import { getMediaSyncFlag, setMediaSyncFlag } from '@pear-notes/core/utils.js'
-
-import {
-  applyCloseToTray,
-  applyStartAtLogin,
-  CLOSE_TO_TRAY_KEY,
-  getAppBehaviorPreference,
-  readStartAtLogin,
-  setAppBehaviorPreference,
-  START_AT_LOGIN_KEY
-} from '../../lib/appBehavior'
 
 export default function GeneralSettings() {
   const { t } = useTranslation()
@@ -32,63 +18,9 @@ export default function GeneralSettings() {
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
   const sortBy = useSelector(getSortBy)
-  const hasLinkedDevices = useSelector(getHasLinkedDevices)
-  const [closeToTray, setCloseToTray] = useState(true)
-  const [startAtLogin, setStartAtLogin] = useState(false)
-  const [mediaPaused, setMediaPaused] = useState(false)
-  const [metered, setMetered] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true).then((v) => {
-      if (active) setCloseToTray(v)
-    })
-    readStartAtLogin(false).then((v) => {
-      if (active) setStartAtLogin(v)
-    })
-    getMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY).then((v) => {
-      if (active) setMediaPaused(v)
-    })
-    getMediaSyncFlag(METERED_CONNECTION_KEY).then((v) => {
-      if (active) setMetered(v)
-    })
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const handleToggleMediaPaused = () => {
-    const next = !mediaPaused
-    setMediaPaused(next)
-    setMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY, next)
-  }
-
-  const handleToggleMetered = () => {
-    const next = !metered
-    setMetered(next)
-    setMediaSyncFlag(METERED_CONNECTION_KEY, next)
-  }
-
-  const isCloseToTrayOn = closeToTray && hasLinkedDevices
 
   const handleUpdateSetting = (key, value) => {
     dispatch(updateSetting({ key, value }))
-  }
-
-  const handleToggleCloseToTray = () => {
-    if (!hasLinkedDevices) return
-    const next = !closeToTray
-    setCloseToTray(next)
-    setAppBehaviorPreference(CLOSE_TO_TRAY_KEY, next)
-    applyCloseToTray(next)
-  }
-
-  const handleToggleStartAtLogin = async () => {
-    const next = !startAtLogin
-    setStartAtLogin(next)
-    const applied = await applyStartAtLogin(next)
-    setStartAtLogin(applied)
-    setAppBehaviorPreference(START_AT_LOGIN_KEY, applied)
   }
 
   return (
@@ -236,104 +168,6 @@ export default function GeneralSettings() {
         </div>
       </div>
 
-      <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          {t('settings.general.startupAndBackground')}
-        </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
-          <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors border-b border-border-primary'>
-            <div className={`space-y-1 min-w-0 ${hasLinkedDevices ? '' : 'opacity-50'}`}>
-              <label className='block text-text-primary text-base font-bold'>
-                {t('settings.general.keepRunning')}
-              </label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {hasLinkedDevices
-                  ? t('settings.general.keepRunningDesc')
-                  : t('settings.general.keepRunningUnlinked')}
-              </p>
-            </div>
-            <button
-              onClick={handleToggleCloseToTray}
-              disabled={!hasLinkedDevices}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${isCloseToTrayOn ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${isCloseToTrayOn ? 'translate-x-5' : ''}`}
-              />
-            </button>
-          </div>
-
-          <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
-            <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                {t('settings.general.startAtLogin')}
-              </label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {t('settings.general.startAtLoginDesc')}
-              </p>
-            </div>
-            <button
-              onClick={handleToggleStartAtLogin}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${startAtLogin ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${startAtLogin ? 'translate-x-5' : ''}`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
-          {t('settings.mediaSync.title')}
-        </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'>
-          <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
-            <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                {t('settings.mediaSync.pauseMedia')}
-              </label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {t('settings.mediaSync.pauseMediaDesc')}
-              </p>
-            </div>
-            <button
-              onClick={handleToggleMediaPaused}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${mediaPaused ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${mediaPaused ? 'translate-x-5' : ''}`}
-              />
-            </button>
-          </div>
-
-          <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
-            <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                {t('settings.general.meteredConnection')}
-              </label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                Also holds media transfers. Desktop cannot detect metered networks automatically, so
-                set this yourself.
-              </p>
-            </div>
-            <button
-              onClick={handleToggleMetered}
-              className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${metered ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-            >
-              <span
-                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${metered ? 'translate-x-5' : ''}`}
-              />
-            </button>
-          </div>
-        </div>
-        {(mediaPaused || metered) && (
-          <p className='text-sm text-text-tertiary ml-2 mt-2'>
-            {t('settings.mediaSync.heldNotice')}
-          </p>
-        )}
-      </div>
     </div>
   )
 }

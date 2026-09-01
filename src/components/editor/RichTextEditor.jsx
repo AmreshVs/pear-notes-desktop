@@ -98,13 +98,14 @@ function seedGenesisFromHtml(ydoc, schema, html) {
 }
 
 const RichTextEditor = forwardRef(
-  ({ content, onChange, placeholder = 'Start writing...', localDevice }, ref) => {
+  ({ content, syncToken = 0, onChange, placeholder = 'Start writing...', localDevice }, ref) => {
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const currentNoteKey = useSelector(getSelectedNote)
     const fontFamily = useSelector(getFontFamily)
     const editorFontSize = useSelector(getEditorFontSize)
     const isUpdatingRef = useRef(false)
+    const lastSyncTokenRef = useRef(-1)
     const hasReceivedSyncRef = useRef(false)
     const lowlight = createLowlight(all)
 
@@ -364,10 +365,11 @@ const RichTextEditor = forwardRef(
 
     useEffect(() => {
       if (COLLABORATION_ENABLED || !editor || content === undefined) return
+      if (syncToken === lastSyncTokenRef.current) return
+      lastSyncTokenRef.current = syncToken
       const currentContent = editor.getHTML()
       if (content === currentContent) return
       const isInitialLoad = currentContent === '<p></p>'
-      if (!isInitialLoad && editor.isFocused) return
       isUpdatingRef.current = true
       const { from, to } = editor.state.selection
       editor.commands.setContent(content || '', false)
@@ -376,7 +378,7 @@ const RichTextEditor = forwardRef(
         editor.commands.setTextSelection({ from: Math.min(from, size), to: Math.min(to, size) })
       }
       isUpdatingRef.current = false
-    }, [content, editor])
+    }, [content, syncToken, editor])
 
     useEffect(() => {
       if (!COLLABORATION_ENABLED || !editor || !ydoc) return

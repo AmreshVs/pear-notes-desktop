@@ -13,6 +13,7 @@ import {
   getEditorContent,
   getEditorContentText,
   getEditorInstance,
+  getEditorSyncToken,
   getEditorTitle,
   setEditorContent,
   setEditorInstance,
@@ -46,6 +47,7 @@ import { formatRelativeDate } from '../../utils/formatters'
 import UploadProgressToast from '../common/UploadProgressToast'
 
 import FormattingToolbar from './FormattingToolbar'
+import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
 import RichTextEditor from './RichTextEditor'
 
@@ -63,6 +65,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const content = useSelector(getEditorContent)
   const contentText = useSelector(getEditorContentText)
   const editorInstance = useSelector(getEditorInstance)
+  const syncToken = useSelector(getEditorSyncToken)
 
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
@@ -339,6 +342,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         onContextMenu={handleEditorContextMenu}
       >
         <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
+          <NoteConflictBanner noteKey={selectedNoteKey} />
           <input
             ref={titleRef}
             type='text'
@@ -358,6 +362,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               key={selectedNoteKey}
               ref={richTextEditorRef}
               content={content}
+              syncToken={syncToken}
               onChange={handleContentChange}
               placeholder={t('noteEditor.placeholder')}
               localDevice={localDevice}

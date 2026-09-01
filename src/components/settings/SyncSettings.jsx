@@ -1,539 +1,231 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
-import {
-  Check,
-  Globe,
-  Info,
-  Link2,
-  Loader2,
-  Monitor,
-  Pencil,
-  Plus,
-  ShieldAlert,
-  ShieldCheck,
-  Smartphone,
-  Timer,
-  Trash2
-} from 'lucide-react'
-import { QRCodeCanvas } from 'qrcode.react'
+import { useSelector } from 'react-redux'
+import { AlertTriangle, Check } from 'lucide-react'
 
-import { DEVICE_NAME_MAX_LENGTH, INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
+import { MEDIA_SYNC_PAUSED_KEY, METERED_CONNECTION_KEY } from '@pear-notes/core/constant.js'
 import {
-  deleteSyncedDevice,
-  getLocalPreferences,
-  getSyncedDevices,
-  updateSyncedDevice
+  getHasLinkedDevices,
+  getRemoteSyncedDevices
 } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import {
-  createInvite,
-  getInvite,
-  getInviteExpiresAt,
-  getInviterStatus,
-  getSyncIsLoading,
-  subscribePairUser
-} from '@pear-notes/core/store/slices/syncSlice.js'
-import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
-import {
-  extractInvite,
-  formatInviteCountdown,
-  getInviteRemainingMs,
-  isValidInvite
+  getMediaSyncFlag,
+  getSyncStatusSnapshot,
+  setMediaSyncFlag
 } from '@pear-notes/core/utils.js'
-import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
-import { copyToClipboard } from '../../lib/clipboard'
-import MergeConfirmModal from '../modals/MergeConfirmModal'
+import {
+  applyCloseToTray,
+  applyStartAtLogin,
+  CLOSE_TO_TRAY_KEY,
+  getAppBehaviorPreference,
+  readStartAtLogin,
+  setAppBehaviorPreference,
+  START_AT_LOGIN_KEY
+} from '../../lib/appBehavior'
+import { formatRelativeDate } from '../../utils/formatters'
 
-const DEVICE_KEY_TAIL_LENGTH = 5
-const INVITE_COUNTDOWN_TICK_MS = 1000
-const INVITE_EXPIRY_WARNING_MS = 60 * 1000
+const REFRESH_INTERVAL_MS = 30000
 
-const PLATFORM_NAMES = {
-  darwin: 'macOS',
-  win32: 'Windows',
-  linux: 'Linux',
-  android: 'Android',
-  ios: 'iOS'
-}
+const SECTION_TITLE_CLASS =
+  'text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'
+const CARD_CLASS =
+  'bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'
+const ROW_CLASS =
+  'p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'
+const LABEL_CLASS = 'block text-text-primary text-base font-bold'
+const DESC_CLASS = 'text-sm text-text-tertiary font-medium opacity-60'
 
-function getPlatformName(platform) {
-  return PLATFORM_NAMES[platform] || platform
-}
-
-export default function SyncSettings({ onClose }) {
-  const { t } = useTranslation()
-  const dispatch = useDispatch()
-  const inviteCode = useSelector(getInvite)
-  const expiresAt = useSelector(getInviteExpiresAt)
-  const isLoading = useSelector(getSyncIsLoading)
-  const { step } = useSelector(getInviterStatus)
-  const syncedDevices = useSelector(getSyncedDevices)
-  const localPreferences = useSelector(getLocalPreferences)
-  const isSynced = localPreferences['isSynced'] === 'true'
-
-  const [countdownTick, setCountdownTick] = useState(0)
-
-  const inviteRemainingMs = useMemo(
-    () => getInviteRemainingMs(expiresAt),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [expiresAt, countdownTick]
+function Toggle({ on, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${on ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+    >
+      <span
+        className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${on ? 'translate-x-5' : ''}`}
+      />
+    </button>
   )
+}
 
-  const inviteExpired = !!inviteCode && !!expiresAt && inviteRemainingMs <= 0
-  const inviteExpiringSoon =
-    !inviteExpired && inviteRemainingMs > 0 && inviteRemainingMs <= INVITE_EXPIRY_WARNING_MS
-  const isInviteGenerated = !!inviteCode && !inviteExpired
+export default function SyncSettings() {
+  const { t } = useTranslation()
+  const hasLinkedDevices = useSelector(getHasLinkedDevices)
+  const remoteDevices = useSelector(getRemoteSyncedDevices)
 
-  const [syncTab, setSyncTab] = useState('invite')
-  const [copied, setCopied] = useState(false)
-  const [pasteCode, setPasteCode] = useState('')
-  const [pendingInvite, setPendingInvite] = useState(null)
+  const [closeToTray, setCloseToTray] = useState(true)
+  const [startAtLogin, setStartAtLogin] = useState(false)
+  const [mediaPaused, setMediaPaused] = useState(false)
+  const [metered, setMetered] = useState(false)
+  const [snapshot, setSnapshot] = useState({ lastSyncAt: 0, lastReceived: 0 })
+
+  const refreshStatus = useCallback(() => {
+    getSyncStatusSnapshot().then(setSnapshot)
+  }, [])
 
   useEffect(() => {
-    if (!inviteCode || !expiresAt) return
-    const timer = setInterval(() => setCountdownTick((n) => n + 1), INVITE_COUNTDOWN_TICK_MS)
+    let active = true
+    getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true).then((v) => {
+      if (active) setCloseToTray(v)
+    })
+    readStartAtLogin(false).then((v) => {
+      if (active) setStartAtLogin(v)
+    })
+    getMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY).then((v) => {
+      if (active) setMediaPaused(v)
+    })
+    getMediaSyncFlag(METERED_CONNECTION_KEY).then((v) => {
+      if (active) setMetered(v)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshStatus()
+    const timer = setInterval(refreshStatus, REFRESH_INTERVAL_MS)
     return () => clearInterval(timer)
-  }, [inviteCode, expiresAt])
+  }, [refreshStatus])
 
-  const handleCopyInvite = async () => {
-    if (!isInviteGenerated) return
-    const copiedOk = await copyToClipboard(inviteCode)
-    if (!copiedOk) return
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const isCloseToTrayOn = closeToTray && hasLinkedDevices
+  const onlineDevices = remoteDevices.filter((device) => device.isOnline)
+  const peerName = remoteDevices[0]?.title || ''
+
+  let verdict = 'ok'
+  if (!hasLinkedDevices) verdict = 'noDevices'
+  else if (!snapshot.lastSyncAt) verdict = 'neverSynced'
+  else if (onlineDevices.length === 0) verdict = 'waiting'
+  else if (isCloseToTrayOn) verdict = 'canSleep'
+
+  const handleToggleCloseToTray = () => {
+    if (!hasLinkedDevices) return
+    const next = !closeToTray
+    setCloseToTray(next)
+    setAppBehaviorPreference(CLOSE_TO_TRAY_KEY, next)
+    applyCloseToTray(next)
   }
 
-  const handleCreateInvite = () => {
-    dispatch(createInvite())
+  const handleToggleStartAtLogin = async () => {
+    const next = !startAtLogin
+    setStartAtLogin(next)
+    const applied = await applyStartAtLogin(next)
+    setStartAtLogin(applied)
+    setAppBehaviorPreference(START_AT_LOGIN_KEY, applied)
   }
 
-  const handleConnect = () => {
-    if (isValidInvite(pasteCode)) {
-      setPendingInvite(extractInvite(pasteCode))
-    }
+  const handleToggleMediaPaused = () => {
+    const next = !mediaPaused
+    setMediaPaused(next)
+    setMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY, next)
   }
 
-  const handleConfirmMerge = () => {
-    if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite }))
-    setPendingInvite(null)
-    setPasteCode('')
-    if (onClose) {
-      onClose()
-    } else {
-      dispatch(setShowSettings(false))
-    }
+  const handleToggleMetered = () => {
+    const next = !metered
+    setMetered(next)
+    setMediaSyncFlag(METERED_CONNECTION_KEY, next)
   }
-
-  const handleCancelMerge = () => {
-    setPendingInvite(null)
-  }
-
 
   return (
-    <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-overlay-soft w-fit mx-auto'>
-        <button
-          onClick={() => setSyncTab('invite')}
-          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            syncTab === 'invite'
-              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-          }`}
-        >
-          {t('sync.tabs.link')}
-        </button>
-        <button
-          onClick={() => setSyncTab('manage')}
-          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            syncTab === 'manage'
-              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-          }`}
-        >
-          {t('sync.tabs.devices')}
-        </button>
-      </div>
-
-      <div className='space-y-6'>
-        {syncTab === 'invite' ? (
-          <div className='space-y-6'>
-            {!isInviteGenerated ? (
-              <div className='bg-bg-secondary border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 hover:border-border-secondary transition-colors'>
-                <div className='w-20 h-20 bg-accent-primary/5 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/10 shadow-inner'>
-                  <Globe className='w-10 h-10 text-accent-primary' />
-                </div>
-                <div className='space-y-2'>
-                  <h3 className='text-text-primary font-bold text-xl'>
-                    {inviteExpired ? t('sync.invite.expiredTitle') : t('sync.hero.title')}
-                  </h3>
-                  <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-                    {inviteExpired
-                      ? t('sync.invite.expiredDesc', { minutes: INVITE_EXPIRY_MINUTES })
-                      : t('sync.hero.description')}
-                  </p>
-                </div>
-                <button
-                  onClick={handleCreateInvite}
-                  disabled={isLoading}
-                  className='group relative px-10 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95'
-                >
-                  <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
-                  {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                  {isLoading
-                    ? t('sync.hero.preparing')
-                    : inviteExpired
-                      ? t('sync.invite.regenerateBtn')
-                      : t('sync.hero.generateBtn')}
-                </button>
+    <div className='space-y-12 max-w-2xl mx-auto'>
+      <div className='space-y-1'>
+        <h3 className={SECTION_TITLE_CLASS}>{t('settings.syncStatus.title')}</h3>
+        <div className={CARD_CLASS}>
+          {hasLinkedDevices && (
+            <>
+              <div className={ROW_CLASS}>
+                <span className={DESC_CLASS}>{t('settings.syncStatus.lastSynced')}</span>
+                <span className='text-sm font-bold text-text-primary tabular-nums'>
+                  {snapshot.lastSyncAt
+                    ? formatRelativeDate(snapshot.lastSyncAt)
+                    : t('settings.syncStatus.never')}
+                </span>
               </div>
+
+              <div className={ROW_CLASS}>
+                <span className={DESC_CLASS}>{t('settings.syncStatus.received')}</span>
+                <span className='text-sm font-bold text-text-primary tabular-nums'>
+                  {snapshot.lastReceived > 0
+                    ? t('settings.syncStatus.receivedCount', { count: snapshot.lastReceived })
+                    : t('settings.syncStatus.nothingNew')}
+                </span>
+              </div>
+
+              <div className={ROW_CLASS}>
+                <span className={DESC_CLASS}>{t('settings.syncStatus.devicesOnline')}</span>
+                <span className='text-sm font-bold text-text-primary truncate'>
+                  {onlineDevices.length > 0
+                    ? onlineDevices.map((device) => device.title).join(', ')
+                    : t('settings.syncStatus.noneReachable')}
+                </span>
+              </div>
+            </>
+          )}
+
+          <div className='p-6 flex items-start gap-3'>
+            {verdict === 'ok' ? (
+              <Check size={16} className='shrink-0 mt-0.5 text-green-500' />
             ) : (
-              <div className='space-y-5'>
-                <div className='bg-bg-secondary border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
-                  <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
-
-                  <div className='flex items-center gap-3 mb-6'>
-                    <div className='w-10 h-10 bg-accent-primary/10 rounded-full flex items-center justify-center border border-accent-primary/20'>
-                      <ShieldCheck className='w-5 h-5 text-accent-primary' />
-                    </div>
-                    <div>
-                      <h4 className='text-text-primary font-semibold'>{t('sync.invite.header')}</h4>
-                      <p
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 mt-1 ${
-                          inviteExpiringSoon
-                            ? 'text-accent-danger bg-accent-danger/10'
-                            : 'text-accent-primary bg-accent-primary/10'
-                        }`}
-                      >
-                        <Timer className='w-3.5 h-3.5' />
-                        {t('sync.invite.expiresIn', {
-                          countdown: formatInviteCountdown(inviteRemainingMs)
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-col items-center mb-6 space-y-4'>
-                    <div className='p-3 bg-white rounded-2xl shadow-sm'>
-                      <QRCodeCanvas
-                        value={inviteCode}
-                        size={160}
-                        level={'H'}
-                        includeMargin={false}
-                      />
-                    </div>
-                    <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-base'>
-                        {t('sync.invite.qrTitle')}
-                      </h5>
-                      <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                        {t('sync.invite.qrDescription')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='space-y-3'>
-                    <label className='text-xs uppercase tracking-wider font-bold text-text-tertiary ml-1'>
-                      {t('sync.invite.codeLabel')}
-                    </label>
-                    <div className='relative group'>
-                      <input
-                        type='text'
-                        readOnly
-                        value={inviteCode}
-                        className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-text-primary font-mono text-base tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleCopyInvite}
-                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold text-base transition-colors duration-300 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 ${
-                      copied
-                        ? 'bg-accent-success text-white'
-                        : 'bg-accent-primary text-accent-on-primary'
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className='w-4 h-4' strokeWidth={2.5} /> {t('sync.invite.copied')}
-                      </>
-                    ) : (
-                      <>
-                        <Link2 className='w-4 h-4' /> {t('sync.invite.copyBtn')}
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-start'>
-                  <Info className='w-5 h-5 text-accent-primary shrink-0' />
-                  <p className='text-xs text-text-tertiary leading-relaxed'>
-                    {t('sync.invite.warning')}
-                  </p>
-                </div>
-              </div>
+              <AlertTriangle size={16} className='shrink-0 mt-0.5 text-accent-primary' />
             )}
-
-            {!isSynced && (
-              <div className='pt-6 border-t border-border-primary space-y-4'>
-                <div className='flex items-center gap-2 ml-1'>
-                  <Plus className='w-4 h-4 text-accent-primary' />
-                  <h4 className='font-bold text-sm text-text-primary'>{t('sync.paste.header')}</h4>
-                </div>
-
-                <div className='relative flex gap-2'>
-                  <input
-                    type='text'
-                    value={pasteCode}
-                    onChange={(e) => setPasteCode(e.target.value)}
-                    placeholder={t('sync.paste.placeholder')}
-                    className='flex-1 px-4 py-3 rounded-xl bg-bg-panel-secondary/50 border border-border-primary text-text-primary text-sm focus:outline-none focus:border-accent-primary transition-colors placeholder:text-text-tertiary/50'
-                  />
-                  <button
-                    onClick={handleConnect}
-                    disabled={!isValidInvite(pasteCode) || isLoading || step !== 'idle'}
-                    className='px-6 py-4 bg-accent-primary text-accent-on-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-base font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
-                  >
-                    {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                    {t('sync.paste.linkBtn')}
-                  </button>
-                </div>
-              </div>
-            )}
+            <p className='text-sm text-text-secondary leading-relaxed'>
+              {t(`settings.syncStatus.verdict.${verdict}`, { device: peerName })}
+            </p>
           </div>
-        ) : (
-          <div className='space-y-6'>
-            <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
-                {t('sync.devices.thisDevice')}
-              </h4>
-              <div className='grid gap-4'>
-                {syncedDevices
-                  .filter((d) => d.isLocal)
-                  .map((device) => (
-                    <DeviceItem key={device.key} device={device} />
-                  ))}
-              </div>
-            </div>
-
-            <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
-                {t('sync.devices.otherDevices')}
-              </h4>
-              <div className='grid gap-4'>
-                {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
-                  syncedDevices
-                    .filter((d) => !d.isLocal)
-                    .map((device) => <DeviceItem key={device.key} device={device} isOther />)
-                ) : (
-                  <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
-                    <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
-                      <Smartphone className='w-5 h-5 opacity-50' />
-                    </div>
-                    <p className='text-xs text-text-tertiary italic'>{t('sync.devices.empty')}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className='pt-2'>
-          <p className='text-center text-xs text-text-tertiary px-4'>
-            <ShieldCheck className='w-3.5 h-3.5 text-accent-primary inline mr-1.5 opacity-60' />
-            {t('sync.footer')}
-          </p>
         </div>
       </div>
 
-      <MergeConfirmModal
-        open={!!pendingInvite}
-        onConfirm={handleConfirmMerge}
-        onCancel={handleCancelMerge}
-      />
+      <div className='space-y-1'>
+        <h3 className={SECTION_TITLE_CLASS}>{t('settings.general.startupAndBackground')}</h3>
+        <div className={CARD_CLASS}>
+          <div className={ROW_CLASS}>
+            <div className={`space-y-1 min-w-0 ${hasLinkedDevices ? '' : 'opacity-50'}`}>
+              <label className={LABEL_CLASS}>{t('settings.general.keepRunning')}</label>
+              <p className={DESC_CLASS}>
+                {hasLinkedDevices
+                  ? t('settings.general.keepRunningDesc')
+                  : t('settings.general.keepRunningUnlinked')}
+              </p>
+            </div>
+            <Toggle
+              on={isCloseToTrayOn}
+              onClick={handleToggleCloseToTray}
+              disabled={!hasLinkedDevices}
+            />
+          </div>
+
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>{t('settings.general.startAtLogin')}</label>
+              <p className={DESC_CLASS}>{t('settings.general.startAtLoginDesc')}</p>
+            </div>
+            <Toggle on={startAtLogin} onClick={handleToggleStartAtLogin} />
+          </div>
+        </div>
+      </div>
+
+      <div className='space-y-1'>
+        <h3 className={SECTION_TITLE_CLASS}>{t('settings.mediaSync.title')}</h3>
+        <div className={CARD_CLASS}>
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>{t('settings.mediaSync.pauseMedia')}</label>
+              <p className={DESC_CLASS}>{t('settings.mediaSync.pauseMediaDesc')}</p>
+            </div>
+            <Toggle on={mediaPaused} onClick={handleToggleMediaPaused} />
+          </div>
+
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>{t('settings.general.meteredConnection')}</label>
+              <p className={DESC_CLASS}>{t('settings.general.meteredConnectionDesc')}</p>
+            </div>
+            <Toggle on={metered} onClick={handleToggleMetered} />
+          </div>
+        </div>
+      </div>
     </div>
-  )
-}
-
-function DeviceItem({ device, isOther }) {
-  const { t } = useTranslation()
-  const dispatch = useDispatch()
-  const Icon = device.deviceType === 'desktop' ? Monitor : Smartphone
-  const [isEditing, setIsEditing] = useState(false)
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
-  const [isExiting, setIsExiting] = useState(false)
-  const [editedTitle, setEditedTitle] = useState(device.title || '')
-
-  const presenceLabelKey = !device.presenceKnown
-    ? 'sync.devices.presenceUnknown'
-    : device.isOnline
-      ? 'sync.devices.online'
-      : 'sync.devices.offline'
-
-  const hasCustomTitle = device.title && !isRawDeviceKey(device.title)
-  const fullDeviceName = hasCustomTitle ? device.title : device.key || getDeviceDisplayName(device)
-  const deviceNameTail = hasCustomTitle ? '' : fullDeviceName.slice(-DEVICE_KEY_TAIL_LENGTH)
-  const deviceNameHead = deviceNameTail
-    ? fullDeviceName.slice(0, -DEVICE_KEY_TAIL_LENGTH)
-    : fullDeviceName
-
-  const handleCloseDelete = () => {
-    setIsExiting(true)
-    setTimeout(() => {
-      setIsConfirmingDelete(false)
-      setIsExiting(false)
-    }, 300)
-  }
-
-  const handleStartRename = () => {
-    if (!isOther) {
-      setIsEditing(true)
-      setEditedTitle(device.title || '')
-    }
-  }
-
-  const handleActionMouseDown = (e) => {
-    if (isEditing) e.preventDefault()
-  }
-
-  const handleBlur = () => {
-    if (editedTitle.trim() && editedTitle !== device.title) {
-      dispatch(updateSyncedDevice({ key: device.key, title: editedTitle.trim() }))
-    }
-    setIsEditing(false)
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleBlur()
-    } else if (e.key === 'Escape') {
-      setIsEditing(false)
-      setEditedTitle(device.title || '')
-    }
-  }
-
-  return (
-    <>
-      <div className='group relative p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors hardware-accelerated overflow-hidden'>
-        <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary shadow-inner relative'>
-          <Icon className='w-7 h-7' />
-          {device.presenceKnown && (
-            <div
-              title={t(presenceLabelKey)}
-              className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-bg-panel-secondary rounded-full shadow-sm ${device.isOnline ? 'bg-accent-success' : 'bg-text-tertiary'}`}
-            />
-          )}
-        </div>
-
-        <div className='flex-1 min-w-0'>
-          {isEditing ? (
-            <input
-              type='text'
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              maxLength={DEVICE_NAME_MAX_LENGTH}
-              autoFocus
-              aria-label={t('sync.devices.rename')}
-              className='block w-full h-9 px-2 font-bold text-text-primary text-base leading-9 bg-bg-panel border border-accent-primary rounded-md outline-none'
-            />
-          ) : (
-            <span
-              className='flex w-full h-9 px-2 items-center font-bold text-text-primary text-base leading-9 border border-transparent rounded-md cursor-pointer'
-              onDoubleClick={handleStartRename}
-              title={
-                device.isLocal
-                  ? t('folders.doubleClickToRename')
-                  : device.key || getDeviceDisplayName(device)
-              }
-            >
-              <span className='truncate'>{deviceNameHead}</span>
-              {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
-            </span>
-          )}
-          <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5 truncate'>
-            {t(
-              `sync.platforms.${getPlatformName(device.platform)}`,
-              getPlatformName(device.platform)
-            )}
-            <span className='normal-case font-medium'>{` · ${t(presenceLabelKey)}`}</span>
-          </p>
-        </div>
-
-        {device.isLocal && (
-          <button
-            onClick={isEditing ? handleBlur : handleStartRename}
-            onMouseDown={handleActionMouseDown}
-            aria-label={isEditing ? t('sync.devices.confirmRename') : t('sync.devices.rename')}
-            title={isEditing ? t('sync.devices.confirmRename') : t('sync.devices.rename')}
-            className={`p-2 rounded-lg text-accent-primary hover:bg-accent-primary/10 transition-all flex items-center gap-2 ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
-          >
-            {isEditing ? <Check className='w-4 h-4' /> : <Pencil className='w-4 h-4' />}
-          </button>
-        )}
-
-        {isOther && (
-          <button
-            onClick={() => setIsConfirmingDelete(true)}
-            aria-label={t('sync.devices.removeDevice', { name: getDeviceDisplayName(device) })}
-            className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-accent-danger/10 rounded-lg text-accent-danger transition-all flex items-center gap-2'
-          >
-            <Trash2 className='w-4 h-4' />
-          </button>
-        )}
-      </div>
-
-      {isConfirmingDelete && (
-        <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
-          <div
-            className={`absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in ${isExiting ? 'animate-out fade-out' : 'fade-in'} duration-300`}
-            onClick={handleCloseDelete}
-          />
-
-          <div
-            className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]`}
-          >
-            <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-danger/20 blur-[80px] rounded-full' />
-            <div className='absolute -bottom-24 -right-24 w-48 h-48 bg-accent-danger/10 blur-[80px] rounded-full' />
-
-            <div className='relative z-10 flex flex-col items-center text-center space-y-6'>
-              <div className='w-20 h-20 bg-accent-danger/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-danger/30 mb-2 shadow-[0_0_30px_rgba(var(--accent-danger-rgb),0.2)]'>
-                <ShieldAlert className='w-10 h-10 text-accent-danger' />
-              </div>
-
-              <div className='space-y-2'>
-                <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-                  {t('sync.delete.title')}
-                </h3>
-                <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                  {t('sync.delete.description')}
-                </p>
-              </div>
-
-              <div className='flex gap-3 w-full pt-2'>
-                <button
-                  onClick={handleCloseDelete}
-                  className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-                >
-                  {t('sync.delete.cancel')}
-                </button>
-                <button
-                  onClick={() => {
-                    dispatch(deleteSyncedDevice({ key: device.key }))
-                    setIsConfirmingDelete(false)
-                  }}
-                  className='flex-1 py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
-                >
-                  {t('common.confirm')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   )
 }

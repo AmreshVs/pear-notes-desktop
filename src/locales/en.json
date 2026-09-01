@@ -49,8 +49,8 @@
       "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background."
     },
     "sync": {
-      "header": "SYNC & DEVICES",
-      "linkAndSync": "Link and Sync"
+      "header": "SYNC",
+      "rowTitle": "Sync"
     },
     "backup": {
       "header": "BACKUP",
@@ -119,6 +119,28 @@
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
       "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
       "activity": "See what each linked device has created, changed and removed."
+    },
+    "syncStatus": {
+      "title": "SYNC STATUS",
+      "lastSynced": "Last synced",
+      "never": "Never",
+      "received": "Received",
+      "receivedCount_one": "{{count}} update",
+      "receivedCount_other": "{{count}} updates",
+      "nothingNew": "Nothing new",
+      "devicesOnline": "Devices online",
+      "noneReachable": "None reachable",
+      "verdict": {
+        "ok": "Up to date.",
+        "noDevices": "Link a device to start syncing. Background and media settings apply once a device is linked.",
+        "neverSynced": "Waiting for {{device}}. Both devices need to be online and on a network at the same time.",
+        "waiting": "Waiting for {{device}} to come online. Notes will sync as soon as both devices are reachable.",
+        "canSleep": "Running in the background. This computer can still sleep, which pauses syncing — disable sleep in your power settings to keep other devices up to date."
+      }
+    },
+    "devices": {
+      "header": "DEVICES",
+      "rowTitle": "Link Devices"
     }
   },
   "sync": {
@@ -420,7 +442,12 @@
       "authProtected": "This note is protected. Use Touch ID or your login password to authenticate and view it.",
       "unavailable": "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."
     },
-    "untitled": "Untitled Note"
+    "untitled": "Untitled Note",
+    "conflict": {
+      "title": "Also edited on another device",
+      "keepMine": "Keep mine",
+      "useTheirs": "Use theirs"
+    }
   },
   "pairing": {
     "status": {
@@ -491,13 +518,14 @@
   "layouts": {
     "settings": "Settings",
     "general": "General",
-    "linkAndSync": "Link and Sync",
     "backupRestore": "Backup / Restore",
     "backupPassword": "Backup Password",
     "noteLockPassword": "Note Lock Password",
     "privacyAndSecurity": "Privacy & Security",
     "storage": "Storage",
-    "activity": "Activity"
+    "activity": "Activity",
+    "linkDevices": "Link Devices",
+    "sync": "Sync"
   },
   "noteLockPassword": {
     "createTitle": "Set Note Lock Password",

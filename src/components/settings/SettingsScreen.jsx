@@ -5,6 +5,7 @@ import {
   Database,
   HardDrive,
   History,
+  Laptop,
   RefreshCw,
   Settings as SettingsIcon,
   ShieldCheck,
@@ -19,6 +20,7 @@ import { getAppVersionLabel } from '../../lib/appFlags'
 
 import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
+import DevicesSettings from './DevicesSettings'
 import GeneralSettings from './GeneralSettings'
 import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
@@ -48,7 +50,8 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const sections = [
     { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
-    { id: 'sync', name: t('layouts.linkAndSync'), icon: RefreshCw },
+    { id: 'devices', name: t('layouts.linkDevices'), icon: Laptop },
+    { id: 'sync', name: t('layouts.sync'), icon: RefreshCw },
     ...(hasLinkedDevices
       ? [{ id: 'activity', name: t('layouts.activity'), icon: History }]
       : []),
@@ -144,7 +147,8 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           <div ref={contentScrollRef} className='flex-1 overflow-y-auto px-10 pb-10'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
-            {activeSection === 'sync' && <SyncSettings onClose={handleAnimatedClose} />}
+            {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
+            {activeSection === 'sync' && <SyncSettings />}
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && <StorageSettings />}

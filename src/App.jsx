@@ -125,7 +125,7 @@ function App() {
   const debouncedUpdateNote = useMemo(
     () =>
       debounce(({ key, title, contentHtml }) => {
-        dispatch(updateNote({ key, title, note: contentHtml }))
+        dispatch(updateNote({ key, title, note: contentHtml, fromEditor: true }))
       }, 100),
     [dispatch]
   )
