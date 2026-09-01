@@ -82,9 +82,9 @@ function App() {
     const load = async () => {
       const key = getDbEncryptionKey()
       const storagePath = window.electronBridge.getStoragePath()
-      setLocalDeviceName(window.electronBridge.getDeviceName())
       await backendApi.ready({ storage: storagePath, encryption: key })
       dispatch(appReady())
+      setLocalDeviceName(window.electronBridge.getDeviceName())
     }
 
     load()
