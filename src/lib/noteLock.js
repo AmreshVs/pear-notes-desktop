@@ -57,3 +57,8 @@ export async function unlockNote(key, reason = 'Unlock this note') {
 export function useNoteLockVersion() {
   return useSyncExternalStore(subscribe, getSnapshot)
 }
+
+export function useHasUnlockedNotes() {
+  useSyncExternalStore(subscribe, getSnapshot)
+  return unlockedKeys.size > 0
+}

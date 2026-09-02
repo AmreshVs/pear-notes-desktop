@@ -298,7 +298,9 @@
     "permanentlyDeleteTitle": "Permanently Delete",
     "permanentlyDeleteSubtitle": "This note cannot be recovered.",
     "noAdditionalText": "No additional text",
-    "trashRetentionNotice": "Notes here are permanently removed after {{days}} days."
+    "trashRetentionNotice": "Notes here are permanently removed after {{days}} days.",
+    "lockNow": "Lock now",
+    "lockNowA11y": "Lock all unlocked notes now"
   },
   "noteCard": {
     "untitled": "Untitled",

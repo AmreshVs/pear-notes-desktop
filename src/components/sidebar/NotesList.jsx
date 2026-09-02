@@ -63,6 +63,8 @@ import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 
+import { LockNowButton } from './LockNowButton'
+
 const MIN_NOTES_FOR_MULTI_SELECT = 2
 
 const ATTACHMENT_ICONS = {
@@ -716,17 +718,20 @@ export default function NotesList({
               >
                 {currentFolderName}
               </h2>
-              <span
-                role='status'
-                aria-live='polite'
-                className='text-xs font-bold text-text-secondary uppercase tracking-wider'
-              >
-                {isSelecting
-                  ? t('notesList.selection.selectedCount', { count: checkedKeys.length })
-                  : filteredNotes.length === 1
-                    ? t('folderView.noteCount_one', { count: 1 })
-                    : t('folderView.noteCount_other', { count: filteredNotes.length })}
-              </span>
+              <div className='flex items-center gap-2 min-w-0'>
+                <span
+                  role='status'
+                  aria-live='polite'
+                  className='text-xs font-bold text-text-secondary uppercase tracking-wider'
+                >
+                  {isSelecting
+                    ? t('notesList.selection.selectedCount', { count: checkedKeys.length })
+                    : filteredNotes.length === 1
+                      ? t('folderView.noteCount_one', { count: 1 })
+                      : t('folderView.noteCount_other', { count: filteredNotes.length })}
+                </span>
+                <LockNowButton />
+              </div>
             </div>
           </div>
 
