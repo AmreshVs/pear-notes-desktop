@@ -117,6 +117,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     await toggleNoteLock({
       key: selectedNoteKey,
       currentlyLocked: isLocked,
+      reason: t('noteCard.unlockReason'),
+      lockReason: t('noteCard.lockReason'),
       dispatch,
       lockMethod,
       requestPassword: requestUnlockPassword,

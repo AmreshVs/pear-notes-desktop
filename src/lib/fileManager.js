@@ -126,6 +126,29 @@ export function base64ToBlob(dataUrl) {
   return new Blob([ab], { type: mimeString })
 }
 
+const FRAME_PREVIEW_MIME_TYPES = {
+  pdf: 'application/pdf',
+  text: 'text/plain'
+}
+
+export function canFramePreview(kind) {
+  return kind in FRAME_PREVIEW_MIME_TYPES
+}
+
+export async function createFramePreviewUrl(url, kind) {
+  const mimeType = FRAME_PREVIEW_MIME_TYPES[kind]
+  if (!mimeType) return null
+
+  const blob = url.startsWith('data:')
+    ? base64ToBlob(url)
+    : await fetch(url).then((response) => {
+        if (!response.ok) throw new Error(`Preview request failed: ${response.status}`)
+        return response.blob()
+      })
+
+  return URL.createObjectURL(new Blob([blob], { type: mimeType }))
+}
+
 export async function processHtmlImages(html) {
   try {
     const parser = new DOMParser()

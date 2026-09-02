@@ -3,11 +3,11 @@ import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { authenticate, isDeviceAuthSupported } from './deviceAuth'
 import { relockNote } from './noteLock'
 
-const UNLOCK_REASON = 'Unlock this note'
-
 export async function toggleNoteLock({
   key,
   currentlyLocked,
+  reason,
+  lockReason,
   dispatch,
   lockMethod = 'biometric',
   requestPassword,
@@ -15,20 +15,6 @@ export async function toggleNoteLock({
 }) {
   if (!key) return
   const usePassword = lockMethod === 'password'
-  if (currentlyLocked) {
-    if (!usePassword) {
-      const supported = await isDeviceAuthSupported()
-      if (!supported) {
-        onUnavailable?.()
-        return
-      }
-    }
-    const ok = usePassword ? await requestPassword?.() : await authenticate(UNLOCK_REASON)
-    if (!ok) return
-    dispatch(updateNote({ key, locked: false }))
-    relockNote(key)
-    return
-  }
   if (!usePassword) {
     const supported = await isDeviceAuthSupported()
     if (!supported) {
@@ -36,6 +22,11 @@ export async function toggleNoteLock({
       return
     }
   }
-  dispatch(updateNote({ key, locked: true }))
+  const authReason = currentlyLocked ? reason : lockReason
+  const ok = usePassword
+    ? await requestPassword?.(currentlyLocked ? 'unlock' : 'lock')
+    : await authenticate(authReason)
+  if (!ok) return
+  dispatch(updateNote({ key, locked: !currentlyLocked }))
   relockNote(key)
 }

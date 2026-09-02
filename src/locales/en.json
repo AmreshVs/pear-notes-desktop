@@ -335,6 +335,7 @@
     },
     "deleteConfirmation": "Are you sure you want to delete this note?",
     "unlockReason": "Unlock this note",
+    "lockReason": "Lock this note",
     "authUnavailableTitle": "Device Lock Unavailable",
     "authUnavailableDesc": "This device has no biometrics or passcode set up, so notes can't be locked or unlocked here. Set up device security, or change the lock method from another synced device.",
     "lockedTitle": "Locked Note",
@@ -532,6 +533,7 @@
     "enterTitle": "Enter Note Lock Password",
     "createDesc": "This password will be required to open locked notes on all your synced devices.",
     "enterDesc": "Enter your note lock password to unlock this note.",
+    "enterLockDesc": "Enter your note lock password to lock this note.",
     "warning": "Your password itself is never stored — only a secure verification hash. It cannot be recovered, so if you forget it, locked notes cannot be opened. Write it down and keep it safe.",
     "placeholder": "Note lock password",
     "confirmPlaceholder": "Confirm password",
@@ -540,6 +542,7 @@
     "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
     "createButton": "Set Password",
     "unlockButton": "Unlock",
+    "lockButton": "Lock",
     "placeholderCreate": "Create a strong password",
     "incorrectPassword": "Incorrect password",
     "rules": {
@@ -814,7 +817,9 @@
     "exitFullscreen": "Exit Fullscreen",
     "fullscreen": "Fullscreen",
     "untitledFile": "Untitled File",
-    "fileDefault": "File"
+    "fileDefault": "File",
+    "pageCount_one": "{{count}} page",
+    "pageCount_other": "{{count}} pages"
   },
   "formatting": {
     "title": "Formatting",
@@ -864,6 +869,7 @@
   },
   "mediaPreview": {
     "preview": "Preview",
+    "loading": "Loading preview...",
     "cannotPreview": "This file type cannot be previewed.",
     "downloadingProgress": "Downloading… {{progress}}%"
   },

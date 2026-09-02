@@ -16,9 +16,17 @@ const STRENGTH_BAR_COLORS = [
   'bg-accent-success'
 ]
 
-export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onCancel }) {
+export default function NoteLockPasswordModal({
+  open,
+  mode,
+  purpose = 'unlock',
+  error,
+  onSubmit,
+  onCancel
+}) {
   const { t } = useTranslation()
   const isCreate = mode === 'create'
+  const isLockPurpose = purpose === 'lock'
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [visible, setVisible] = useState(false)
@@ -72,7 +80,11 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
               {isCreate ? t('noteLockPassword.createTitle') : t('noteLockPassword.enterTitle')}
             </h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              {isCreate ? t('noteLockPassword.createDesc') : t('noteLockPassword.enterDesc')}
+              {isCreate
+                ? t('noteLockPassword.createDesc')
+                : isLockPurpose
+                  ? t('noteLockPassword.enterLockDesc')
+                  : t('noteLockPassword.enterDesc')}
             </p>
           </div>
 
@@ -176,7 +188,11 @@ export default function NoteLockPasswordModal({ open, mode, error, onSubmit, onC
               disabled={!canSubmit}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
             >
-              {isCreate ? t('noteLockPassword.createButton') : t('noteLockPassword.unlockButton')}
+              {isCreate
+                ? t('noteLockPassword.createButton')
+                : isLockPurpose
+                  ? t('noteLockPassword.lockButton')
+                  : t('noteLockPassword.unlockButton')}
             </button>
           </div>
         </div>

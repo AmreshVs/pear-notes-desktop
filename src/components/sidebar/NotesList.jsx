@@ -594,6 +594,8 @@ export default function NotesList({
           await toggleNoteLock({
             key: noteKey,
             currentlyLocked: noteData?.value?.locked === true,
+            reason: t('noteCard.unlockReason'),
+            lockReason: t('noteCard.lockReason'),
             dispatch,
             lockMethod,
             requestPassword: requestUnlockPassword,
@@ -794,7 +796,7 @@ export default function NotesList({
       </div>
 
       <div
-        className='flex-1 overflow-y-auto py-2 scrollbar-hide'
+        className='flex-1 overflow-y-auto pb-2 scrollbar-hide'
         role={filteredNotes.length === 0 ? undefined : 'listbox'}
         aria-multiselectable={isSelecting || undefined}
         aria-label={t('folders.systemIcons.all')}

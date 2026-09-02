@@ -21,15 +21,18 @@ import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
+import usePdfPreview from '../../hooks/usePdfPreview'
 import {
   base64ToBlob,
   createDownloadLink,
   deleteHyperdriveFile,
   downloadAsBlob
 } from '../../lib/fileManager'
+import { isPdfAttachment } from '../../lib/pdfPreview'
 import MediaPreviewModal from '../modals/MediaPreviewModal'
 
 import AudioPlayer from './AudioPlayer'
+import PdfAttachmentPreview from './PdfAttachmentPreview'
 
 export default function FileAttachmentView({ node, deleteNode }) {
   const { t } = useTranslation()
@@ -61,6 +64,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
 
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')
+  const isPdf = isPdfAttachment(fileName, fileType)
+  const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null)
 
   useEffect(() => {
     const media = mediaRef.current
@@ -159,53 +164,8 @@ export default function FileAttachmentView({ node, deleteNode }) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`
   }
 
-  const openPreview = async () => {
+  const openPreview = () => {
     if (isAudio) return
-
-    const isPdf = fileType === 'application/pdf' || fileName?.toLowerCase().endsWith('.pdf')
-    if (isPdf) {
-      try {
-        const isElectron = typeof window !== 'undefined' && window.require
-        if (!isElectron) {
-          window.open(resolvedUrl || fileData, '_blank')
-          return
-        }
-
-        const fs = window.require('fs')
-        const path = window.require('path')
-        const os = window.require('os')
-        const { shell } = window.require('electron')
-        const { Buffer } = window.require('buffer')
-
-        let buffer
-        if (resolvedUrl) {
-          const response = await fetch(resolvedUrl)
-          const arrayBuffer = await response.arrayBuffer()
-          buffer = Buffer.from(arrayBuffer)
-        } else if (fileData) {
-          const base64Data = fileData.includes(',') ? fileData.split(',')[1] : fileData
-          buffer = Buffer.from(base64Data, 'base64')
-        } else {
-          return
-        }
-
-        const rawName = (fileName || 'document.pdf').replace(/\0/g, '')
-        const baseName = path.basename(rawName).replace(/[/\\]/g, '_')
-        const safeName =
-          baseName && baseName !== '.' && baseName !== '..' ? baseName : 'document.pdf'
-        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-notes-'))
-        const tempFilePath = path.join(tempDir, safeName)
-        fs.writeFileSync(tempFilePath, buffer)
-
-        const openError = await shell.openPath(tempFilePath)
-        if (openError) throw new Error(openError)
-      } catch (error) {
-        console.error('Failed to open PDF natively:', error)
-        setIsPreviewOpen(true)
-      }
-      return
-    }
-
     setIsPreviewOpen(true)
   }
 
@@ -511,6 +471,12 @@ export default function FileAttachmentView({ node, deleteNode }) {
               </div>
             ))}
 
+          <PdfAttachmentPreview
+            preview={pdfPreview}
+            fileName={fileName || t('fileAttachment.untitledFile')}
+            onOpen={openPreview}
+          />
+
           <div
             className={`relative flex items-center gap-4 cursor-pointer ${isVideo ? 'p-6' : 'p-4'}`}
             onClick={openPreview}
@@ -536,6 +502,14 @@ export default function FileAttachmentView({ node, deleteNode }) {
                 </span>
                 <span className='text-xs text-text-tertiary'>•</span>
                 <span className='text-xs text-text-tertiary'>{formatFileSize(fileSize)}</span>
+                {pdfPreview?.pageCount > 0 && (
+                  <>
+                    <span className='text-xs text-text-tertiary'>•</span>
+                    <span className='text-xs text-text-tertiary'>
+                      {t('fileAttachment.pageCount', { count: pdfPreview.pageCount })}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 

@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Download, FileQuestion, X } from 'lucide-react'
+
+import { canFramePreview, createFramePreviewUrl } from '../../lib/fileManager'
 
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'heic', 'avif']
 const TEXT_EXTENSIONS = ['txt', 'md', 'json', 'csv', 'log', 'xml', 'html']
@@ -33,6 +35,9 @@ export default function MediaPreviewModal({
   downloadProgress
 }) {
   const { t } = useTranslation()
+  const kind = resolveKind(fileType, fileName)
+  const needsFrameUrl = !!url && canFramePreview(kind)
+  const [frameUrl, setFrameUrl] = useState(null)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -42,9 +47,30 @@ export default function MediaPreviewModal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  if (!url) return null
+  useEffect(() => {
+    if (!needsFrameUrl) return undefined
 
-  const kind = resolveKind(fileType, fileName)
+    let cancelled = false
+    let created = null
+
+    createFramePreviewUrl(url, kind)
+      .then((objectUrl) => {
+        if (cancelled) {
+          if (objectUrl) URL.revokeObjectURL(objectUrl)
+          return
+        }
+        created = objectUrl
+        setFrameUrl(objectUrl)
+      })
+      .catch((error) => console.error('Failed to build a preview URL:', error))
+
+    return () => {
+      cancelled = true
+      if (created) URL.revokeObjectURL(created)
+    }
+  }, [needsFrameUrl, url, kind])
+
+  if (!url) return null
 
   const renderBody = () => {
     switch (kind) {
@@ -58,9 +84,16 @@ export default function MediaPreviewModal({
         )
       case 'pdf':
       case 'text':
+        if (!frameUrl)
+          return (
+            <div className='flex flex-col items-center gap-3'>
+              <div className='w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+              <p className='text-sm text-white/80'>{t('mediaPreview.loading')}</p>
+            </div>
+          )
         return (
           <iframe
-            src={url}
+            src={frameUrl}
             title={fileName || t('mediaPreview.preview')}
             className='w-full h-full bg-white rounded-lg shadow-xl border-none'
           />

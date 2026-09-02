@@ -12,10 +12,12 @@ export default function NoteLockPasswordProvider({ children }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
   const [unavailableOpen, setUnavailableOpen] = useState(false)
+  const [purpose, setPurpose] = useState('unlock')
   const resolverRef = useRef(null)
 
-  const requestUnlockPassword = useCallback(() => {
+  const requestUnlockPassword = useCallback((nextPurpose = 'unlock') => {
     setError('')
+    setPurpose(nextPurpose)
     setOpen(true)
     return new Promise((resolve) => {
       resolverRef.current = resolve
@@ -54,6 +56,7 @@ export default function NoteLockPasswordProvider({ children }) {
       <NoteLockPasswordModal
         open={open}
         mode='enter'
+        purpose={purpose}
         error={error}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
