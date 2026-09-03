@@ -316,6 +316,7 @@ const NotesItem = memo(
                 className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary'}`}
               >
+                <span className='truncate'>{noteData?.title || t('noteCard.untitled')}</span>
                 {noteData?.pinned && !isTrash && (
                   <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
                 )}
@@ -325,7 +326,6 @@ const NotesItem = memo(
                   ) : (
                     <LockOpen className='w-3.5 h-3.5 text-accent-primary flex-shrink-0' />
                   ))}
-                <span className='truncate'>{noteData?.title || t('noteCard.untitled')}</span>
               </h3>
               {showAttachmentPreview ? (
                 <AttachmentPreview info={attachmentInfo} isSelected={isSelected} />
