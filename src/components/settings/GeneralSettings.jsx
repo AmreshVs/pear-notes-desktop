@@ -26,7 +26,7 @@ export default function GeneralSettings() {
   return (
     <div className='space-y-12 max-w-2xl mx-auto'>
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.general.interface')}
         </h3>
 
@@ -60,7 +60,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.general.notesList')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
@@ -90,7 +90,7 @@ export default function GeneralSettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.general.editor')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
@@ -167,7 +167,6 @@ export default function GeneralSettings() {
           </div>
         </div>
       </div>
-
     </div>
   )
 }

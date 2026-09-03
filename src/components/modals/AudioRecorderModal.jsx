@@ -109,7 +109,7 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                 <h2 className='text-text-primary font-black text-xl tracking-tighter leading-none'>
                   {t('audioRecorderModal.title')}
                 </h2>
-                <span className='text-xs font-black uppercase tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>
+                <span className='text-xs font-black tracking-[0.2em] mt-1 text-text-tertiary opacity-40'>
                   {t('audioRecorderModal.subtitle')}
                 </span>
               </div>

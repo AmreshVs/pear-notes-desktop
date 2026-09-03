@@ -248,7 +248,7 @@ export default function PairingStatusOverlay() {
           </div>
 
           <div className='w-full space-y-3'>
-            <div className='flex justify-center items-center text-xs font-bold tracking-widest uppercase opacity-60'>
+            <div className='flex justify-center items-center text-xs font-bold tracking-widest opacity-60'>
               <span className='text-text-tertiary'>
                 {message} • {t('pairing.overlay.complete', { progress })}
               </span>
@@ -290,7 +290,7 @@ export default function PairingStatusOverlay() {
         {mainIdValue && (
           <div className='w-full space-y-4'>
             <div className='px-6 py-4 bg-overlay-subtle border border-overlay-medium rounded-2xl'>
-              <span className='text-xs uppercase tracking-[0.2em] font-bold text-accent-primary/60 block mb-1'>
+              <span className='text-xs tracking-[0.2em] font-bold text-accent-primary/60 block mb-1'>
                 {mainIdLabel}
               </span>
               <span className='text-2xl font-black text-text-primary tracking-[0.3em] font-mono block'>
@@ -300,7 +300,7 @@ export default function PairingStatusOverlay() {
 
             {subIdValue && (
               <div className='flex items-center justify-center gap-2 opacity-40'>
-                <span className='text-xs uppercase tracking-wider font-bold truncate max-w-[200px]'>
+                <span className='text-xs tracking-wider font-bold truncate max-w-[200px]'>
                   {subIdLabel}: {subIdValue.toUpperCase()}
                 </span>
               </div>
@@ -342,7 +342,7 @@ export default function PairingStatusOverlay() {
                 style={{ width: `${progress || 25}%` }}
               />
             </div>
-            <div className='flex justify-center items-center text-xs font-bold tracking-widest uppercase opacity-40'>
+            <div className='flex justify-center items-center text-xs font-bold tracking-widest opacity-40'>
               <span className='text-text-tertiary'>
                 {message || t('pairing.status.establishing')}
               </span>
@@ -384,7 +384,7 @@ export default function PairingStatusOverlay() {
 
               <div className='w-full space-y-4'>
                 <div className='space-y-2'>
-                  <label className='text-xs uppercase tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
+                  <label className='text-xs tracking-[0.2em] font-bold text-text-tertiary block text-left ml-1'>
                     {t('pairing.overlay.inviteCode')}
                   </label>
                   <input

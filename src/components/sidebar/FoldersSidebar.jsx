@@ -1,20 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  Briefcase,
-  FileText,
-  Folder,
-  FolderPlus,
-  Lightbulb,
-  Settings,
-  Trash2,
-  User
-} from 'lucide-react'
+import { FolderPlus, Settings } from 'lucide-react'
 
 import {
+  DEFAULT_FOLDER_ICON,
   DEFAULT_FOLDER_NAME,
   FOLDER_ERROR,
+  FOLDER_ICONS,
   FOLDER_NAME_MAX_LENGTH
 } from '@pear-notes/core/constant.js'
 import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
@@ -26,15 +20,11 @@ import {
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
 import { showContextMenu } from '../../lib/contextMenu'
+import { getFolderIconComponent } from '../../lib/folderIcons'
 
-const ICON_MAP = {
-  FileText,
-  Briefcase,
-  User,
-  Lightbulb,
-  Trash2,
-  Folder
-}
+const ICON_PICKER_WIDTH = 268
+const ICON_PICKER_HEIGHT = 400
+const ICON_PICKER_EDGE_GAP = 8
 
 export default function FoldersSidebar({
   selectedFolder,
@@ -53,7 +43,9 @@ export default function FoldersSidebar({
   const shouldAutoRenameNextFolder = useSelector(getShouldAutoRenameNextFolder)
   const [editName, setEditName] = useState('')
   const [renameError, setRenameError] = useState(null)
+  const [iconPicker, setIconPicker] = useState(null)
   const inputRef = useRef(null)
+  const iconPickerRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
   const foldersRef = useRef(folders)
 
@@ -78,6 +70,42 @@ export default function FoldersSidebar({
       inputRef.current.select()
     }
   }, [editingFolderId])
+
+  const handleCloseIconPicker = () => setIconPicker(null)
+
+  useEffect(() => {
+    if (!iconPicker) return
+    const onPointerDown = (e) => {
+      if (!iconPickerRef.current?.contains(e.target)) handleCloseIconPicker()
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') handleCloseIconPicker()
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    iconPickerRef.current?.querySelector('[data-selected="true"], button')?.focus()
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [iconPicker])
+
+  const handlePickIcon = (icon) => {
+    if (iconPicker) dispatch(updateFolder({ id: iconPicker.folderId, icon }))
+    handleCloseIconPicker()
+  }
+
+  const iconPickerPosition = useMemo(() => {
+    if (!iconPicker) return undefined
+    const gap = ICON_PICKER_EDGE_GAP
+    const maxLeft = Math.max(gap, window.innerWidth - gap - ICON_PICKER_WIDTH)
+    const maxTop = Math.max(gap, window.innerHeight - gap - ICON_PICKER_HEIGHT)
+    return {
+      top: Math.min(iconPicker.y, maxTop),
+      left: Math.min(iconPicker.x, maxLeft),
+      width: ICON_PICKER_WIDTH
+    }
+  }, [iconPicker])
 
   const handleStartRename = (e, folder) => {
     e.stopPropagation()
@@ -136,7 +164,7 @@ export default function FoldersSidebar({
     onCreateFolder(nextAvailableFolderName())
   }
 
-  const handleMenuAction = (action, folder) => {
+  const handleMenuAction = (action, folder, anchor) => {
     switch (action) {
       case 'new-note':
         onSelectFolder(folder.id)
@@ -148,6 +176,15 @@ export default function FoldersSidebar({
       case 'rename':
         setEditingFolderId(folder.id)
         setEditName(folder.name)
+        break
+      case 'change-icon':
+        setIconPicker({
+          folderId: folder.id,
+          folderName: folder.name || DEFAULT_FOLDER_NAME,
+          icon: folder.icon || DEFAULT_FOLDER_ICON,
+          x: anchor.x,
+          y: anchor.y
+        })
         break
       case 'delete':
         if (window.confirm(`${t('folders.deleteDescription')} "${folder.name}"?`)) {
@@ -163,6 +200,7 @@ export default function FoldersSidebar({
   const handleContextMenu = async (e, folder) => {
     e.preventDefault()
     e.stopPropagation()
+    const anchor = { x: e.clientX, y: e.clientY }
     const items = [
       { id: 'new-note', label: t('folders.a11y.newNote') },
       { id: 'new-folder', label: t('folders.newFolder') }
@@ -171,18 +209,19 @@ export default function FoldersSidebar({
       items.push(
         { type: 'separator' },
         { id: 'rename', label: t('folders.buttons.rename') },
+        { id: 'change-icon', label: t('folders.buttons.changeIcon') },
         { id: 'delete', label: t('folders.buttons.delete') }
       )
     }
     const result = await showContextMenu(items)
-    if (result) handleMenuAction(result, folder)
+    if (result) handleMenuAction(result, folder, anchor)
   }
 
   const topFolders = useMemo(() => folders.filter((f) => !f.isTrash), [folders])
   const bottomFolders = useMemo(() => folders.filter((f) => f.isTrash), [folders])
 
   const renderFolderItem = (folder) => {
-    const Icon = ICON_MAP[folder.icon] || Folder
+    const Icon = getFolderIconComponent(folder.icon)
     const isSelected = selectedFolder === folder.id
     const count = noteCounts[folder.id] || 0
     const isEditing = editingFolderId === folder.id
@@ -280,7 +319,7 @@ export default function FoldersSidebar({
           {topFolders.slice(1).map(renderFolderItem)}
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
-          <div className='text-xs font-bold text-text-secondary uppercase tracking-[0.2em] mb-3 px-4 transition-none'>
+          <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none'>
             {t('folders.archiveHeader')}
           </div>
           <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
@@ -302,6 +341,46 @@ export default function FoldersSidebar({
           </button>
         </div>
       </div>
+
+      {iconPicker &&
+        createPortal(
+          <div
+            ref={iconPickerRef}
+            role='dialog'
+            aria-label={t('folders.iconPickerTitle', { name: iconPicker.folderName })}
+            className='fixed z-[500] p-3 rounded-xl bg-bg-panel-secondary border border-border-primary shadow-xl'
+            style={iconPickerPosition}
+          >
+            <div className='px-1 pb-2.5 text-xs font-semibold text-text-secondary truncate'>
+              {t('folders.iconPickerTitle', { name: iconPicker.folderName })}
+            </div>
+            <div className='grid grid-cols-5 gap-1.5'>
+              {FOLDER_ICONS.map((icon) => {
+                const PickIcon = getFolderIconComponent(icon)
+                const isPicked = iconPicker.icon === icon
+                return (
+                  <button
+                    key={icon}
+                    type='button'
+                    data-selected={isPicked}
+                    onClick={() => handlePickIcon(icon)}
+                    title={t(`folders.icons.${icon}`)}
+                    aria-label={t(`folders.icons.${icon}`)}
+                    aria-pressed={isPicked}
+                    className={`w-11 h-11 grid place-items-center rounded-lg border focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary ${
+                      isPicked
+                        ? 'bg-[var(--accent-selected-bg)] border-[var(--accent-selected-border)] text-accent-primary'
+                        : 'border-transparent text-text-primary hover:bg-bg-tertiary'
+                    }`}
+                  >
+                    <PickIcon className='w-5 h-5' />
+                  </button>
+                )
+              })}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

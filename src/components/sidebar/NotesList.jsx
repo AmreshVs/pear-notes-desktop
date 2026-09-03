@@ -1,10 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createElement, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
   Film,
-  Folder,
   FolderInput,
   Image as ImageIcon,
   ListChecks,
@@ -59,6 +58,7 @@ import {
 
 import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
+import { getFolderIconComponent } from '../../lib/folderIcons'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
@@ -118,6 +118,12 @@ const AttachmentPreview = ({ info, isSelected }) => {
       <span className='truncate'>{label}</span>
     </p>
   )
+}
+
+function NoteFolderIcon({ folder }) {
+  return createElement(getFolderIconComponent(folder?.icon), {
+    className: 'w-3 h-3 flex-shrink-0'
+  })
 }
 
 const NotesItem = memo(
@@ -331,11 +337,13 @@ const NotesItem = memo(
                   {previewText}
                 </p>
               )}
-              <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold uppercase tracking-wider'>
+              <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold tracking-wider'>
                 {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
                   <>
                     <div className='flex items-center gap-1.5 min-w-0'>
-                      <Folder className='w-3 h-3 flex-shrink-0' />
+                      <NoteFolderIcon
+                        folder={allFolders.find((f) => f.id === noteData.folderKey)}
+                      />
                       <span className='truncate'>
                         {allFolders.find((f) => f.id === noteData.folderKey)?.name ||
                           t('folders.title')}
@@ -722,7 +730,7 @@ export default function NotesList({
                 <span
                   role='status'
                   aria-live='polite'
-                  className='text-xs font-bold text-text-secondary uppercase tracking-wider'
+                  className='text-xs font-bold text-text-secondary tracking-wider'
                 >
                   {isSelecting
                     ? t('notesList.selection.selectedCount', { count: checkedKeys.length })
@@ -904,7 +912,7 @@ export default function NotesList({
             )}
             {sortedGroups.map((group) => (
               <div key={group} className='mb-6'>
-                <h3 className='px-6 py-2 text-xs font-bold text-text-primary uppercase tracking-[0.2em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
+                <h3 className='px-6 py-2 text-sm font-bold text-text-primary tracking-[0.1em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
                   {getGroupName(group)}
                 </h3>
                 <div>

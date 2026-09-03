@@ -106,9 +106,7 @@ export default function ActivitySettings() {
   }
 
   const handleRetentionChange = (event) => {
-    dispatch(
-      updateSetting({ key: 'activityRetentionDays', value: Number(event.target.value) })
-    )
+    dispatch(updateSetting({ key: 'activityRetentionDays', value: Number(event.target.value) }))
   }
 
   const handleClear = () => {
@@ -126,7 +124,7 @@ export default function ActivitySettings() {
   return (
     <div className='space-y-8 animate-in fade-in duration-500'>
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('activity.settings.title')}
         </h3>
 
@@ -231,7 +229,7 @@ export default function ActivitySettings() {
       </div>
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('activity.timeline')}
         </h3>
 
@@ -285,7 +283,7 @@ export default function ActivitySettings() {
           <div className='space-y-6'>
             {groups.map((group) => (
               <div key={group.day} className='space-y-2'>
-                <p className='text-[0.65rem] uppercase tracking-[0.18em] text-text-tertiary font-bold ml-2'>
+                <p className='text-[0.65rem] tracking-[0.18em] text-text-tertiary font-bold ml-2'>
                   {formatDay(group.at, t)}
                 </p>
                 <div className='space-y-2'>

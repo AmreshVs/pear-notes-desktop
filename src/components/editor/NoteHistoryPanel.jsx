@@ -106,7 +106,7 @@ export default function NoteHistoryPanel({ noteKey, noteTitle, onClose }) {
           <div className='space-y-6'>
             {groups.map((group) => (
               <div key={group.day} className='space-y-2'>
-                <p className='text-[0.65rem] uppercase tracking-[0.18em] text-text-tertiary font-bold ml-1'>
+                <p className='text-[0.65rem] tracking-[0.18em] text-text-tertiary font-bold ml-1'>
                   {formatDay(group.at, t)}
                 </p>
                 <div className='space-y-2'>

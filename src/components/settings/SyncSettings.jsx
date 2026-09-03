@@ -27,8 +27,7 @@ import { formatRelativeDate } from '../../utils/formatters'
 
 const REFRESH_INTERVAL_MS = 30000
 
-const SECTION_TITLE_CLASS =
-  'text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'
+const SECTION_TITLE_CLASS = 'text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'
 const CARD_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md divide-y divide-border-primary'
 const ROW_CLASS =

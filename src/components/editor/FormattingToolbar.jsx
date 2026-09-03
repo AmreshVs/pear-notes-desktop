@@ -258,7 +258,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
                 <div className='h-px bg-divider-light my-2 mx-1' />
 
                 <div className='flex items-center justify-between px-1.5 py-0.5'>
-                  <span className='text-xs font-semibold text-text-tertiary/80 tracking-wide uppercase'>
+                  <span className='text-xs font-semibold text-text-tertiary/80 tracking-wide '>
                     {t('formatting.alignment')}
                   </span>
                   <div className='flex items-center gap-0.5'>

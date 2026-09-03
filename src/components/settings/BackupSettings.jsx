@@ -288,7 +288,7 @@ export default function BackupSettings() {
             <Shield className='w-5 h-5 text-accent-primary' />
           </div>
           <div className='min-w-0'>
-            <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
+            <p className='text-xs tracking-widest font-bold text-text-tertiary mb-1'>
               {t('backup.lastBackup')}
             </p>
             <p className='text-text-primary font-bold text-base truncate'>
@@ -302,7 +302,7 @@ export default function BackupSettings() {
             <Database className='w-5 h-5 text-accent-primary' />
           </div>
           <div className='min-w-0'>
-            <p className='text-xs uppercase tracking-widest font-bold text-text-tertiary mb-1'>
+            <p className='text-xs tracking-widest font-bold text-text-tertiary mb-1'>
               {t('backup.notesSize')}
             </p>
             <p className='text-text-primary font-bold text-base truncate'>

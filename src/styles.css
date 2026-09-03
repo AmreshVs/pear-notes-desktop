@@ -535,3 +535,8 @@
 .group\/select:hover .group-hover\/select\:text-accent-primary {
   color: var(--accent-primary-text);
 }
+
+.tracking-\[0\.1em\] {
+  --tw-tracking: .1em;
+  letter-spacing: .01em !important;
+}

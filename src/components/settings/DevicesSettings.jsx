@@ -130,7 +130,6 @@ export default function DevicesSettings({ onClose }) {
     setPendingInvite(null)
   }
 
-
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
       <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-overlay-soft w-fit mx-auto'>
@@ -234,7 +233,7 @@ export default function DevicesSettings({ onClose }) {
                   </div>
 
                   <div className='space-y-3'>
-                    <label className='text-xs uppercase tracking-wider font-bold text-text-tertiary ml-1'>
+                    <label className='text-xs tracking-wider font-bold text-text-tertiary ml-1'>
                       {t('sync.invite.codeLabel')}
                     </label>
                     <div className='relative group'>
@@ -306,7 +305,7 @@ export default function DevicesSettings({ onClose }) {
         ) : (
           <div className='space-y-6'>
             <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-secondary font-bold text-xs tracking-widest ml-1 mb-3'>
                 {t('sync.devices.thisDevice')}
               </h4>
               <div className='grid gap-4'>
@@ -319,7 +318,7 @@ export default function DevicesSettings({ onClose }) {
             </div>
 
             <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs uppercase tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-secondary font-bold text-xs tracking-widest ml-1 mb-3'>
                 {t('sync.devices.otherDevices')}
               </h4>
               <div className='grid gap-4'>
@@ -460,7 +459,7 @@ function DeviceItem({ device, isOther }) {
               {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
             </span>
           )}
-          <p className='px-2 text-xs text-text-tertiary font-bold uppercase tracking-tight mt-1.5 truncate'>
+          <p className='px-2 text-xs text-text-tertiary font-bold tracking-tight mt-1.5 truncate'>
             {t(
               `sync.platforms.${getPlatformName(device.platform)}`,
               getPlatformName(device.platform)

@@ -332,51 +332,52 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     <div className='flex-1 flex overflow-hidden min-w-0'>
       <div className='flex-1 flex flex-col overflow-hidden bg-bg-primary relative min-w-0 hardware-accelerated'>
         <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
-        <div className='flex-1 min-w-0 pointer-events-auto'>
-          <div className='pb-2'>
-            <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+          <div className='flex-1 min-w-0 pointer-events-auto'>
+            <div className='pb-2'>
+              <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div
-        className='flex-1 overflow-y-auto custom-scrollbar pt-16'
-        onContextMenu={handleEditorContextMenu}
-      >
-        <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
-          <NoteConflictBanner noteKey={selectedNoteKey} />
-          <input
-            ref={titleRef}
-            type='text'
-            value={title}
-            onChange={handleTitleChange}
-            maxLength={NOTE_TITLE_MAX_LENGTH}
-            placeholder={t('noteEditor.titlePlaceholder')}
-            aria-label={t('noteEditor.titlePlaceholder')}
-            className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
-            style={{
-              fontSize: `${editorFontSize * 2}px`,
-              fontFamily: editorFontFamily
-            }}
-          />
-          <div className='flex-1'>
-            <RichTextEditor
-              key={selectedNoteKey}
-              ref={richTextEditorRef}
-              content={content}
-              syncToken={syncToken}
-              onChange={handleContentChange}
-              placeholder={t('noteEditor.placeholder')}
-              localDevice={localDevice}
+        <div
+          className='flex-1 overflow-y-auto custom-scrollbar pt-16'
+          onContextMenu={handleEditorContextMenu}
+        >
+          <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
+            <NoteConflictBanner noteKey={selectedNoteKey} />
+            <input
+              ref={titleRef}
+              type='text'
+              value={title}
+              onChange={handleTitleChange}
+              maxLength={NOTE_TITLE_MAX_LENGTH}
+              placeholder={t('noteEditor.titlePlaceholder')}
+              aria-label={t('noteEditor.titlePlaceholder')}
+              className='w-full text-4xl font-black mb-4 bg-transparent border-none resize-none select-text leading-tight text-text-primary tracking-tighter p-0'
+              style={{
+                fontSize: `${editorFontSize * 2}px`,
+                fontFamily: editorFontFamily
+              }}
             />
+            <div className='flex-1'>
+              <RichTextEditor
+                key={selectedNoteKey}
+                ref={richTextEditorRef}
+                content={content}
+                syncToken={syncToken}
+                onChange={handleContentChange}
+                placeholder={t('noteEditor.placeholder')}
+                localDevice={localDevice}
+              />
+            </div>
           </div>
         </div>
-      </div>
-      <UploadProgressToast />
+        <UploadProgressToast />
 
         <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-          <span className='text-xs font-bold text-text-secondary uppercase tracking-widest'>
-            {t('noteEditor.edited')} {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
+          <span className='text-xs font-bold text-text-secondary tracking-widest'>
+            {t('noteEditor.edited')}{' '}
+            {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
           </span>
         </div>
       </div>

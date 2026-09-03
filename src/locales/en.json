@@ -2,20 +2,20 @@
   "settings": {
     "title": "Settings",
     "general": {
-      "header": "GENERAL",
+      "header": "General",
       "interface": "Interface",
-      "notesList": "Notes List",
+      "notesList": "Notes list",
       "editor": "Editor",
-      "appTheme": "App Theme",
-      "sortNotesBy": "Sort Notes By",
-      "fontFamily": "Font Family",
-      "textSize": "Text Size",
+      "appTheme": "App theme",
+      "sortNotesBy": "Sort notes by",
+      "fontFamily": "Font family",
+      "textSize": "Text size",
       "sortOptions": {
-        "updatedAt": "Date Edited",
-        "createdAt": "Date Created",
+        "updatedAt": "Date edited",
+        "createdAt": "Date created",
         "title": "Title"
       },
-      "colorTheme": "Color Theme",
+      "colorTheme": "Color theme",
       "colorOptions": {
         "pear": "Default",
         "material_you": "Material You"
@@ -26,7 +26,7 @@
         "Lora": "Lora",
         "Newsreader": "Newsreader",
         "IBM Plex Mono": "IBM Plex Mono",
-        "System": "System Default",
+        "System": "System default",
         "Serif": "Serif",
         "Mono": "Monospace"
       },
@@ -39,45 +39,45 @@
       "sortNotesByDesc": "Choose your preferred sorting order.",
       "fontFamilyDesc": "Primary typeface for notes.",
       "textSizeDesc": "Adjust the editor's base font size.",
-      "startupAndBackground": "Startup & Background",
-      "keepRunning": "Keep Running in Background",
+      "startupAndBackground": "Startup & background",
+      "keepRunning": "Keep running in background",
       "keepRunningDesc": "Closing the window keeps Pear Notes running in the tray so your notes stay in sync.",
-      "startAtLogin": "Start at Login",
+      "startAtLogin": "Start at login",
       "startAtLoginDesc": "Launch Pear Notes automatically when you sign in to this device.",
-      "meteredConnection": "Metered Connection",
+      "meteredConnection": "Metered connection",
       "meteredConnectionDesc": "Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.",
       "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background."
     },
     "sync": {
-      "header": "SYNC",
+      "header": "Sync",
       "rowTitle": "Sync"
     },
     "backup": {
-      "header": "BACKUP",
-      "backupAndRestore": "Backup / Restore"
+      "header": "Backup",
+      "backupAndRestore": "Backup / restore"
     },
     "storage": {
-      "header": "STORAGE",
+      "header": "Storage",
       "storageTitle": "Storage"
     },
     "privacy": {
-      "header": "NOTE LOCK",
-      "sectionHeader": "PRIVACY & SECURITY",
-      "rowTitle": "Privacy & Security",
-      "screenTitle": "Privacy & Security",
+      "header": "Note lock",
+      "sectionHeader": "Privacy & security",
+      "rowTitle": "Privacy & security",
+      "screenTitle": "Privacy & security",
       "screenDesc": "Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.",
-      "noteLock": "Note Lock",
+      "noteLock": "Note lock",
       "available": "Available",
       "noteLockDesc": "Lock individual notes from the note menu. Unlocks with {{method}}.",
       "noteLockPasswordDesc": "Locked notes unlock with your custom password on all synced devices.",
       "noteLockUnavailableDesc": "Device lock isn't set up on this device. Change the lock method from another synced device.",
       "changeMethodReason": "Authenticate to change the note lock method",
-      "unlockMethod": "Unlock Method",
+      "unlockMethod": "Unlock method",
       "biometric": "Biometric",
       "password": "Password",
-      "blockScreenshots": "Block Screenshots",
+      "blockScreenshots": "Block screenshots",
       "blockScreenshotsDesc": "Prevent screenshots while viewing a locked note.",
-      "hideInSwitcher": "Hide in App Switcher",
+      "hideInSwitcher": "Hide in app switcher",
       "hideInSwitcherDesc": "Cover note content in the app switcher while viewing a locked note.",
       "methods": {
         "faceIos": "Face ID",
@@ -91,11 +91,11 @@
       "unlockMethodDesc": "Choose how locked notes are unlocked."
     },
     "danger": {
-      "header": "DANGER ZONE",
-      "clearStorage": "Clear Storage"
+      "header": "Danger zone",
+      "clearStorage": "Clear storage"
     },
     "reset": {
-      "confirmTitle": "Clear Storage?",
+      "confirmTitle": "Clear storage?",
       "confirmMessage": "This will permanently delete all your notes, media, and files on this device. This action cannot be undone and your data cannot be recovered if you haven't backed it up or synced with another device."
     },
     "e2eEncrypted": "End-to-end encrypted",
@@ -121,7 +121,7 @@
       "activity": "See what each linked device has created, changed and removed."
     },
     "syncStatus": {
-      "title": "SYNC STATUS",
+      "title": "Sync status",
       "lastSynced": "Last synced",
       "never": "Never",
       "received": "Received",
@@ -139,15 +139,15 @@
       }
     },
     "devices": {
-      "header": "DEVICES",
-      "rowTitle": "Link Devices"
+      "header": "Devices",
+      "rowTitle": "Link devices"
     }
   },
   "sync": {
-    "title": "Link Devices",
+    "title": "Link devices",
     "tabs": {
-      "link": "Link Device",
-      "devices": "My Devices"
+      "link": "Link device",
+      "devices": "My devices"
     },
     "alreadyHaveInvite": "Already have an invite?",
     "platforms": {
@@ -156,27 +156,27 @@
       "Linux": "Linux",
       "Android": "Android",
       "iOS": "iOS",
-      "unknown": "Unknown Device",
+      "unknown": "Unknown device",
       "renameHint": " · Tap to rename"
     },
     "hero": {
-      "title": "Link Your Devices",
+      "title": "Link your devices",
       "description": "Create a secure, end-to-end encrypted connection to sync your notes across devices instantly.",
-      "generateBtn": "Generate Invite",
+      "generateBtn": "Generate invite",
       "preparing": "Preparing…"
     },
     "invite": {
-      "header": "Invitation Ready",
+      "header": "Invitation ready",
       "qrTitle": "Scan to link faster",
       "qrDescription": "Open the link screen on your other device and scan this QR code to paste the invite instantly.",
-      "codeLabel": "SECURE PAIR CODE",
-      "copyBtn": "Copy Invite Code",
+      "codeLabel": "Secure pair code",
+      "copyBtn": "Copy invite code",
       "copied": "Copied!",
       "warning": "For security, don't share this code in public channels as it grants full access to your notes.",
       "expiresIn": "Expires in {{countdown}}",
-      "expiredTitle": "Invite Expired",
+      "expiredTitle": "Invite expired",
       "expiredDesc": "For security, invites are valid for {{minutes}} minutes. Generate a new one to link a device.",
-      "regenerateBtn": "Generate New Invite"
+      "regenerateBtn": "Generate new invite"
     },
     "paste": {
       "header": "Already have an invite?",
@@ -186,8 +186,8 @@
     },
     "footer": "Your data moves directly between devices using encrypted Hypercore logs. No central server involved.",
     "devices": {
-      "thisDevice": "THIS DEVICE",
-      "otherDevices": "OTHER DEVICES",
+      "thisDevice": "This device",
+      "otherDevices": "Other devices",
       "empty": "No other devices connected yet.",
       "removeDevice": "Remove {{name}}",
       "rename": "Rename this device",
@@ -199,7 +199,7 @@
     "permissions": {
       "cameraTitle": "Camera access needed",
       "cameraDescription": "Allow camera access to scan an invite QR code and fill the pairing code automatically.",
-      "allowBtn": "Allow Camera",
+      "allowBtn": "Allow camera",
       "cancelBtn": "Not now"
     },
     "scanner": {
@@ -207,17 +207,17 @@
       "description": "Point your camera at the QR code shown on your other device to fill the invite automatically."
     },
     "delete": {
-      "title": "Remove Device?",
+      "title": "Remove device?",
       "description": "The device will lose the data sync and all data will be removed from that device.",
       "cancel": "Cancel",
       "remove": "Remove"
     },
     "backgroundSync": {
-      "header": "BACKGROUND SYNC",
-      "modeLabel": "Sync Mode",
+      "header": "Background sync",
+      "modeLabel": "Sync mode",
       "off": "Off",
       "periodic": "Periodic",
-      "alwaysOn": "Always On",
+      "alwaysOn": "Always on",
       "offDesc": "Sync only while the app is open.",
       "periodicDesc": "The OS occasionally wakes Pear Notes in the background to sync — low battery impact.",
       "alwaysOnDesc": "Keep syncing continuously in the background with a persistent notification.",
@@ -239,14 +239,15 @@
   },
   "folders": {
     "title": "Folders",
-    "archiveHeader": "ARCHIVE",
-    "renameTitle": "Rename Folder",
-    "deleteTitle": "Delete Folder",
+    "archiveHeader": "Archive",
+    "renameTitle": "Rename folder",
+    "deleteTitle": "Delete folder",
     "deleteDescription": "This folder and its notes will be deleted.",
     "buttons": {
       "cancel": "Cancel",
       "delete": "Delete",
-      "rename": "Rename"
+      "rename": "Rename",
+      "changeIcon": "Change icon"
     },
     "renameLabel": "Folder name",
     "options": "Folder options",
@@ -264,11 +265,49 @@
       "newNote": "New note"
     },
     "doubleClickToRename": "Double click to rename",
-    "newFolder": "New Folder",
+    "newFolder": "New folder",
     "errors": {
       "duplicateName": "A folder named “{{name}}” already exists.",
       "emptyName": "Enter a folder name."
-    }
+    },
+    "icons": {
+      "folder": "Folder",
+      "briefcase": "Work",
+      "home": "Home",
+      "people": "People",
+      "idea": "Ideas",
+      "tasks": "Tasks",
+      "calendar": "Calendar",
+      "book": "Journal",
+      "study": "Study",
+      "code": "Code",
+      "design": "Design",
+      "project": "Projects",
+      "chart": "Reports",
+      "finance": "Finance",
+      "shopping": "Shopping",
+      "recipes": "Recipes",
+      "travel": "Travel",
+      "health": "Health",
+      "star": "Important",
+      "archive": "Archive",
+      "heart": "Favourites",
+      "music": "Music",
+      "camera": "Photos",
+      "film": "Watchlist",
+      "mic": "Recordings",
+      "pets": "Pets",
+      "leaf": "Nature",
+      "coffee": "Coffee",
+      "fitness": "Fitness",
+      "target": "Goals",
+      "globe": "World",
+      "building": "Office",
+      "gift": "Gifts",
+      "map": "Places",
+      "trophy": "Achievements"
+    },
+    "iconPickerTitle": "Icon for “{{name}}”"
   },
   "folderView": {
     "searchPlaceholder": "Search notes...",
@@ -277,9 +316,9 @@
     "empty": {
       "noMatchesTitle": "No matches found",
       "noMatchesSubtitle": "Try a different search term",
-      "noNotesTitle": "No Notes",
+      "noNotesTitle": "No notes",
       "noNotesSubtitle": "Tap the compose button to create one",
-      "trashEmptyTitle": "No Deleted Notes",
+      "trashEmptyTitle": "No deleted notes",
       "trashEmptySubtitle": "Notes you delete appear here for {{days}} days before they are removed for good.",
       "onboardingTitle": "Start your first note",
       "onboardingSubtitle": "Write something new, connect another device to sync, or restore from a backup file.",
@@ -292,10 +331,10 @@
       "pinned": "Pinned",
       "today": "Today",
       "yesterday": "Yesterday",
-      "last7Days": "Last 7 Days",
+      "last7Days": "Last 7 days",
       "older": "Older"
     },
-    "permanentlyDeleteTitle": "Permanently Delete",
+    "permanentlyDeleteTitle": "Permanently delete",
     "permanentlyDeleteSubtitle": "This note cannot be recovered.",
     "noAdditionalText": "No additional text",
     "trashRetentionNotice": "Notes here are permanently removed after {{days}} days.",
@@ -310,38 +349,38 @@
     "uploading": "Uploading… {{progress}}%",
     "attachment": {
       "image_one": "Photo",
-      "image_other": "{{count}} Photos",
+      "image_other": "{{count}} photos",
       "video_one": "Video",
-      "video_other": "{{count}} Videos",
+      "video_other": "{{count}} videos",
       "audio_one": "Voice recording",
-      "audio_other": "{{count}} Voice recordings",
+      "audio_other": "{{count}} voice recordings",
       "file_one": "Attachment",
-      "file_other": "{{count}} Attachments",
-      "mixed": "{{count}} Attachments"
+      "file_other": "{{count}} attachments",
+      "mixed": "{{count}} attachments"
     },
     "actions": {
       "moveTo": "Move to",
-      "moveToFolder": "Move to Folder",
+      "moveToFolder": "Move to folder",
       "downloading": "Downloading...",
-      "copyNote": "Copy Note",
-      "pin": "Pin Note",
-      "unpin": "Unpin Note",
+      "copyNote": "Copy note",
+      "pin": "Pin note",
+      "unpin": "Unpin note",
       "delete": "Delete",
       "noFolders": "No folders available",
       "options": "Note options",
       "share": "Share",
-      "lock": "Lock Note",
-      "unlock": "Remove Lock",
+      "lock": "Lock note",
+      "unlock": "Remove lock",
       "restore": "Restore",
-      "noteHistory": "Note History"
+      "noteHistory": "Note history"
     },
     "deleteConfirmation": "Are you sure you want to delete this note?",
     "unlockReason": "Unlock this note",
     "lockReason": "Lock this note",
-    "authUnavailableTitle": "Device Lock Unavailable",
+    "authUnavailableTitle": "Device lock unavailable",
     "authUnavailableDesc": "This device has no biometrics or passcode set up, so notes can't be locked or unlocked here. Set up device security, or change the lock method from another synced device.",
-    "lockedTitle": "Locked Note",
-    "lockedNoAuthTitle": "Can't Open Locked Note",
+    "lockedTitle": "Locked note",
+    "lockedNoAuthTitle": "Can't open locked note",
     "lockedNoAuthDesc": "This note is locked and can't be opened on this device. Set up Face ID, Touch ID, or a device passcode in Settings to view it.",
     "lockedUnlockDesc": "This note is protected. Use biometric to authenticate and view it.",
     "lockedUnlockFaceDesc": "This note is protected. Use Face ID to view it.",
@@ -349,8 +388,8 @@
     "lockedUnlockPasswordDesc": "This note is protected. Enter your note lock password to view it.",
     "unlock": "Unlock",
     "unlockWithFace": "Unlock with Face ID",
-    "unlockWithFingerprint": "Unlock with Fingerprint",
-    "unlockWithPassword": "Enter Password"
+    "unlockWithFingerprint": "Unlock with fingerprint",
+    "unlockWithPassword": "Enter password"
   },
   "audioRecorder": {
     "status": {
@@ -369,14 +408,14 @@
       "startHint": "Tap to start recording."
     },
     "errors": {
-      "micTitle": "Microphone Access",
+      "micTitle": "Microphone access",
       "micMessage": "Please enable microphone in Settings.",
-      "recordTitle": "Recording Error",
+      "recordTitle": "Recording error",
       "recordDefault": "Could not start recording."
     }
   },
   "error": {
-    "initFailed": "Initialization Failed",
+    "initFailed": "Initialization failed",
     "retry": "Retry",
     "backendFailed": "Failed to initialize backend runtime."
   },
@@ -394,7 +433,7 @@
       "readingWithSize": "Reading {{size}}...",
       "processing": "Processing...",
       "uploading": "Uploading...",
-      "failedTitle": "Upload Failed",
+      "failedTitle": "Upload failed",
       "failedVideo": "Could not upload the video.",
       "failedDownload": "Could not download the file.",
       "photo": "Photo",
@@ -413,8 +452,8 @@
     "menu": {
       "image": "Image",
       "attachment": "Attachment",
-      "imageOptions": "Image Options",
-      "attachmentOptions": "Attachment Options",
+      "imageOptions": "Image options",
+      "attachmentOptions": "Attachment options",
       "saveToPhotos": "Save to Photos",
       "download": "Download"
     },
@@ -430,22 +469,22 @@
       "cut": "Cut",
       "copy": "Copy",
       "paste": "Paste",
-      "selectAll": "Select All",
+      "selectAll": "Select all",
       "moveTo": "Move to",
-      "copyNote": "Copy Note",
-      "unpinNote": "Unpin Note",
-      "pinNote": "Pin Note",
-      "removeLock": "Remove Lock",
-      "lockNote": "Lock Note",
+      "copyNote": "Copy note",
+      "unpinNote": "Unpin note",
+      "pinNote": "Pin note",
+      "removeLock": "Remove lock",
+      "lockNote": "Lock note",
       "delete": "Delete",
-      "noteHistory": "Note History"
+      "noteHistory": "Note history"
     },
     "lock": {
       "passwordProtected": "This note is protected. Enter your note lock password to view it.",
       "authProtected": "This note is protected. Use Touch ID or your login password to authenticate and view it.",
       "unavailable": "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."
     },
-    "untitled": "Untitled Note",
+    "untitled": "Untitled note",
     "conflict": {
       "title": "Also edited on another device",
       "keepMine": "Keep mine",
@@ -463,48 +502,48 @@
       "startingReplication": "Starting data replication...",
       "receiving": "Receiving data...",
       "receivingWithCount": "Receiving data... ({{count}} notes found)",
-      "establishing": "Establishing Link...",
+      "establishing": "Establishing link...",
       "confirmation": "Waiting for confirmation...",
       "done": "Devices linked",
       "waiting": "Waiting for device...",
       "readyToPair": "Ready to pair"
     },
     "overlay": {
-      "deviceRemovedTitle": "Device Removed",
+      "deviceRemovedTitle": "Device removed",
       "deviceRemovedDesc": "This device has been removed from the synced cluster. Press Okay to clear local synced data and reset common storage.",
       "okay": "Okay",
-      "resettingTitle": "Clearing Data",
+      "resettingTitle": "Clearing data",
       "resettingDesc": "Removing synced data from this device...",
-      "linkedTitle": "Device Linked",
+      "linkedTitle": "Device linked",
       "linkedInviter": "Your new device has been verified and linked successfully.",
       "linkedReceiver": "Welcome! This device is now a secure part of your notes library.",
-      "returnToNotes": "Return to Notes",
-      "openWorkspace": "Open Workspace",
-      "syncingTitle": "Syncing Data",
+      "returnToNotes": "Return to notes",
+      "openWorkspace": "Open workspace",
+      "syncingTitle": "Syncing data",
       "syncingDesc": "Moving your notes and media to this device...",
-      "complete": "{{progress}}% Complete",
-      "linkTitle": "Link Your Device",
+      "complete": "{{progress}}% complete",
+      "linkTitle": "Link your device",
       "linkDesc": "Enter the invite code from your other device to sync your notes securely.",
-      "inviteCode": "Invite Code",
+      "inviteCode": "Invite code",
       "scanBtn": "Scan QR",
       "placeholder": "Paste your code here...",
       "connectBtn": "Connect",
-      "mergeTitle": "Combine This Device?",
+      "mergeTitle": "Combine this device?",
       "mergeDesc": "Notes, folders, and media on this device will be merged into the linked vault. Nothing on this device will be deleted.",
-      "mergeConfirm": "Combine & Link",
-      "verifyTitle": "Verify Secure Code",
-      "identityTitle": "Identity Verification",
+      "mergeConfirm": "Combine & link",
+      "verifyTitle": "Verify secure code",
+      "identityTitle": "Identity verification",
       "verifyDesc": "Ensure both devices display the same identification code.",
       "identityDesc": "Verifying connection. Please authorize on your other device.",
-      "remoteId": "REMOTE ID",
-      "myId": "MY ID",
-      "verifyBtn": "Verify Code",
+      "remoteId": "Remote ID",
+      "myId": "My ID",
+      "verifyBtn": "Verify code",
       "rejectBtn": "Reject",
-      "pairingFailedTitle": "Pairing Failed",
+      "pairingFailedTitle": "Pairing failed",
       "pairingFailedDesc": "Pairing timed out or failed. Your notes on this device have been kept. You can try pairing again.",
-      "pairingRejectedTitle": "Pairing Declined",
+      "pairingRejectedTitle": "Pairing declined",
       "pairingRejectedDesc": "The other device declined this pairing request. Your notes on this device have been kept.",
-      "pairingExpiredTitle": "Invite Expired",
+      "pairingExpiredTitle": "Invite expired",
       "pairingExpiredDesc": "That invite is no longer valid. Ask the other device to generate a new one."
     }
   },
@@ -521,18 +560,18 @@
   "layouts": {
     "settings": "Settings",
     "general": "General",
-    "backupRestore": "Backup / Restore",
-    "backupPassword": "Backup Password",
-    "noteLockPassword": "Note Lock Password",
-    "privacyAndSecurity": "Privacy & Security",
+    "backupRestore": "Backup / restore",
+    "backupPassword": "Backup password",
+    "noteLockPassword": "Note lock password",
+    "privacyAndSecurity": "Privacy & security",
     "storage": "Storage",
     "activity": "Activity",
-    "linkDevices": "Link Devices",
+    "linkDevices": "Link devices",
     "sync": "Sync"
   },
   "noteLockPassword": {
-    "createTitle": "Set Note Lock Password",
-    "enterTitle": "Enter Note Lock Password",
+    "createTitle": "Set note lock password",
+    "enterTitle": "Enter note lock password",
     "createDesc": "This password will be required to open locked notes on all your synced devices.",
     "enterDesc": "Enter your note lock password to unlock this note.",
     "enterLockDesc": "Enter your note lock password to lock this note.",
@@ -542,7 +581,7 @@
     "mismatch": "Passwords do not match",
     "incorrect": "Incorrect password",
     "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
-    "createButton": "Set Password",
+    "createButton": "Set password",
     "unlockButton": "Unlock",
     "lockButton": "Lock",
     "placeholderCreate": "Create a strong password",
@@ -567,15 +606,15 @@
     "explore": "Explore"
   },
   "attachments": {
-    "addAttachment": "Add Attachment",
-    "photoVideo": "Photos or Videos",
-    "takePhoto": "Take Photo",
-    "takeVideo": "Take Video",
-    "chooseFile": "Attach File",
-    "scanDocument": "Scan Document",
-    "recordAudio": "Record Audio",
-    "audioRecording": "Audio Recording",
-    "audioAttachment": "Audio Attachment"
+    "addAttachment": "Add attachment",
+    "photoVideo": "Photos or videos",
+    "takePhoto": "Take photo",
+    "takeVideo": "Take video",
+    "chooseFile": "Attach file",
+    "scanDocument": "Scan document",
+    "recordAudio": "Record audio",
+    "audioRecording": "Audio recording",
+    "audioAttachment": "Audio attachment"
   },
   "common": {
     "active": "Active",
@@ -594,37 +633,37 @@
     "play": "Play"
   },
   "permissions": {
-    "openSettings": "Open Settings",
+    "openSettings": "Open settings",
     "camera": {
-      "title": "Camera Access Needed",
+      "title": "Camera access needed",
       "message": "Pear Notes needs camera access to take photos and videos. Enable it in Settings."
     }
   },
   "backup": {
-    "title": "Backup / Restore",
+    "title": "Backup / restore",
     "subtitle": "Export or import your data",
     "hero": {
-      "title": "Secure Your Vault",
+      "title": "Secure your vault",
       "description": "Backing up your data ensures you never lose your notes and files. All backups are encrypted with a password you choose and can be safely restored to any of your devices."
     },
-    "createBackup": "Create Backup",
+    "createBackup": "Create backup",
     "lockedAuthReason": "Authenticate to back up your locked notes",
-    "restoreData": "Restore Data",
-    "restoreTitle": "Restoring Data",
-    "runInBackground": "Run in Background",
-    "bannerReadyTitle": "Backup Ready",
+    "restoreData": "Restore data",
+    "restoreTitle": "Restoring data",
+    "runInBackground": "Run in background",
+    "bannerReadyTitle": "Backup ready",
     "bannerReadyAction": "Press here to save",
-    "notificationPermissionTitle": "Notification Permission",
+    "notificationPermissionTitle": "Notification permission",
     "notificationPermissionDesc": "Pear Notes needs notification permission to show backup progress while it runs in the background.",
-    "notificationPermissionAskMeLater": "Ask Me Later",
+    "notificationPermissionAskMeLater": "Ask me later",
     "notificationPermissionCancel": "Cancel",
     "notificationPermissionOK": "OK",
-    "lastBackup": "Last Backup",
+    "lastBackup": "Last backup",
     "noBackup": "Never",
-    "notesSize": "Notes Size",
+    "notesSize": "Notes size",
     "diskFootprint": "On-disk footprint",
     "reclaimable": "Reclaimable",
-    "breakdownByType": "BREAKDOWN BY TYPE",
+    "breakdownByType": "Breakdown by type",
     "images": "Images",
     "videos": "Videos",
     "voiceNotes": "Voice notes",
@@ -632,47 +671,47 @@
     "files": "Files",
     "text": "Text",
     "textAllNotesDesc": "(all notes)",
-    "syncedMedia": "Synced Media",
+    "syncedMedia": "Synced media",
     "items": "{{count}} items",
     "shareBackup": "Pear Notes backup",
-    "shareError": "Share Failed",
-    "clearStorage": "Clear Storage",
-    "clearAllDataTitle": "Clear All Data?",
+    "shareError": "Share failed",
+    "clearStorage": "Clear storage",
+    "clearAllDataTitle": "Clear all data?",
     "clearAllDataDesc": "This will permanently delete ALL notes, folders, settings, and media. This cannot be undone.",
     "progress": {
       "backingUp": "Backing up your data...",
       "restoring": "Restoring your data...",
-      "creatingTitle": "Creating Backup...",
-      "restoringTitle": "Restoring Data...",
-      "readingTitle": "Reading Backup...",
+      "creatingTitle": "Creating backup...",
+      "restoringTitle": "Restoring data...",
+      "readingTitle": "Reading backup...",
       "readingDesc": "Loading and preparing your backup file...",
       "creatingDesc": "Encrypting and uploading your vault data...",
       "restoringDesc": "Decrypting and restoring your vault data...",
       "errorTitle": "Something went wrong",
-      "restoredTitle": "Restore Complete",
+      "restoredTitle": "Restore complete",
       "restoredDesc": "Your notes and data have been restored successfully.",
-      "completeTitle": "Backup Ready",
+      "completeTitle": "Backup ready",
       "completeDesc": "Opening the share sheet to save your backup...",
       "cancel": "Cancel",
       "dismiss": "Dismiss"
     },
     "readingBackup": "Reading backup file...",
-    "restoreComplete": "Restore Complete",
+    "restoreComplete": "Restore complete",
     "restoreCompleteDesc": "Your notes and data have been restored successfully.",
-    "invalidFile": "Invalid File",
+    "invalidFile": "Invalid file",
     "invalidFileDesc": "Please select a .pnbk backup file.",
-    "restoreError": "Restore Failed",
-    "confirmExportTitle": "Backup Recovery Key",
-    "confirmExportDesc": "Please make sure you have copied your Recovery Key securely. You will need it to restore this backup on other devices.",
+    "restoreError": "Restore failed",
+    "confirmExportTitle": "Backup recovery key",
+    "confirmExportDesc": "Please make sure you have copied your recovery key securely. You will need it to restore this backup on other devices.",
     "confirmExportYes": "Yes, I copied it",
     "confirmExportNo": "Cancel",
-    "recoveryKey": "Recovery Key",
+    "recoveryKey": "Recovery key",
     "recoveryKeyDesc": "Save this key securely. You will need it to restore this backup on a new device.",
-    "copyKey": "Copy Key",
+    "copyKey": "Copy key",
     "copied": "Copied!",
-    "enterRecoveryKeyTitle": "Enter Recovery Key",
-    "enterRecoveryKeyDesc": "Please enter the Recovery Key of the device that created this backup.",
-    "invalidKey": "Invalid Key",
+    "enterRecoveryKeyTitle": "Enter recovery key",
+    "enterRecoveryKeyDesc": "Please enter the recovery key of the device that created this backup.",
+    "invalidKey": "Invalid key",
     "invalidKeyDesc": "The recovery key must be a 64-character hex string.",
     "errors": {
       "invalidFile": "This file isn't a valid Pear Notes backup.",
@@ -681,17 +720,17 @@
       "unsupportedVersion": "This backup was made with an incompatible version and cannot be restored.",
       "incorrectRecoveryKey": "Incorrect recovery key. Please check the key and try again."
     },
-    "protectedTitle": "Password Protected and Encrypted",
+    "protectedTitle": "Password protected and encrypted",
     "protectedDesc": "You choose a password when creating a backup, and it encrypts the file. You'll need that same password to restore — it is never stored, so keep it somewhere safe.",
     "password": {
-      "createTitle": "Set a Backup Password",
+      "createTitle": "Set a backup password",
       "createDesc": "This password encrypts your backup. You'll need it to restore — it can't be recovered if lost.",
-      "enterTitle": "Enter Backup Password",
+      "enterTitle": "Enter backup password",
       "enterDesc": "Enter the password used to create this backup to decrypt your data.",
       "placeholder": "Password",
       "confirmPlaceholder": "Confirm password",
       "mismatch": "Passwords do not match",
-      "createButton": "Create Backup",
+      "createButton": "Create backup",
       "restoreButton": "Restore",
       "strength": {
         "label": "Strength",
@@ -716,29 +755,29 @@
       "title": "Storage",
       "description": "View and manage the space used by your notes, media, and files on this device."
     },
-    "usage": "USAGE",
-    "notesData": "Notes Data",
-    "diskFootprint": "On-disk Footprint",
+    "usage": "Usage",
+    "notesData": "Notes data",
+    "diskFootprint": "On-disk footprint",
     "reclaimable": "Reclaimable",
     "reclaimableDesc": "Deleted attachments still on disk",
     "reclaimNow": "Reclaim now",
     "reclaiming": "Reclaiming…",
-    "compact": "Compact Storage",
+    "compact": "Compact storage",
     "compactDesc": "Free disk space held by deleted attachments",
     "compactNow": "Compact",
     "compacting": "Compacting…",
-    "syncingFromDevices": "SYNCING FROM OTHER DEVICES",
-    "syncingToDevices": "SYNCING TO OTHER DEVICES",
+    "syncingFromDevices": "Syncing from other devices",
+    "syncingToDevices": "Syncing to other devices",
     "attachment": "Attachment",
     "waitingForDevice": "Waiting for the other device to come online",
-    "dangerZone": "DANGER ZONE",
-    "clearAllData": "Clear All Data",
+    "dangerZone": "Danger zone",
+    "clearAllData": "Clear all data",
     "clearAllDataDesc": "Permanently deletes all notes, folders, settings, and media.",
-    "clearStorage": "Clear Storage",
+    "clearStorage": "Clear storage",
     "liveMediaOnDisk": "Live media on disk",
     "notesDataTooltip": "Total size of media currently referenced by your notes.",
     "diskFootprintTooltip": "Physical bytes hypercore has allocated on disk. Deleting media compacts this automatically; use Reclaim below if it looks stale.",
-    "perNoteBreakdown": "Per-Note Breakdown",
+    "perNoteBreakdown": "Per-note breakdown",
     "transferFailed": "Transfer failed — retry to try again",
     "paused": "Paused",
     "stalled": "Stalled — retry to try again",
@@ -748,63 +787,63 @@
   },
   "update": {
     "overlay": {
-      "title": "Update Required",
+      "title": "Update required",
       "description": "A required update is available (v{{version}}). Please update Pear Notes to continue.",
-      "updateButton": "Update Now"
+      "updateButton": "Update now"
     },
     "banner": {
       "title": "Update available",
       "description": "Version {{version}} is ready to install",
-      "updateButton": "Update Now",
+      "updateButton": "Update now",
       "dismiss": "Dismiss"
     }
   },
   "linkModal": {
-    "addLink": "Add Link",
-    "linkText": "Link Text",
+    "addLink": "Add link",
+    "linkText": "Link text",
     "linkTextPlaceholder": "Link text",
     "url": "URL",
     "enterWebAddress": "Enter the web address",
-    "removeLink": "Remove Link"
+    "removeLink": "Remove link"
   },
   "sidebar": {
     "title": "Notes",
-    "newNote": "New Note",
+    "newNote": "New note",
     "search": "Search",
     "noNotesFound": "No notes found",
     "noNotesYet": "No notes yet",
     "createFirstNote": "Create your first note",
-    "deleteNote": "Delete Note",
+    "deleteNote": "Delete note",
     "untitled": "Untitled"
   },
   "attachmentMenu": {
-    "ariaLabel": "Add Attachment",
-    "photoVideo": "Photos or Videos",
-    "chooseFile": "Attach File",
-    "recordAudio": "Record Audio"
+    "ariaLabel": "Add attachment",
+    "photoVideo": "Photos or videos",
+    "chooseFile": "Attach file",
+    "recordAudio": "Record audio"
   },
   "lockUnavailableModal": {
-    "title": "Device Lock Unavailable"
+    "title": "Device lock unavailable"
   },
   "syncScreen": {
-    "title": "Sync Devices",
+    "title": "Sync devices",
     "haveInvite": "Have an invite?",
-    "connectedDevices": "Connected Devices",
-    "thisDevice": "This Device"
+    "connectedDevices": "Connected devices",
+    "thisDevice": "This device"
   },
   "pairingStatus": {
-    "deviceLinked": "Device Linked",
-    "syncingData": "Syncing Data"
+    "deviceLinked": "Device linked",
+    "syncingData": "Syncing data"
   },
   "audioPlayer": {
-    "label": "AUDIO"
+    "label": "Audio"
   },
   "audioRecorderModal": {
-    "title": "Record Audio",
-    "subtitle": "Voice Capture",
-    "start": "Start Recording",
-    "stop": "Stop Recording",
-    "previewTitle": "Preview Recording",
+    "title": "Record audio",
+    "subtitle": "Voice capture",
+    "start": "Start recording",
+    "stop": "Stop recording",
+    "previewTitle": "Preview recording",
     "rerecord": "Re-record",
     "saving": "Saving...",
     "insert": "Insert",
@@ -816,9 +855,9 @@
     "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone.",
     "thisFile": "this file",
     "playingFullscreen": "Playing in fullscreen",
-    "exitFullscreen": "Exit Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
     "fullscreen": "Fullscreen",
-    "untitledFile": "Untitled File",
+    "untitledFile": "Untitled file",
     "fileDefault": "File",
     "pageCount_one": "{{count}} page",
     "pageCount_other": "{{count}} pages"
@@ -830,22 +869,22 @@
     "underline": "Underline",
     "strikethrough": "Strikethrough",
     "highlight": "Highlight",
-    "codeBlock": "Code Block",
+    "codeBlock": "Code block",
     "checklist": "Checklist",
     "link": "Link",
-    "insertTable": "Insert Table",
+    "insertTable": "Insert table",
     "attachments": "Attachments",
     "undo": "Undo",
     "redo": "Redo",
     "subscript": "Subscript",
     "superscript": "Superscript",
     "horizontalRule": "Divider",
-    "alignLeft": "Align Left",
-    "alignCenter": "Align Center",
-    "alignRight": "Align Right",
+    "alignLeft": "Align left",
+    "alignCenter": "Align center",
+    "alignRight": "Align right",
     "alignJustify": "Justify",
     "alignment": "Alignment",
-    "highlightNone": "No Highlight",
+    "highlightNone": "No highlight",
     "highlightColors": {
       "yellow": "Yellow",
       "green": "Green",
@@ -858,15 +897,15 @@
       "title": "Title",
       "heading": "Heading",
       "subheading": "Subheading",
-      "bodyText": "Body Text",
+      "bodyText": "Body text",
       "monospaced": "Monospaced",
-      "bulletedList": "Bulleted List",
-      "numberedList": "Numbered List",
-      "quoteBlock": "Quote Block"
+      "bulletedList": "Bulleted list",
+      "numberedList": "Numbered list",
+      "quoteBlock": "Quote block"
     }
   },
   "imageView": {
-    "deleteImage": "Delete Image",
+    "deleteImage": "Delete image",
     "imageDefault": "Image"
   },
   "mediaPreview": {
@@ -876,42 +915,42 @@
     "downloadingProgress": "Downloading… {{progress}}%"
   },
   "mergeConfirm": {
-    "title": "Combine This Device?",
+    "title": "Combine this device?",
     "description": "Notes, folders, and media on this device will be merged into the linked vault. Nothing on this device will be deleted.",
-    "combineBtn": "Combine & Link"
+    "combineBtn": "Combine & link"
   },
   "notesList": {
-    "toggleSidebar": "Toggle Sidebar",
+    "toggleSidebar": "Toggle sidebar",
     "selection": {
-      "select": "Select Notes",
-      "selectAll": "Select All",
-      "deselectAll": "Deselect All",
+      "select": "Select notes",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
       "done": "Done selecting",
       "selectedCount_one": "{{count}} SELECTED",
       "selectedCount_other": "{{count}} SELECTED",
       "move": "Move to",
       "restore": "Restore",
-      "moveSelected": "Move Selected to Folder",
-      "deleteSelected": "Delete Selected",
+      "moveSelected": "Move selected to folder",
+      "deleteSelected": "Delete selected",
       "confirmDelete_one": "Move 1 note to Recently Deleted?",
       "confirmDelete_other": "Move {{count}} notes to Recently Deleted?",
       "confirmPermanentDelete_one": "Permanently delete 1 note? This cannot be undone.",
       "confirmPermanentDelete_other": "Permanently delete {{count}} notes? This cannot be undone.",
-      "restoreSelected": "Restore Selected"
+      "restoreSelected": "Restore selected"
     }
   },
   "editor": {
     "table": {
-      "addRowAbove": "Add Row Above",
-      "addRowBelow": "Add Row Below",
-      "deleteRow": "Delete Row",
-      "addColumnBefore": "Add Column Before",
-      "addColumnAfter": "Add Column After",
-      "deleteColumn": "Delete Column",
-      "mergeCells": "Merge Cells",
-      "deleteTable": "Delete Table",
-      "toggleHeaderRow": "Toggle Header Row",
-      "splitCell": "Split Cell"
+      "addRowAbove": "Add row above",
+      "addRowBelow": "Add row below",
+      "deleteRow": "Delete row",
+      "addColumnBefore": "Add column before",
+      "addColumnAfter": "Add column after",
+      "deleteColumn": "Delete column",
+      "mergeCells": "Merge cells",
+      "deleteTable": "Delete table",
+      "toggleHeaderRow": "Toggle header row",
+      "splitCell": "Split cell"
     }
   },
   "uploadToast": {
@@ -930,7 +969,7 @@
   },
   "activity": {
     "timeline": "Timeline",
-    "noteHistory": "Note History",
+    "noteHistory": "Note history",
     "today": "Today",
     "yesterday": "Yesterday",
     "loadMore": "Load more",

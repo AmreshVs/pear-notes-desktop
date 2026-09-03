@@ -360,7 +360,7 @@ export default function StorageSettings() {
 
       {activeDownloads.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('storage.syncingFromDevices')} ({activeDownloads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
@@ -384,7 +384,7 @@ export default function StorageSettings() {
 
       {activeUploads.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('storage.syncingToDevices')} ({activeUploads.length})
           </h3>
           <div className={TRANSFER_LIST_CLASS}>
@@ -400,7 +400,7 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('storage.usage')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
@@ -480,7 +480,7 @@ export default function StorageSettings() {
 
       {hasBreakdown && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('backup.breakdownByType')}
           </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
@@ -572,7 +572,7 @@ export default function StorageSettings() {
 
       {notesStorageInfo.length > 0 && (
         <div className='space-y-1'>
-          <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+          <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('storage.perNoteBreakdown')}
           </h3>
           <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
@@ -584,7 +584,7 @@ export default function StorageSettings() {
       )}
 
       <div className='space-y-1'>
-        <h3 className='text-text-secondary font-bold text-xs uppercase tracking-[0.2em] ml-2 mb-3'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('storage.dangerZone')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>

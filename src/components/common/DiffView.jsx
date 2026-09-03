@@ -27,8 +27,10 @@ export default function DiffView({ before, after, compact = false }) {
     <div className='mt-3 border border-border-secondary rounded-2xl overflow-hidden bg-bg-primary/60'>
       <div className='flex items-center gap-3 px-4 py-2 border-b border-border-secondary bg-bg-tertiary/30'>
         <span className='text-xs font-bold text-accent-success tabular-nums'>+{diff.added}</span>
-        <span className='text-xs font-bold text-accent-danger tabular-nums'>&minus;{diff.removed}</span>
-        <span className='text-[0.65rem] uppercase tracking-[0.14em] text-text-tertiary font-bold ml-auto'>
+        <span className='text-xs font-bold text-accent-danger tabular-nums'>
+          &minus;{diff.removed}
+        </span>
+        <span className='text-[0.65rem] tracking-[0.14em] text-text-tertiary font-bold ml-auto'>
           {t('activity.diff.plainText')}
         </span>
       </div>
