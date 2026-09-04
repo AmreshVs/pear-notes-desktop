@@ -23,6 +23,12 @@ window.electronBridge = {
     return () => ipcRenderer.removeListener('worker-data', handler)
   },
 
+  onPowerState: (callback) => {
+    const handler = (event, state) => callback(state)
+    ipcRenderer.on('power-state', handler)
+    return () => ipcRenderer.removeListener('power-state', handler)
+  },
+
   authenticate: (reason) => ipcRenderer.invoke('device-auth:authenticate', reason),
   isDeviceAuthSupported: () => ipcRenderer.invoke('device-auth:is-supported'),
 

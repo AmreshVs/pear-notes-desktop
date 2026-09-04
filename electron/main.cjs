@@ -7,6 +7,7 @@ const {
   dialog,
   Tray,
   nativeImage,
+  powerMonitor,
   powerSaveBlocker,
   screen,
   shell,
@@ -140,6 +141,16 @@ function startWorker() {
     worker = null
     if (code !== 0) reportWorkerExit(code)
   })
+}
+
+function sendPowerState(state) {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send('power-state', state)
+}
+
+function watchPowerState() {
+  powerMonitor.on('suspend', () => sendPowerState('suspend'))
+  powerMonitor.on('resume', () => sendPowerState('resume'))
 }
 
 const MIN_WINDOW_WIDTH = 880
@@ -433,6 +444,7 @@ if (!lock) {
     createWindow()
     createTray()
     startWorker()
+    watchPowerState()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
