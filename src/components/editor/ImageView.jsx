@@ -76,7 +76,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
   return (
     <NodeViewWrapper className='block relative my-4 w-fit' draggable={!selected}>
       <div
-        className={`relative block transition-all rounded-lg ${selected ? 'ring-2 ring-accent-primary' : ''}`}
+        className='relative block transition-all rounded-lg'
         onMouseDown={(e) => {
           if (selected) e.stopPropagation()
         }}
@@ -119,7 +119,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
               onLoad={onImageLoad}
               onDoubleClick={openPreview}
               draggable={false}
-              className={`rounded-lg border border-border-primary w-full h-full block object-contain pointer-events-auto cursor-zoom-in ${selected ? 'brightness-110' : ''}`}
+              className={`rounded-lg w-full h-full block object-contain pointer-events-auto cursor-zoom-in ${selected ? 'border-2 border-accent-primary brightness-110' : 'border border-border-primary'}`}
             />
           </div>
         </Resizable>
