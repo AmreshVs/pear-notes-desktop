@@ -389,6 +389,25 @@ function setupIPC() {
     return shell.openExternal(url)
   })
 
+  // Chromium's HTTP cache only. Never clearStorageData here: that would also wipe IndexedDB, and
+  // the note thumbnails the sidebar draws live there.
+  ipcMain.handle('cache:size', async () => {
+    try {
+      return await session.defaultSession.getCacheSize()
+    } catch {
+      return 0
+    }
+  })
+
+  ipcMain.handle('cache:clear', async () => {
+    try {
+      await session.defaultSession.clearCache()
+      return true
+    } catch {
+      return false
+    }
+  })
+
   ipcMain.handle('clipboard:write', (event, { text, html } = {}) => {
     if (typeof text !== 'string') return false
     if (typeof html === 'string' && html) clipboard.write({ text, html })

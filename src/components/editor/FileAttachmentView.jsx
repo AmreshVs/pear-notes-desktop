@@ -29,6 +29,7 @@ import {
   downloadAsBlob
 } from '../../lib/fileManager'
 import { isPdfAttachment } from '../../lib/pdfPreview'
+import { deletePdfThumb } from '../../lib/pdfThumbCache'
 import MediaPreviewModal from '../modals/MediaPreviewModal'
 
 import AudioPlayer from './AudioPlayer'
@@ -241,6 +242,9 @@ export default function FileAttachmentView({ node, deleteNode }) {
       console.error('Error deleting file from backend:', error)
       return
     }
+
+    // Reclaim the cached thumbnail now rather than leaving it for the next sweep.
+    await deletePdfThumb(url).catch(() => {})
 
     if (deleteNode) deleteNode()
   }

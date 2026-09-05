@@ -47,5 +47,8 @@ window.electronBridge = {
   checkAppUpdate: () => ipcRenderer.invoke('app-update:check-manifest'),
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
 
-  writeClipboard: (payload) => ipcRenderer.invoke('clipboard:write', payload)
+  writeClipboard: (payload) => ipcRenderer.invoke('clipboard:write', payload),
+
+  getCacheSize: () => ipcRenderer.invoke('cache:size'),
+  clearCache: () => ipcRenderer.invoke('cache:clear')
 }

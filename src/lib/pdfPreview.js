@@ -1,4 +1,4 @@
-import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { attachmentIdentity, getCachedPdfThumb, putPdfThumb } from './pdfThumbCache'
 
 const PREVIEW_MAX_WIDTH = 420
 const PREVIEW_MAX_HEIGHT = 260
@@ -15,14 +15,6 @@ function loadPdfEngine() {
 
 const previewCache = new Map()
 const pendingPreviews = new Map()
-
-function attachmentIdentity(url) {
-  const queryIndex = url.indexOf('?')
-  if (queryIndex !== -1 && url.slice(queryIndex).includes('blob=')) {
-    return `${HYPERDRIVE_URL_PREFIX}/${url.slice(queryIndex)}`
-  }
-  return url
-}
 
 function rememberPreview(identity, preview) {
   previewCache.set(identity, preview)
@@ -67,6 +59,17 @@ async function renderFirstPage(url) {
   }
 }
 
+// Rendering on note open also fills the persistent cache, which is what lets the sidebar show a
+// thumbnail for a note it never renders itself.
+async function loadPreview(url) {
+  const stored = await getCachedPdfThumb(url).catch(() => null)
+  if (stored?.dataUrl) return stored
+
+  const preview = await renderFirstPage(url)
+  if (preview) await putPdfThumb(url, preview).catch(() => {})
+  return preview
+}
+
 export function getPdfPreview(url) {
   if (!url) return Promise.resolve(null)
   const identity = attachmentIdentity(url)
@@ -77,7 +80,7 @@ export function getPdfPreview(url) {
   const inFlight = pendingPreviews.get(identity)
   if (inFlight) return inFlight
 
-  const request = renderFirstPage(url)
+  const request = loadPreview(url)
     .then((preview) => {
       if (preview) rememberPreview(identity, preview)
       return preview
@@ -87,4 +90,29 @@ export function getPdfPreview(url) {
 
   pendingPreviews.set(identity, request)
   return request
+}
+
+/**
+ * Renders page 1 straight from a just-picked local file and persists it under the attachment's
+ * final link, so a freshly attached PDF has a sidebar thumbnail without any network read.
+ */
+export async function warmPdfThumbFromFile(link, file) {
+  if (!link || !file) return
+  const identity = attachmentIdentity(link)
+  if (previewCache.has(identity)) return
+
+  const existing = await getCachedPdfThumb(link).catch(() => null)
+  if (existing?.dataUrl) return
+
+  const objectUrl = URL.createObjectURL(file)
+  try {
+    const preview = await renderFirstPage(objectUrl)
+    if (!preview) return
+    rememberPreview(identity, preview)
+    await putPdfThumb(link, preview).catch(() => {})
+  } catch {
+    // A thumbnail is cosmetic; never let it break an attachment.
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
 }

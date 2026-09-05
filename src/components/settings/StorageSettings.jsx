@@ -344,6 +344,35 @@ export default function StorageSettings() {
     dispatch(reclaimStorage())
   }
 
+  const [cacheBytes, setCacheBytes] = useState(0)
+  const [isClearingCache, setIsClearingCache] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    window.electronBridge
+      ?.getCacheSize?.()
+      .then((bytes) => {
+        if (active) setCacheBytes(bytes || 0)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const handleClearCache = async () => {
+    setIsClearingCache(true)
+    try {
+      await window.electronBridge?.clearCache?.()
+      const bytes = await window.electronBridge?.getCacheSize?.()
+      setCacheBytes(bytes || 0)
+    } catch {
+      // A cache that will not clear is not worth interrupting the user for.
+    } finally {
+      setIsClearingCache(false)
+    }
+  }
+
   const hasBreakdown = useMemo(
     () => Boolean(buckets) && Object.values(buckets).some((bucket) => bucket.count > 0),
     [buckets]
@@ -471,6 +500,22 @@ export default function StorageSettings() {
                   className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                 >
                   {isReclaiming ? t('storage.compacting') : t('storage.compactNow')}
+                </button>
+              </div>
+
+              <div className='px-6 py-5 flex items-center justify-between border-t border-border-primary/50'>
+                <div className='flex flex-col'>
+                  <span className='text-base font-semibold text-text-tertiary'>
+                    {t('storage.cache')} · {formatBytes(cacheBytes)}
+                  </span>
+                  <span className='text-sm text-text-tertiary/70'>{t('storage.cacheDesc')}</span>
+                </div>
+                <button
+                  onClick={handleClearCache}
+                  disabled={isClearingCache}
+                  className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {isClearingCache ? t('storage.clearingCache') : t('storage.clearCache')}
                 </button>
               </div>
             </>

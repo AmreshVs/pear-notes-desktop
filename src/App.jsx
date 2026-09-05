@@ -44,6 +44,7 @@ import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
 import ResizablePanel from './components/sidebar/ResizablePanel'
 import { useAppReload } from './hooks/useAppReload'
+import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
@@ -72,6 +73,7 @@ function App() {
   }, [width])
 
   useAppReload()
+  usePdfThumbSweep()
   usePowerState()
 
   const selectedNote = useSelector(getSelectedNote)

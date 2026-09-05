@@ -51,6 +51,7 @@ import {
   formatDate,
   getAttachmentInfo,
   getFirstImage,
+  getFirstPdfAttachment,
   getGroupTitle,
   getPreview,
   NOTES_LIST_GROUP
@@ -62,6 +63,11 @@ import { getFolderIconComponent } from '../../lib/folderIcons'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import {
+  attachmentIdentity,
+  getCachedPdfThumb,
+  subscribePdfThumbWrites
+} from '../../lib/pdfThumbCache'
 
 import { LockNowButton } from './LockNowButton'
 
@@ -148,6 +154,42 @@ const NotesItem = memo(
     const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
     const resolvedImgSrc = useSelector((state) => getHyperdriveAddress(state, rawImgSrc))
     const imgSrc = isMasked ? null : resolvedImgSrc
+
+    // A PDF fills the thumbnail slot only when there is no image, and only from the cache — a row
+    // must never render a PDF itself. Attaching one, or opening the note, is what caches it.
+    const pdfUrl = useMemo(
+      () => (isMasked || imgSrc ? null : getFirstPdfAttachment(noteData?.note)?.url || null),
+      [isMasked, imgSrc, noteData?.note]
+    )
+    // Keyed by url so a row whose note changed never flashes the previous note's thumbnail.
+    const [pdfThumb, setPdfThumb] = useState(null)
+
+    useEffect(() => {
+      if (!pdfUrl) return
+      let active = true
+
+      const read = () => {
+        getCachedPdfThumb(pdfUrl)
+          .then((thumb) => {
+            if (active && thumb?.dataUrl) setPdfThumb({ url: pdfUrl, dataUrl: thumb.dataUrl })
+          })
+          .catch(() => {})
+      }
+
+      read()
+      // Opening the note renders and caches the thumbnail; pick it up without an app restart.
+      const identity = attachmentIdentity(pdfUrl)
+      const unsubscribe = subscribePdfThumbWrites((written) => {
+        if (written === identity) read()
+      })
+
+      return () => {
+        active = false
+        unsubscribe()
+      }
+    }, [pdfUrl])
+
+    const pdfThumbSrc = pdfUrl && pdfThumb?.url === pdfUrl ? pdfThumb.dataUrl : null
 
     const rawPreviewText = useMemo(
       () => getPreview(noteData?.note, noteData?.note),
@@ -358,13 +400,17 @@ const NotesItem = memo(
               </div>
             </div>
 
-            {imgSrc && (
+            {(imgSrc || pdfThumbSrc) && (
               <div className='flex items-center gap-1 ml-2 flex-shrink-0 relative'>
                 <div className='relative flex-none h-[56px] w-[56px] rounded-lg overflow-hidden border border-white/10 shadow-sm bg-bg-tertiary/20 hardware-accelerated'>
                   <img
-                    src={imgSrc}
+                    src={imgSrc || pdfThumbSrc}
                     alt='Note attachment'
-                    className='w-full h-full object-cover'
+                    className={
+                      imgSrc
+                        ? 'w-full h-full object-cover'
+                        : 'w-full h-full object-cover object-top'
+                    }
                     decoding='async'
                   />
                 </div>
