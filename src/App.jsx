@@ -29,6 +29,8 @@ import {
 } from '@pear-notes/core/store/slices/uiSlice.js'
 import { debounce } from '@pear-notes/core/utils.js'
 
+import appIcon from '../build/icon.png'
+
 import BackupProgressBanner from './components/common/BackupProgressBanner'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
@@ -156,6 +158,12 @@ function App() {
   const content = isLoading ? (
     <div className='flex-1 flex items-center justify-center'>
       <div className='text-center'>
+        <img
+          src={appIcon}
+          alt=''
+          className='h-16 w-16 mx-auto mb-4 shadow-lg select-none'
+          draggable={false}
+        />
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
         <p className='text-base text-text-tertiary'>{t('common.loading')}</p>
       </div>
