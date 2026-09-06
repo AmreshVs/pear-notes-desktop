@@ -12,7 +12,11 @@ import {
   startExportBackup,
   startImportBackup
 } from '@pear-notes/core/store/slices/backupSlice.js'
-import { getTotalStorageSize } from '@pear-notes/core/store/slices/storageSlice.js'
+import {
+  getTotalStorageSize,
+  subscribeStorageInfo,
+  unsubscribeStorageInfo
+} from '@pear-notes/core/store/slices/storageSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import { getBackupErrorMessage } from '../../utils/backupErrors'
@@ -38,6 +42,13 @@ export default function BackupSettings() {
     error: false,
     errorMessage: ''
   })
+  useEffect(() => {
+    dispatch(subscribeStorageInfo())
+    return () => {
+      dispatch(unsubscribeStorageInfo())
+    }
+  }, [dispatch])
+
   const [showExportPasswordModal, setShowExportPasswordModal] = useState(false)
   const [showRestorePasswordModal, setShowRestorePasswordModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)

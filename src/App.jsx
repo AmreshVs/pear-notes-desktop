@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { backendApi, setLocalDeviceName } from '@pear-notes/core/backend/api.js'
+import { appBoot } from '@pear-notes/core/bootTimeline.js'
 import {
   createFolder,
   deleteFolder,
@@ -86,9 +87,11 @@ function App() {
 
   useEffect(() => {
     const load = async () => {
+      appBoot.mark('renderer reached backendApi.ready')
       const key = getDbEncryptionKey()
       const storagePath = window.electronBridge.getStoragePath()
       await backendApi.ready({ storage: storagePath, encryption: key })
+      appBoot.mark('backendApi.ready resolved')
       dispatch(appReady())
       setLocalDeviceName(window.electronBridge.getDeviceName())
     }

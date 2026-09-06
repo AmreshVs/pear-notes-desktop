@@ -40,7 +40,8 @@ import {
   reclaimStorage,
   retryDownload,
   selectStorageByKind,
-  subscribeStorageInfo
+  subscribeStorageInfo,
+  unsubscribeStorageInfo
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
@@ -319,6 +320,9 @@ export default function StorageSettings() {
 
   useEffect(() => {
     dispatch(subscribeStorageInfo())
+    return () => {
+      dispatch(unsubscribeStorageInfo())
+    }
   }, [dispatch])
 
   const handleDeleteMedia = (noteKey, mediaPath) => {
