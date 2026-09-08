@@ -57,7 +57,6 @@ import {
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
-import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
@@ -268,7 +267,6 @@ const NotesItem = memo(
                 { type: 'separator' },
                 { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
                 { type: 'separator' },
-                { id: 'copy', label: t('noteCard.actions.copyNote') },
                 ...(activityEnabled
                   ? [{ id: 'history', label: t('noteCard.actions.noteHistory') }]
                   : []),
@@ -630,18 +628,6 @@ export default function NotesList({
             })
           )
           break
-        case 'copy': {
-          const text = noteData?.value?.note || ''
-          try {
-            const parser = new DOMParser()
-            const doc = parser.parseFromString(text, 'text/html')
-            const cleanText = doc.body.textContent || doc.body.innerText || ''
-            await copyToClipboard(cleanText)
-          } catch (e) {
-            console.error('Failed to copy', e)
-          }
-          break
-        }
         case 'history':
           dispatch(setSelectedNote(noteKey))
           dispatch(openNoteHistory(noteKey))

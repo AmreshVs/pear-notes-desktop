@@ -2,8 +2,8 @@ import { useSyncExternalStore } from 'react'
 
 import { authenticate } from './deviceAuth'
 
-const unlockedKeys = new Set()
 const listeners = new Set()
+let sessionUnlocked = false
 let version = 0
 
 function emit() {
@@ -21,34 +21,27 @@ function getSnapshot() {
 }
 
 export function isNoteUnlocked(key) {
-  return unlockedKeys.has(key)
-}
-
-export function relockNote(key) {
-  if (unlockedKeys.delete(key)) emit()
+  return !!key && sessionUnlocked
 }
 
 export function markNoteUnlocked(key) {
-  if (!key) return
-  if (!unlockedKeys.has(key)) {
-    unlockedKeys.add(key)
-    emit()
-  }
+  if (!key || sessionUnlocked) return
+  sessionUnlocked = true
+  emit()
 }
 
 export function clearUnlockedNotes() {
-  if (unlockedKeys.size > 0) {
-    unlockedKeys.clear()
-    emit()
-  }
+  if (!sessionUnlocked) return
+  sessionUnlocked = false
+  emit()
 }
 
 export async function unlockNote(key, reason = 'Unlock this note') {
   if (!key) return false
-  if (unlockedKeys.has(key)) return true
+  if (sessionUnlocked) return true
   const ok = await authenticate(reason)
   if (ok) {
-    unlockedKeys.add(key)
+    sessionUnlocked = true
     emit()
   }
   return ok
@@ -60,5 +53,5 @@ export function useNoteLockVersion() {
 
 export function useHasUnlockedNotes() {
   useSyncExternalStore(subscribe, getSnapshot)
-  return unlockedKeys.size > 0
+  return sessionUnlocked
 }

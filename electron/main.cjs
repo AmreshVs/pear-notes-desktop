@@ -143,9 +143,34 @@ function startWorker() {
   })
 }
 
+const WINDOW_AWAY_RESUME_MS = 5 * 60 * 1000
+let windowAwaySince = null
+
 function sendPowerState(state) {
   if (!mainWindow || mainWindow.isDestroyed()) return
   mainWindow.webContents.send('power-state', state)
+}
+
+function markWindowAway() {
+  if (windowAwaySince === null) windowAwaySince = Date.now()
+}
+
+function markWindowBack() {
+  const awaySince = windowAwaySince
+  windowAwaySince = null
+  if (awaySince === null) return
+  if (Date.now() - awaySince < WINDOW_AWAY_RESUME_MS) return
+  sendPowerState('resume')
+}
+
+function watchWindowActivity(window) {
+  windowAwaySince = null
+  window.on('blur', markWindowAway)
+  window.on('hide', markWindowAway)
+  window.on('minimize', markWindowAway)
+  window.on('focus', markWindowBack)
+  window.on('show', markWindowBack)
+  window.on('restore', markWindowBack)
 }
 
 function watchPowerState() {
@@ -215,6 +240,8 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+
+  watchWindowActivity(mainWindow)
 }
 
 function createTray() {

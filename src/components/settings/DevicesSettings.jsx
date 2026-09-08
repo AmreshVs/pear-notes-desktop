@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Smartphone,
   Timer,
-  Trash2
+  Trash2,
+  TriangleAlert
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 
@@ -51,7 +52,12 @@ import {
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
-import { canPromoteDevice, getIndexerErrorKey, getIndexerStepKey } from '../../lib/indexerUtils'
+import {
+  canPromoteDevice,
+  getIndexerErrorKey,
+  getIndexerStepKey,
+  isIndexerTransferBlocked
+} from '../../lib/indexerUtils'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
@@ -80,6 +86,9 @@ export default function DevicesSettings({ onClose }) {
   const syncedDevices = useSelector(getSyncedDevices)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
+  const indexerDevice = useSelector(getIndexerDevice)
+  const indexerOffline = isIndexerTransferBlocked(indexerDevice)
+  const indexerName = indexerDevice ? getDeviceDisplayName(indexerDevice) : ''
 
   const [countdownTick, setCountdownTick] = useState(0)
 
@@ -351,6 +360,15 @@ export default function DevicesSettings({ onClose }) {
                   {t('sync.devices.indexerExplain')}
                 </p>
               </div>
+
+              {indexerOffline && (
+                <div className='flex items-start gap-2 mt-3 ml-1'>
+                  <TriangleAlert className='w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5' />
+                  <p className='text-xs text-red-500 leading-relaxed'>
+                    {t('sync.devices.indexerOfflineNotice', { name: indexerName })}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -387,7 +405,7 @@ function DeviceItem({ device, isOther }) {
   const indexerError = useSelector(getIndexerError)
   const indexerErrorDeviceKey = useSelector(getIndexerErrorDeviceKey)
   const currentIndexer = useSelector(getIndexerDevice)
-  const canPromote = canPromoteDevice(device)
+  const canPromote = canPromoteDevice(device, currentIndexer)
   const isTransferring = indexerPendingKey === device.key
   const indexerStepKey = getIndexerStepKey(indexerPendingStep)
   const indexerErrorKey =

@@ -1,7 +1,6 @@
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { authenticate, isDeviceAuthSupported } from './deviceAuth'
-import { relockNote } from './noteLock'
 
 export async function toggleNoteLock({
   key,
@@ -28,5 +27,4 @@ export async function toggleNoteLock({
     : await authenticate(authReason)
   if (!ok) return
   dispatch(updateNote({ key, locked: !currentlyLocked }))
-  relockNote(key)
 }

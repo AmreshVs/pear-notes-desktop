@@ -204,6 +204,8 @@
       "transferring": "Transferring…",
       "errorLastIndexer": "Every vault needs one sync leader. Make another device the leader first.",
       "errorDeviceOffline": "That device must be online before it can become the sync leader.",
+      "errorLeaderOffline": "The current sync leader must be online to hand the role to another device.",
+      "indexerOfflineNotice": "{{name}} is the sync leader and is offline. Bring it back online to make another device the sync leader.",
       "errorGeneric": "Could not change the sync leader. Please try again.",
       "makeIndexerTitleLocal": "Make this device the sync leader?",
       "makeIndexerBodyLocal": "This device takes over keeping the history in order. {{name}} must stay online until the change finishes.",
@@ -478,7 +480,7 @@
     },
     "authenticating": "Authenticating…",
     "titlePlaceholder": "Title",
-    "edited": "edited",
+    "edited": "Edited",
     "contextMenu": {
       "noOtherLists": "No other lists",
       "cut": "Cut",
