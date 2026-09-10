@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { ChevronDown, ChevronRight, Lock, Monitor, Smartphone } from 'lucide-react'
+import { ChevronDown, ChevronRight, Lock, Monitor, RotateCcw, Smartphone } from 'lucide-react'
 
 import { findDeviceByLocalKey, getActivityMessage } from '@pear-notes/core/activity.js'
 import { ACTIVITY_EVENT } from '@pear-notes/core/constant.js'
 import {
   fetchActivityDiff,
-  getActivityDiffs
+  getActivityDiffs,
+  getIsRecoveringWrite,
+  recoverDiscardedWrite
 } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
@@ -15,7 +17,7 @@ import { resolveActivityDeviceName } from '../../lib/activityDevice'
 
 import DiffView from './DiffView'
 
-const DIFFABLE = new Set([ACTIVITY_EVENT.NOTE_EDITED])
+const DIFFABLE = new Set([ACTIVITY_EVENT.NOTE_EDITED, ACTIVITY_EVENT.NOTE_EDIT_DISCARDED])
 
 function formatTime(value) {
   if (!value) return ''
@@ -49,6 +51,15 @@ export default function ActivityEntryRow({
   const hidden = entry.locked && !isUnlocked
   const canExpand = DIFFABLE.has(entry.event) && entry.hasDiff && !hidden
   const diff = diffs[entry.id]
+  const isRecovering = useSelector(getIsRecoveringWrite(entry.id))
+  const isDiscarded = entry.event === ACTIVITY_EVENT.NOTE_EDIT_DISCARDED
+  const canRecover = isDiscarded && entry.recoverable && !hidden
+
+  const handleRecover = (e) => {
+    e.stopPropagation()
+    if (isRecovering) return
+    dispatch(recoverDiscardedWrite({ id: entry.id }))
+  }
 
   const message = getActivityMessage(entry, t, { hidden, showTarget })
 
@@ -118,7 +129,12 @@ export default function ActivityEntryRow({
       </div>
 
       {expanded && (
-        <div className='px-4 pb-4'>
+        <div className='px-4 pb-4 space-y-3'>
+          {isDiscarded && (
+            <p className='text-xs text-text-tertiary leading-relaxed'>
+              {t('activity.discarded.explanation')}
+            </p>
+          )}
           {diff?.available ? (
             <DiffView before={diff.before} after={diff.after} compact />
           ) : (
@@ -126,6 +142,22 @@ export default function ActivityEntryRow({
               {diff ? t('activity.diff.unavailable') : t('activity.diff.loading')}
             </div>
           )}
+          {isDiscarded &&
+            (canRecover ? (
+              <button
+                type='button'
+                onClick={handleRecover}
+                disabled={isRecovering}
+                className='inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-accent-primary/10 text-accent-primary text-xs font-bold hover:bg-accent-primary/20 disabled:opacity-50 transition-colors'
+              >
+                <RotateCcw className='w-3.5 h-3.5' />
+                {isRecovering ? t('activity.discarded.recovering') : t('activity.discarded.recover')}
+              </button>
+            ) : (
+              <p className='text-xs text-text-tertiary font-medium'>
+                {t('activity.discarded.recovered')}
+              </p>
+            ))}
         </div>
       )}
     </div>

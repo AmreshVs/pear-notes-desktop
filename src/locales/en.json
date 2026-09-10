@@ -1042,9 +1042,16 @@
       "unavailable": "The changes for this entry are no longer available.",
       "truncated": "This note is too large to diff line by line."
     },
+    "discarded": {
+      "explanation": "This edit arrived after another device had already changed the note, so it was not applied. Recover it to append the text below to the note.",
+      "recover": "Recover",
+      "recovering": "Recovering…",
+      "recovered": "Recovered into the note"
+    },
     "events": {
       "note.created": "created {{target}}",
       "note.edited": "edited {{target}}",
+      "note.edit_discarded": "made an edit to {{target}} that was superseded by another device",
       "note.renamed": "renamed {{from}} to {{to}}",
       "note.moved": "moved {{target}} to {{to}}",
       "note.trashed": "moved {{target}} to Recently Deleted",
@@ -1070,6 +1077,7 @@
     "eventsShort": {
       "note.created": "created this note",
       "note.edited": "edited this note",
+      "note.edit_discarded": "made an edit that was superseded by another device",
       "note.renamed": "renamed this note from {{from}} to {{to}}",
       "note.moved": "moved this note to {{to}}",
       "note.trashed": "moved this note to Recently Deleted",
