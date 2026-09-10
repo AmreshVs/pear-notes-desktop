@@ -584,7 +584,8 @@
     "storage": "Storage",
     "activity": "Activity",
     "linkDevices": "Link devices",
-    "sync": "Sync"
+    "sync": "Sync",
+    "debug": "Debug"
   },
   "noteLockPassword": {
     "createTitle": "Set note lock password",
@@ -1085,6 +1086,29 @@
       "video": "a video",
       "audio": "an audio recording",
       "file": "a file"
+    }
+  },
+  "debug": {
+    "copy": "Copy diagnostics",
+    "copied": "Copied",
+    "refresh": "Refresh",
+    "loading": "Collecting diagnostics…",
+    "untitledDevice": "Untitled device",
+    "deviceLocal": "this device",
+    "deviceLeader": "sync leader",
+    "deviceOnline": "online",
+    "deviceOffline": "offline",
+    "sections": {
+      "autobase": "Autobase and indexer",
+      "swarm": "Swarm and peers",
+      "devices": "Devices",
+      "transfers": "Transfers",
+      "sync": "Sync telemetry",
+      "storage": "Storage and hyperdrive",
+      "app": "App",
+      "runtime": "Runtime",
+      "backendBoot": "Backend boot timeline",
+      "appBoot": "App boot timeline"
     }
   }
 }

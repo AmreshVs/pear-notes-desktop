@@ -20,11 +20,14 @@ import { getAppVersionLabel } from '../../lib/appFlags'
 
 import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
+import DebugSettings from './DebugSettings'
 import DevicesSettings from './DevicesSettings'
 import GeneralSettings from './GeneralSettings'
 import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
+
+const DEBUG_HOLD_MS = 5000
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
@@ -47,6 +50,29 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
 
   const dialogRef = useDialog(handleAnimatedClose)
 
+  const debugHoldRef = useRef(null)
+
+  const cancelDebugHold = useCallback(() => {
+    clearTimeout(debugHoldRef.current)
+    debugHoldRef.current = null
+  }, [])
+
+  const startDebugHold = useCallback(() => {
+    clearTimeout(debugHoldRef.current)
+    debugHoldRef.current = setTimeout(() => {
+      debugHoldRef.current = null
+      setSelectedSection('debug')
+    }, DEBUG_HOLD_MS)
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('blur', cancelDebugHold)
+    return () => {
+      window.removeEventListener('blur', cancelDebugHold)
+      cancelDebugHold()
+    }
+  }, [cancelDebugHold])
+
   const sections = [
     { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
@@ -58,6 +84,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
     { id: 'backup', name: t('layouts.backupRestore'), icon: HardDrive },
     { id: 'storage', name: t('layouts.storage'), icon: Database }
   ]
+
+  const hiddenSections = [{ id: 'debug', name: t('layouts.debug') }]
+  const allSections = [...sections, ...hiddenSections]
 
 
 
@@ -115,7 +144,13 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           </div>
 
           <div className='px-6 pb-6'>
-            <p className='text-text-tertiary text-xs text-center opacity-50'>
+            <p
+              onMouseDown={startDebugHold}
+              onMouseUp={cancelDebugHold}
+              onMouseLeave={cancelDebugHold}
+              onContextMenu={cancelDebugHold}
+              className='text-text-tertiary text-xs text-center opacity-50 select-none'
+            >
               {getAppVersionLabel(appVersion)}
             </p>
           </div>
@@ -125,7 +160,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           <div className='px-10 py-10 flex items-center justify-between'>
             <div>
               <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
-                {sections.find((s) => s.id === activeSection)?.name || t('settings.title')}
+                {allSections.find((s) => s.id === activeSection)?.name || t('settings.title')}
               </h2>
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' && t('settings.descriptions.general')}
@@ -152,6 +187,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && <StorageSettings />}
+            {activeSection === 'debug' && <DebugSettings />}
           </div>
         </div>
       </div>
