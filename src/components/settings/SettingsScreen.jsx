@@ -27,7 +27,7 @@ import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
 
-const DEBUG_HOLD_MS = 5000
+const DEBUG_HOLD_MS = 3000
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
