@@ -1,7 +1,6 @@
 .DS_Store
 node_modules
 storage/*
-package-lock.json
 dist/*
 out/
 src/styles/*.md
@@ -11,3 +10,6 @@ src/store/*.md
 native/pear-device-auth/build/*
 native/pear-device-auth/bin/*
 .release.mac.env
+
+# harden-core preview staging (npm run harden-core)
+.core-hardened/

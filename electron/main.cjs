@@ -25,7 +25,9 @@ const appName = pkg.productName ?? pkg.name
 // the storage directory is where every existing install keeps its notes, keys and
 // pairing state, so renaming the app must not move it.
 const storageDirName = 'PearNotes'
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+// Deliberately does NOT consult NODE_ENV: a packaged build launched with
+// NODE_ENV=development would otherwise disable webSecurity and open DevTools.
+const isDev = !app.isPackaged
 const isMas = process.mas === true
 
 const fallbackBuildNumber = String(pkg.masBuildNumber ?? '1')
@@ -122,13 +124,18 @@ function startWorker() {
   worker.on('error', reportWorkerFailure)
   if (worker._process) worker._process.on('error', reportWorkerFailure)
 
-  worker.stdout.on('data', (data) => {
-    console.log('[worker]', data.toString().trim())
-  })
+  // The worker runs @pear-notes/core. Re-emitting its stdout here duplicates
+  // every backend line into the Electron main process, which on macOS reaches
+  // the system console. Keep it for development only.
+  if (isDev) {
+    worker.stdout.on('data', (data) => {
+      console.log('[worker]', data.toString().trim())
+    })
 
-  worker.stderr.on('data', (data) => {
-    console.error('[worker]', data.toString().trim())
-  })
+    worker.stderr.on('data', (data) => {
+      console.error('[worker]', data.toString().trim())
+    })
+  }
 
   worker.on('data', (chunk) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -203,6 +210,17 @@ function defaultWindowSize() {
   }
 }
 
+const EXTERNAL_URL_SCHEMES = new Set(['https:', 'http:', 'mailto:'])
+
+function isExternallyOpenable(url) {
+  if (typeof url !== 'string' || url.length === 0) return false
+  try {
+    return EXTERNAL_URL_SCHEMES.has(new URL(url).protocol)
+  } catch {
+    return false
+  }
+}
+
 function createWindow() {
   const { width, height } = defaultWindowSize()
 
@@ -225,6 +243,22 @@ function createWindow() {
   })
 
   mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
+
+  // The renderer has full Node access, so a navigation away from the bundled
+  // app would hand a remote page those privileges. Never let one happen:
+  // window.open goes to the OS browser (allowed schemes only) and in-place
+  // navigation is refused outright.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isExternallyOpenable(url)) shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== mainWindow.webContents.getURL()) {
+      event.preventDefault()
+      if (isExternallyOpenable(url)) shell.openExternal(url)
+    }
+  })
 
   if (isDev) {
     mainWindow.webContents.openDevTools()
@@ -413,6 +447,13 @@ function setupIPC() {
   })
 
   ipcMain.handle('shell:open-external', (event, url) => {
+    // The URL comes from the renderer, which renders user-authored note HTML.
+    // Without an allowlist a crafted link could reach file:, smb: or a custom
+    // scheme registered by another installed app.
+    if (!isExternallyOpenable(url)) {
+      console.warn('shell:open-external refused a disallowed URL')
+      return false
+    }
     return shell.openExternal(url)
   })
 

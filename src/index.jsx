@@ -1,3 +1,4 @@
+import './devFlag.js'
 import './locales/i18n.js'
 import './styles.css'
 
@@ -44,9 +45,11 @@ const stream = new FramedStream(workerStream)
 const rpc = new HRPC(stream)
 setRPC(rpc)
 
-if (!globalThis.production) {
+// `globalThis.production` was never assigned anywhere, so this branch always
+// ran - the packaged app exposed the full store (notes, folders, settings and
+// the pairing encryptionKey) on globalThis.
+if (import.meta.env.DEV) {
   globalThis.store = store
-  console.log('redux store exposed as globalThis.store')
 }
 
 window.addEventListener('beforeunload', () => {

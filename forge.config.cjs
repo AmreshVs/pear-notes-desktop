@@ -1,6 +1,9 @@
 const fs = require('fs')
 const path = require('path')
 
+const { FusesPlugin } = require('@electron-forge/plugin-fuses')
+const { FuseV1Options, FuseVersion } = require('@electron/fuses')
+
 const pkg = require('./package.json')
 const appName = pkg.productName ?? pkg.name
 
@@ -32,9 +35,64 @@ function entitlements(name) {
   return path.join(__dirname, 'build', name)
 }
 
+// Everything here was shipping inside Contents/Resources/app: the whole
+// unminified React source tree next to the built bundle, the release env file
+// (App Store Connect key id, issuer id, certificate names), agent configs and
+// the build tooling. None of it is read at runtime.
+//
+// Deliberately NOT ignored: `build/` (main.cjs reads build/icon.png for the
+// tray) and `native/` (main.cjs requires native/pear-device-auth).
+const IGNORED_TOP_LEVEL = new Set([
+  // Supplying `ignore` replaces @electron/packager's own defaults, so the
+  // things it used to drop have to be named explicitly. `.git` is the
+  // important one - it carries the entire source history.
+  '/.git',
+  '/.gitattributes',
+  '/.DS_Store',
+  '/out',
+  '/storage',
+  '/src',
+  '/docs',
+  '/test',
+  '/scripts',
+  '/.agents',
+  '/.argent',
+  '/.claude',
+  '/.codex',
+  '/.gemini',
+  '/.vscode',
+  '/.env',
+  '/.gitignore',
+  '/.mcp.json',
+  '/.prettierrc.json',
+  '/README.md',
+  '/eslint.config.js',
+  '/forge.config.cjs',
+  '/vite.config.js',
+  '/skills-lock.json',
+  '/package-lock.json'
+])
+
+function ignorePackagedFile(filePath) {
+  if (!filePath) return false
+
+  // `.release.mac.env` and `.release.mac.env.example` carry the ASC key id,
+  // issuer id and codesign identity common names.
+  if (filePath.startsWith('/.release.')) return true
+
+  const top = '/' + filePath.split('/')[1]
+  if (IGNORED_TOP_LEVEL.has(top)) return true
+
+  // Core is consumed from node_modules by the Bare worker; its test suite is not.
+  if (filePath.startsWith('/node_modules/@pear-notes/core/tests')) return true
+
+  return false
+}
+
 let packagerConfig = {
   name: appName,
   icon: path.join(__dirname, 'build', 'icon'),
+  ignore: ignorePackagedFile,
   appBundleId: APPLE_BUNDLE_ID,
   appCategoryType: 'public.app-category.productivity',
   appCopyright: `Copyright © ${new Date().getFullYear()} ${appName}`,
@@ -44,7 +102,14 @@ let packagerConfig = {
   extendInfo: {
     NSMicrophoneUsageDescription: `${appName} needs access to your microphone to record voice notes.`,
     NSHumanReadableCopyright: `Copyright © ${new Date().getFullYear()} ${appName}`,
-    ITSAppUsesNonExemptEncryption: false
+    ITSAppUsesNonExemptEncryption: false,
+    // Electron's stock Info.plist sets NSAllowsArbitraryLoads: true. The app
+    // only needs the loopback blob server, which is what the iOS build already
+    // declares - match it here rather than allowing arbitrary cleartext.
+    NSAppTransportSecurity: {
+      NSAllowsArbitraryLoads: false,
+      NSAllowsLocalNetworking: true
+    }
   }
 }
 
@@ -212,6 +277,42 @@ function relocateSidecarBinary(buildPath, platform, arch) {
   )
 }
 
+// The renderer is minified by Vite, but the main process and preload ship as
+// raw .cjs with full comments and IPC channel names. Minify the packaged copies
+// only - the originals on disk stay readable.
+function minifyElectronEntries(buildPath) {
+  const esbuild = require('esbuild')
+  for (const rel of ['electron/main.cjs', 'electron/preload.cjs']) {
+    const file = path.join(buildPath, rel)
+    if (!fs.existsSync(file)) continue
+    const source = fs.readFileSync(file, 'utf8')
+    const { code } = esbuild.transformSync(source, {
+      loader: 'js',
+      format: 'cjs',
+      platform: 'node',
+      minify: true,
+      // `pure` lets the minifier drop diagnostic logging; console.error stays.
+      pure: ['console.log', 'console.debug', 'console.info']
+    })
+    fs.writeFileSync(file, code)
+  }
+}
+
+// The Bare sidecar runs @pear-notes/core as raw ESM off disk, so - unlike the
+// Vite-minified renderer - core ships readable unless transformed here. This
+// minifies and (by default) obfuscates the packaged copy in place; the repo
+// copy a dev runs against is untouched. Toggle with PEAR_OBFUSCATE=0.
+async function hardenPackagedCore(buildPath) {
+  const { hardenCore } = require('./scripts/harden-core.cjs')
+  const coreDir = path.join(buildPath, 'node_modules', '@pear-notes', 'core')
+  const result = await hardenCore(coreDir)
+  console.log(
+    `[harden-core] ${result.mode}: ${result.files} files, ` +
+      `${(result.before / 1024).toFixed(0)} KB -> ${(result.after / 1024).toFixed(0)} KB ` +
+      `(${result.delta >= 0 ? '+' : ''}${result.delta}%)`
+  )
+}
+
 function stripPackageScripts(buildPath) {
   const manifestPath = path.join(buildPath, 'package.json')
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
@@ -236,9 +337,26 @@ module.exports = {
       if (nativePlatform === 'darwin') {
         relocateSidecarBinary(buildPath, nativePlatform, arch)
       }
+      minifyElectronEntries(buildPath)
+      await hardenPackagedCore(buildPath)
       stripPackageScripts(buildPath)
     }
   },
 
-  plugins: []
+  plugins: [
+    // Close off the Node-level escape hatches Electron leaves open by default.
+    //
+    // OnlyLoadAppFromAsar is deliberately absent: the backend runs in a Bare
+    // sidecar spawned as a separate process, which reads workers/main.js and
+    // node_modules/@pear-notes/core from the real filesystem. That binary has
+    // no asar support, so this app cannot be packed into an archive.
+    new FusesPlugin({
+      version: FuseVersion.V1,
+      [FuseV1Options.RunAsNode]: false,
+      [FuseV1Options.EnableNodeCliInspectArguments]: false,
+      [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+      [FuseV1Options.EnableCookieEncryption]: true,
+      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: false
+    })
+  ]
 }

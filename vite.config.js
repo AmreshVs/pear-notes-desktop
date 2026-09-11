@@ -137,11 +137,15 @@ function electronExternalsPlugin() {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), electronExternalsPlugin()],
   build: {
     outDir: 'dist',
-    emptyOutDir: false,
+    // Must stay true: `npm run make` does not clean, so a stale bundle from
+    // `dev:vite` (which builds with --sourcemap inline) would otherwise be
+    // packaged into the signed app.
+    emptyOutDir: true,
+    sourcemap: false,
     rollupOptions: {
       input: resolve(__dirname, 'index.html'),
       output: {
@@ -159,6 +163,19 @@ export default defineConfig({
       'y-prosemirror': '@tiptap/y-tiptap'
     }
   },
+  // Strip diagnostic logging from production builds. console.error survives so
+  // genuine failures are still reportable; core's log.js already gates
+  // info/debug behind __PEAR_DEV__, this removes the call sites entirely.
+  //
+  // Gated on mode because `dev:vite` runs `vite build --watch`, which minifies
+  // too - without this, development would lose its logging as well.
+  esbuild:
+    mode === 'production'
+      ? {
+          pure: ['console.log', 'console.debug', 'console.info', 'console.trace'],
+          drop: ['debugger']
+        }
+      : {},
   optimizeDeps: {
     esbuildOptions: {
       platform: 'node'
@@ -169,4 +186,4 @@ export default defineConfig({
     open: false
   },
   base: './'
-})
+}))
