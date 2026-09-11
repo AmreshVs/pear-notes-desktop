@@ -48,6 +48,10 @@ const IGNORED_TOP_LEVEL = new Set([
   '/.DS_Store',
   '/out',
   '/storage',
+  // `npm run harden-core` stages a preview copy here; it must never be packaged
+  // (it can carry a read-only .git that makes osx-sign fail with Permission denied).
+  '/.core-hardened',
+  '/.core-build',
   '/src',
   '/docs',
   '/test',
@@ -73,11 +77,19 @@ const IGNORED_TOP_LEVEL = new Set([
 function ignorePackagedFile(filePath) {
   if (!filePath) return false
 
+  // Supplying a custom `ignore` REPLACES @electron/packager's defaults, which
+  // dropped VCS dirs. `@pear-notes/core` is a github: dependency, so npm clones
+  // it and leaves a `.git` in node_modules — its read-only objects make
+  // `codesign` fail with "Permission denied", silently shipping an unsigned app.
+  // Exclude any `.git` segment anywhere in the tree.
+  const segments = filePath.split('/')
+  if (segments.includes('.git') || segments.includes('.github')) return true
+
   // `.release.mac.env` and `.release.mac.env.example` carry the ASC key id,
   // issuer id and codesign identity common names.
   if (filePath.startsWith('/.release.')) return true
 
-  const top = '/' + filePath.split('/')[1]
+  const top = '/' + segments[1]
   if (IGNORED_TOP_LEVEL.has(top)) return true
 
   // Core is consumed from node_modules by the Bare worker; its test suite is not.

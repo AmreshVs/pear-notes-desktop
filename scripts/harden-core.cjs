@@ -134,8 +134,9 @@ async function hardenCore(coreDir) {
     )
   }
 
-  // Not loaded at runtime; drop from the packaged app.
-  for (const noise of ['types', 'tests', 'eslint.config.js', 'tsconfig.json', 'README.md', 'package-lock.json']) {
+  // Not loaded at runtime; drop from the packaged app. `.git`/`.github` come from
+  // the github: dependency clone and their read-only objects break code signing.
+  for (const noise of ['.git', '.github', 'types', 'tests', 'eslint.config.js', 'tsconfig.json', 'README.md', 'package-lock.json']) {
     fs.rmSync(path.join(coreDir, noise), { recursive: true, force: true })
   }
 
@@ -184,12 +185,15 @@ async function previewFromNodeModules() {
   fs.rmSync(outRoot, { recursive: true, force: true })
   fs.mkdirSync(path.dirname(out), { recursive: true })
 
-  // Dereference the symlink; skip core's own node_modules (not hardened, and
-  // copying it would make the preview needlessly slow and large).
+  // Dereference the symlink; skip core's own node_modules (not hardened) and its
+  // .git (dereferencing the file: symlink pulls in ../pear-notes-core/.git, whose
+  // read-only objects otherwise break code signing if this dir ever leaks into a
+  // package).
+  const skip = new Set(['node_modules', '.git'])
   fs.cpSync(liveCore, out, {
     recursive: true,
     dereference: true,
-    filter: (src) => path.basename(src) !== 'node_modules',
+    filter: (src) => !skip.has(path.basename(src)),
   })
 
   const result = await hardenCore(out)
