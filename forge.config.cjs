@@ -1,9 +1,6 @@
 const fs = require('fs')
 const path = require('path')
 
-const { FusesPlugin } = require('@electron-forge/plugin-fuses')
-const { FuseV1Options, FuseVersion } = require('@electron/fuses')
-
 const pkg = require('./package.json')
 const appName = pkg.productName ?? pkg.name
 
@@ -343,28 +340,17 @@ module.exports = {
     }
   },
 
-  plugins: [
-    // Close off the Node-level escape hatches Electron leaves open by default.
-    //
-    // resetAdHocDarwinSignature (above) is REQUIRED with MAS signing — without it
-    // osx-sign fails on the fuse-invalidated binaries and ships an unsigned app.
-    //
-    // OnlyLoadAppFromAsar is deliberately absent: the backend runs in a Bare
-    // sidecar spawned as a separate process, which reads workers/main.js and
-    // node_modules/@pear-notes/core from the real filesystem. That binary has
-    // no asar support, so this app cannot be packed into an archive.
-    new FusesPlugin({
-      version: FuseVersion.V1,
-      // Flipping fuses invalidates the signature of the Electron binaries. Without
-      // this, @electron/osx-sign later fails to sign them (it does not --force over
-      // an invalid signature), silently leaving the whole app unsigned. Re-signing
-      // ad-hoc here hands osx-sign a valid base to replace with the real identity.
-      resetAdHocDarwinSignature: true,
-      [FuseV1Options.RunAsNode]: false,
-      [FuseV1Options.EnableNodeCliInspectArguments]: false,
-      [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-      [FuseV1Options.EnableCookieEncryption]: true,
-      [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: false
-    })
-  ]
+  // No @electron-forge/plugin-fuses. It does not compose with this app's signing:
+  //   - resetAdHocDarwinSignature:false -> osx-sign fails on the fuse-invalidated
+  //     Electron binaries (it won't --force over an invalid sig) and silently ships
+  //     the app UNSIGNED (caught only at codesign --verify).
+  //   - resetAdHocDarwinSignature:true  -> @electron/fuses runs its own ad-hoc
+  //     codesign whose app-path guess (`path.split('.app')[0] + '.app'`) mangles the
+  //     MAS temp-staging path to `.../T/com.app` and aborts the build.
+  // Builds <=20 shipped signed with no fuses, and under the Mac App Store sandbox +
+  // hardened runtime the RunAsNode / Node-CLI-inspect / NODE_OPTIONS escape hatches
+  // these fuses close are already constrained. If a non-MAS Developer-ID build is
+  // ever added, flip fuses on the FINAL signed .app via the @electron/fuses CLI and
+  // re-sign, rather than through this plugin.
+  plugins: []
 }
