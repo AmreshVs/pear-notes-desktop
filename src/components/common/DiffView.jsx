@@ -1,7 +1,10 @@
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Check, Copy } from 'lucide-react'
 
 import { diffActivityText } from '@pear-notes/core/activity.js'
+
+import { copyToClipboard } from '../../lib/clipboard'
 
 const ROW_STYLES = {
   add: 'bg-accent-success/10 text-accent-success',
@@ -11,9 +14,33 @@ const ROW_STYLES = {
 
 const MARKERS = { add: '+', del: '-', ctx: ' ' }
 
+const COPIED_RESET_MS = 2000
+
 export default function DiffView({ before, after, compact = false }) {
   const { t } = useTranslation()
   const diff = useMemo(() => diffActivityText(before || '', after || ''), [before, after])
+  const [copied, setCopied] = useState(false)
+  const copiedTimerRef = useRef(null)
+
+  const removedText = useMemo(
+    () =>
+      diff.rows
+        .filter((row) => row.type === 'del')
+        .map((row) => row.text)
+        .join('\n'),
+    [diff.rows]
+  )
+
+  useEffect(() => () => clearTimeout(copiedTimerRef.current), [])
+
+  const handleCopyRemoved = useCallback(async () => {
+    if (!removedText) return
+    const ok = await copyToClipboard(removedText)
+    if (!ok) return
+    setCopied(true)
+    clearTimeout(copiedTimerRef.current)
+    copiedTimerRef.current = setTimeout(() => setCopied(false), COPIED_RESET_MS)
+  }, [removedText])
 
   if (diff.unchanged) {
     return (
@@ -33,6 +60,21 @@ export default function DiffView({ before, after, compact = false }) {
         <span className='text-[0.65rem] tracking-[0.14em] text-text-tertiary font-bold ml-auto'>
           {t('activity.diff.plainText')}
         </span>
+        {removedText ? (
+          <button
+            type='button'
+            onClick={handleCopyRemoved}
+            title={t('activity.diff.copyRemoved')}
+            aria-label={t('activity.diff.copyRemoved')}
+            className='flex items-center justify-center text-text-tertiary hover:text-text-secondary transition-colors'
+          >
+            {copied ? (
+              <Check className='w-3.5 h-3.5 text-accent-success' />
+            ) : (
+              <Copy className='w-3.5 h-3.5' />
+            )}
+          </button>
+        ) : null}
       </div>
 
       <div className={`overflow-x-auto ${compact ? 'max-h-64' : 'max-h-96'} overflow-y-auto`}>

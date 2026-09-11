@@ -4,11 +4,20 @@ import { AlertTriangle, Check, Copy, RefreshCw } from 'lucide-react'
 
 import { formatDebugReport } from '@pear-notes/core/utils.js'
 
+import { copyToClipboard } from '../../lib/clipboard'
 import { captureDebugSnapshot } from '../../lib/debugSnapshot'
 
 const POLL_INTERVAL_MS = 2000
 const COPIED_RESET_MS = 2000
 const HEX_PREVIEW_LENGTH = 8
+
+const TIMESTAMP_KEYS = [
+  'lastBaseErrorAt',
+  'lastSyncAt',
+  'lastWakeAt',
+  'backgroundServiceFailedAt',
+  'activityOldestAt'
+]
 
 function shortenHex(value) {
   if (typeof value !== 'string') return value
@@ -17,7 +26,13 @@ function shortenHex(value) {
   return `${value.slice(0, HEX_PREVIEW_LENGTH)}…`
 }
 
-function displayValue(value) {
+function formatTimestamp(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return '—'
+  return new Date(value).toLocaleString()
+}
+
+function displayValue(value, key) {
+  if (key && TIMESTAMP_KEYS.includes(key)) return formatTimestamp(value)
   if (value === null || value === undefined) return '—'
   if (typeof value === 'boolean') return value ? 'yes' : 'no'
   if (Array.isArray(value)) {
@@ -29,7 +44,7 @@ function displayValue(value) {
   return shortenHex(String(value))
 }
 
-function Row({ label, value, emphasis }) {
+function Row({ label, value, emphasis, valueKey }) {
   return (
     <div className='px-6 py-2.5 flex items-start justify-between gap-6 border-b border-border-primary/40 last:border-b-0'>
       <span className='text-sm text-text-tertiary font-mono shrink-0'>{label}</span>
@@ -39,7 +54,7 @@ function Row({ label, value, emphasis }) {
         }`}
         title={typeof value === 'string' ? value : undefined}
       >
-        {displayValue(value)}
+        {displayValue(value, valueKey)}
       </span>
     </div>
   )
@@ -65,7 +80,7 @@ function Section({ title, data, emphasis = [] }) {
   return (
     <Card title={title}>
       {entries.map(([key, value]) => (
-        <Row key={key} label={key} value={value} emphasis={emphasis.includes(key)} />
+        <Row key={key} label={key} value={value} valueKey={key} emphasis={emphasis.includes(key)} />
       ))}
     </Card>
   )
@@ -114,12 +129,19 @@ export default function DebugSettings() {
   const [refreshing, setRefreshing] = useState(false)
   const mountedRef = useRef(true)
   const copiedTimerRef = useRef(null)
+  const heavyStorageRef = useRef(null)
 
   const load = useCallback(async (heavy) => {
     try {
       const next = await captureDebugSnapshot({ heavy })
       if (!mountedRef.current) return
-      setSnapshot(next)
+      if (heavy && next?.storage) heavyStorageRef.current = next.storage
+      const keepsHeavyStorage = !heavy && next && heavyStorageRef.current
+      setSnapshot(
+        keepsHeavyStorage
+          ? { ...next, storage: { ...heavyStorageRef.current, ...next.storage } }
+          : next
+      )
       setError(next?.error ? String(next.error) : '')
     } catch (e) {
       if (!mountedRef.current) return
@@ -148,7 +170,8 @@ export default function DebugSettings() {
   const handleCopy = useCallback(async () => {
     if (!snapshot) return
     try {
-      await navigator.clipboard.writeText(formatDebugReport(snapshot))
+      const ok = await copyToClipboard(formatDebugReport(snapshot))
+      if (!ok) throw new Error('clipboard write failed')
       setCopied(true)
       clearTimeout(copiedTimerRef.current)
       copiedTimerRef.current = setTimeout(() => setCopied(false), COPIED_RESET_MS)

@@ -363,8 +363,8 @@ export default function DevicesSettings({ onClose }) {
 
               {indexerOffline && (
                 <div className='flex items-start gap-2 mt-3 ml-1'>
-                  <TriangleAlert className='w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5' />
-                  <p className='text-xs text-red-500 leading-relaxed'>
+                  <TriangleAlert className='w-3.5 h-3.5 text-text-tertiary shrink-0 mt-0.5' />
+                  <p className='text-xs text-text-tertiary leading-relaxed'>
                     {t('sync.devices.indexerOfflineNotice', { name: indexerName })}
                   </p>
                 </div>

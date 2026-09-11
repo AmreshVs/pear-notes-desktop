@@ -1035,6 +1035,7 @@
     },
     "diff": {
       "plainText": "Plain text",
+      "copyRemoved": "Copy removed lines",
       "formattingOnly": "Only formatting changed — no text was added or removed.",
       "unchangedLines_one": "{{count}} unchanged line",
       "unchangedLines_other": "{{count}} unchanged lines",
