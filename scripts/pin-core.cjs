@@ -7,11 +7,14 @@ const path = require('path')
 // pinned sha) to `github:<slug>#<current core HEAD>`, so a release build ships
 // exactly the committed-and-pushed core rather than whatever happens to be in
 // the sibling working tree. Refuses to pin when core is dirty or its HEAD is
-// unpushed.
+// unpushed, and commits the resulting pin itself so a release is never built
+// from an uncommitted lockfile - pass --no-commit to skip that.
 
 const ROOT = path.resolve(__dirname, '..')
 const CORE_ROOT = path.resolve(ROOT, '..', 'pear-notes-core')
 const DEPENDENCY = '@pear-notes/core'
+const COMMIT_PATHS = ['package.json', 'package-lock.json']
+const NO_COMMIT = process.argv.slice(2).includes('--no-commit')
 
 function abort(message) {
   console.error(`\n  pin-core: ${message}\n`)
@@ -28,6 +31,37 @@ function coreGit(command) {
   } catch {
     return null
   }
+}
+
+function repoGit(command, { inherit = false } = {}) {
+  try {
+    const out = execSync(`git -C "${ROOT}" ${command}`, {
+      stdio: inherit ? 'inherit' : ['ignore', 'pipe', 'ignore'],
+    })
+    return inherit ? '' : out.toString().trim()
+  } catch {
+    return null
+  }
+}
+
+function commitBlocker() {
+  if (NO_COMMIT) return 'skipped (--no-commit)'
+  if (!fs.existsSync(path.join(ROOT, '.git'))) return 'this package is not a git checkout'
+  const dirty = repoGit(`status --porcelain -- ${COMMIT_PATHS.join(' ')}`)
+  if (dirty === null) return 'could not read git status'
+  if (dirty) return `${COMMIT_PATHS.join(' / ')} already had uncommitted changes`
+  return null
+}
+
+function commitPin(sha) {
+  const message = `Bump core to ${sha.slice(0, 12)}`
+  const committed = repoGit(`commit -m "${message}" -- ${COMMIT_PATHS.join(' ')}`, { inherit: true })
+  if (committed === null) {
+    console.log(`\n  pin-core: commit failed - commit ${COMMIT_PATHS.join(' and ')} by hand\n`)
+    return false
+  }
+  console.log(`\n  pin-core: committed "${message}"`)
+  return true
 }
 
 function readPackageJson() {
@@ -85,6 +119,8 @@ function main() {
     abort(`core ${sha.slice(0, 12)} is not on any remote branch - push pear-notes-core first`)
   }
 
+  const blocker = commitBlocker()
+
   const { file, json } = readPackageJson()
   const previous = json.dependencies?.[DEPENDENCY]
   if (!previous) abort(`${DEPENDENCY} is not a dependency of this package`)
@@ -104,7 +140,14 @@ function main() {
   })
 
   console.log(`\n  pin-core: ${DEPENDENCY} pinned to ${sha.slice(0, 12)} (was ${previous})`)
-  console.log('  commit package.json together with the pin')
+
+  if (blocker) {
+    console.log(`  not committing - ${blocker}`)
+    console.log(`  commit ${COMMIT_PATHS.join(' and ')} together`)
+  } else if (commitPin(sha)) {
+    console.log('  push it before starting the build')
+  }
+
   console.log(`  to return to local development: set ${DEPENDENCY} back to "file:../pear-notes-core" and npm install\n`)
 }
 
