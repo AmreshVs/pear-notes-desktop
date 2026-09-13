@@ -3,11 +3,26 @@
 
 #include "auth.h"
 
+#include <string>
+
+namespace {
+
+std::string CopyUTF8(NSString* value) {
+  if (value == nil) return std::string();
+  const char* utf8 = [value UTF8String];
+  return utf8 != nullptr ? std::string(utf8) : std::string();
+}
+
+}  // namespace
+
 bool PlatformIsSupported() {
   @autoreleasepool {
     LAContext* context = [[LAContext alloc] init];
     NSError* error = nil;
     BOOL canEvaluate = [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&error];
+#if !__has_feature(objc_arc)
+    [context release];
+#endif
     return canEvaluate ? true : false;
   }
 }
@@ -18,31 +33,37 @@ bool PlatformAuthenticate(const std::string& reason, void* windowHandle, std::st
     LAContext* context = [[LAContext alloc] init];
     NSError* policyError = nil;
     if (![context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:&policyError]) {
-      if (policyError != nil) {
-        error = std::string([[policyError localizedDescription] UTF8String]);
-      }
+      error = CopyUTF8([policyError localizedDescription]);
+#if !__has_feature(objc_arc)
+      [context release];
+#endif
       return false;
     }
 
     NSString* localizedReason = [NSString stringWithUTF8String:reason.c_str()];
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     __block bool authenticated = false;
-    __block NSString* failureMessage = nil;
+    __block std::string failureMessage;
 
     [context evaluatePolicy:LAPolicyDeviceOwnerAuthentication
             localizedReason:localizedReason
                       reply:^(BOOL success, NSError* replyError) {
                         authenticated = success ? true : false;
-                        if (!success && replyError != nil) {
-                          failureMessage = [replyError localizedDescription];
+                        if (!success) {
+                          failureMessage = CopyUTF8([replyError localizedDescription]);
                         }
                         dispatch_semaphore_signal(semaphore);
                       }];
 
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 
-    if (!authenticated && failureMessage != nil) {
-      error = std::string([failureMessage UTF8String]);
+#if !__has_feature(objc_arc)
+    dispatch_release(semaphore);
+    [context release];
+#endif
+
+    if (!authenticated) {
+      error = failureMessage;
     }
     return authenticated;
   }

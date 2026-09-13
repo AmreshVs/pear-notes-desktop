@@ -99,9 +99,6 @@ export default function PrivacySettings() {
                 <LockKeyhole className='w-5 h-5 text-accent-primary' />
               </div>
               <div className='space-y-1 min-w-0'>
-                <label className='block text-text-primary text-base font-bold'>
-                  {t('settings.privacy.noteLock')}
-                </label>
                 <p className='text-sm text-text-tertiary font-medium opacity-60'>
                   {lockMethod === 'password'
                     ? t('settings.privacy.noteLockPasswordDesc')

@@ -48,7 +48,7 @@ export default function PairingStatusOverlay() {
 
   const activeStatus = isInviterActive ? inviterStatus : receiverStatus
   const isInviter = isInviterActive
-  const { step, progress, userData, localKey, data, requestedAt } = activeStatus
+  const { step, progress, userData, localKey, requestedAt } = activeStatus
 
   const getMessage = () => {
     switch (step) {
@@ -71,8 +71,7 @@ export default function PairingStatusOverlay() {
       case 'syncing':
         return t('pairing.status.startingReplication')
       case 'receiving_data': {
-        const notesCount = data || 0
-        return t('pairing.status.receivingWithCount', { count: notesCount })
+        return t('pairing.status.receivingWithCount')
       }
       case 'done':
         return t('pairing.status.done')

@@ -323,7 +323,7 @@ export default function DevicesSettings({ onClose }) {
         ) : (
           <div className='space-y-6'>
             <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
                 {t('sync.devices.thisDevice')}
               </h4>
               <div className='grid gap-4'>
@@ -336,7 +336,7 @@ export default function DevicesSettings({ onClose }) {
             </div>
 
             <div className='space-y-1'>
-              <h4 className='text-text-secondary font-bold text-xs tracking-widest ml-1 mb-3'>
+              <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
                 {t('sync.devices.otherDevices')}
               </h4>
               <div className='grid gap-4'>
@@ -514,8 +514,14 @@ function DeviceItem({ device, isOther }) {
                   : device.key || getDeviceDisplayName(device)
               }
             >
-              <span className='truncate'>{deviceNameHead}</span>
+              <span className='truncate min-w-0'>{deviceNameHead}</span>
               {deviceNameTail && <span className='shrink-0'>{deviceNameTail}</span>}
+              {device.isIndexer && (
+                <span className='ml-2.5 shrink-0 self-center inline-flex items-center gap-1 h-5 px-2 rounded-full bg-accent-primary/15 text-accent-primary text-[11px] leading-none font-semibold whitespace-nowrap'>
+                  <Crown className='w-3 h-3 shrink-0' />
+                  {t('sync.devices.indexerBadge')}
+                </span>
+              )}
             </span>
           )}
           <p className='px-2 text-xs text-text-tertiary font-bold tracking-tight truncate'>
@@ -524,12 +530,6 @@ function DeviceItem({ device, isOther }) {
               getPlatformName(device.platform)
             )}
           </p>
-          {device.isIndexer && (
-            <span className='ml-2 mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent-primary/10 text-accent-primary text-[11px] font-bold tracking-tight'>
-              <Crown className='w-3 h-3' />
-              {t('sync.devices.indexerBadge')}
-            </span>
-          )}
           {!!indexerErrorKey && (
             <p className='px-2 mt-1 text-xs text-accent-danger'>{t(indexerErrorKey)}</p>
           )}

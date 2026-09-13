@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
-import { AlertCircle, CheckCircle2, CloudDownload, Loader2, Upload } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Import, Loader2, Share } from 'lucide-react'
 
 import { getExportStatus, getImportStatus } from '@pear-notes/core/store/slices/backupSlice.js'
 
@@ -49,9 +49,9 @@ export default function BackupProgressBanner() {
           ) : isDone ? (
             <CheckCircle2 className='w-5 h-5' />
           ) : isExport ? (
-            <Upload className='w-5 h-5' />
+            <Share className='w-5 h-5' />
           ) : (
-            <CloudDownload className='w-5 h-5' />
+            <Import className='w-5 h-5' />
           )}
         </div>
 

@@ -6,8 +6,8 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
-  CloudDownload,
-  CloudUpload,
+  CircleArrowDown,
+  CircleArrowUp,
   Database,
   FileText,
   Film,
@@ -193,7 +193,7 @@ function DownloadRow({ download, onRetry, onPause }) {
     <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
       <div className='flex items-center justify-between gap-3 mb-2'>
         <div className='flex items-center gap-2 min-w-0'>
-          <CloudDownload className='w-4 h-4 text-accent-primary flex-shrink-0' />
+          <CircleArrowDown className='w-4 h-4 text-accent-primary flex-shrink-0' />
           <span className='text-sm font-medium text-text-primary truncate'>
             {download.fileName || t('storage.attachment')}
           </span>
@@ -258,7 +258,7 @@ function UploadRow({ upload }) {
     <div className='px-5 py-3.5 border-b border-overlay-light last:border-0'>
       <div className='flex items-center justify-between gap-3 mb-2'>
         <div className='flex items-center gap-2 min-w-0'>
-          <CloudUpload className='w-4 h-4 text-accent-primary flex-shrink-0' />
+          <CircleArrowUp className='w-4 h-4 text-accent-primary flex-shrink-0' />
           <span className='text-sm font-medium text-text-primary truncate'>
             {upload.fileName || t('storage.attachment')}
           </span>

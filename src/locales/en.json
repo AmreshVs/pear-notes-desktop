@@ -518,7 +518,7 @@
       "replicating": "Replicating data...",
       "startingReplication": "Starting data replication...",
       "receiving": "Receiving data...",
-      "receivingWithCount": "Receiving data... ({{count}} notes found)",
+      "receivingWithCount": "Receiving data...",
       "establishing": "Establishing link...",
       "confirmation": "Waiting for confirmation...",
       "done": "Devices linked",

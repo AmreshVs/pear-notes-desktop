@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { CloudDownload, Database, HardDrive, Lock, Shield, Upload } from 'lucide-react'
+import { Database, History, Import, Lock, Share, Shield } from 'lucide-react'
 
 import {
   getExportStatus,
@@ -262,7 +262,7 @@ export default function BackupSettings() {
         <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
 
         <div className='w-20 h-20 bg-accent-primary/10 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/20 shadow-inner'>
-          <CloudDownload className='w-10 h-10 text-accent-primary' />
+          <History className='w-10 h-10 text-accent-primary' />
         </div>
 
         <div className='space-y-2'>
@@ -279,7 +279,7 @@ export default function BackupSettings() {
             className='group relative px-8 py-3.5 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 overflow-hidden'
           >
             <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
-            <HardDrive className='w-4 h-4' />
+            <Share className='w-4 h-4' />
             {t('backup.createBackup')}
           </button>
           <button
@@ -287,7 +287,7 @@ export default function BackupSettings() {
             disabled={isExporting || isImporting}
             className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
           >
-            <Upload className='w-4 h-4' />
+            <Import className='w-4 h-4' />
             {t('backup.restoreData')}
           </button>
         </div>
@@ -365,7 +365,7 @@ export default function BackupSettings() {
                 <div
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isError ? 'bg-accent-danger/15 ring-1 ring-accent-danger/30' : 'bg-accent-primary/10 ring-1 ring-accent-primary/20'}`}
                 >
-                  <CloudDownload
+                  <History
                     className={`w-7 h-7 ${isError ? 'text-accent-danger' : 'text-accent-primary'}`}
                   />
                 </div>
