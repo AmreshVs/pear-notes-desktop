@@ -317,6 +317,9 @@ export default function DevicesSettings({ onClose }) {
                     {t('sync.paste.linkBtn')}
                   </button>
                 </div>
+                {pasteCode.trim() && !isValidInvite(pasteCode) && (
+                  <p className='text-xs text-text-tertiary ml-1'>{t('sync.paste.hintInvalid')}</p>
+                )}
               </div>
             )}
           </div>

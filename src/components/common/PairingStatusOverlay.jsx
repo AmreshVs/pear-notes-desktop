@@ -14,7 +14,7 @@ import {
   setShowPairingInput,
   subscribePairUser
 } from '@pear-notes/core/store/slices/syncSlice.js'
-import { getFingerprint } from '@pear-notes/core/utils.js'
+import { extractInvite, getFingerprint, isValidInvite } from '@pear-notes/core/utils.js'
 
 import { getRelativeTime } from '../../utils/relativeTime'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
@@ -123,8 +123,8 @@ export default function PairingStatusOverlay() {
   }
 
   const handleConnect = () => {
-    if (pasteCode.trim()) {
-      setPendingInvite(pasteCode.trim())
+    if (isValidInvite(pasteCode)) {
+      setPendingInvite(extractInvite(pasteCode))
     }
   }
 
@@ -395,6 +395,11 @@ export default function PairingStatusOverlay() {
                     className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
                     autoFocus
                   />
+                  {pasteCode.trim() && !isValidInvite(pasteCode) && (
+                    <p className='text-xs text-text-tertiary text-left ml-1'>
+                      {t('sync.paste.hintInvalid')}
+                    </p>
+                  )}
                 </div>
 
                 <div className='flex gap-3 w-full pt-2'>
@@ -406,7 +411,7 @@ export default function PairingStatusOverlay() {
                   </button>
                   <button
                     onClick={handleConnect}
-                    disabled={!pasteCode.trim()}
+                    disabled={!isValidInvite(pasteCode)}
                     className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
                   >
                     {t('pairing.overlay.connectBtn')}

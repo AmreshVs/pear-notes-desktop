@@ -182,7 +182,8 @@
       "header": "Already have an invite?",
       "scanBtn": "Scan QR",
       "placeholder": "Paste invite code here...",
-      "linkBtn": "Link"
+      "linkBtn": "Link",
+      "hintInvalid": "That isn't a complete invite code yet."
     },
     "footer": "Your data moves directly between devices using encrypted Hypercore logs. No central server involved.",
     "devices": {
