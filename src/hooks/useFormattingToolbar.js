@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 
+import { requestLocalAiSheet } from '../lib/localAi/localAiRequests'
 import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
 import { isPdfAttachment, warmPdfThumbFromFile } from '../lib/pdfPreview'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
@@ -229,7 +230,7 @@ export function useFormattingToolbar(editor, noteKey) {
     clearUploadQueue()
   }
 
-  const handleInsertAudio = async ({ data, duration }) => {
+  const handleInsertAudio = async ({ data, duration, addTranscript = false }) => {
     if (!editor) return
     try {
       const response = await fetch(data)
@@ -260,6 +261,9 @@ export function useFormattingToolbar(editor, noteKey) {
             { type: 'paragraph' }
           ])
           .run()
+        if (addTranscript) {
+          requestLocalAiSheet({ mode: 'transcribe', url: data, fileName, attachmentUrl: link })
+        }
       }
     } catch (error) {
       console.error('Error uploading audio:', error)

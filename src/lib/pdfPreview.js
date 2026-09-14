@@ -59,6 +59,38 @@ async function renderFirstPage(url) {
   }
 }
 
+const OCR_PAGE_WIDTH = 1240
+const OCR_MAX_SCALE = 3
+
+export async function renderPdfPagesForOcr(url, { maxPages, signal, onPage }) {
+  const { getDocument } = await loadPdfEngine()
+  const loadingTask = getDocument({ url, isEvalSupported: false })
+  const pdf = await loadingTask.promise
+  try {
+    const pageCount = Math.min(pdf.numPages, maxPages)
+    for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+      if (signal?.aborted) return
+      const page = await pdf.getPage(pageNumber)
+      const base = page.getViewport({ scale: 1 })
+      const viewport = page.getViewport({
+        scale: Math.min(OCR_PAGE_WIDTH / base.width, OCR_MAX_SCALE)
+      })
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(viewport.width))
+      canvas.height = Math.max(1, Math.round(viewport.height))
+      const context = canvas.getContext('2d')
+      context.fillStyle = '#ffffff'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+      await page.render({ canvas, canvasContext: context, viewport }).promise
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+      page.cleanup()
+      if (blob) await onPage(new Uint8Array(await blob.arrayBuffer()), pageNumber, pageCount)
+    }
+  } finally {
+    await loadingTask.destroy()
+  }
+}
+
 // Rendering on note open also fills the persistent cache, which is what lets the sidebar show a
 // thumbnail for a note it never renders itself.
 async function loadPreview(url) {

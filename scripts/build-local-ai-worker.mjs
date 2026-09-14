@@ -16,6 +16,35 @@ if (!fs.existsSync(path.join(sdkDir, 'package.json'))) {
   process.exit(1)
 }
 
+const bundlePath = path.join(runtimeRoot, 'qvac', 'worker.bundle.js')
+const bundleInputs = [
+  configPath,
+  path.join(runtimeRoot, 'package-lock.json'),
+  path.join(sdkDir, 'package.json')
+]
+
+function isBundleCurrent() {
+  if (process.env.LOCAL_AI_REBUILD === '1') return false
+  if (!fs.existsSync(bundlePath) || !fs.existsSync(manifestPath)) return false
+  const bundleTime = fs.statSync(bundlePath).mtimeMs
+  return bundleInputs.every((input) => !fs.existsSync(input) || fs.statSync(input).mtimeMs <= bundleTime)
+}
+
+if (isBundleCurrent()) {
+  console.log('Local AI worker is up to date.')
+  process.exit(0)
+}
+
+const MIN_BUNDLER_NODE_MAJOR = 24
+if (Number(process.versions.node.split('.')[0]) < MIN_BUNDLER_NODE_MAJOR) {
+  console.error(
+    `Building the local AI worker needs Node ${MIN_BUNDLER_NODE_MAJOR} or newer (bare-module-lexer crashes on Node ${process.versions.node}). Run: nvm use 24 && node scripts/build-local-ai-worker.mjs`
+  )
+  process.exit(1)
+}
+
+process.env.PATH = [path.dirname(process.execPath), process.env.PATH].filter(Boolean).join(path.delimiter)
+
 const { bundleSdk, verifyBundle, hasErrors, formatVerifyBundleResult } = await import(
   pathToFileURL(path.join(sdkDir, 'dist', 'src', 'commands', 'index.js')).href
 )

@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 import {
   AlignCenter,
   AlignJustify,
@@ -10,6 +11,7 @@ import {
   Highlighter,
   Italic,
   Link2,
+  Mic,
   Minus,
   Paperclip,
   Redo,
@@ -22,7 +24,14 @@ import {
   Undo
 } from 'lucide-react'
 
+import {
+  LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
+import { selectIsLocalAiFeatureReady } from '@pear-notes/core/store/slices/localAiSlice.js'
+
 import { useFormattingToolbar } from '../../hooks/useFormattingToolbar'
+import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 import AudioRecorderModal from '../modals/AudioRecorderModal'
 import LinkModal from '../modals/LinkModal'
 
@@ -67,6 +76,15 @@ export default function FormattingToolbar({ editor, noteKey }) {
     handleInsertAudio,
     handleToggleCodeBlock
   } = useFormattingToolbar(editor, noteKey)
+  const voiceTypingReady = useSelector(
+    (state) =>
+      LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.VOICE_TYPING)
+  )
+  const transcribeReady = useSelector(
+    (state) =>
+      LOCAL_AI_ENABLED &&
+      selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
+  )
 
   if (!editor) {
     return null
@@ -344,6 +362,16 @@ export default function FormattingToolbar({ editor, noteKey }) {
           )}
         </div>
 
+        {voiceTypingReady && (
+          <Button
+            onClick={() => requestLocalAiSheet({ mode: 'dictate' })}
+            title={t('localAi.dictate.toolbarLabel')}
+            className='w-9 h-9'
+          >
+            <Mic className='w-4 h-4' strokeWidth={2.5} />
+          </Button>
+        )}
+
         <div className='w-px h-5 bg-overlay-strong mx-1' />
 
         <div className='flex items-center gap-1'>
@@ -379,6 +407,7 @@ export default function FormattingToolbar({ editor, noteKey }) {
         <AudioRecorderModal
           onClose={() => setShowAudioRecorder(false)}
           onSaveAudio={handleInsertAudio}
+          transcriptAvailable={transcribeReady}
         />
       )}
     </>

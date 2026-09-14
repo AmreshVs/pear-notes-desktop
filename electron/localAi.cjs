@@ -15,6 +15,8 @@ const PCM_FILE_EXTENSION = '.raw'
 const MIN_DARWIN_MAJOR = 23
 const INTERRUPT_WINDOW_MS = 60 * 1000
 const OCR_LANGUAGES = ['en']
+const OCR_MAG_RATIO = 1
+const OCR_CANVAS_SIZE = 1600
 const WHISPER_AUDIO_FORMAT = 's16le'
 const PARAKEET_ENGINE = 'parakeet'
 
@@ -252,13 +254,17 @@ async function extractText(event, { image }) {
     catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT,
     {}
   )
-  const modelId = await ensureModelLoaded(sdk, `${recognizerName}|${detectorName}`, () =>
+  const modelId = await ensureModelLoaded(sdk, `${recognizerName}|${detectorName}|desktop`, () =>
     sdk.loadModel({
       modelSrc: registryAsset(sdk, catalog, recognizerName),
       modelType: 'ocr',
       modelConfig: {
         detectorModelSrc: registryAsset(sdk, catalog, detectorName),
-        langList: OCR_LANGUAGES
+        langList: OCR_LANGUAGES,
+        magRatio: OCR_MAG_RATIO,
+        canvasSize: OCR_CANVAS_SIZE,
+        defaultRotationAngles: [],
+        backendDevice: process.platform === 'darwin' ? 'metal' : 'cpu'
       }
     })
   )

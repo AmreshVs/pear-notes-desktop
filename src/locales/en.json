@@ -234,6 +234,7 @@
       "license": "License: {{license}}",
       "licenses": {
         "MIT": "MIT",
+        "Apache-2.0": "Apache 2.0",
         "CC-BY-4.0": "CC BY 4.0, attribution required",
         "pending": "Confirmed before release"
       },
@@ -1229,6 +1230,85 @@
       "video": "a video",
       "audio": "an audio recording",
       "file": "a file"
+    }
+  },
+  "localAi": {
+    "actions": {
+      "insert": "Insert",
+      "copy": "Copy",
+      "copied": "Copied",
+      "again": "Try again",
+      "recordAgain": "Record again",
+      "start": "Start voice typing",
+      "stop": "Stop and transcribe"
+    },
+    "conflictBlocked": "This note changed on another device. Choose a version before inserting. You can still select and copy the text.",
+    "transcriptTitle": "Transcript",
+    "dictate": {
+      "toolbarLabel": "Voice typing",
+      "recording": {
+        "title": "Listening",
+        "subtitle": "Your words appear when you stop."
+      },
+      "working": {
+        "title": "Turning speech into text",
+        "subtitle": "Your voice stays on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Here's what you said",
+        "subtitle": "Insert adds it where your cursor was."
+      }
+    },
+    "transcribe": {
+      "actionLabel": "Transcribe",
+      "addTranscript": "Add transcript",
+      "addTranscriptHint": "Transcribed on this device after you insert the recording.",
+      "working": {
+        "title": "Transcribing your recording",
+        "subtitle": "Your audio stays on this computer. Long recordings take a little longer."
+      },
+      "preview": {
+        "title": "Transcript ready",
+        "subtitle": "Insert adds it as a quote below the recording."
+      }
+    },
+    "extract": {
+      "actionLabel": "Extract text",
+      "pageProgress": "Reading page {{page}} of {{total}}",
+      "working": {
+        "title": "Reading the text",
+        "subtitle": "Everything happens on this computer. PDFs are read up to 20 pages."
+      },
+      "preview": {
+        "title": "Text found",
+        "subtitle": "Check it, then insert it at the end of your note."
+      }
+    },
+    "errors": {
+      "micDenied": {
+        "title": "Microphone access is off",
+        "subtitle": "Allow Pear Notes to use the microphone in System Settings, then try again."
+      },
+      "failedExtract": {
+        "title": "Couldn't extract text",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "failed": {
+        "title": "Couldn't transcribe",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "empty": {
+        "title": "Didn't catch anything",
+        "subtitle": "Try again and speak a little closer to the microphone."
+      },
+      "emptyImage": {
+        "title": "No text found",
+        "subtitle": "Try an image or scan where the text is sharp and upright."
+      },
+      "download": {
+        "title": "Couldn't open this file",
+        "subtitle": "Try again once it has finished syncing."
+      }
     }
   },
   "debug": {

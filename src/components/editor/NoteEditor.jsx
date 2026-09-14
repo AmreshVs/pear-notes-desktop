@@ -4,12 +4,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
 
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
   openNoteHistory
 } from '@pear-notes/core/store/slices/activitySlice.js'
 import {
+  getEditorConflict,
   getEditorContent,
   getEditorContentText,
   getEditorInstance,
@@ -35,6 +37,10 @@ import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
 import {
+  clearLocalAiSheetRequest,
+  useLocalAiSheetRequest
+} from '../../lib/localAi/localAiRequests'
+import {
   isNoteUnlocked,
   markNoteUnlocked,
   unlockNote,
@@ -45,6 +51,7 @@ import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { getFontFamilyValue } from '../../utils/fonts'
 import { formatRelativeDate } from '../../utils/formatters'
 import UploadProgressToast from '../common/UploadProgressToast'
+import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
 import FormattingToolbar from './FormattingToolbar'
 import NoteConflictBanner from './NoteConflictBanner'
@@ -88,6 +95,70 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const showLockScreen = isLocked && !noteUnlocked
 
   useLockedNoteProtection(isLocked && noteUnlocked)
+
+  const localAiRequest = useLocalAiSheetRequest()
+  const editorConflict = useSelector(getEditorConflict)
+  const hasNoteConflict = !!editorConflict && editorConflict.key === selectedNoteKey
+
+  useEffect(() => {
+    clearLocalAiSheetRequest()
+  }, [selectedNoteKey, showLockScreen])
+
+  const insertTranscriptQuote = (paragraphs, attachmentUrl) => {
+    const { doc } = editorInstance.state
+    let insertAt = null
+    if (attachmentUrl) {
+      doc.descendants((node, pos) => {
+        if (insertAt !== null) return false
+        const isAttachment =
+          node.type.name === 'audioAttachment' || node.type.name === 'fileAttachment'
+        const nodeUrl = node.attrs.url || node.attrs.audioData || node.attrs.fileData
+        if (isAttachment && nodeUrl === attachmentUrl) {
+          insertAt = pos + node.nodeSize
+          return false
+        }
+      })
+    }
+    const quote = {
+      type: 'blockquote',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: t('localAi.transcriptTitle'), marks: [{ type: 'bold' }] }
+          ]
+        },
+        ...paragraphs
+      ]
+    }
+    editorInstance
+      .chain()
+      .focus()
+      .insertContentAt(insertAt ?? doc.content.size, quote)
+      .run()
+  }
+
+  const handleInsertLocalAiText = (text, mode) => {
+    const atCursor = mode === 'dictate' || localAiRequest?.insertAt === 'cursor'
+    const attachmentUrl = localAiRequest?.attachmentUrl ?? null
+    clearLocalAiSheetRequest()
+    if (!editorInstance || editorInstance.isDestroyed) return
+    const paragraphs = text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => ({ type: 'paragraph', content: [{ type: 'text', text: line }] }))
+    if (paragraphs.length === 0) return
+    if (mode === 'transcribe') {
+      insertTranscriptQuote(paragraphs, attachmentUrl)
+      return
+    }
+    editorInstance
+      .chain()
+      .focus(atCursor ? undefined : 'end')
+      .insertContent(paragraphs)
+      .run()
+  }
 
   useEffect(() => {
     let active = true
@@ -373,6 +444,16 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
         </div>
         <UploadProgressToast />
+
+        {LOCAL_AI_ENABLED && localAiRequest && (
+          <LocalAiSheetModal
+            key={localAiRequest.id}
+            request={localAiRequest}
+            insertBlocked={hasNoteConflict}
+            onInsert={handleInsertLocalAiText}
+            onClose={clearLocalAiSheetRequest}
+          />
+        )}
 
         <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
           <span className='text-xs font-bold text-text-secondary tracking-widest'>

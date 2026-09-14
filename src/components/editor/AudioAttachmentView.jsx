@@ -2,9 +2,14 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { NodeViewWrapper } from '@tiptap/react'
-import { Download, Trash2 } from 'lucide-react'
+import { AudioLines, Download, Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import {
+  LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
+import { selectIsLocalAiFeatureReady } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
@@ -14,6 +19,7 @@ import {
   deleteHyperdriveFile,
   downloadAsBlob
 } from '../../lib/fileManager'
+import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 
 import AudioPlayer from './AudioPlayer'
 
@@ -26,6 +32,23 @@ export default function AudioAttachmentView({ node, deleteNode }) {
   const noteKey = useSelector(getSelectedNote)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
+  const transcribeReady = useSelector(
+    (state) =>
+      LOCAL_AI_ENABLED &&
+      selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
+  )
+
+  const handleTranscribe = (e) => {
+    e.stopPropagation()
+    const finalUrl = resolvedUrl || audioData
+    if (!finalUrl) return
+    requestLocalAiSheet({
+      mode: 'transcribe',
+      url: finalUrl,
+      fileName,
+      attachmentUrl: url || audioData
+    })
+  }
 
   const handleDownload = async (e) => {
     e.stopPropagation()
@@ -79,6 +102,16 @@ export default function AudioAttachmentView({ node, deleteNode }) {
         )}
 
         <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
+          {transcribeReady && (resolvedUrl || audioData) && (
+            <button
+              onClick={handleTranscribe}
+              className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-panel transition-all duration-200'
+              title={t('localAi.transcribe.actionLabel')}
+              aria-label={t('localAi.transcribe.actionLabel')}
+            >
+              <AudioLines className='w-4 h-4 text-text-secondary hover:text-text-primary transition-colors' />
+            </button>
+          )}
           {(resolvedUrl || audioData) && (
             <button
               onClick={handleDownload}
