@@ -118,7 +118,8 @@
       "sync": "Manage your secure peer-to-peer network and linked devices with end-to-end encryption.",
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
       "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
-      "activity": "See what each linked device has created, changed and removed."
+      "activity": "See what each linked device has created, changed and removed.",
+      "onDeviceAi": "AI features that run on this computer. Your notes are never sent anywhere. Each feature downloads its model once, then works offline."
     },
     "syncStatus": {
       "title": "Sync status",
@@ -141,6 +142,137 @@
     "devices": {
       "header": "Devices",
       "rowTitle": "Link devices"
+    },
+    "onDeviceAi": {
+      "loading": "Loading AI settings",
+      "thisDevice": "This device",
+      "status": "Status",
+      "memory": "Memory",
+      "freeSpace": "Free space",
+      "modelsOnDevice": "AI models on this computer",
+      "deviceStatus": {
+        "unknown": "Checking",
+        "supported": "Ready",
+        "limited": "Limited",
+        "unsupported": "Not supported"
+      },
+      "verdict": {
+        "unknown": "Checking what this computer supports.",
+        "supported": "On-device AI is ready to use on this computer.",
+        "limited": "This computer has less memory, so the Best quality models may be slow. Lite and Standard work normally."
+      },
+      "unsupportedReason": {
+        "simulator": "On-device AI only runs on a physical device. Everything else in Pear Notes works as usual.",
+        "os-version": "On-device AI needs {{requirement}}. Everything else in Pear Notes works as usual.",
+        "architecture": "On-device AI isn't available for this processor. Everything else in Pear Notes works as usual.",
+        "gpu": "On-device AI needs a supported graphics driver. Everything else in Pear Notes works as usual.",
+        "store-build": "On-device AI isn't available in this build. Everything else in Pear Notes works as usual."
+      },
+      "requirementMac": "macOS 14 or later",
+      "downloads": "Downloads",
+      "wifiOnly": "Hold AI downloads on metered connections",
+      "wifiOnlyDesc": "Uses the metered connection setting in Sync.",
+      "groups": {
+        "voiceAndAudio": "Voice and audio",
+        "imagesAndScans": "Images and scans"
+      },
+      "features": {
+        "voiceTyping": {
+          "title": "Voice typing",
+          "inline": "voice typing",
+          "desc": "Speak and your words appear in the note."
+        },
+        "transcribeRecordings": {
+          "title": "Transcribe recordings",
+          "inline": "recording transcripts",
+          "desc": "Turn voice recordings into text."
+        },
+        "extractText": {
+          "title": "Extract text",
+          "inline": "text extraction",
+          "desc": "Copy text from photos, scans and PDFs."
+        }
+      },
+      "featureStatus": {
+        "off": "{{size}} download",
+        "offDownloaded": "Model already on this computer",
+        "ready": "Ready · {{size}}",
+        "downloading": "Downloading · {{percent}}% · {{downloaded}} of {{total}}",
+        "paused": "Paused · {{percent}}% · {{downloaded}} of {{total}}",
+        "waitingNetwork": "Waiting for an unmetered connection · {{size}}",
+        "failed": "Download stopped at {{percent}}%"
+      },
+      "downloadNow": "Download now",
+      "tryAgain": "Try again",
+      "pauseDownload": "Pause download",
+      "resumeDownload": "Resume download",
+      "cancelDownload": "Cancel download",
+      "turnOn": {
+        "title": "Turn on {{feature}}?",
+        "message": "This downloads {{size}}. After that it works offline.",
+        "messageWaiting": "This downloads {{size}}. You're on a metered connection, so the download starts when you're on an unmetered one.",
+        "confirm": "Download {{size}}",
+        "confirmWaiting": "Download later"
+      },
+      "turnOff": {
+        "title": "Turn off {{feature}}?",
+        "message": "Keep the model to turn this back on without downloading again, or delete it to free {{size}}.",
+        "keep": "Keep model",
+        "delete": "Delete model"
+      },
+      "notEnoughSpace": {
+        "title": "Not enough space",
+        "message": "{{feature}} needs {{size}}. Pear Notes keeps some space free so your notes can always save. Free up {{short}} and try again.",
+        "messageGeneric": "A model download stopped because this computer is almost full. Free up some space and try again."
+      },
+      "footer": "Models are downloaded from the QVAC model library and checked before use. These settings apply to this computer only.",
+      "modelsTitle": "AI models",
+      "modelsEmpty": "No models yet. Turn on a feature to download its model.",
+      "notDownloaded": "Not downloaded",
+      "usedBy": "Used by {{features}}",
+      "unused": "Not used by any feature",
+      "license": "License: {{license}}",
+      "licenses": {
+        "MIT": "MIT",
+        "CC-BY-4.0": "CC BY 4.0, attribution required",
+        "pending": "Confirmed before release"
+      },
+      "modelNames": {
+        "WHISPER_TINY_Q8_0": "Whisper tiny",
+        "WHISPER_EN_TINY_Q8_0": "Whisper tiny, English",
+        "WHISPER_BASE_Q8_0": "Whisper base",
+        "WHISPER_EN_BASE_Q8_0": "Whisper base, English",
+        "VAD_SILERO_5_1_2": "Silero voice detection",
+        "PARAKEET_TDT_0_6B_V3_Q4_0": "Parakeet",
+        "OCR_LATIN": "Latin text recognizer",
+        "OCR_CRAFT": "CRAFT text detector"
+      },
+      "language": "Language",
+      "languages": {
+        "auto": "Detect automatically",
+        "en": "English only"
+      },
+      "quality": "Quality",
+      "tierDescriptions": {
+        "lite": "Lite · Whisper tiny · {{size}}",
+        "standard": "Standard · Whisper base · {{size}}",
+        "best": "Best · Parakeet · {{size}}"
+      },
+      "tierSwitchNote": "Switching downloads the new model. The current one stays on this computer until you delete it.",
+      "model": "Model",
+      "deleteModel": "Delete model",
+      "deleteAllModels": "Delete all models",
+      "deleteAllModelsDesc": "Frees the space AI models use and turns off every AI feature on this computer. Your notes aren't affected.",
+      "sharedModel": "Also used by {{features}}. Turn that off first to delete it.",
+      "deleteModelConfirm": {
+        "title": "Delete {{model}}?",
+        "message": "This frees {{size}}. Your notes aren't affected.",
+        "messageUsers": "This frees {{size}} and turns off {{features}}. Your notes aren't affected."
+      },
+      "deleteAllConfirm": {
+        "title": "Delete all AI models?",
+        "message": "This frees {{size}} and turns off every AI feature on this computer. Your notes aren't affected."
+      }
     }
   },
   "sync": {
@@ -582,6 +714,7 @@
     "backupPassword": "Backup password",
     "noteLockPassword": "Note lock password",
     "privacyAndSecurity": "Privacy & security",
+    "onDeviceAi": "On-device AI",
     "storage": "Storage",
     "activity": "Activity",
     "linkDevices": "Link devices",

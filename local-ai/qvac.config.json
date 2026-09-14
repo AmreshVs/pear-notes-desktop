@@ -1,0 +1,7 @@
+{
+  "plugins": [
+    "@qvac/sdk/whispercpp-transcription/plugin",
+    "@qvac/sdk/parakeet-transcription/plugin",
+    "@qvac/sdk/ggml-ocr/plugin"
+  ]
+}

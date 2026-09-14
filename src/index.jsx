@@ -11,10 +11,13 @@ import { Duplex } from 'stream'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { setRPC } from '@pear-notes/core/rpc.js'
 import HRPC from '@pear-notes/core/spec/hrpc/index.js'
+import { setLocalAiAdapter } from '@pear-notes/core/store/services/localAiAdapter.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
 import { store } from '@pear-notes/core/store/store.js'
 
 import ErrorBoundary from './components/common/ErrorBoundary.jsx'
+import { electronAdapter } from './lib/localAi/electronAdapter.js'
 import App from './App.jsx'
 
 const { ipcRenderer } = window.require('electron')
@@ -44,6 +47,8 @@ const workerStream = new WorkerIPCStream()
 const stream = new FramedStream(workerStream)
 const rpc = new HRPC(stream)
 setRPC(rpc)
+
+if (LOCAL_AI_ENABLED) setLocalAiAdapter(electronAdapter)
 
 // `globalThis.production` was never assigned anywhere, so this branch always
 // ran - the packaged app exposed the full store (notes, folders, settings and
