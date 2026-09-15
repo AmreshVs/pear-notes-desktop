@@ -186,7 +186,7 @@
           "desc": "Speak and your words appear in the note.",
           "limitations": [
             "Works best in a quiet place with one person speaking.",
-            "Accuracy depends on language and accent. Standard and Lite are most accurate in English; Best covers 25 European languages.",
+            "Accuracy depends on language and accent. Lite and Standard are most accurate in English; Best covers about 25 languages.",
             "Punctuation and names can be wrong, so check the text before you insert it.",
             "Your voice is processed on this computer and never uploaded."
           ]
@@ -211,7 +211,7 @@
           "inline": "image descriptions",
           "desc": "Get a short description of an image to add as a caption.",
           "limitations": [
-            "Descriptions are short and in English.",
+            "Descriptions are short and usually in English, even for photos of text in other languages.",
             "Descriptions can be wrong or miss details, so check them before you use them.",
             "To copy text from an image, use Extract text instead."
           ]
@@ -1595,10 +1595,6 @@
       "notEnoughMemory": {
         "title": "Not enough memory",
         "subtitle": "This computer doesn't have enough free memory for this right now. Close other apps and try again, or choose a lighter quality in On-device AI settings."
-      },
-      "unstable": {
-        "title": "Paused to keep Pear Notes stable",
-        "subtitle": "This AI model stopped the app twice, so it's paused on this computer. Try again, or choose a lighter quality in On-device AI settings."
       }
     },
     "translate": {

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 import {
+  canRunFeature,
   getFeatureLanguages,
   getFeatureRegistryNames,
   getFeatureTiers,
@@ -235,6 +236,8 @@ export default function LocalAiSettings() {
         })
       case LOCAL_AI_FEATURE_STATUS.FAILED:
         return t('settings.onDeviceAi.featureStatus.failed', { percent: row.percent })
+      case LOCAL_AI_FEATURE_STATUS.NEEDS_MEMORY:
+        return t('settings.onDeviceAi.featureStatus.needsMemory')
       default:
         return ''
     }
@@ -423,7 +426,9 @@ export default function LocalAiSettings() {
                     <Toggle
                       on={row.enabled}
                       onClick={() => handleToggleFeature(row)}
-                      disabled={isUnsupported}
+                      disabled={
+                        isUnsupported || (row.status === LOCAL_AI_FEATURE_STATUS.NEEDS_MEMORY && !row.enabled)
+                      }
                     />
                   </div>
 
@@ -549,14 +554,21 @@ export default function LocalAiSettings() {
                                   language: config.features[row.feature]?.language
                                 })
                               )
+                              const fits = canRunFeature(
+                                row.feature,
+                                { ...config.features[row.feature], tier },
+                                device.totalMemoryBytes
+                              )
                               return (
                                 <button
                                   key={tier}
                                   onClick={() =>
                                     dispatch(setLocalAiFeatureTier({ feature: row.feature, tier }))
                                   }
+                                  disabled={!fits}
+                                  title={fits ? undefined : t('settings.onDeviceAi.tierNeedsMemory')}
                                   aria-pressed={selected}
-                                  className={optionClass(selected)}
+                                  className={`${optionClass(selected)} disabled:opacity-45 disabled:cursor-not-allowed`}
                                 >
                                   {selected && <Check className='w-3.5 h-3.5' />}
                                   {t(
