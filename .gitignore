@@ -10,6 +10,7 @@ src/store/*.md
 native/pear-device-auth/build/*
 native/pear-device-auth/bin/*
 .release.mac.env
+local-ai/qvac/
 
 # harden-core preview staging (npm run harden-core)
 .core-hardened/

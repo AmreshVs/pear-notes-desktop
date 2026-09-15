@@ -5,8 +5,9 @@ import { Mic, Square, X } from 'lucide-react'
 import { formatTime } from '../../utils/formatters'
 import AudioPlayer from '../editor/AudioPlayer'
 
-export default function AudioRecorderModal({ onClose, onSaveAudio }) {
+export default function AudioRecorderModal({ onClose, onSaveAudio, transcriptAvailable = false }) {
   const { t } = useTranslation()
+  const [addTranscript, setAddTranscript] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [audioBlob, setAudioBlob] = useState(null)
@@ -82,7 +83,8 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
       setIsSaving(true)
       onSaveAudio({
         data: audioDataUrl,
-        duration: recordingTime
+        duration: recordingTime,
+        addTranscript: transcriptAvailable && addTranscript
       })
       setTimeout(() => {
         onClose()
@@ -161,6 +163,35 @@ export default function AudioRecorderModal({ onClose, onSaveAudio }) {
                     duration={recordingTime}
                     title={t('audioRecorderModal.previewTitle')}
                   />
+                  {transcriptAvailable && (
+                    <button
+                      type='button'
+                      role='switch'
+                      aria-checked={addTranscript}
+                      onClick={() => setAddTranscript((value) => !value)}
+                      className='mt-4 w-full flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-bg-tertiary/40 border border-overlay-soft text-left transition-all hover:bg-bg-tertiary/60'
+                    >
+                      <span className='flex flex-col min-w-0'>
+                        <span className='text-sm font-bold text-text-primary'>
+                          {t('localAi.transcribe.addTranscript')}
+                        </span>
+                        <span className='text-xs text-text-tertiary'>
+                          {t('localAi.transcribe.addTranscriptHint')}
+                        </span>
+                      </span>
+                      <span
+                        className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
+                          addTranscript ? 'bg-accent-primary' : 'bg-overlay-strong'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
+                            addTranscript ? 'left-[18px]' : 'left-0.5'
+                          }`}
+                        />
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

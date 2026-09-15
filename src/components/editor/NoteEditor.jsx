@@ -3,13 +3,19 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
 
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
+import {
+  LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
   openNoteHistory
 } from '@pear-notes/core/store/slices/activitySlice.js'
 import {
+  getEditorConflict,
   getEditorContent,
   getEditorContentText,
   getEditorInstance,
@@ -30,10 +36,12 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
 import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { clearLocalAiSheetRequest, useLocalAiSheetRequest } from '../../lib/localAi/localAiRequests'
 import {
   isNoteUnlocked,
   markNoteUnlocked,
@@ -45,11 +53,26 @@ import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { getFontFamilyValue } from '../../utils/fonts'
 import { formatRelativeDate } from '../../utils/formatters'
 import UploadProgressToast from '../common/UploadProgressToast'
+import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
+import AiToolsButton from './AiToolsButton'
 import FormattingToolbar from './FormattingToolbar'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
 import RichTextEditor from './RichTextEditor'
+
+const paragraphNode = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
+
+const bulletListNode = (items) => ({
+  type: 'bulletList',
+  content: items.map((item) => ({ type: 'listItem', content: [paragraphNode(item)] }))
+})
+
+const toLines = (text) =>
+  String(text ?? '')
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
 
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const { t } = useTranslation()
@@ -88,6 +111,268 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const showLockScreen = isLocked && !noteUnlocked
 
   useLockedNoteProtection(isLocked && noteUnlocked)
+
+  const localAiRequest = useLocalAiSheetRequest()
+  const editorConflict = useSelector(getEditorConflict)
+  const hasNoteConflict = !!editorConflict && editorConflict.key === selectedNoteKey
+  const summarizeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
+  const translateReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSLATE_NOTES)
+
+  useEffect(() => {
+    clearLocalAiSheetRequest()
+  }, [selectedNoteKey, showLockScreen])
+
+  const insertImageCaption = (caption, imageSrc) => {
+    const { doc } = editorInstance.state
+    let insertAt = null
+    if (imageSrc) {
+      doc.descendants((node, pos) => {
+        if (insertAt !== null) return false
+        if (node.type.name === 'image' && node.attrs.src === imageSrc) {
+          insertAt = pos + node.nodeSize
+          return false
+        }
+      })
+    }
+    editorInstance
+      .chain()
+      .focus()
+      .insertContentAt(insertAt ?? doc.content.size, {
+        type: 'paragraph',
+        content: [{ type: 'text', text: caption, marks: [{ type: 'italic' }] }]
+      })
+      .run()
+  }
+
+  const summaryNodes = (summary) => {
+    if (!summary) return []
+    const heading = (text) => ({
+      type: 'paragraph',
+      content: [{ type: 'text', text, marks: [{ type: 'bold' }] }]
+    })
+    return [
+      ...(summary.summary
+        ? [
+            heading(t('localAi.summary.title')),
+            { type: 'paragraph', content: [{ type: 'text', text: summary.summary }] }
+          ]
+        : []),
+      ...(summary.actionItems.length > 0
+        ? [
+            heading(t('localAi.summary.actionItems')),
+            {
+              type: 'bulletList',
+              content: summary.actionItems.map((item) => ({
+                type: 'listItem',
+                content: [{ type: 'paragraph', content: [{ type: 'text', text: item }] }]
+              }))
+            }
+          ]
+        : [])
+    ]
+  }
+
+  const insertTranscriptQuote = (
+    paragraphs,
+    attachmentUrl,
+    summary,
+    title = t('localAi.transcriptTitle'),
+    position = null
+  ) => {
+    const { doc } = editorInstance.state
+    let insertAt = null
+    if (attachmentUrl) {
+      doc.descendants((node, pos) => {
+        if (insertAt !== null) return false
+        const isAttachment =
+          node.type.name === 'audioAttachment' || node.type.name === 'fileAttachment'
+        const nodeUrl = node.attrs.url || node.attrs.audioData || node.attrs.fileData
+        if (isAttachment && nodeUrl === attachmentUrl) {
+          insertAt = pos + node.nodeSize
+          return false
+        }
+      })
+    }
+    const quote = {
+      type: 'blockquote',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: title, marks: [{ type: 'bold' }] }]
+        },
+        ...paragraphs,
+        ...summaryNodes(summary)
+      ]
+    }
+    editorInstance
+      .chain()
+      .focus()
+      .insertContentAt(insertAt ?? position ?? doc.content.size, quote)
+      .run()
+  }
+
+  const insertForSelection = (text, mode, summary, meta, selection) => {
+    const { doc } = editorInstance.state
+    const size = doc.content.size
+    const from = Math.min(selection.from, size)
+    const to = Math.min(Math.max(selection.to, from), size)
+    const $to = doc.resolve(to)
+    const below = $to.depth > 0 ? $to.after(1) : size
+    if (mode === 'summarizeNote') {
+      if (!summary) return
+      insertTranscriptQuote(
+        summary.summary ? [paragraphNode(summary.summary)] : [],
+        null,
+        { summary: '', actionItems: summary.actionItems },
+        t('localAi.summarizeNote.insertTitle'),
+        below
+      )
+      return
+    }
+    if (mode === 'keyPoints') {
+      const bullets = meta?.bullets ?? []
+      if (bullets.length === 0) return
+      insertTranscriptQuote(
+        [bulletListNode(bullets)],
+        null,
+        null,
+        t('localAi.keyPoints.insertTitle'),
+        below
+      )
+      return
+    }
+    const lines = toLines(text)
+    if (lines.length === 0) return
+    const unchanged = doc.textBetween(from, to, '\n', ' ') === selection.text
+    if (meta?.action === 'replace' && unchanged) {
+      editorInstance
+        .chain()
+        .focus()
+        .insertContentAt(
+          { from, to },
+          lines.length === 1 ? { type: 'text', text: lines[0] } : lines.map(paragraphNode)
+        )
+        .run()
+      return
+    }
+    editorInstance.chain().focus().insertContentAt(below, lines.map(paragraphNode)).run()
+  }
+
+  const handleAttachLocalAiAudio = async (blob, durationSeconds) => {
+    const noteKey = selectedNoteKey
+    clearLocalAiSheetRequest()
+    if (!noteKey) return
+    try {
+      const extension = blob.type.includes('ogg') ? 'ogg' : 'webm'
+      const fileName = `Audio Recording ${new Date().toLocaleString()}.${extension}`
+      const { link } = await backendApi.insertFile({
+        key: noteKey,
+        fileName,
+        buffer: await blob.arrayBuffer()
+      })
+      if (!link || !editorInstance || editorInstance.isDestroyed) return
+      editorInstance
+        .chain()
+        .focus()
+        .insertContent([
+          {
+            type: 'audioAttachment',
+            attrs: { audioData: null, url: link, duration: durationSeconds, fileName }
+          },
+          { type: 'paragraph' }
+        ])
+        .run()
+    } catch (error) {
+      console.error('Error uploading audio:', error)
+    }
+  }
+
+  const handleInsertLocalAiText = (text, mode, summary, meta) => {
+    const atCursor = mode === 'dictate' || localAiRequest?.insertAt === 'cursor'
+    const attachmentUrl = localAiRequest?.attachmentUrl ?? null
+    const selection = localAiRequest?.scope === 'selection' ? localAiRequest.selection : null
+    clearLocalAiSheetRequest()
+    if (!editorInstance || editorInstance.isDestroyed) return
+    if (selection) {
+      insertForSelection(text, mode, summary, meta, selection)
+      return
+    }
+    if (mode === 'describe') {
+      insertImageCaption(text.trim(), attachmentUrl)
+      return
+    }
+    if (mode === 'suggestTitle') {
+      const nextTitle = text.trim().slice(0, NOTE_TITLE_MAX_LENGTH)
+      if (!nextTitle) return
+      dispatch(setEditorTitle(nextTitle))
+      onUpdate({
+        key: selectedNoteKey,
+        title: nextTitle,
+        contentHtml: content,
+        content: editorInstance.getText() || contentText
+      })
+      return
+    }
+    if (mode === 'summarizeNote') {
+      if (!summary) return
+      insertTranscriptQuote(
+        summary.summary
+          ? [{ type: 'paragraph', content: [{ type: 'text', text: summary.summary }] }]
+          : [],
+        null,
+        { summary: '', actionItems: summary.actionItems },
+        t('localAi.summarizeNote.insertTitle')
+      )
+      return
+    }
+    if (mode === 'keyPoints') {
+      const bullets = meta?.bullets ?? []
+      if (bullets.length === 0) return
+      insertTranscriptQuote(
+        [
+          {
+            type: 'bulletList',
+            content: bullets.map((item) => ({
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: item }] }]
+            }))
+          }
+        ],
+        null,
+        null,
+        t('localAi.keyPoints.insertTitle')
+      )
+      return
+    }
+    const paragraphs = text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => ({ type: 'paragraph', content: [{ type: 'text', text: line }] }))
+    if (paragraphs.length === 0) return
+    if (mode === 'translate') {
+      const language =
+        meta?.language === 'en'
+          ? t('localAi.translate.english')
+          : t(`settings.onDeviceAi.languages.${meta?.language}`)
+      insertTranscriptQuote(
+        paragraphs,
+        null,
+        null,
+        t('localAi.translate.insertTitle', { language })
+      )
+      return
+    }
+    if (mode === 'transcribe') {
+      insertTranscriptQuote(paragraphs, attachmentUrl, summary)
+      return
+    }
+    editorInstance
+      .chain()
+      .focus(atCursor ? undefined : 'end')
+      .insertContent(paragraphs)
+      .run()
+  }
 
   useEffect(() => {
     let active = true
@@ -374,11 +659,30 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         </div>
         <UploadProgressToast />
 
-        <div className='absolute bottom-6 right-8 pointer-events-none z-30'>
-          <span className='text-xs font-bold text-text-secondary tracking-widest'>
+        {LOCAL_AI_ENABLED && localAiRequest && (
+          <LocalAiSheetModal
+            key={localAiRequest.id}
+            request={localAiRequest}
+            insertBlocked={hasNoteConflict}
+            summaryAvailable={summarizeReady}
+            onInsert={handleInsertLocalAiText}
+            onAttachAudio={handleAttachLocalAiAudio}
+            onClose={clearLocalAiSheetRequest}
+          />
+        )}
+
+        <div className='absolute bottom-6 right-8 z-30 flex items-center gap-4'>
+          <span className='pointer-events-none text-xs font-bold text-text-secondary tracking-widest'>
             {t('noteEditor.edited')}{' '}
             {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
           </span>
+          {LOCAL_AI_ENABLED && (summarizeReady || translateReady) && (
+            <AiToolsButton
+              content={content}
+              summarizeReady={summarizeReady}
+              translateReady={translateReady}
+            />
+          )}
         </div>
       </div>
 

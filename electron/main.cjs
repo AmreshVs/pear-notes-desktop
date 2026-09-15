@@ -18,6 +18,7 @@ const path = require('path')
 const fs = require('fs')
 const PearRuntime = require('pear-runtime')
 const { isMac, isLinux } = require('which-runtime')
+const { setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 
 const pkg = require('../package.json')
 const appName = pkg.productName ?? pkg.name
@@ -528,6 +529,7 @@ if (!lock) {
     })
 
     setupIPC()
+    setupLocalAi({ getStoragePath, isMas })
     createWindow()
     createTray()
     startWorker()
@@ -555,6 +557,7 @@ if (!lock) {
       powerSaveBlocker.stop(powerSaveBlockerId)
       powerSaveBlockerId = null
     }
+    shutdownLocalAi()
     if (worker) {
       worker.destroy()
       worker = null

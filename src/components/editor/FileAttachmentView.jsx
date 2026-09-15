@@ -14,13 +14,16 @@ import {
   Minimize2,
   Pause,
   Play,
+  ScanText,
   Trash2
 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import usePdfPreview from '../../hooks/usePdfPreview'
 import {
   base64ToBlob,
@@ -28,6 +31,7 @@ import {
   deleteHyperdriveFile,
   downloadAsBlob
 } from '../../lib/fileManager'
+import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 import { isPdfAttachment } from '../../lib/pdfPreview'
 import { deletePdfThumb } from '../../lib/pdfThumbCache'
 import MediaPreviewModal from '../modals/MediaPreviewModal'
@@ -67,6 +71,15 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const isAudio = fileType?.startsWith('audio/')
   const isPdf = isPdfAttachment(fileName, fileType)
   const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null)
+  const extractTextReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.EXTRACT_TEXT)
+
+  const handleExtractText = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const source = resolvedUrl || fileData
+    if (!source) return
+    requestLocalAiSheet({ mode: 'extract', url: source, fileName, kind: 'pdf' })
+  }
 
   useEffect(() => {
     const media = mediaRef.current
@@ -518,6 +531,16 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
 
             <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-20'>
+              {isPdf && extractTextReady && (resolvedUrl || fileData) && (
+                <button
+                  onClick={handleExtractText}
+                  className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'
+                  title={t('localAi.extract.actionLabel')}
+                  aria-label={t('localAi.extract.actionLabel')}
+                >
+                  <ScanText className='w-4 h-4 text-text-secondary' />
+                </button>
+              )}
               {(resolvedUrl || fileData) && (
                 <button
                   onClick={handleDownload}

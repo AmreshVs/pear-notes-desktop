@@ -64,6 +64,7 @@ import * as Y from 'yjs'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
@@ -76,6 +77,7 @@ import { getFontClass, getFontFamilyValue } from '../../utils/fonts'
 import AudioAttachment from './AudioAttachment'
 import FileAttachment from './FileAttachment'
 import ImageView from './ImageView'
+import SelectionAiTools from './SelectionAiTools'
 
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
@@ -550,6 +552,7 @@ const RichTextEditor = forwardRef(
             >
               <CodeIcon className='w-4 h-4 text-text-secondary' strokeWidth={2.5} />
             </BubbleButton>
+            {LOCAL_AI_ENABLED && <SelectionAiTools editor={editor} />}
           </BubbleMenu>
         )}
 

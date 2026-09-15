@@ -109,7 +109,7 @@ let packagerConfig = {
   protocols: [{ name: appName, schemes: [pkg.name] }],
   derefSymlinks: true,
   extendInfo: {
-    NSMicrophoneUsageDescription: `${appName} needs access to your microphone to record voice notes.`,
+    NSMicrophoneUsageDescription: `${appName} needs access to your microphone to record voice notes and for voice typing. Audio stays on this device.`,
     NSHumanReadableCopyright: `Copyright © ${new Date().getFullYear()} ${appName}`,
     ITSAppUsesNonExemptEncryption: false,
     // Electron's stock Info.plist sets NSAllowsArbitraryLoads: true. The app
@@ -220,6 +220,29 @@ async function prunePrebuilds(base, platform, arch) {
   )
 }
 
+const LOCAL_AI_DEFERRED_ADDONS = new Set(['bare-ffmpeg'])
+
+async function pruneUnusedLocalAiAddons(buildPath) {
+  const runtimeDir = path.join(buildPath, 'local-ai')
+  const bundlePath = path.join(runtimeDir, 'qvac', 'worker.bundle.js')
+  if (!fs.existsSync(bundlePath)) return
+  const source = fs.readFileSync(bundlePath, 'utf8')
+  const used = new Set()
+  for (const match of source.matchAll(/\/local-ai\/node_modules\/((?:@[^/"\\]+\/)?[^/"\\]+)\//g)) {
+    used.add(match[1])
+  }
+  const modulesDir = path.join(runtimeDir, 'node_modules')
+  for (const dir of await listPackageDirs(modulesDir)) {
+    const name = path.relative(modulesDir, dir).split(path.sep).join('/')
+    const prebuildsDir = path.join(dir, 'prebuilds')
+    const unusedQvacAddon = name.startsWith('@qvac/') && !used.has(name)
+    if ((unusedQvacAddon || LOCAL_AI_DEFERRED_ADDONS.has(name)) && fs.existsSync(prebuildsDir)) {
+      await fs.promises.rm(prebuildsDir, { recursive: true, force: true })
+    }
+  }
+  await fs.promises.rm(bundlePath, { force: true })
+}
+
 async function listPackageDirs(modulesDir) {
   const dirs = []
   for (const entry of await readdir(modulesDir)) {
@@ -291,7 +314,7 @@ function relocateSidecarBinary(buildPath, platform, arch) {
 // only - the originals on disk stay readable.
 function minifyElectronEntries(buildPath) {
   const esbuild = require('esbuild')
-  for (const rel of ['electron/main.cjs', 'electron/preload.cjs']) {
+  for (const rel of ['electron/main.cjs', 'electron/preload.cjs', 'electron/localAi.cjs']) {
     const file = path.join(buildPath, rel)
     if (!fs.existsSync(file)) continue
     const source = fs.readFileSync(file, 'utf8')
@@ -336,6 +359,15 @@ module.exports = {
   makers,
 
   hooks: {
+    generateAssets: async () => {
+      if (!fs.existsSync(path.join(__dirname, 'local-ai', 'node_modules', '@qvac', 'sdk'))) return
+      require('child_process').execFileSync(
+        process.execPath,
+        [path.join(__dirname, 'scripts', 'build-local-ai-worker.mjs')],
+        { stdio: 'inherit' }
+      )
+    },
+
     preMake: async () => {
       fs.rmSync(path.join(__dirname, 'out', 'make'), { recursive: true, force: true })
     },
@@ -343,6 +375,8 @@ module.exports = {
     packageAfterPrune: async (config, buildPath, electronVersion, platform, arch) => {
       const nativePlatform = platform === 'mas' ? 'darwin' : platform
       await prunePrebuilds(buildPath, nativePlatform, arch)
+      await pruneUnusedLocalAiAddons(buildPath)
+      await prunePrebuilds(path.join(buildPath, 'local-ai'), nativePlatform, arch)
       if (nativePlatform === 'darwin') {
         relocateSidecarBinary(buildPath, nativePlatform, arch)
       }

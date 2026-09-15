@@ -50,5 +50,23 @@ window.electronBridge = {
   writeClipboard: (payload) => ipcRenderer.invoke('clipboard:write', payload),
 
   getCacheSize: () => ipcRenderer.invoke('cache:size'),
-  clearCache: () => ipcRenderer.invoke('cache:clear')
+  clearCache: () => ipcRenderer.invoke('cache:clear'),
+
+  localAiGetDeviceSupport: () => ipcRenderer.invoke('local-ai:device-support'),
+  localAiGetDiskSpace: () => ipcRenderer.invoke('local-ai:disk-space'),
+  localAiDownload: (payload) => ipcRenderer.invoke('local-ai:download', payload),
+  onLocalAiDownloadProgress: (callback) => {
+    const handler = (event, progress) => callback(progress)
+    ipcRenderer.on('local-ai:download-progress', handler)
+    return () => ipcRenderer.removeListener('local-ai:download-progress', handler)
+  },
+  localAiCancel: (payload) => ipcRenderer.invoke('local-ai:cancel', payload),
+  localAiDeleteModel: (payload) => ipcRenderer.invoke('local-ai:delete-model', payload),
+  localAiCloseAndWipe: () => ipcRenderer.invoke('local-ai:close-and-wipe'),
+  localAiTranscribe: (payload) => ipcRenderer.invoke('local-ai:transcribe', payload),
+  localAiExtractText: (payload) => ipcRenderer.invoke('local-ai:extract-text', payload),
+  localAiDescribeImage: (payload) => ipcRenderer.invoke('local-ai:describe-image', payload),
+  localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
+  localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
+  localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task')
 }

@@ -9,9 +9,11 @@ import {
   RefreshCw,
   Settings as SettingsIcon,
   ShieldCheck,
+  Sparkles,
   X
 } from 'lucide-react'
 
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
 import { version as appVersion } from '../../../package.json'
@@ -23,6 +25,7 @@ import BackupSettings from './BackupSettings'
 import DebugSettings from './DebugSettings'
 import DevicesSettings from './DevicesSettings'
 import GeneralSettings from './GeneralSettings'
+import LocalAiSettings from './LocalAiSettings'
 import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
@@ -76,6 +79,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const sections = [
     { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
+    ...(LOCAL_AI_ENABLED
+      ? [{ id: 'onDeviceAi', name: t('layouts.onDeviceAi'), icon: Sparkles }]
+      : []),
     { id: 'devices', name: t('layouts.linkDevices'), icon: Laptop },
     { id: 'sync', name: t('layouts.sync'), icon: RefreshCw },
     ...(hasLinkedDevices
@@ -165,6 +171,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' && t('settings.descriptions.general')}
                 {activeSection === 'privacy' && t('settings.privacy.screenDesc')}
+                {activeSection === 'onDeviceAi' && t('settings.descriptions.onDeviceAi')}
                 {activeSection === 'sync' && t('settings.descriptions.sync')}
                 {activeSection === 'activity' && t('settings.descriptions.activity')}
                 {activeSection === 'backup' && t('settings.descriptions.backup')}
@@ -182,11 +189,14 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           <div ref={contentScrollRef} className='flex-1 overflow-y-auto px-10 pb-10'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
+            {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
             {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
             {activeSection === 'sync' && <SyncSettings />}
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
-            {activeSection === 'storage' && <StorageSettings />}
+            {activeSection === 'storage' && (
+              <StorageSettings onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')} />
+            )}
             {activeSection === 'debug' && <DebugSettings />}
           </div>
         </div>

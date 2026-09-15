@@ -5,13 +5,16 @@ import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Resizable } from 'react-resizable'
 import { NodeViewWrapper } from '@tiptap/react'
-import { Trash2 } from 'lucide-react'
+import { ScanText, Sparkles, Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { deleteHyperdriveFile } from '../../lib/fileManager'
+import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 import MediaPreviewModal from '../modals/MediaPreviewModal'
 
 export default function ImageView({ node, updateAttributes, selected, deleteNode }) {
@@ -21,6 +24,8 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
     src && src.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, src) : src
   )
   const noteKey = useSelector(getSelectedNote)
+  const extractTextReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.EXTRACT_TEXT)
+  const describeImagesReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
 
   const [width, setWidth] = useState(initialWidth || 300)
   const [height, setHeight] = useState(initialHeight || 'auto')
@@ -88,6 +93,39 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
             title={t('imageView.deleteImage')}
           >
             <Trash2 className='w-4 h-4' />
+          </button>
+        )}
+        {selected && extractTextReady && resolvedUrl && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              requestLocalAiSheet({ mode: 'extract', url: resolvedUrl, fileName: title || alt })
+            }}
+            className='absolute -top-3 right-7 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto'
+            title={t('localAi.extract.actionLabel')}
+            aria-label={t('localAi.extract.actionLabel')}
+          >
+            <ScanText className='w-4 h-4' />
+          </button>
+        )}
+        {selected && describeImagesReady && resolvedUrl && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              requestLocalAiSheet({
+                mode: 'describe',
+                url: resolvedUrl,
+                fileName: title || alt,
+                attachmentUrl: src
+              })
+            }}
+            className={`absolute -top-3 ${extractTextReady ? 'right-[4.25rem]' : 'right-7'} w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto`}
+            title={t('localAi.describe.actionLabel')}
+            aria-label={t('localAi.describe.actionLabel')}
+          >
+            <Sparkles className='w-4 h-4' />
           </button>
         )}
         <Resizable

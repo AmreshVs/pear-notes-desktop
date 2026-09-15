@@ -118,7 +118,8 @@
       "sync": "Manage your secure peer-to-peer network and linked devices with end-to-end encryption.",
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
       "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
-      "activity": "See what each linked device has created, changed and removed."
+      "activity": "See what each linked device has created, changed and removed.",
+      "onDeviceAi": "AI features that run on this computer. Your notes are never sent anywhere. Each feature downloads its model once, then works offline."
     },
     "syncStatus": {
       "title": "Sync status",
@@ -141,6 +142,351 @@
     "devices": {
       "header": "Devices",
       "rowTitle": "Link devices"
+    },
+    "onDeviceAi": {
+      "storageRow": "On-device AI models",
+      "storageRowDesc": "Not included in backups or sync.",
+      "loading": "Loading AI settings",
+      "thisDevice": "This device",
+      "status": "Status",
+      "memory": "Memory",
+      "freeSpace": "Free space",
+      "modelsOnDevice": "AI models on this computer",
+      "deviceStatus": {
+        "unknown": "Checking",
+        "supported": "Ready",
+        "limited": "Limited",
+        "unsupported": "Not supported"
+      },
+      "verdict": {
+        "unknown": "Checking what this computer supports.",
+        "supported": "On-device AI is ready to use on this computer.",
+        "limited": "This computer has less memory, so the Best quality models may be slow. Lite and Standard work normally."
+      },
+      "unsupportedReason": {
+        "simulator": "On-device AI only runs on a physical device. Everything else in Pear Notes works as usual.",
+        "os-version": "On-device AI needs {{requirement}}. Everything else in Pear Notes works as usual.",
+        "architecture": "On-device AI isn't available for this processor. Everything else in Pear Notes works as usual.",
+        "gpu": "On-device AI needs a supported graphics driver. Everything else in Pear Notes works as usual.",
+        "store-build": "On-device AI isn't available in this build. Everything else in Pear Notes works as usual."
+      },
+      "requirementMac": "macOS 14 or later",
+      "downloads": "Downloads",
+      "wifiOnly": "Hold AI downloads on metered connections",
+      "wifiOnlyDesc": "Uses the metered connection setting in Sync.",
+      "groups": {
+        "voiceAndAudio": "Voice and audio",
+        "imagesAndScans": "Images and scans",
+        "notes": "Notes"
+      },
+      "features": {
+        "voiceTyping": {
+          "title": "Voice typing",
+          "inline": "voice typing",
+          "desc": "Speak and your words appear in the note.",
+          "limitations": [
+            "Works best in a quiet place with one person speaking.",
+            "Accuracy depends on language and accent. Standard and Lite are most accurate in English; Best covers 25 European languages.",
+            "Punctuation and names can be wrong, so check the text before you insert it.",
+            "Your voice is processed on this computer and never uploaded."
+          ]
+        },
+        "summarizeRecordings": {
+          "title": "Summaries and titles",
+          "inline": "summaries and titles",
+          "desc": "Summarize notes and recordings, list key points, and suggest titles.",
+          "tierDescriptions": {
+            "standard": "Standard · Qwen3 0.6B · {{size}}",
+            "best": "Best · Qwen3 1.7B · {{size}} · better with other languages"
+          },
+          "limitations": [
+            "Results can miss or get details wrong, so check them before you rely on them.",
+            "Standard is fastest and works best in English. Best handles other languages better, but is slower and needs more memory.",
+            "Summaries, titles and key points use the first 8,000 characters of a note.",
+            "Writing tools work on up to 3,000 characters of selected text."
+          ]
+        },
+        "describeImages": {
+          "title": "Describe images",
+          "inline": "image descriptions",
+          "desc": "Get a short description of an image to add as a caption.",
+          "limitations": [
+            "Descriptions are short and in English.",
+            "Descriptions can be wrong or miss details, so check them before you use them.",
+            "To copy text from an image, use Extract text instead."
+          ]
+        },
+        "transcribeRecordings": {
+          "title": "Transcribe recordings",
+          "inline": "recording transcripts",
+          "desc": "Turn voice recordings into text.",
+          "limitations": [
+            "Accuracy depends on audio quality, background noise, language and accent.",
+            "Speakers aren't labelled, so a conversation comes out as one block of text.",
+            "Long recordings take a while, and the app has to stay open until it finishes.",
+            "Uses the same model as voice typing."
+          ]
+        },
+        "extractText": {
+          "title": "Extract text",
+          "inline": "text extraction",
+          "desc": "Copy text from photos, scans and PDFs.",
+          "limitations": [
+            "Reads text in Latin-script languages only, such as English, French, German, Spanish, Polish and Vietnamese.",
+            "Text in other scripts, such as Russian, Arabic, Hindi, Chinese, Japanese or Korean, isn't recognised.",
+            "Handwriting, low light, blur and tilted photos reduce accuracy.",
+            "Reads up to 20 pages of a PDF. Layout, tables and formatting aren't kept."
+          ]
+        },
+        "translateNotes": {
+          "title": "Translate notes",
+          "inline": "note translation",
+          "desc": "Translate notes to and from English. Each language downloads the first time you use it.",
+          "limitations": [
+            "Translates to and from English. Other pairs go through English, which can lose nuance.",
+            "The note's language is detected automatically and can be wrong for short or mixed-language notes. You can change it before translating.",
+            "Formatting such as bold, links and lists isn't kept in the translation.",
+            "Translates up to 400 paragraphs at a time. Each language needs a 13–44 MB download the first time you use it."
+          ]
+        }
+      },
+      "featureStatus": {
+        "off": "{{size}} download",
+        "offDownloaded": "Model already on this computer",
+        "ready": "Ready · {{size}}",
+        "downloading": "Downloading · {{percent}}% · {{downloaded}} of {{total}}",
+        "paused": "Paused · {{percent}}% · {{downloaded}} of {{total}}",
+        "waitingNetwork": "Waiting for an unmetered connection · {{size}}",
+        "failed": "Download stopped at {{percent}}%",
+        "offOnDemand": "Languages download when you first use them",
+        "readyOnDemand": "Ready · {{size}} of languages on this computer",
+        "readyOnDemandEmpty": "Ready · languages download when you first use them",
+        "needsMemory": "Needs more memory than this computer has"
+      },
+      "downloadNow": "Download now",
+      "tryAgain": "Try again",
+      "pauseDownload": "Pause download",
+      "resumeDownload": "Resume download",
+      "cancelDownload": "Cancel download",
+      "turnOn": {
+        "title": "Turn on {{feature}}?",
+        "message": "This downloads {{size}}. After that it works offline.",
+        "messageWaiting": "This downloads {{size}}. You're on a metered connection, so the download starts when you're on an unmetered one.",
+        "confirm": "Download {{size}}",
+        "confirmWaiting": "Download later"
+      },
+      "turnOff": {
+        "title": "Turn off {{feature}}?",
+        "message": "Keep the model to turn this back on without downloading again, or delete it to free {{size}}.",
+        "keep": "Keep model",
+        "delete": "Delete model"
+      },
+      "notEnoughSpace": {
+        "title": "Not enough space",
+        "message": "{{feature}} needs {{size}}. Pear Notes keeps some space free so your notes can always save. Free up {{short}} and try again.",
+        "messageGeneric": "A model download stopped because this computer is almost full. Free up some space and try again."
+      },
+      "footer": "Models are downloaded from the QVAC model library and checked before use. These settings apply to this computer only.",
+      "modelsTitle": "AI models",
+      "modelsEmpty": "No models yet. Turn on a feature to download its model.",
+      "notDownloaded": "Not downloaded",
+      "usedBy": "Used by {{features}}",
+      "unused": "Not used by any feature",
+      "license": "License: {{license}}",
+      "licenses": {
+        "MIT": "MIT",
+        "Apache-2.0": "Apache 2.0",
+        "CC-BY-4.0": "CC BY 4.0, attribution required",
+        "pending": "Confirmed before release",
+        "MPL-2.0": "MPL 2.0"
+      },
+      "modelNames": {
+        "WHISPER_TINY_Q8_0": "Whisper tiny",
+        "WHISPER_EN_TINY_Q8_0": "Whisper tiny, English",
+        "WHISPER_BASE_Q8_0": "Whisper base",
+        "WHISPER_EN_BASE_Q8_0": "Whisper base, English",
+        "VAD_SILERO_5_1_2": "Silero voice detection",
+        "PARAKEET_TDT_0_6B_V3_Q4_0": "Parakeet",
+        "OCR_LATIN": "Latin text recognizer",
+        "OCR_CRAFT": "CRAFT text detector",
+        "VISIONPSY_NANO_460M_MULTIMODAL_Q4_K_M": "VisionPsy Nano",
+        "MMPROJ_VISIONPSY_NANO_460M_MULTIMODAL_Q8_0": "VisionPsy image encoder",
+        "QWEN3_600M_INST_Q4": "Qwen3 0.6B",
+        "BERGAMOT_EN_ES": "English to Spanish",
+        "BERGAMOT_ES_EN": "Spanish to English",
+        "BERGAMOT_EN_FR": "English to French",
+        "BERGAMOT_FR_EN": "French to English",
+        "BERGAMOT_EN_DE": "English to German",
+        "BERGAMOT_DE_EN": "German to English",
+        "BERGAMOT_EN_IT": "English to Italian",
+        "BERGAMOT_IT_EN": "Italian to English",
+        "BERGAMOT_EN_PT": "English to Portuguese",
+        "BERGAMOT_PT_EN": "Portuguese to English",
+        "BERGAMOT_EN_NL": "English to Dutch",
+        "BERGAMOT_NL_EN": "Dutch to English",
+        "BERGAMOT_EN_PL": "English to Polish",
+        "BERGAMOT_PL_EN": "Polish to English",
+        "BERGAMOT_EN_RU": "English to Russian",
+        "BERGAMOT_RU_EN": "Russian to English",
+        "BERGAMOT_EN_UK": "English to Ukrainian",
+        "BERGAMOT_UK_EN": "Ukrainian to English",
+        "BERGAMOT_EN_ZH": "English to Chinese",
+        "BERGAMOT_ZH_EN": "Chinese to English",
+        "BERGAMOT_EN_JA": "English to Japanese",
+        "BERGAMOT_JA_EN": "Japanese to English",
+        "BERGAMOT_EN_KO": "English to Korean",
+        "BERGAMOT_KO_EN": "Korean to English",
+        "BERGAMOT_EN_HI": "English to Hindi",
+        "BERGAMOT_HI_EN": "Hindi to English",
+        "BERGAMOT_EN_AR": "English to Arabic",
+        "BERGAMOT_AR_EN": "Arabic to English",
+        "BERGAMOT_EN_TR": "English to Turkish",
+        "BERGAMOT_TR_EN": "Turkish to English",
+        "BERGAMOT_EN_SV": "English to Swedish",
+        "BERGAMOT_SV_EN": "Swedish to English",
+        "BERGAMOT_EN_VI": "English to Vietnamese",
+        "BERGAMOT_VI_EN": "Vietnamese to English",
+        "BERGAMOT_EN_ID": "English to Indonesian",
+        "BERGAMOT_ID_EN": "Indonesian to English",
+        "BERGAMOT_EN_SQ": "English to Albanian",
+        "BERGAMOT_SQ_EN": "Albanian to English",
+        "BERGAMOT_EN_AZ": "English to Azerbaijani",
+        "BERGAMOT_AZ_EN": "Azerbaijani to English",
+        "BERGAMOT_EN_BN": "English to Bengali",
+        "BERGAMOT_BN_EN": "Bengali to English",
+        "BERGAMOT_EN_BS": "English to Bosnian",
+        "BERGAMOT_BS_EN": "Bosnian to English",
+        "BERGAMOT_EN_BG": "English to Bulgarian",
+        "BERGAMOT_BG_EN": "Bulgarian to English",
+        "BERGAMOT_EN_CA": "English to Catalan",
+        "BERGAMOT_CA_EN": "Catalan to English",
+        "BERGAMOT_EN_HR": "English to Croatian",
+        "BERGAMOT_HR_EN": "Croatian to English",
+        "BERGAMOT_EN_CS": "English to Czech",
+        "BERGAMOT_CS_EN": "Czech to English",
+        "BERGAMOT_EN_DA": "English to Danish",
+        "BERGAMOT_DA_EN": "Danish to English",
+        "BERGAMOT_EN_ET": "English to Estonian",
+        "BERGAMOT_ET_EN": "Estonian to English",
+        "BERGAMOT_EN_FI": "English to Finnish",
+        "BERGAMOT_FI_EN": "Finnish to English",
+        "BERGAMOT_EN_EL": "English to Greek",
+        "BERGAMOT_EL_EN": "Greek to English",
+        "BERGAMOT_EN_GU": "English to Gujarati",
+        "BERGAMOT_GU_EN": "Gujarati to English",
+        "BERGAMOT_EN_HE": "English to Hebrew",
+        "BERGAMOT_HE_EN": "Hebrew to English",
+        "BERGAMOT_EN_HU": "English to Hungarian",
+        "BERGAMOT_HU_EN": "Hungarian to English",
+        "BERGAMOT_EN_IS": "English to Icelandic",
+        "BERGAMOT_IS_EN": "Icelandic to English",
+        "BERGAMOT_EN_KN": "English to Kannada",
+        "BERGAMOT_KN_EN": "Kannada to English",
+        "BERGAMOT_EN_LV": "English to Latvian",
+        "BERGAMOT_LV_EN": "Latvian to English",
+        "BERGAMOT_EN_LT": "English to Lithuanian",
+        "BERGAMOT_LT_EN": "Lithuanian to English",
+        "BERGAMOT_EN_MS": "English to Malay",
+        "BERGAMOT_MS_EN": "Malay to English",
+        "BERGAMOT_EN_ML": "English to Malayalam",
+        "BERGAMOT_ML_EN": "Malayalam to English",
+        "BERGAMOT_EN_NB": "English to Norwegian",
+        "BERGAMOT_NB_EN": "Norwegian to English",
+        "BERGAMOT_EN_FA": "English to Persian",
+        "BERGAMOT_FA_EN": "Persian to English",
+        "BERGAMOT_EN_RO": "English to Romanian",
+        "BERGAMOT_RO_EN": "Romanian to English",
+        "BERGAMOT_EN_SR": "English to Serbian",
+        "BERGAMOT_SR_EN": "Serbian to English",
+        "BERGAMOT_EN_SK": "English to Slovak",
+        "BERGAMOT_SK_EN": "Slovak to English",
+        "BERGAMOT_EN_SL": "English to Slovenian",
+        "BERGAMOT_SL_EN": "Slovenian to English",
+        "BERGAMOT_EN_TA": "English to Tamil",
+        "BERGAMOT_TA_EN": "Tamil to English",
+        "BERGAMOT_EN_TE": "English to Telugu",
+        "BERGAMOT_TE_EN": "Telugu to English",
+        "BERGAMOT_EN_TH": "English to Thai",
+        "BERGAMOT_TH_EN": "Thai to English",
+        "QWEN3_1_7B_INST_Q4": "Qwen3 1.7B"
+      },
+      "language": "Language",
+      "languages": {
+        "auto": "Detect automatically",
+        "en": "English only",
+        "sq": "Albanian",
+        "ar": "Arabic",
+        "az": "Azerbaijani",
+        "bn": "Bengali",
+        "bs": "Bosnian",
+        "bg": "Bulgarian",
+        "ca": "Catalan",
+        "zh": "Chinese",
+        "hr": "Croatian",
+        "cs": "Czech",
+        "da": "Danish",
+        "nl": "Dutch",
+        "et": "Estonian",
+        "fi": "Finnish",
+        "fr": "French",
+        "de": "German",
+        "el": "Greek",
+        "gu": "Gujarati",
+        "he": "Hebrew",
+        "hi": "Hindi",
+        "hu": "Hungarian",
+        "is": "Icelandic",
+        "id": "Indonesian",
+        "it": "Italian",
+        "ja": "Japanese",
+        "kn": "Kannada",
+        "ko": "Korean",
+        "lv": "Latvian",
+        "lt": "Lithuanian",
+        "ms": "Malay",
+        "ml": "Malayalam",
+        "nb": "Norwegian",
+        "fa": "Persian",
+        "pl": "Polish",
+        "pt": "Portuguese",
+        "ro": "Romanian",
+        "ru": "Russian",
+        "sr": "Serbian",
+        "sk": "Slovak",
+        "sl": "Slovenian",
+        "es": "Spanish",
+        "sv": "Swedish",
+        "ta": "Tamil",
+        "te": "Telugu",
+        "th": "Thai",
+        "tr": "Turkish",
+        "uk": "Ukrainian",
+        "vi": "Vietnamese"
+      },
+      "quality": "Quality",
+      "tierDescriptions": {
+        "lite": "Lite · Whisper tiny · {{size}}",
+        "standard": "Standard · Whisper base · {{size}}",
+        "best": "Best · Parakeet · {{size}}"
+      },
+      "tierSwitchNote": "Switching downloads the new model. The current one stays on this computer until you delete it.",
+      "model": "Model",
+      "deleteModel": "Delete model",
+      "deleteAllModels": "Delete all models",
+      "deleteAllModelsDesc": "Frees the space AI models use and turns off every AI feature on this computer. Your notes aren't affected.",
+      "sharedModel": "Also used by {{features}}. Turn that off first to delete it.",
+      "deleteModelConfirm": {
+        "title": "Delete {{model}}?",
+        "message": "This frees {{size}}. Your notes aren't affected.",
+        "messageUsers": "This frees {{size}} and turns off {{features}}. Your notes aren't affected."
+      },
+      "deleteAllConfirm": {
+        "title": "Delete all AI models?",
+        "message": "This frees {{size}} and turns off every AI feature on this computer. Your notes aren't affected."
+      },
+      "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it.",
+      "limitations": "Limitations",
+      "tierNeedsMemory": "Needs more memory than this computer has"
     }
   },
   "sync": {
@@ -582,6 +928,7 @@
     "backupPassword": "Backup password",
     "noteLockPassword": "Note lock password",
     "privacyAndSecurity": "Privacy & security",
+    "onDeviceAi": "On-device AI",
     "storage": "Storage",
     "activity": "Activity",
     "linkDevices": "Link devices",
@@ -1096,6 +1443,338 @@
       "video": "a video",
       "audio": "an audio recording",
       "file": "a file"
+    }
+  },
+  "localAi": {
+    "reportSubject": "Pear Notes on-device AI: problem with a result",
+    "actions": {
+      "insert": "Insert",
+      "copy": "Copy",
+      "copied": "Copied",
+      "reportProblem": "Report a problem",
+      "again": "Try again",
+      "recordAgain": "Record again",
+      "start": "Start voice typing",
+      "stop": "Stop and transcribe",
+      "useTitle": "Use title",
+      "downloadNow": "Download now",
+      "replace": "Replace",
+      "insertBelow": "Insert below",
+      "attachAudio": "Attach audio"
+    },
+    "conflictBlocked": "This note changed on another device. Choose a version before inserting. You can still select and copy the text.",
+    "transcriptTitle": "Transcript",
+    "describe": {
+      "actionLabel": "Describe image",
+      "working": {
+        "title": "Looking at the image",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Description ready",
+        "subtitle": "Descriptions can be wrong. Insert adds it as a caption below the image."
+      }
+    },
+    "summary": {
+      "action": "Summarize",
+      "working": "Summarizing…",
+      "title": "Summary",
+      "actionItems": "Action items",
+      "failed": "Couldn't summarize this transcript. Try again.",
+      "disclaimer": "Summaries can be wrong. Check them before relying on them."
+    },
+    "dictate": {
+      "toolbarLabel": "Voice typing",
+      "recording": {
+        "title": "Listening",
+        "subtitle": "Your words appear when you stop."
+      },
+      "working": {
+        "title": "Turning speech into text",
+        "subtitle": "Your voice stays on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Here's what you said",
+        "subtitle": "Insert adds it where your cursor was."
+      }
+    },
+    "transcribe": {
+      "actionLabel": "Transcribe",
+      "addTranscript": "Add transcript",
+      "addTranscriptHint": "Transcribed on this device after you insert the recording.",
+      "working": {
+        "title": "Transcribing your recording",
+        "subtitle": "Your audio stays on this computer. Long recordings take a little longer."
+      },
+      "preview": {
+        "title": "Transcript ready",
+        "subtitle": "Insert adds it as a quote below the recording."
+      }
+    },
+    "extract": {
+      "actionLabel": "Extract text",
+      "pageProgress": "Reading page {{page}} of {{total}}",
+      "working": {
+        "title": "Reading the text",
+        "subtitle": "Everything happens on this computer. PDFs are read up to 20 pages."
+      },
+      "preview": {
+        "title": "Text found",
+        "subtitle": "Check it, then insert it at the end of your note."
+      }
+    },
+    "errors": {
+      "micDenied": {
+        "title": "Microphone access is off",
+        "subtitle": "Allow Pear Notes to use the microphone in System Settings, then try again."
+      },
+      "failedDescribe": {
+        "title": "Couldn't describe the image",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "emptyDescribe": {
+        "title": "Nothing to describe",
+        "subtitle": "Try a clearer image."
+      },
+      "failedExtract": {
+        "title": "Couldn't extract text",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "failed": {
+        "title": "Couldn't transcribe",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "empty": {
+        "title": "Didn't catch anything",
+        "subtitle": "Try again and speak a little closer to the microphone."
+      },
+      "emptyImage": {
+        "title": "No text found",
+        "subtitle": "Try an image or scan where the text is sharp and upright."
+      },
+      "download": {
+        "title": "Couldn't open this file",
+        "subtitle": "Try again once it has finished syncing."
+      },
+      "failedTranslate": {
+        "title": "Couldn't translate this note",
+        "subtitle": "Try again, or choose a different language."
+      },
+      "emptyTranslate": {
+        "title": "Nothing to translate",
+        "subtitle": "Add some text to this note first."
+      },
+      "emptyNote": {
+        "title": "Nothing to work with",
+        "subtitle": "Add a few sentences to this note first."
+      },
+      "failedNoteTask": {
+        "title": "Couldn't finish this",
+        "subtitle": "Try again in a moment."
+      },
+      "noSpace": {
+        "title": "Not enough space",
+        "subtitle": "This needs {{size}}. Free up some space, then try again."
+      },
+      "failedDownload": {
+        "title": "Download didn't finish",
+        "subtitle": "Check your connection and try again."
+      },
+      "selectionTooLong": {
+        "title": "Selection is too long",
+        "subtitle": "Select a shorter passage, up to about 500 words, and try again."
+      },
+      "emptySelection": {
+        "title": "Nothing to work with",
+        "subtitle": "Select a few words first."
+      },
+      "dictationFailed": {
+        "title": "Couldn't transcribe that",
+        "subtitle": "Your recording is saved. Try again, or attach it to the note as audio."
+      },
+      "notEnoughMemory": {
+        "title": "Not enough memory",
+        "subtitle": "This computer doesn't have enough free memory for this right now. Close other apps and try again, or choose a lighter quality in On-device AI settings."
+      },
+      "unstable": {
+        "title": "Paused to keep Pear Notes stable",
+        "subtitle": "This AI model stopped the app twice, so it's paused on this computer. Try again, or choose a lighter quality in On-device AI settings."
+      }
+    },
+    "translate": {
+      "actionLabel": "Translate note",
+      "english": "English",
+      "insertTitle": "Translation ({{language}})",
+      "working": {
+        "title": "Translating your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Translation ready",
+        "subtitle": "Machine translation can be wrong. Insert adds it at the end of the note."
+      },
+      "from": "From",
+      "to": "To",
+      "noteLanguage": "Note language",
+      "choose": {
+        "title": "Translate note",
+        "subtitle": "Choose a language to translate into."
+      },
+      "downloading": {
+        "title": "Getting {{language}} ready",
+        "subtitle": "Downloading the translation model · {{percent}}%"
+      },
+      "waiting": {
+        "title": "Waiting for Wi-Fi",
+        "subtitle": "{{size}} download. Your connection is set as metered."
+      }
+    },
+    "summarizeNote": {
+      "menuLabel": "Summarize note",
+      "insertTitle": "Summary",
+      "working": {
+        "title": "Summarizing your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Summary ready",
+        "subtitle": "Summaries can be wrong. Insert adds it at the end of the note."
+      }
+    },
+    "suggestTitle": {
+      "menuLabel": "Suggest a title",
+      "working": {
+        "title": "Reading your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Suggested title",
+        "subtitle": "Use title replaces the current title. You can edit it any time."
+      }
+    },
+    "keyPoints": {
+      "menuLabel": "Key points",
+      "insertTitle": "Key points",
+      "working": {
+        "title": "Finding the key points",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Key points ready",
+        "subtitle": "Key points can be wrong. Insert adds them at the end of the note."
+      }
+    },
+    "generatedDisclaimer": "AI results can be wrong. Check them before relying on them.",
+    "writingTools": {
+      "menuLabel": "AI tools",
+      "title": "AI tools",
+      "toolbarLabel": "AI tools",
+      "selectionToolbarLabel": "AI tools for selected text",
+      "editLabel": "Edit",
+      "editGroup": "Edit selection",
+      "understandGroup": "Summarize or translate selection",
+      "noteGroup": "Whole note",
+      "noSelectionHint": "Select text first to rewrite, summarize or translate just that part."
+    },
+    "fixGrammar": {
+      "menuLabel": "Fix grammar and spelling",
+      "working": {
+        "title": "Checking grammar and spelling",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Corrections ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "rewrite": {
+      "menuLabel": "Rewrite to be clearer",
+      "working": {
+        "title": "Rewriting",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Rewrite ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeShorter": {
+      "menuLabel": "Make shorter",
+      "working": {
+        "title": "Shortening",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Shorter version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeProfessional": {
+      "menuLabel": "Make more professional",
+      "working": {
+        "title": "Adjusting the tone",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Professional version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeFriendly": {
+      "menuLabel": "Make friendlier",
+      "working": {
+        "title": "Adjusting the tone",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Friendlier version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "summarizeSelection": {
+      "menuLabel": "Summarize selection",
+      "working": {
+        "title": "Summarizing the selection",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Summary ready",
+        "subtitle": "Summaries can be wrong. Insert below adds it after the selection."
+      }
+    },
+    "keyPointsSelection": {
+      "menuLabel": "Key points",
+      "working": {
+        "title": "Finding the key points",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Key points ready",
+        "subtitle": "Key points can be wrong. Insert below adds them after the selection."
+      }
+    },
+    "translateSelection": {
+      "menuLabel": "Translate selection",
+      "working": {
+        "title": "Translating the selection",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "choose": {
+        "title": "Translate selection",
+        "subtitle": "Choose a language to translate into."
+      },
+      "downloading": {
+        "title": "Getting {{language}} ready",
+        "subtitle": "Downloading the translation model · {{percent}}%"
+      },
+      "waiting": {
+        "title": "Waiting for Wi-Fi",
+        "subtitle": "{{size}} download. Your connection is set as metered."
+      },
+      "preview": {
+        "title": "Translation ready",
+        "subtitle": "Machine translation can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
     }
   },
   "debug": {

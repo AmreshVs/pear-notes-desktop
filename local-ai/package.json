@@ -1,0 +1,8 @@
+{
+  "name": "pear-notes-desktop-local-ai",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@qvac/sdk": "^0.19.1"
+  }
+}
