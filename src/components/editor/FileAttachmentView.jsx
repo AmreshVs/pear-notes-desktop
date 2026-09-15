@@ -19,14 +19,11 @@ import {
 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
-import {
-  LOCAL_AI_ENABLED,
-  LOCAL_AI_FEATURE
-} from '@pear-notes/core/store/services/localAiCatalog.js'
-import { selectIsLocalAiFeatureReady } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import usePdfPreview from '../../hooks/usePdfPreview'
 import {
   base64ToBlob,
@@ -74,10 +71,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const isAudio = fileType?.startsWith('audio/')
   const isPdf = isPdfAttachment(fileName, fileType)
   const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null)
-  const extractTextReady = useSelector(
-    (state) =>
-      LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.EXTRACT_TEXT)
-  )
+  const extractTextReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.EXTRACT_TEXT)
 
   const handleExtractText = (e) => {
     e.preventDefault()

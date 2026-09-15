@@ -19,6 +19,7 @@ import {
   getFeatureLanguages,
   getFeatureRegistryNames,
   getFeatureTiers,
+  getOnDemandModelNames,
   getRegistryNamesBytes,
   LOCAL_AI_DEVICE_STATUS,
   LOCAL_AI_ENABLED,
@@ -164,6 +165,11 @@ export default function LocalAiSettings() {
     return [...names].map((name) => buildModelRow(state, name)).filter((row) => row.onDevice)
   }, [config.downloaded, state])
 
+  const featureModelNames = (feature) => [
+    ...getFeatureRegistryNames(feature, config.features[feature]),
+    ...getOnDemandModelNames(feature, state.models)
+  ]
+
   const featureTitles = (features) =>
     features.map((feature) => t(`settings.onDeviceAi.features.${feature}.title`)).join(', ')
 
@@ -189,6 +195,14 @@ export default function LocalAiSettings() {
       percent: row.percent,
       downloaded: formatBytes(row.downloadedBytes),
       total: formatBytes(row.totalBytes)
+    }
+    if (row.onDemand && row.status === LOCAL_AI_FEATURE_STATUS.OFF) {
+      return t('settings.onDeviceAi.featureStatus.offOnDemand')
+    }
+    if (row.onDemand && row.status === LOCAL_AI_FEATURE_STATUS.READY) {
+      return row.onDemandBytes
+        ? t('settings.onDeviceAi.featureStatus.readyOnDemand', { size: formatBytes(row.onDemandBytes) })
+        : t('settings.onDeviceAi.featureStatus.readyOnDemandEmpty')
     }
     switch (row.status) {
       case LOCAL_AI_FEATURE_STATUS.OFF:
@@ -546,7 +560,10 @@ export default function LocalAiSettings() {
                         <p className='text-sm font-bold text-text-primary'>
                           {t('settings.onDeviceAi.model')}
                         </p>
-                        {getFeatureRegistryNames(row.feature, config.features[row.feature]).map(
+                        {featureModelNames(row.feature).length === 0 && (
+                          <p className={DESC_CLASS}>{t('settings.onDeviceAi.noLanguagesYet')}</p>
+                        )}
+                        {featureModelNames(row.feature).map(
                           (name) => {
                             const model = buildModelRow(state, name)
                             const otherUsers = model.users.filter((user) => user !== row.feature)

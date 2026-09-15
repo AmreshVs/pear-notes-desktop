@@ -144,6 +144,8 @@
       "rowTitle": "Link devices"
     },
     "onDeviceAi": {
+      "storageRow": "On-device AI models",
+      "storageRowDesc": "Not included in backups or sync.",
       "loading": "Loading AI settings",
       "thisDevice": "This device",
       "status": "Status",
@@ -174,13 +176,24 @@
       "wifiOnlyDesc": "Uses the metered connection setting in Sync.",
       "groups": {
         "voiceAndAudio": "Voice and audio",
-        "imagesAndScans": "Images and scans"
+        "imagesAndScans": "Images and scans",
+        "notes": "Notes"
       },
       "features": {
         "voiceTyping": {
           "title": "Voice typing",
           "inline": "voice typing",
           "desc": "Speak and your words appear in the note."
+        },
+        "summarizeRecordings": {
+          "title": "Summaries and titles",
+          "inline": "summaries and titles",
+          "desc": "Summarize notes and recordings, list key points, and suggest titles."
+        },
+        "describeImages": {
+          "title": "Describe images",
+          "inline": "image descriptions",
+          "desc": "Get a short description of an image to add as a caption."
         },
         "transcribeRecordings": {
           "title": "Transcribe recordings",
@@ -191,6 +204,11 @@
           "title": "Extract text",
           "inline": "text extraction",
           "desc": "Copy text from photos, scans and PDFs."
+        },
+        "translateNotes": {
+          "title": "Translate notes",
+          "inline": "note translation",
+          "desc": "Translate notes between English and 18 languages. Each language downloads the first time you use it."
         }
       },
       "featureStatus": {
@@ -200,7 +218,10 @@
         "downloading": "Downloading · {{percent}}% · {{downloaded}} of {{total}}",
         "paused": "Paused · {{percent}}% · {{downloaded}} of {{total}}",
         "waitingNetwork": "Waiting for an unmetered connection · {{size}}",
-        "failed": "Download stopped at {{percent}}%"
+        "failed": "Download stopped at {{percent}}%",
+        "offOnDemand": "Languages download when you first use them",
+        "readyOnDemand": "Ready · {{size}} of languages on this computer",
+        "readyOnDemandEmpty": "Ready · languages download when you first use them"
       },
       "downloadNow": "Download now",
       "tryAgain": "Try again",
@@ -236,7 +257,8 @@
         "MIT": "MIT",
         "Apache-2.0": "Apache 2.0",
         "CC-BY-4.0": "CC BY 4.0, attribution required",
-        "pending": "Confirmed before release"
+        "pending": "Confirmed before release",
+        "MPL-2.0": "MPL 2.0"
       },
       "modelNames": {
         "WHISPER_TINY_Q8_0": "Whisper tiny",
@@ -246,12 +268,69 @@
         "VAD_SILERO_5_1_2": "Silero voice detection",
         "PARAKEET_TDT_0_6B_V3_Q4_0": "Parakeet",
         "OCR_LATIN": "Latin text recognizer",
-        "OCR_CRAFT": "CRAFT text detector"
+        "OCR_CRAFT": "CRAFT text detector",
+        "VISIONPSY_NANO_460M_MULTIMODAL_Q4_K_M": "VisionPsy Nano",
+        "MMPROJ_VISIONPSY_NANO_460M_MULTIMODAL_Q8_0": "VisionPsy image encoder",
+        "QWEN3_600M_INST_Q4": "Qwen3 0.6B",
+        "BERGAMOT_EN_ES": "English to Spanish",
+        "BERGAMOT_ES_EN": "Spanish to English",
+        "BERGAMOT_EN_FR": "English to French",
+        "BERGAMOT_FR_EN": "French to English",
+        "BERGAMOT_EN_DE": "English to German",
+        "BERGAMOT_DE_EN": "German to English",
+        "BERGAMOT_EN_IT": "English to Italian",
+        "BERGAMOT_IT_EN": "Italian to English",
+        "BERGAMOT_EN_PT": "English to Portuguese",
+        "BERGAMOT_PT_EN": "Portuguese to English",
+        "BERGAMOT_EN_NL": "English to Dutch",
+        "BERGAMOT_NL_EN": "Dutch to English",
+        "BERGAMOT_EN_PL": "English to Polish",
+        "BERGAMOT_PL_EN": "Polish to English",
+        "BERGAMOT_EN_RU": "English to Russian",
+        "BERGAMOT_RU_EN": "Russian to English",
+        "BERGAMOT_EN_UK": "English to Ukrainian",
+        "BERGAMOT_UK_EN": "Ukrainian to English",
+        "BERGAMOT_EN_ZH": "English to Chinese",
+        "BERGAMOT_ZH_EN": "Chinese to English",
+        "BERGAMOT_EN_JA": "English to Japanese",
+        "BERGAMOT_JA_EN": "Japanese to English",
+        "BERGAMOT_EN_KO": "English to Korean",
+        "BERGAMOT_KO_EN": "Korean to English",
+        "BERGAMOT_EN_HI": "English to Hindi",
+        "BERGAMOT_HI_EN": "Hindi to English",
+        "BERGAMOT_EN_AR": "English to Arabic",
+        "BERGAMOT_AR_EN": "Arabic to English",
+        "BERGAMOT_EN_TR": "English to Turkish",
+        "BERGAMOT_TR_EN": "Turkish to English",
+        "BERGAMOT_EN_SV": "English to Swedish",
+        "BERGAMOT_SV_EN": "Swedish to English",
+        "BERGAMOT_EN_VI": "English to Vietnamese",
+        "BERGAMOT_VI_EN": "Vietnamese to English",
+        "BERGAMOT_EN_ID": "English to Indonesian",
+        "BERGAMOT_ID_EN": "Indonesian to English"
       },
       "language": "Language",
       "languages": {
         "auto": "Detect automatically",
-        "en": "English only"
+        "en": "English only",
+        "es": "Spanish",
+        "fr": "French",
+        "de": "German",
+        "it": "Italian",
+        "pt": "Portuguese",
+        "nl": "Dutch",
+        "pl": "Polish",
+        "ru": "Russian",
+        "uk": "Ukrainian",
+        "zh": "Chinese",
+        "ja": "Japanese",
+        "ko": "Korean",
+        "hi": "Hindi",
+        "ar": "Arabic",
+        "tr": "Turkish",
+        "sv": "Swedish",
+        "vi": "Vietnamese",
+        "id": "Indonesian"
       },
       "quality": "Quality",
       "tierDescriptions": {
@@ -273,7 +352,8 @@
       "deleteAllConfirm": {
         "title": "Delete all AI models?",
         "message": "This frees {{size}} and turns off every AI feature on this computer. Your notes aren't affected."
-      }
+      },
+      "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it."
     }
   },
   "sync": {
@@ -1233,17 +1313,43 @@
     }
   },
   "localAi": {
+    "reportSubject": "Pear Notes on-device AI: problem with a result",
     "actions": {
       "insert": "Insert",
       "copy": "Copy",
       "copied": "Copied",
+      "reportProblem": "Report a problem",
       "again": "Try again",
       "recordAgain": "Record again",
       "start": "Start voice typing",
-      "stop": "Stop and transcribe"
+      "stop": "Stop and transcribe",
+      "useTitle": "Use title",
+      "downloadNow": "Download now",
+      "replace": "Replace",
+      "insertBelow": "Insert below",
+      "attachAudio": "Attach audio"
     },
     "conflictBlocked": "This note changed on another device. Choose a version before inserting. You can still select and copy the text.",
     "transcriptTitle": "Transcript",
+    "describe": {
+      "actionLabel": "Describe image",
+      "working": {
+        "title": "Looking at the image",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Description ready",
+        "subtitle": "Descriptions can be wrong. Insert adds it as a caption below the image."
+      }
+    },
+    "summary": {
+      "action": "Summarize",
+      "working": "Summarizing…",
+      "title": "Summary",
+      "actionItems": "Action items",
+      "failed": "Couldn't summarize this transcript. Try again.",
+      "disclaimer": "Summaries can be wrong. Check them before relying on them."
+    },
     "dictate": {
       "toolbarLabel": "Voice typing",
       "recording": {
@@ -1289,6 +1395,14 @@
         "title": "Microphone access is off",
         "subtitle": "Allow Pear Notes to use the microphone in System Settings, then try again."
       },
+      "failedDescribe": {
+        "title": "Couldn't describe the image",
+        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+      },
+      "emptyDescribe": {
+        "title": "Nothing to describe",
+        "subtitle": "Try a clearer image."
+      },
       "failedExtract": {
         "title": "Couldn't extract text",
         "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
@@ -1308,6 +1422,215 @@
       "download": {
         "title": "Couldn't open this file",
         "subtitle": "Try again once it has finished syncing."
+      },
+      "failedTranslate": {
+        "title": "Couldn't translate this note",
+        "subtitle": "Try again, or choose a different language."
+      },
+      "emptyTranslate": {
+        "title": "Nothing to translate",
+        "subtitle": "Add some text to this note first."
+      },
+      "emptyNote": {
+        "title": "Nothing to work with",
+        "subtitle": "Add a few sentences to this note first."
+      },
+      "failedNoteTask": {
+        "title": "Couldn't finish this",
+        "subtitle": "Try again in a moment."
+      },
+      "noSpace": {
+        "title": "Not enough space",
+        "subtitle": "This needs {{size}}. Free up some space, then try again."
+      },
+      "failedDownload": {
+        "title": "Download didn't finish",
+        "subtitle": "Check your connection and try again."
+      },
+      "selectionTooLong": {
+        "title": "Selection is too long",
+        "subtitle": "Select a shorter passage, up to about 500 words, and try again."
+      },
+      "emptySelection": {
+        "title": "Nothing to work with",
+        "subtitle": "Select a few words first."
+      },
+      "dictationFailed": {
+        "title": "Couldn't transcribe that",
+        "subtitle": "Your recording is saved. Try again, or attach it to the note as audio."
+      }
+    },
+    "translate": {
+      "actionLabel": "Translate note",
+      "english": "English",
+      "insertTitle": "Translation ({{language}})",
+      "working": {
+        "title": "Translating your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Translation ready",
+        "subtitle": "Machine translation can be wrong. Insert adds it at the end of the note."
+      },
+      "from": "From",
+      "to": "To",
+      "noteLanguage": "Note language",
+      "choose": {
+        "title": "Translate note",
+        "subtitle": "Choose a language to translate into."
+      },
+      "downloading": {
+        "title": "Getting {{language}} ready",
+        "subtitle": "Downloading the translation model · {{percent}}%"
+      },
+      "waiting": {
+        "title": "Waiting for Wi-Fi",
+        "subtitle": "{{size}} download. Your connection is set as metered."
+      }
+    },
+    "summarizeNote": {
+      "menuLabel": "Summarize note",
+      "insertTitle": "Summary",
+      "working": {
+        "title": "Summarizing your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Summary ready",
+        "subtitle": "Summaries can be wrong. Insert adds it at the end of the note."
+      }
+    },
+    "suggestTitle": {
+      "menuLabel": "Suggest a title",
+      "working": {
+        "title": "Reading your note",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Suggested title",
+        "subtitle": "Use title replaces the current title. You can edit it any time."
+      }
+    },
+    "keyPoints": {
+      "menuLabel": "Key points",
+      "insertTitle": "Key points",
+      "working": {
+        "title": "Finding the key points",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Key points ready",
+        "subtitle": "Key points can be wrong. Insert adds them at the end of the note."
+      }
+    },
+    "generatedDisclaimer": "AI results can be wrong. Check them before relying on them.",
+    "writingTools": {
+      "menuLabel": "AI tools",
+      "title": "AI tools",
+      "toolbarLabel": "AI tools",
+      "editGroup": "Edit selection",
+      "understandGroup": "Summarize or translate selection",
+      "noteGroup": "Whole note",
+      "noSelectionHint": "Select text first to rewrite, summarize or translate just that part."
+    },
+    "fixGrammar": {
+      "menuLabel": "Fix grammar and spelling",
+      "working": {
+        "title": "Checking grammar and spelling",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Corrections ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "rewrite": {
+      "menuLabel": "Rewrite to be clearer",
+      "working": {
+        "title": "Rewriting",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Rewrite ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeShorter": {
+      "menuLabel": "Make shorter",
+      "working": {
+        "title": "Shortening",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Shorter version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeProfessional": {
+      "menuLabel": "Make more professional",
+      "working": {
+        "title": "Adjusting the tone",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Professional version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "makeFriendly": {
+      "menuLabel": "Make friendlier",
+      "working": {
+        "title": "Adjusting the tone",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Friendlier version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "summarizeSelection": {
+      "menuLabel": "Summarize selection",
+      "working": {
+        "title": "Summarizing the selection",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Summary ready",
+        "subtitle": "Summaries can be wrong. Insert below adds it after the selection."
+      }
+    },
+    "keyPointsSelection": {
+      "menuLabel": "Key points",
+      "working": {
+        "title": "Finding the key points",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Key points ready",
+        "subtitle": "Key points can be wrong. Insert below adds them after the selection."
+      }
+    },
+    "translateSelection": {
+      "menuLabel": "Translate selection",
+      "working": {
+        "title": "Translating the selection",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "choose": {
+        "title": "Translate selection",
+        "subtitle": "Choose a language to translate into."
+      },
+      "downloading": {
+        "title": "Getting {{language}} ready",
+        "subtitle": "Downloading the translation model · {{percent}}%"
+      },
+      "waiting": {
+        "title": "Waiting for Wi-Fi",
+        "subtitle": "{{size}} download. Your connection is set as metered."
+      },
+      "preview": {
+        "title": "Translation ready",
+        "subtitle": "Machine translation can be wrong. Replace swaps it into your note, Insert below keeps both."
       }
     }
   },

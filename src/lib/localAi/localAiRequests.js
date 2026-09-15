@@ -23,10 +23,24 @@ export function requestLocalAiSheet({
   fileName = null,
   kind = null,
   insertAt = null,
-  attachmentUrl = null
+  attachmentUrl = null,
+  paragraphs = null,
+  scope = 'note',
+  selection = null
 }) {
   requestCounter += 1
-  currentRequest = { id: requestCounter, mode, url, fileName, kind, insertAt, attachmentUrl }
+  currentRequest = {
+    id: requestCounter,
+    mode,
+    url,
+    fileName,
+    kind,
+    insertAt,
+    attachmentUrl,
+    paragraphs,
+    scope,
+    selection
+  }
   emit()
 }
 

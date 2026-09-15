@@ -19,10 +19,14 @@ const OCR_MAG_RATIO = 1
 const OCR_CANVAS_SIZE = 1600
 const WHISPER_AUDIO_FORMAT = 's16le'
 const PARAKEET_ENGINE = 'parakeet'
+const IMAGE_FILE_PREFIX = 'pear-notes-local-ai-image-'
+const IMAGE_EXTENSION_PATTERN = /^[a-z0-9]{2,5}$/i
+const DEFAULT_IMAGE_EXTENSION = 'png'
 
 let options = null
 let catalogPromise = null
 let textPromise = null
+let promptsPromise = null
 let sdkPromise = null
 let loadedModel = null
 let systemSuspended = false
@@ -45,6 +49,11 @@ function loadCatalog() {
 function loadText() {
   if (!textPromise) textPromise = import('@pear-notes/core/store/services/localAiText.js')
   return textPromise
+}
+
+function loadPrompts() {
+  if (!promptsPromise) promptsPromise = import('@pear-notes/core/store/services/localAiPrompts.js')
+  return promptsPromise
 }
 
 function getRuntimeRoot() {
@@ -272,6 +281,92 @@ async function extractText(event, { image }) {
   return { text: text.formatOcrBlocks(await blocks) }
 }
 
+function loadLlmFeature(sdk, catalog, prompts, feature) {
+  const [modelName, projectionName] = catalog.getFeatureRegistryNames(feature, {})
+  return ensureModelLoaded(sdk, [modelName, projectionName].filter(Boolean).join('|'), () =>
+    sdk.loadModel({
+      modelSrc: registryAsset(sdk, catalog, modelName),
+      modelType: 'llm',
+      modelConfig: {
+        ctx_size: prompts.LLM_CONTEXT_SIZE,
+        ...(projectionName ? { projectionModelSrc: registryAsset(sdk, catalog, projectionName) } : {})
+      }
+    })
+  )
+}
+
+async function describeImage(event, { image, extension }) {
+  const [sdk, catalog, prompts] = await Promise.all([loadSdk(), loadCatalog(), loadPrompts()])
+  const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
+  pcmCounter += 1
+  const safeExtension = IMAGE_EXTENSION_PATTERN.test(extension ?? '') ? extension : DEFAULT_IMAGE_EXTENSION
+  const imagePath = path.join(
+    os.tmpdir(),
+    `${IMAGE_FILE_PREFIX}${process.pid}-${pcmCounter}.${safeExtension}`
+  )
+  try {
+    await fs.promises.writeFile(imagePath, Buffer.from(image))
+    const run = sdk.completion({
+      modelId,
+      history: [
+        { role: 'user', content: prompts.DESCRIBE_IMAGE_PROMPT, attachments: [{ path: imagePath }] }
+      ],
+      stream: false,
+      generationParams: { temp: prompts.LLM_TEMPERATURE, predict: prompts.DESCRIBE_MAX_TOKENS }
+    })
+    return { text: prompts.cleanModelOutput(await run.text) }
+  } finally {
+    await fs.promises.rm(imagePath, { force: true })
+  }
+}
+
+async function summarize(event, { text, task }) {
+  const [sdk, catalog, prompts] = await Promise.all([loadSdk(), loadCatalog(), loadPrompts()])
+  const noteTask = prompts.isNoteTask(task) ? task : prompts.NOTE_TASK.TRANSCRIPT_SUMMARY
+  const modelId = await loadLlmFeature(
+    sdk,
+    catalog,
+    prompts,
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+  )
+  const run = sdk.completion({
+    modelId,
+    history: prompts.buildNoteTaskMessages(noteTask, text),
+    stream: false,
+    generationParams: {
+      temp: prompts.LLM_TEMPERATURE,
+      predict: prompts.getNoteTaskMaxTokens(noteTask, text)
+    }
+  })
+  return { text: prompts.cleanModelOutput(await run.text) }
+}
+
+async function translateParagraphs(event, { paragraphs, from, to }) {
+  const [sdk, catalog, translation, language] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    import('@pear-notes/core/store/services/localAiTranslationModels.js'),
+    import('@pear-notes/core/store/services/localAiLanguage.js')
+  ])
+  const steps = language.getTranslationSteps(from, to)
+  let lines = Array.isArray(paragraphs) ? paragraphs.map((line) => String(line ?? '')) : []
+  if (steps.length === 0 || lines.length === 0) {
+    throw new LocalAiError(catalog.LOCAL_AI_ERROR.TASK_FAILED)
+  }
+  for (const [stepFrom, stepTo] of steps) {
+    const modelName = translation.getTranslationModelName(stepFrom, stepTo)
+    const modelId = await ensureModelLoaded(sdk, `${modelName}|translate`, () =>
+      sdk.loadModel({
+        modelSrc: registryAsset(sdk, catalog, modelName),
+        modelConfig: { engine: 'Bergamot', from: stepFrom, to: stepTo }
+      })
+    )
+    const run = sdk.translate({ modelId, text: lines, modelType: 'nmtcpp-translation', stream: false })
+    lines = (await run.translations).map((line) => String(line ?? ''))
+  }
+  return { translations: lines }
+}
+
 async function cancelTask() {
   if (!sdkPromise || !loadedModel) return {}
   const sdk = await sdkPromise
@@ -321,6 +416,9 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:close-and-wipe', 'TASK_FAILED', closeAndWipe)
   handle('local-ai:transcribe', 'TASK_FAILED', transcribe)
   handle('local-ai:extract-text', 'TASK_FAILED', extractText)
+  handle('local-ai:describe-image', 'TASK_FAILED', describeImage)
+  handle('local-ai:summarize', 'TASK_FAILED', summarize)
+  handle('local-ai:translate', 'TASK_FAILED', translateParagraphs)
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
   watchPower()
 }

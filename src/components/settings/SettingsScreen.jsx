@@ -194,7 +194,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'sync' && <SyncSettings />}
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
-            {activeSection === 'storage' && <StorageSettings />}
+            {activeSection === 'storage' && (
+              <StorageSettings onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')} />
+            )}
             {activeSection === 'debug' && <DebugSettings />}
           </div>
         </div>

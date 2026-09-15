@@ -65,5 +65,8 @@ window.electronBridge = {
   localAiCloseAndWipe: () => ipcRenderer.invoke('local-ai:close-and-wipe'),
   localAiTranscribe: (payload) => ipcRenderer.invoke('local-ai:transcribe', payload),
   localAiExtractText: (payload) => ipcRenderer.invoke('local-ai:extract-text', payload),
+  localAiDescribeImage: (payload) => ipcRenderer.invoke('local-ai:describe-image', payload),
+  localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
+  localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
   localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task')
 }

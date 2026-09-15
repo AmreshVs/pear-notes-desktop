@@ -5,14 +5,11 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { AudioLines, Download, Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
-import {
-  LOCAL_AI_ENABLED,
-  LOCAL_AI_FEATURE
-} from '@pear-notes/core/store/services/localAiCatalog.js'
-import { selectIsLocalAiFeatureReady } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import {
   base64ToBlob,
   createDownloadLink,
@@ -32,11 +29,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
   const noteKey = useSelector(getSelectedNote)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
-  const transcribeReady = useSelector(
-    (state) =>
-      LOCAL_AI_ENABLED &&
-      selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
-  )
+  const transcribeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
 
   const handleTranscribe = (e) => {
     e.stopPropagation()

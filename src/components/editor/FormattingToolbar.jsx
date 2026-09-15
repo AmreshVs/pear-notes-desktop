@@ -1,6 +1,5 @@
 import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSelector } from 'react-redux'
 import {
   AlignCenter,
   AlignJustify,
@@ -24,13 +23,10 @@ import {
   Undo
 } from 'lucide-react'
 
-import {
-  LOCAL_AI_ENABLED,
-  LOCAL_AI_FEATURE
-} from '@pear-notes/core/store/services/localAiCatalog.js'
-import { selectIsLocalAiFeatureReady } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 
 import { useFormattingToolbar } from '../../hooks/useFormattingToolbar'
+import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 import AudioRecorderModal from '../modals/AudioRecorderModal'
 import LinkModal from '../modals/LinkModal'
@@ -76,15 +72,8 @@ export default function FormattingToolbar({ editor, noteKey }) {
     handleInsertAudio,
     handleToggleCodeBlock
   } = useFormattingToolbar(editor, noteKey)
-  const voiceTypingReady = useSelector(
-    (state) =>
-      LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.VOICE_TYPING)
-  )
-  const transcribeReady = useSelector(
-    (state) =>
-      LOCAL_AI_ENABLED &&
-      selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
-  )
+  const voiceTypingReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.VOICE_TYPING)
+  const transcribeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
 
   if (!editor) {
     return null

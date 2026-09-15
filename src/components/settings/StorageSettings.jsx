@@ -20,11 +20,18 @@ import {
   PenLine,
   Play,
   RotateCw,
+  Sparkles,
   Trash2,
   WifiOff,
   X
 } from 'lucide-react'
 
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
+import {
+  getLocalAiLoaded,
+  initLocalAi,
+  selectLocalAiBytesOnDisk
+} from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNoteMedia,
   getActiveDownloads,
@@ -288,9 +295,15 @@ function TransferNoteGroup({ group, renderRow }) {
   )
 }
 
-export default function StorageSettings() {
+export default function StorageSettings({ onOpenOnDeviceAi }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
+  const aiModelBytes = useSelector(selectLocalAiBytesOnDisk) ?? 0
+  const localAiLoaded = useSelector(getLocalAiLoaded)
+
+  useEffect(() => {
+    if (LOCAL_AI_ENABLED && !localAiLoaded) dispatch(initLocalAi())
+  }, [dispatch, localAiLoaded])
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
   const isReclaiming = useSelector(getIsReclaiming)
@@ -522,6 +535,31 @@ export default function StorageSettings() {
                   {isClearingCache ? t('storage.clearingCache') : t('storage.clearCache')}
                 </button>
               </div>
+
+              {LOCAL_AI_ENABLED && (
+                <button
+                  onClick={onOpenOnDeviceAi}
+                  className='w-full px-6 py-5 flex items-center justify-between border-t border-border-primary/50 hover:bg-overlay-subtle transition-colors text-left'
+                >
+                  <div className='flex items-center gap-3 min-w-0'>
+                    <Sparkles className='w-4 h-4 text-text-tertiary flex-shrink-0' />
+                    <div className='flex flex-col min-w-0'>
+                      <span className='text-base font-semibold text-text-tertiary'>
+                        {t('settings.onDeviceAi.storageRow')}
+                      </span>
+                      <span className='text-sm text-text-tertiary/70'>
+                        {t('settings.onDeviceAi.storageRowDesc')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-2 flex-shrink-0'>
+                    <span className='text-base font-bold text-text-secondary'>
+                      {formatBytes(aiModelBytes)}
+                    </span>
+                    <ChevronRight className='w-4 h-4 text-text-tertiary' />
+                  </div>
+                </button>
+              )}
             </>
           )}
         </div>

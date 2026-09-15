@@ -91,6 +91,23 @@ export async function extractTextFromImage(image) {
   return text
 }
 
+export async function describeImage(image, extension) {
+  const { text } = await invoke('localAiDescribeImage', { image, extension })
+  return text
+}
+
+export async function runNoteTask(task, input) {
+  const { text } = await invoke('localAiSummarize', { text: input, task })
+  return text
+}
+
+export const summarizeTranscript = (transcript) => runNoteTask('transcriptSummary', transcript)
+
+export async function translateParagraphs(paragraphs, from, to) {
+  const { translations } = await invoke('localAiTranslate', { paragraphs, from, to })
+  return Array.isArray(translations) ? translations : []
+}
+
 export async function cancelLocalAiTask() {
   await invoke('localAiCancelTask')
 }

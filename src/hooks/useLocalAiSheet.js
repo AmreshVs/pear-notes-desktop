@@ -1,19 +1,71 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 
-import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { getLocalAiFeatureConfig } from '@pear-notes/core/store/slices/localAiSlice.js'
+import {
+  LOCAL_AI_FEATURE,
+  LOCAL_AI_MODEL_STATUS,
+  LOCAL_AI_NOTICE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
+import {
+  detectTextLanguage,
+  getTranslationModelNames,
+  normalizeLanguageCode,
+  pickTranslationTarget,
+  TRANSLATION_ALL_LANGUAGES
+} from '@pear-notes/core/store/services/localAiLanguage.js'
+import {
+  isRewriteTask,
+  NOTE_TASK,
+  NOTE_TASK_MIN_CHARS,
+  parseKeyPointsOutput,
+  parseRewriteOutput,
+  parseSummaryOutput,
+  parseTitleOutput,
+  REWRITE_MAX_CHARS
+} from '@pear-notes/core/store/services/localAiPrompts.js'
+import { TRANSLATION_SOURCE_LANGUAGE } from '@pear-notes/core/store/services/localAiTranslationModels.js'
+import {
+  clearLocalAiNotice,
+  downloadLocalAiModelNow,
+  downloadLocalAiModels,
+  getLocalAiFeatureConfig,
+  getLocalAiNotice,
+  getLocalAiTranslationTarget,
+  selectLocalAiModelsStatus,
+  setLocalAiTranslationTarget
+} from '@pear-notes/core/store/slices/localAiSlice.js'
 
 import { downloadAsBlob } from '../lib/fileManager'
 import { decodeAudioToPcm } from '../lib/localAi/audioPcm'
 import {
   cancelLocalAiTask,
+  describeImage,
   extractTextFromImage,
-  transcribePcm
+  runNoteTask,
+  summarizeTranscript,
+  transcribePcm,
+  translateParagraphs
 } from '../lib/localAi/electronAdapter'
 import { renderPdfPagesForOcr } from '../lib/pdfPreview'
 
 const OCR_MAX_PDF_PAGES = 20
+const DESCRIBABLE_IMAGE_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg' }
+const EMPTY_PARAGRAPHS = []
+const EMPTY_PROGRESS = { percent: 0, missingBytes: 0 }
+const WAITING_STATUSES = [LOCAL_AI_MODEL_STATUS.WAITING_NETWORK, LOCAL_AI_MODEL_STATUS.PAUSED]
+
+async function toDescribableImage(blob) {
+  const extension = DESCRIBABLE_IMAGE_TYPES[blob.type]
+  if (extension) return { bytes: new Uint8Array(await blob.arrayBuffer()), extension }
+  const bitmap = await createImageBitmap(blob)
+  const canvas = document.createElement('canvas')
+  canvas.width = bitmap.width
+  canvas.height = bitmap.height
+  canvas.getContext('2d').drawImage(bitmap, 0, 0)
+  bitmap.close?.()
+  const png = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+  return { bytes: new Uint8Array(await png.arrayBuffer()), extension: 'png' }
+}
 
 async function extractTextFromPdf(url, { signal, onProgress }) {
   const texts = []
@@ -40,34 +92,86 @@ async function extractTextFromPdf(url, { signal, onProgress }) {
   return texts.join('\n\n')
 }
 
+const NOTE_TASK_BY_MODE = {
+  summarizeNote: NOTE_TASK.NOTE_SUMMARY,
+  suggestTitle: NOTE_TASK.TITLE,
+  keyPoints: NOTE_TASK.KEY_POINTS,
+  fixGrammar: NOTE_TASK.FIX_GRAMMAR,
+  rewrite: NOTE_TASK.REWRITE,
+  makeShorter: NOTE_TASK.MAKE_SHORTER,
+  makeProfessional: NOTE_TASK.MAKE_PROFESSIONAL,
+  makeFriendly: NOTE_TASK.MAKE_FRIENDLY
+}
+
 const FEATURE_BY_MODE = {
   dictate: LOCAL_AI_FEATURE.VOICE_TYPING,
   transcribe: LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS,
-  extract: LOCAL_AI_FEATURE.EXTRACT_TEXT
+  extract: LOCAL_AI_FEATURE.EXTRACT_TEXT,
+  describe: LOCAL_AI_FEATURE.DESCRIBE_IMAGES,
+  translate: LOCAL_AI_FEATURE.TRANSLATE_NOTES,
+  summarizeNote: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  suggestTitle: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  keyPoints: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  fixGrammar: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  rewrite: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  makeShorter: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  makeProfessional: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  makeFriendly: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
 }
 
-export function useLocalAiSheet(request, { onInsert, onClose }) {
+const getDeviceLanguage = () =>
+  normalizeLanguageCode(typeof navigator !== 'undefined' ? navigator.language : null)
+
+export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   const mode = request?.mode ?? 'dictate'
   const feature = FEATURE_BY_MODE[mode]
+  const paragraphs = request?.paragraphs ?? EMPTY_PARAGRAPHS
+  const scope = request?.scope ?? 'note'
+  const dispatch = useDispatch()
+  const store = useStore()
   const featureConfig = useSelector((state) => getLocalAiFeatureConfig(state, feature))
+  const lastTarget = useSelector(getLocalAiTranslationTarget)
 
   const [phase, setPhase] = useState('idle')
   const [error, setError] = useState(null)
   const [text, setText] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [pageProgress, setPageProgress] = useState(null)
+  const [summary, setSummary] = useState(null)
+  const [summaryPhase, setSummaryPhase] = useState('idle')
+  const [keyPoints, setKeyPoints] = useState([])
+  const [sourceLanguage, setSourceLanguage] = useState(null)
+  const [targetLanguage, setTargetLanguage] = useState(null)
+  const [downloadProgress, setDownloadProgress] = useState(EMPTY_PROGRESS)
+  const [noSpaceBytes, setNoSpaceBytes] = useState(0)
+  const [savedAudio, setSavedAudio] = useState(null)
 
   const abortRef = useRef(null)
   const phaseRef = useRef('idle')
+  const summaryPhaseRef = useRef('idle')
   const runIdRef = useRef(0)
   const recorderRef = useRef(null)
   const streamRef = useRef(null)
   const chunksRef = useRef([])
   const timerRef = useRef(null)
+  const downloadNamesRef = useRef([])
+  const translateRequestRef = useRef(null)
+  const savedAudioRef = useRef(null)
+  const startedAtRef = useRef(0)
+
+  const keepSavedAudio = useCallback((next) => {
+    savedAudioRef.current = next
+    setSavedAudio(next)
+  }, [])
 
   const updatePhase = useCallback((next) => {
     phaseRef.current = next
     setPhase(next)
+  }, [])
+
+  const updateSummaryPhase = useCallback((next) => {
+    summaryPhaseRef.current = next
+    setSummaryPhase(next)
   }, [])
 
   const stopTimer = useCallback(() => {
@@ -90,7 +194,7 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
   )
 
   const run = useCallback(
-    async (work) => {
+    async (work, failCode = 'failed') => {
       runIdRef.current += 1
       const runId = runIdRef.current
       abortRef.current?.abort()
@@ -98,21 +202,23 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
       abortRef.current = controller
       setError(null)
       setPageProgress(null)
+      setSummary(null)
+      updateSummaryPhase('idle')
       updatePhase('working')
       try {
         const result = String((await work(controller.signal, runId)) ?? '').trim()
         if (runId !== runIdRef.current) return
         if (!result) {
-          fail('empty', runId)
+          fail(failCode, runId)
           return
         }
         setText(result)
         updatePhase('preview')
       } catch (err) {
-        fail(err?.code === 'download' ? 'download' : 'failed', runId)
+        fail(err?.code === 'download' ? 'download' : failCode, runId)
       }
     },
-    [fail, updatePhase]
+    [fail, updatePhase, updateSummaryPhase]
   )
 
   const processSource = useCallback(() => {
@@ -132,19 +238,149 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
       } catch {
         throw Object.assign(new Error('download'), { code: 'download' })
       }
+      if (mode === 'describe') {
+        const { bytes, extension } = await toDescribableImage(blob)
+        return describeImage(bytes, extension)
+      }
       const buffer = await blob.arrayBuffer()
       if (mode === 'extract') return extractTextFromImage(new Uint8Array(buffer))
       return transcribePcm(await decodeAudioToPcm(buffer), feature, featureConfig ?? {})
     })
   }, [feature, featureConfig, mode, request, run])
 
+  const runTranslation = useCallback(() => {
+    const pending = translateRequestRef.current
+    if (!pending) return
+    run(async () => {
+      const translations = await translateParagraphs(paragraphs, pending.source, pending.target)
+      return translations
+        .map((line) => String(line ?? '').trim())
+        .filter(Boolean)
+        .join('\n')
+    })
+  }, [paragraphs, run])
+
+  const checkDownload = useCallback(() => {
+    if (phaseRef.current !== 'downloading' && phaseRef.current !== 'waiting') return
+    const names = downloadNamesRef.current
+    if (names.length === 0) return
+    const state = store.getState()
+    const notice = getLocalAiNotice(state)
+    if (
+      notice?.type === LOCAL_AI_NOTICE.INSUFFICIENT_SPACE &&
+      notice.names?.some((name) => names.includes(name))
+    ) {
+      setNoSpaceBytes(notice.requiredBytes ?? 0)
+      setError('noSpace')
+      updatePhase('error')
+      dispatch(clearLocalAiNotice())
+      return
+    }
+    const status = selectLocalAiModelsStatus(state, names)
+    setDownloadProgress((previous) =>
+      previous.percent === status.percent && previous.missingBytes === status.missingBytes
+        ? previous
+        : { percent: status.percent, missingBytes: status.missingBytes }
+    )
+    if (status.status === LOCAL_AI_MODEL_STATUS.READY) {
+      runTranslation()
+      return
+    }
+    if (status.status === LOCAL_AI_MODEL_STATUS.FAILED) {
+      setError('downloadFailed')
+      updatePhase('error')
+      return
+    }
+    updatePhase(WAITING_STATUSES.includes(status.status) ? 'waiting' : 'downloading')
+  }, [dispatch, runTranslation, store, updatePhase])
+
+  useEffect(() => store.subscribe(checkDownload), [checkDownload, store])
+
+  const startTranslate = useCallback(
+    (source, target) => {
+      runIdRef.current += 1
+      abortRef.current?.abort()
+      setError(null)
+      setText('')
+      setSummary(null)
+      setSourceLanguage(source)
+      setTargetLanguage(target)
+      setDownloadProgress(EMPTY_PROGRESS)
+      translateRequestRef.current = null
+      downloadNamesRef.current = []
+      if (paragraphs.length === 0) {
+        setError('empty')
+        updatePhase('error')
+        return
+      }
+      if (!target) {
+        updatePhase('choose')
+        return
+      }
+      translateRequestRef.current = { source, target }
+      downloadNamesRef.current = getTranslationModelNames(source, target)
+      updatePhase('downloading')
+      dispatch(setLocalAiTranslationTarget(target))
+      dispatch(downloadLocalAiModels({ names: downloadNamesRef.current }))
+      checkDownload()
+    },
+    [checkDownload, dispatch, paragraphs, updatePhase]
+  )
+
+  const beginTranslate = useCallback(() => {
+    const source = detectTextLanguage(paragraphs.join('\n')) ?? TRANSLATION_SOURCE_LANGUAGE
+    startTranslate(
+      source,
+      pickTranslationTarget({ source, lastTarget, deviceLanguage: getDeviceLanguage() })
+    )
+  }, [lastTarget, paragraphs, startTranslate])
+
+  const runNoteTaskMode = useCallback(() => {
+    const task = NOTE_TASK_BY_MODE[mode]
+    if (!task) return
+    const input = paragraphs.join('\n')
+    setKeyPoints([])
+    const tooLong = isRewriteTask(task) && input.length > REWRITE_MAX_CHARS
+    if (input.trim().length < (scope === 'selection' ? 1 : NOTE_TASK_MIN_CHARS) || tooLong) {
+      runIdRef.current += 1
+      setSummary(null)
+      setError(tooLong ? 'tooLong' : 'empty')
+      updatePhase('error')
+      return
+    }
+    run(async (signal, runId) => {
+      const output = await runNoteTask(task, input)
+      if (mode === 'summarizeNote') {
+        const parsed = parseSummaryOutput(output)
+        if (!parsed.summary && parsed.actionItems.length === 0) return ''
+        if (runId === runIdRef.current) setSummary(parsed)
+        return [parsed.summary, ...parsed.actionItems.map((item) => `• ${item}`)]
+          .filter(Boolean)
+          .join('\n')
+      }
+      if (mode === 'keyPoints') {
+        const points = parseKeyPointsOutput(output)
+        if (runId === runIdRef.current) setKeyPoints(points)
+        return points.map((point) => `• ${point}`).join('\n')
+      }
+      return isRewriteTask(task) ? parseRewriteOutput(output) : parseTitleOutput(output)
+    })
+  }, [mode, paragraphs, run, scope, updatePhase])
+
   const handleRecord = useCallback(async () => {
+    if (recorderRef.current || streamRef.current) return
     runIdRef.current += 1
+    const runId = runIdRef.current
     setError(null)
     setText('')
     setElapsed(0)
+    keepSavedAudio(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (runId !== runIdRef.current) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
       streamRef.current = stream
       const recorder = new MediaRecorder(stream)
       recorderRef.current = recorder
@@ -153,13 +389,15 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
       recorder.start()
       updatePhase('recording')
       const startedAt = Date.now()
+      startedAtRef.current = startedAt
       timerRef.current = setInterval(() => setElapsed(Date.now() - startedAt), 200)
     } catch {
       releaseMic()
+      if (runId !== runIdRef.current) return
       setError('micDenied')
       updatePhase('error')
     }
-  }, [releaseMic, updatePhase])
+  }, [keepSavedAudio, releaseMic, updatePhase])
 
   const stopRecorder = useCallback(() => {
     stopTimer()
@@ -178,21 +416,42 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
     })
   }, [releaseMic, stopTimer])
 
+  const transcribeSavedAudio = useCallback(() => {
+    const saved = savedAudioRef.current
+    if (!saved) return
+    run(async (signal, runId) => {
+      const transcript = String(
+        (await transcribePcm(
+          await decodeAudioToPcm(await saved.blob.arrayBuffer()),
+          feature,
+          featureConfig ?? {}
+        )) ?? ''
+      ).trim()
+      if (transcript && runId === runIdRef.current) keepSavedAudio(null)
+      return transcript
+    }, 'dictationFailed')
+  }, [feature, featureConfig, keepSavedAudio, run])
+
   const handleStop = useCallback(async () => {
+    const durationSeconds = Math.round((Date.now() - startedAtRef.current) / 1000)
     const blob = await stopRecorder()
-    if (!blob) {
+    if (!blob || blob.size === 0) {
       setError('failed')
       updatePhase('error')
       return
     }
-    run(async () =>
-      transcribePcm(
-        await decodeAudioToPcm(await blob.arrayBuffer()),
-        feature,
-        featureConfig ?? {}
-      )
-    )
-  }, [feature, featureConfig, run, stopRecorder, updatePhase])
+    keepSavedAudio({ blob, durationSeconds })
+    transcribeSavedAudio()
+  }, [keepSavedAudio, stopRecorder, transcribeSavedAudio, updatePhase])
+
+  const handleAttachAudio = useCallback(() => {
+    const saved = savedAudioRef.current
+    if (!saved || !onAttachAudio) return
+    runIdRef.current += 1
+    keepSavedAudio(null)
+    updatePhase('idle')
+    onAttachAudio(saved.blob, saved.durationSeconds)
+  }, [keepSavedAudio, onAttachAudio, updatePhase])
 
   useEffect(() => {
     if (!request) return
@@ -201,6 +460,10 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
     setElapsed(0)
     if (request.mode === 'dictate') {
       handleRecord()
+    } else if (request.mode === 'translate') {
+      beginTranslate()
+    } else if (NOTE_TASK_BY_MODE[request.mode]) {
+      runNoteTaskMode()
     } else {
       processSource()
     }
@@ -218,25 +481,95 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
     [releaseMic, stopTimer]
   )
 
+  const handleChooseTarget = useCallback(
+    (language) => {
+      if (!sourceLanguage || !language || language === sourceLanguage) return
+      if (phaseRef.current === 'working') return
+      startTranslate(sourceLanguage, language)
+    },
+    [sourceLanguage, startTranslate]
+  )
+
+  const handleChooseSource = useCallback(
+    (language) => {
+      if (!language || language === sourceLanguage || phaseRef.current === 'working') return
+      const target =
+        targetLanguage && targetLanguage !== language
+          ? targetLanguage
+          : pickTranslationTarget({ source: language, lastTarget, deviceLanguage: getDeviceLanguage() })
+      startTranslate(language, target)
+    },
+    [lastTarget, sourceLanguage, startTranslate, targetLanguage]
+  )
+
+  const handleDownloadNow = useCallback(() => {
+    for (const name of downloadNamesRef.current) dispatch(downloadLocalAiModelNow({ name }))
+  }, [dispatch])
+
   const handleAgain = useCallback(() => {
     if (mode === 'dictate') handleRecord()
+    else if (mode === 'translate') {
+      if (sourceLanguage) startTranslate(sourceLanguage, targetLanguage)
+      else beginTranslate()
+    } else if (NOTE_TASK_BY_MODE[mode]) runNoteTaskMode()
     else processSource()
-  }, [handleRecord, mode, processSource])
+  }, [
+    beginTranslate,
+    handleRecord,
+    mode,
+    processSource,
+    runNoteTaskMode,
+    sourceLanguage,
+    startTranslate,
+    targetLanguage
+  ])
+
+  const handleSummarize = useCallback(async () => {
+    if (!text || summaryPhaseRef.current === 'working') return
+    const runId = runIdRef.current
+    updateSummaryPhase('working')
+    try {
+      const parsed = parseSummaryOutput(await summarizeTranscript(text))
+      if (runId !== runIdRef.current) return
+      if (!parsed.summary && parsed.actionItems.length === 0) {
+        updateSummaryPhase('failed')
+        return
+      }
+      setSummary(parsed)
+      updateSummaryPhase('idle')
+    } catch {
+      if (runId !== runIdRef.current) return
+      updateSummaryPhase('failed')
+    }
+  }, [text, updateSummaryPhase])
 
   const handleClose = useCallback(async () => {
     runIdRef.current += 1
     abortRef.current?.abort()
     if (phaseRef.current === 'recording') await stopRecorder()
-    if (phaseRef.current === 'working') cancelLocalAiTask().catch(() => {})
+    if (phaseRef.current === 'working' || summaryPhaseRef.current === 'working') {
+      cancelLocalAiTask().catch(() => {})
+    }
+    translateRequestRef.current = null
+    downloadNamesRef.current = []
+    keepSavedAudio(null)
     updatePhase('idle')
+    updateSummaryPhase('idle')
     onClose()
-  }, [onClose, stopRecorder, updatePhase])
+  }, [keepSavedAudio, onClose, stopRecorder, updatePhase, updateSummaryPhase])
 
-  const handleInsert = useCallback(() => {
-    if (phaseRef.current !== 'preview' || !text) return
-    updatePhase('idle')
-    onInsert(text, mode)
-  }, [mode, onInsert, text, updatePhase])
+  const handleInsert = useCallback(
+    (action = 'insert') => {
+      if (phaseRef.current !== 'preview' || !text || summaryPhaseRef.current === 'working') return
+      updatePhase('idle')
+      onInsert(text, mode, summary, {
+        language: mode === 'translate' ? targetLanguage : null,
+        bullets: mode === 'keyPoints' ? keyPoints : [],
+        action
+      })
+    },
+    [keyPoints, mode, onInsert, summary, targetLanguage, text, updatePhase]
+  )
 
   return {
     mode,
@@ -245,10 +578,28 @@ export function useLocalAiSheet(request, { onInsert, onClose }) {
     text,
     elapsed,
     pageProgress,
+    summary,
+    summaryPhase,
+    sourceLanguage,
+    targetLanguage,
+    scope,
+    canReplace:
+      scope === 'selection' && (mode === 'translate' || isRewriteTask(NOTE_TASK_BY_MODE[mode])),
+    translateLanguages: TRANSLATION_ALL_LANGUAGES,
+    downloadProgress,
+    noSpaceBytes,
+    handleChooseTarget,
+    handleChooseSource,
+    handleDownloadNow,
     handleRecord,
     handleStop,
     handleAgain,
+    handleSummarize,
     handleClose,
-    handleInsert
+    handleInsert,
+    hasSavedAudio: !!savedAudio,
+    canAttachAudio: !!savedAudio && !!onAttachAudio,
+    handleRetrySavedAudio: transcribeSavedAudio,
+    handleAttachAudio
   }
 }
