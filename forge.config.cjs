@@ -309,6 +309,53 @@ function relocateSidecarBinary(buildPath, platform, arch) {
   )
 }
 
+const LOCAL_AI_RUNTIME_EXECUTABLE = 'bare-local-ai'
+
+// The on-device AI SDK starts its worker with bare-runtime, whose binary sits in
+// node_modules/bare-runtime-<platform>-<arch>/bin. The App Store sandbox only
+// lets the app launch executables inside Contents/MacOS, so move it there and
+// point the host package at the new location.
+function relocateLocalAiRuntimeBinary(buildPath, platform, arch) {
+  const modulesDir = path.join(buildPath, 'local-ai', 'node_modules')
+  if (!fs.existsSync(modulesDir)) return
+
+  const hostPrefix = `bare-runtime-${platform}-`
+  const hostDirs = fs
+    .readdirSync(modulesDir)
+    .filter((name) => name.startsWith(hostPrefix))
+    .map((name) => path.join(modulesDir, name))
+  const hostDir = path.join(modulesDir, `${hostPrefix}${arch}`)
+
+  for (const dir of hostDirs) {
+    if (dir !== hostDir) fs.rmSync(path.join(dir, 'bin'), { recursive: true, force: true })
+  }
+
+  const source = path.join(hostDir, 'bin', 'bare')
+  if (!fs.existsSync(source)) {
+    throw new Error(`bare-runtime binary missing for ${platform}-${arch}: ${source}`)
+  }
+
+  const contentsDir = path.resolve(buildPath, '..', '..')
+  if (path.basename(contentsDir) !== 'Contents') {
+    throw new Error(`unexpected bundle layout, cannot relocate local AI runtime: ${contentsDir}`)
+  }
+
+  const target = path.join(contentsDir, 'MacOS', LOCAL_AI_RUNTIME_EXECUTABLE)
+  fs.copyFileSync(source, target)
+  fs.chmodSync(target, 0o755)
+  fs.rmSync(path.join(hostDir, 'bin'), { recursive: true, force: true })
+
+  fs.writeFileSync(
+    path.join(hostDir, 'index.js'),
+    [
+      "const path = require('path')",
+      '',
+      `exports.bare = path.join(path.dirname(process.execPath), ${JSON.stringify(LOCAL_AI_RUNTIME_EXECUTABLE)})`,
+      ''
+    ].join('\n')
+  )
+}
+
 // The renderer is minified by Vite, but the main process and preload ship as
 // raw .cjs with full comments and IPC channel names. Minify the packaged copies
 // only - the originals on disk stay readable.
@@ -360,7 +407,14 @@ module.exports = {
 
   hooks: {
     generateAssets: async () => {
-      if (!fs.existsSync(path.join(__dirname, 'local-ai', 'node_modules', '@qvac', 'sdk'))) return
+      if (!fs.existsSync(path.join(__dirname, 'local-ai', 'node_modules', '@qvac', 'sdk'))) {
+        if (isMas) {
+          throw new Error(
+            'local-ai dependencies are not installed, so this build would ship without on-device AI. Run npm ci in local-ai first.'
+          )
+        }
+        return
+      }
       require('child_process').execFileSync(
         process.execPath,
         [path.join(__dirname, 'scripts', 'build-local-ai-worker.mjs')],
@@ -379,6 +433,7 @@ module.exports = {
       await prunePrebuilds(path.join(buildPath, 'local-ai'), nativePlatform, arch)
       if (nativePlatform === 'darwin') {
         relocateSidecarBinary(buildPath, nativePlatform, arch)
+        relocateLocalAiRuntimeBinary(buildPath, nativePlatform, arch)
       }
       minifyElectronEntries(buildPath)
       await hardenPackagedCore(buildPath)

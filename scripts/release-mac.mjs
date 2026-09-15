@@ -269,7 +269,30 @@ function commitBuildNumber(buildNumber) {
   ok(`committed build ${buildNumber} as ${sha}`)
 }
 
+const SOCKET_FIREWALL = '/usr/local/bin/sfw'
+
+async function installLocalAiRuntime() {
+  const cwd = path.join(root, 'local-ai')
+  const [command, args] = fs.existsSync(SOCKET_FIREWALL)
+    ? [SOCKET_FIREWALL, ['npm', 'ci']]
+    : ['npm', ['ci']]
+  const { status, output, durationMs } = await streamCommand(command, args, {
+    cwd,
+    heartbeat: 'still installing'
+  })
+  if (status !== 0) {
+    process.stdout.write(output)
+    throw new ReleaseError(
+      'Could not install the on-device AI runtime',
+      'Run npm ci in local-ai and check the error above'
+    )
+  }
+  took(durationMs)
+}
+
 async function build(config) {
+  await installLocalAiRuntime()
+
   const env = {
     ...process.env,
     APPLE_BUNDLE_ID: config.APPLE_BUNDLE_ID,
@@ -333,6 +356,27 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
   }
   ok('bare sidecar relocated to Contents/MacOS')
 
+  const localAiRuntime = path.join(appDir, 'Contents', 'MacOS', 'bare-local-ai')
+  const localAiSdk = path.join(
+    appDir,
+    'Contents',
+    'Resources',
+    'app',
+    'local-ai',
+    'node_modules',
+    '@qvac',
+    'sdk',
+    'package.json'
+  )
+  const localAiWorker = path.join(appDir, 'Contents', 'Resources', 'app', 'local-ai', 'qvac', 'worker.entry.mjs')
+  if (!fs.existsSync(localAiRuntime) || !fs.existsSync(localAiSdk) || !fs.existsSync(localAiWorker)) {
+    throw new ReleaseError(
+      'On-device AI runtime is incomplete in the app',
+      'Expected Contents/MacOS/bare-local-ai, the @qvac/sdk package and local-ai/qvac/worker.entry.mjs. Check the generateAssets and packageAfterPrune hooks in forge.config.cjs'
+    )
+  }
+  ok('on-device AI runtime packaged, worker binary in Contents/MacOS')
+
   const frameworks = path.join(appDir, 'Contents', 'Frameworks')
   const helpers = fs.existsSync(frameworks)
     ? fs
@@ -340,7 +384,7 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
         .filter((n) => n.endsWith('.app'))
         .map((n) => path.join(frameworks, n))
     : []
-  for (const target of [sidecar, ...helpers]) {
+  for (const target of [sidecar, localAiRuntime, ...helpers]) {
     const entitlements = run('codesign', ['-d', '--entitlements', '-', target]).output
     for (const required of ['app-sandbox', 'inherit', 'allow-jit']) {
       if (!entitlements.includes(required)) {
@@ -353,7 +397,9 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
       }
     }
   }
-  ok(`nested code signed with inherit + allow-jit (${helpers.length} helpers + sidecar)`)
+  ok(
+    `nested code signed with inherit + allow-jit (${helpers.length} helpers, sidecar and AI runtime)`
+  )
 
   const plist = path.join(appDir, 'Contents', 'Info.plist')
   const bundleId = run('plutil', [

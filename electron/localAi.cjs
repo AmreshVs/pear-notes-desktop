@@ -74,7 +74,7 @@ function isRuntimeHostInstalled() {
 
 function getUnsupportedReason(catalog) {
   const reasons = catalog.LOCAL_AI_UNSUPPORTED_REASON
-  if (options.isMas || !fs.existsSync(SDK_ENTRY)) return reasons.STORE_BUILD
+  if (!fs.existsSync(SDK_ENTRY)) return reasons.STORE_BUILD
   if (!isRuntimeHostInstalled()) return reasons.ARCHITECTURE
   if (process.platform === 'darwin' && Number.parseInt(os.release(), 10) < MIN_DARWIN_MAJOR) {
     return reasons.OS_VERSION
