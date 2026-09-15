@@ -183,32 +183,71 @@
         "voiceTyping": {
           "title": "Voice typing",
           "inline": "voice typing",
-          "desc": "Speak and your words appear in the note."
+          "desc": "Speak and your words appear in the note.",
+          "limitations": [
+            "Works best in a quiet place with one person speaking.",
+            "Accuracy depends on language and accent. Standard and Lite are most accurate in English; Best covers 25 European languages.",
+            "Punctuation and names can be wrong, so check the text before you insert it.",
+            "Your voice is processed on this computer and never uploaded."
+          ]
         },
         "summarizeRecordings": {
           "title": "Summaries and titles",
           "inline": "summaries and titles",
-          "desc": "Summarize notes and recordings, list key points, and suggest titles."
+          "desc": "Summarize notes and recordings, list key points, and suggest titles.",
+          "tierDescriptions": {
+            "standard": "Standard · Qwen3 0.6B · {{size}}",
+            "best": "Best · Qwen3 1.7B · {{size}} · better with other languages"
+          },
+          "limitations": [
+            "Results can miss or get details wrong, so check them before you rely on them.",
+            "Standard is fastest and works best in English. Best handles other languages better, but is slower and needs more memory.",
+            "Summaries, titles and key points use the first 8,000 characters of a note.",
+            "Writing tools work on up to 3,000 characters of selected text."
+          ]
         },
         "describeImages": {
           "title": "Describe images",
           "inline": "image descriptions",
-          "desc": "Get a short description of an image to add as a caption."
+          "desc": "Get a short description of an image to add as a caption.",
+          "limitations": [
+            "Descriptions are short and in English.",
+            "Descriptions can be wrong or miss details, so check them before you use them.",
+            "To copy text from an image, use Extract text instead."
+          ]
         },
         "transcribeRecordings": {
           "title": "Transcribe recordings",
           "inline": "recording transcripts",
-          "desc": "Turn voice recordings into text."
+          "desc": "Turn voice recordings into text.",
+          "limitations": [
+            "Accuracy depends on audio quality, background noise, language and accent.",
+            "Speakers aren't labelled, so a conversation comes out as one block of text.",
+            "Long recordings take a while, and the app has to stay open until it finishes.",
+            "Uses the same model as voice typing."
+          ]
         },
         "extractText": {
           "title": "Extract text",
           "inline": "text extraction",
-          "desc": "Copy text from photos, scans and PDFs."
+          "desc": "Copy text from photos, scans and PDFs.",
+          "limitations": [
+            "Reads text in Latin-script languages only, such as English, French, German, Spanish, Polish and Vietnamese.",
+            "Text in other scripts, such as Russian, Arabic, Hindi, Chinese, Japanese or Korean, isn't recognised.",
+            "Handwriting, low light, blur and tilted photos reduce accuracy.",
+            "Reads up to 20 pages of a PDF. Layout, tables and formatting aren't kept."
+          ]
         },
         "translateNotes": {
           "title": "Translate notes",
           "inline": "note translation",
-          "desc": "Translate notes between English and 18 languages. Each language downloads the first time you use it."
+          "desc": "Translate notes to and from English. Each language downloads the first time you use it.",
+          "limitations": [
+            "Translates to and from English. Other pairs go through English, which can lose nuance.",
+            "The note's language is detected automatically and can be wrong for short or mixed-language notes. You can change it before translating.",
+            "Formatting such as bold, links and lists isn't kept in the translation.",
+            "Translates up to 400 paragraphs at a time. Each language needs a 13–44 MB download the first time you use it."
+          ]
         }
       },
       "featureStatus": {
@@ -221,7 +260,8 @@
         "failed": "Download stopped at {{percent}}%",
         "offOnDemand": "Languages download when you first use them",
         "readyOnDemand": "Ready · {{size}} of languages on this computer",
-        "readyOnDemandEmpty": "Ready · languages download when you first use them"
+        "readyOnDemandEmpty": "Ready · languages download when you first use them",
+        "needsMemory": "Needs more memory than this computer has"
       },
       "downloadNow": "Download now",
       "tryAgain": "Try again",
@@ -307,30 +347,121 @@
         "BERGAMOT_EN_VI": "English to Vietnamese",
         "BERGAMOT_VI_EN": "Vietnamese to English",
         "BERGAMOT_EN_ID": "English to Indonesian",
-        "BERGAMOT_ID_EN": "Indonesian to English"
+        "BERGAMOT_ID_EN": "Indonesian to English",
+        "BERGAMOT_EN_SQ": "English to Albanian",
+        "BERGAMOT_SQ_EN": "Albanian to English",
+        "BERGAMOT_EN_AZ": "English to Azerbaijani",
+        "BERGAMOT_AZ_EN": "Azerbaijani to English",
+        "BERGAMOT_EN_BN": "English to Bengali",
+        "BERGAMOT_BN_EN": "Bengali to English",
+        "BERGAMOT_EN_BS": "English to Bosnian",
+        "BERGAMOT_BS_EN": "Bosnian to English",
+        "BERGAMOT_EN_BG": "English to Bulgarian",
+        "BERGAMOT_BG_EN": "Bulgarian to English",
+        "BERGAMOT_EN_CA": "English to Catalan",
+        "BERGAMOT_CA_EN": "Catalan to English",
+        "BERGAMOT_EN_HR": "English to Croatian",
+        "BERGAMOT_HR_EN": "Croatian to English",
+        "BERGAMOT_EN_CS": "English to Czech",
+        "BERGAMOT_CS_EN": "Czech to English",
+        "BERGAMOT_EN_DA": "English to Danish",
+        "BERGAMOT_DA_EN": "Danish to English",
+        "BERGAMOT_EN_ET": "English to Estonian",
+        "BERGAMOT_ET_EN": "Estonian to English",
+        "BERGAMOT_EN_FI": "English to Finnish",
+        "BERGAMOT_FI_EN": "Finnish to English",
+        "BERGAMOT_EN_EL": "English to Greek",
+        "BERGAMOT_EL_EN": "Greek to English",
+        "BERGAMOT_EN_GU": "English to Gujarati",
+        "BERGAMOT_GU_EN": "Gujarati to English",
+        "BERGAMOT_EN_HE": "English to Hebrew",
+        "BERGAMOT_HE_EN": "Hebrew to English",
+        "BERGAMOT_EN_HU": "English to Hungarian",
+        "BERGAMOT_HU_EN": "Hungarian to English",
+        "BERGAMOT_EN_IS": "English to Icelandic",
+        "BERGAMOT_IS_EN": "Icelandic to English",
+        "BERGAMOT_EN_KN": "English to Kannada",
+        "BERGAMOT_KN_EN": "Kannada to English",
+        "BERGAMOT_EN_LV": "English to Latvian",
+        "BERGAMOT_LV_EN": "Latvian to English",
+        "BERGAMOT_EN_LT": "English to Lithuanian",
+        "BERGAMOT_LT_EN": "Lithuanian to English",
+        "BERGAMOT_EN_MS": "English to Malay",
+        "BERGAMOT_MS_EN": "Malay to English",
+        "BERGAMOT_EN_ML": "English to Malayalam",
+        "BERGAMOT_ML_EN": "Malayalam to English",
+        "BERGAMOT_EN_NB": "English to Norwegian",
+        "BERGAMOT_NB_EN": "Norwegian to English",
+        "BERGAMOT_EN_FA": "English to Persian",
+        "BERGAMOT_FA_EN": "Persian to English",
+        "BERGAMOT_EN_RO": "English to Romanian",
+        "BERGAMOT_RO_EN": "Romanian to English",
+        "BERGAMOT_EN_SR": "English to Serbian",
+        "BERGAMOT_SR_EN": "Serbian to English",
+        "BERGAMOT_EN_SK": "English to Slovak",
+        "BERGAMOT_SK_EN": "Slovak to English",
+        "BERGAMOT_EN_SL": "English to Slovenian",
+        "BERGAMOT_SL_EN": "Slovenian to English",
+        "BERGAMOT_EN_TA": "English to Tamil",
+        "BERGAMOT_TA_EN": "Tamil to English",
+        "BERGAMOT_EN_TE": "English to Telugu",
+        "BERGAMOT_TE_EN": "Telugu to English",
+        "BERGAMOT_EN_TH": "English to Thai",
+        "BERGAMOT_TH_EN": "Thai to English",
+        "QWEN3_1_7B_INST_Q4": "Qwen3 1.7B"
       },
       "language": "Language",
       "languages": {
         "auto": "Detect automatically",
         "en": "English only",
-        "es": "Spanish",
+        "sq": "Albanian",
+        "ar": "Arabic",
+        "az": "Azerbaijani",
+        "bn": "Bengali",
+        "bs": "Bosnian",
+        "bg": "Bulgarian",
+        "ca": "Catalan",
+        "zh": "Chinese",
+        "hr": "Croatian",
+        "cs": "Czech",
+        "da": "Danish",
+        "nl": "Dutch",
+        "et": "Estonian",
+        "fi": "Finnish",
         "fr": "French",
         "de": "German",
-        "it": "Italian",
-        "pt": "Portuguese",
-        "nl": "Dutch",
-        "pl": "Polish",
-        "ru": "Russian",
-        "uk": "Ukrainian",
-        "zh": "Chinese",
-        "ja": "Japanese",
-        "ko": "Korean",
+        "el": "Greek",
+        "gu": "Gujarati",
+        "he": "Hebrew",
         "hi": "Hindi",
-        "ar": "Arabic",
-        "tr": "Turkish",
+        "hu": "Hungarian",
+        "is": "Icelandic",
+        "id": "Indonesian",
+        "it": "Italian",
+        "ja": "Japanese",
+        "kn": "Kannada",
+        "ko": "Korean",
+        "lv": "Latvian",
+        "lt": "Lithuanian",
+        "ms": "Malay",
+        "ml": "Malayalam",
+        "nb": "Norwegian",
+        "fa": "Persian",
+        "pl": "Polish",
+        "pt": "Portuguese",
+        "ro": "Romanian",
+        "ru": "Russian",
+        "sr": "Serbian",
+        "sk": "Slovak",
+        "sl": "Slovenian",
+        "es": "Spanish",
         "sv": "Swedish",
-        "vi": "Vietnamese",
-        "id": "Indonesian"
+        "ta": "Tamil",
+        "te": "Telugu",
+        "th": "Thai",
+        "tr": "Turkish",
+        "uk": "Ukrainian",
+        "vi": "Vietnamese"
       },
       "quality": "Quality",
       "tierDescriptions": {
@@ -353,7 +484,9 @@
         "title": "Delete all AI models?",
         "message": "This frees {{size}} and turns off every AI feature on this computer. Your notes aren't affected."
       },
-      "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it."
+      "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it.",
+      "limitations": "Limitations",
+      "tierNeedsMemory": "Needs more memory than this computer has"
     }
   },
   "sync": {
@@ -1458,6 +1591,14 @@
       "dictationFailed": {
         "title": "Couldn't transcribe that",
         "subtitle": "Your recording is saved. Try again, or attach it to the note as audio."
+      },
+      "notEnoughMemory": {
+        "title": "Not enough memory",
+        "subtitle": "This computer doesn't have enough free memory for this right now. Close other apps and try again, or choose a lighter quality in On-device AI settings."
+      },
+      "unstable": {
+        "title": "Paused to keep Pear Notes stable",
+        "subtitle": "This AI model stopped the app twice, so it's paused on this computer. Try again, or choose a lighter quality in On-device AI settings."
       }
     },
     "translate": {
@@ -1528,6 +1669,8 @@
       "menuLabel": "AI tools",
       "title": "AI tools",
       "toolbarLabel": "AI tools",
+      "selectionToolbarLabel": "AI tools for selected text",
+      "editLabel": "Edit",
       "editGroup": "Edit selection",
       "understandGroup": "Summarize or translate selection",
       "noteGroup": "Whole note",

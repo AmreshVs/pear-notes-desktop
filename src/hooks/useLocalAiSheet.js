@@ -130,6 +130,9 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   const dispatch = useDispatch()
   const store = useStore()
   const featureConfig = useSelector((state) => getLocalAiFeatureConfig(state, feature))
+  const summaryConfig = useSelector((state) =>
+    getLocalAiFeatureConfig(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
+  )
   const lastTarget = useSelector(getLocalAiTranslationTarget)
 
   const [phase, setPhase] = useState('idle')
@@ -349,7 +352,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       return
     }
     run(async (signal, runId) => {
-      const output = await runNoteTask(task, input)
+      const output = await runNoteTask(task, input, summaryConfig ?? {})
       if (mode === 'summarizeNote') {
         const parsed = parseSummaryOutput(output)
         if (!parsed.summary && parsed.actionItems.length === 0) return ''
@@ -365,7 +368,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       }
       return isRewriteTask(task) ? parseRewriteOutput(output) : parseTitleOutput(output)
     })
-  }, [mode, paragraphs, run, scope, updatePhase])
+  }, [mode, paragraphs, run, scope, summaryConfig, updatePhase])
 
   const handleRecord = useCallback(async () => {
     if (recorderRef.current || streamRef.current) return
@@ -529,7 +532,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
     const runId = runIdRef.current
     updateSummaryPhase('working')
     try {
-      const parsed = parseSummaryOutput(await summarizeTranscript(text))
+      const parsed = parseSummaryOutput(await summarizeTranscript(text, summaryConfig ?? {}))
       if (runId !== runIdRef.current) return
       if (!parsed.summary && parsed.actionItems.length === 0) {
         updateSummaryPhase('failed')
@@ -541,7 +544,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       if (runId !== runIdRef.current) return
       updateSummaryPhase('failed')
     }
-  }, [text, updateSummaryPhase])
+  }, [summaryConfig, text, updateSummaryPhase])
 
   const handleClose = useCallback(async () => {
     runIdRef.current += 1

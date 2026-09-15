@@ -30,6 +30,22 @@ function isBundleCurrent() {
   return bundleInputs.every((input) => !fs.existsSync(input) || fs.statSync(input).mtimeMs <= bundleTime)
 }
 
+const registryModels = await import(
+  pathToFileURL(
+    path.join(runtimeRoot, 'node_modules', '@qvac', 'inference', 'dist', 'models', 'registry', 'models.js')
+  ).href
+)
+const { findLocalAiRegistryMismatches } = await import(
+  '@pear-notes/core/store/services/localAiRegistryCheck.js'
+)
+const registryProblems = findLocalAiRegistryMismatches(registryModels)
+if (registryProblems.length) {
+  console.error(
+    `The local AI model catalog doesn't match the installed QVAC SDK:\n  ${registryProblems.join('\n  ')}`
+  )
+  process.exit(1)
+}
+
 if (isBundleCurrent()) {
   console.log('Local AI worker is up to date.')
   process.exit(0)

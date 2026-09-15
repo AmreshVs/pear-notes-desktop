@@ -678,7 +678,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </span>
           {LOCAL_AI_ENABLED && (summarizeReady || translateReady) && (
             <AiToolsButton
-              editor={editorInstance}
               content={content}
               summarizeReady={summarizeReady}
               translateReady={translateReady}

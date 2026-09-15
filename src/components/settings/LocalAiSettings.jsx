@@ -66,7 +66,13 @@ const ACTION_BUTTON_CLASS =
 const ICON_BUTTON_CLASS =
   'p-1.5 rounded-lg text-accent-primary hover:bg-accent-primary/10 transition-colors'
 const MODAL_CANCEL_CLASS =
-  'flex-1 py-3 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium transition-all active:scale-95'
+  'flex-1 py-3 px-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm whitespace-nowrap hover:bg-overlay-medium transition-all active:scale-95'
+
+const MODAL_PRIMARY_CLASS =
+  'flex-1 py-3 px-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm whitespace-nowrap shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+
+const MODAL_DANGER_CLASS =
+  'flex-1 py-3 px-4 bg-accent-danger text-white rounded-xl font-bold text-sm whitespace-nowrap shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.25)] hover:opacity-90 transition-all active:scale-95'
 
 const OPTION_CLASS =
   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold border transition-colors'
@@ -177,6 +183,14 @@ export default function LocalAiSettings() {
     row.users.length
       ? t('settings.onDeviceAi.usedBy', { features: featureTitles(row.users) })
       : t('settings.onDeviceAi.unused')
+
+  const featureLimitations = (feature) => {
+    const items = t(`settings.onDeviceAi.features.${feature}.limitations`, {
+      returnObjects: true,
+      defaultValue: []
+    })
+    return Array.isArray(items) ? items : []
+  }
 
   const licenseLabel = (row) =>
     t('settings.onDeviceAi.license', { license: t(`settings.onDeviceAi.licenses.${row.license}`) })
@@ -545,7 +559,12 @@ export default function LocalAiSettings() {
                                   className={optionClass(selected)}
                                 >
                                   {selected && <Check className='w-3.5 h-3.5' />}
-                                  {t(`settings.onDeviceAi.tierDescriptions.${tier}`, {
+                                  {t(
+                                    [
+                                      `settings.onDeviceAi.features.${row.feature}.tierDescriptions.${tier}`,
+                                      `settings.onDeviceAi.tierDescriptions.${tier}`
+                                    ],
+                                    {
                                     size: formatBytes(bytes)
                                   })}
                                 </button>
@@ -553,6 +572,21 @@ export default function LocalAiSettings() {
                             })}
                           </div>
                           <p className={DESC_CLASS}>{t('settings.onDeviceAi.tierSwitchNote')}</p>
+                        </div>
+                      )}
+
+                      {featureLimitations(row.feature).length > 0 && (
+                        <div className='space-y-2'>
+                          <p className='text-sm font-bold text-text-primary'>
+                            {t('settings.onDeviceAi.limitations')}
+                          </p>
+                          <ul className='space-y-1.5 list-disc pl-5 marker:text-text-tertiary'>
+                            {featureLimitations(row.feature).map((item) => (
+                              <li key={item} className={DESC_CLASS}>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
 
@@ -687,7 +721,7 @@ export default function LocalAiSettings() {
             </button>
             <button
               onClick={handleConfirmTurnOn}
-              className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95'
+              className={MODAL_PRIMARY_CLASS}
             >
               {confirm.waitsForNetwork
                 ? t('settings.onDeviceAi.turnOn.confirmWaiting')
@@ -710,7 +744,7 @@ export default function LocalAiSettings() {
             </button>
             <button
               onClick={() => handleConfirmTurnOff(true)}
-              className='flex-1 py-3 bg-accent-danger text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 shadow-[0_4px_15px_rgba(var(--accent-danger-rgb),0.3)]'
+              className={MODAL_DANGER_CLASS}
             >
               {t('settings.onDeviceAi.turnOff.delete')}
             </button>
@@ -738,7 +772,7 @@ export default function LocalAiSettings() {
             </button>
             <button
               onClick={handleConfirmDelete}
-              className='flex-1 py-3 bg-accent-danger text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 shadow-[0_4px_15px_rgba(var(--accent-danger-rgb),0.3)]'
+              className={MODAL_DANGER_CLASS}
             >
               {t('common.delete')}
             </button>

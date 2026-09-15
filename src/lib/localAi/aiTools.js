@@ -10,7 +10,8 @@ const tool = (mode, scope, group, labelKey) => ({ id: `${scope}:${mode}`, mode, 
 
 export function buildAiTools({ summarizeReady, translateReady, hasSelection }) {
   const tools = []
-  if (hasSelection && summarizeReady) {
+  if (hasSelection) {
+    if (summarizeReady) {
     for (const mode of REWRITE_TOOL_MODES) {
       tools.push(tool(mode, 'selection', 'edit', `localAi.${mode}.menuLabel`))
     }
@@ -19,8 +20,10 @@ export function buildAiTools({ summarizeReady, translateReady, hasSelection }) {
       tool('keyPoints', 'selection', 'understand', 'localAi.keyPointsSelection.menuLabel')
     )
   }
-  if (hasSelection && translateReady) {
-    tools.push(tool('translate', 'selection', 'understand', 'localAi.translateSelection.menuLabel'))
+    if (translateReady) {
+      tools.push(tool('translate', 'selection', 'understand', 'localAi.translateSelection.menuLabel'))
+    }
+    return tools
   }
   if (summarizeReady) {
     tools.push(

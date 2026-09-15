@@ -14,7 +14,6 @@ const PCM_FILE_PREFIX = 'pear-notes-local-ai-'
 const PCM_FILE_EXTENSION = '.raw'
 const MIN_DARWIN_MAJOR = 23
 const INTERRUPT_WINDOW_MS = 60 * 1000
-const OCR_LANGUAGES = ['en']
 const OCR_MAG_RATIO = 1
 const OCR_CANVAS_SIZE = 1600
 const WHISPER_AUDIO_FORMAT = 's16le'
@@ -153,6 +152,15 @@ async function ensureModelLoaded(sdk, key, load) {
   return modelId
 }
 
+async function getDownloadedBytes(sdk, catalog, name) {
+  try {
+    const info = await sdk.getModelInfo({ name })
+    const bytes = Number(info?.actualSize) || Number(info?.expectedSize)
+    if (bytes > 0) return bytes
+  } catch {}
+  return catalog.LOCAL_AI_REGISTRY_MODELS[name]?.bytes ?? 0
+}
+
 async function download(event, { requestId, name }) {
   const pending = { sdkRequestId: null, cancelled: false, discard: false }
   pendingDownloads.set(requestId, pending)
@@ -176,7 +184,7 @@ async function download(event, { requestId, name }) {
       sdk.cancel({ requestId: operation.requestId, clearCache: pending.discard }).catch(() => {})
     }
     await operation
-    return { bytes: catalog.LOCAL_AI_REGISTRY_MODELS[name]?.bytes ?? 0 }
+    return { bytes: await getDownloadedBytes(sdk, catalog, name) }
   } finally {
     pendingDownloads.delete(requestId)
   }
@@ -269,7 +277,7 @@ async function extractText(event, { image }) {
       modelType: 'ocr',
       modelConfig: {
         detectorModelSrc: registryAsset(sdk, catalog, detectorName),
-        langList: OCR_LANGUAGES,
+        langList: catalog.LOCAL_AI_OCR_LANGUAGES,
         magRatio: OCR_MAG_RATIO,
         canvasSize: OCR_CANVAS_SIZE,
         defaultRotationAngles: [],
@@ -281,8 +289,8 @@ async function extractText(event, { image }) {
   return { text: text.formatOcrBlocks(await blocks) }
 }
 
-function loadLlmFeature(sdk, catalog, prompts, feature) {
-  const [modelName, projectionName] = catalog.getFeatureRegistryNames(feature, {})
+function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}) {
+  const [modelName, projectionName] = catalog.getFeatureRegistryNames(feature, featureConfig)
   return ensureModelLoaded(sdk, [modelName, projectionName].filter(Boolean).join('|'), () =>
     sdk.loadModel({
       modelSrc: registryAsset(sdk, catalog, modelName),
@@ -320,14 +328,15 @@ async function describeImage(event, { image, extension }) {
   }
 }
 
-async function summarize(event, { text, task }) {
+async function summarize(event, { text, task, featureConfig }) {
   const [sdk, catalog, prompts] = await Promise.all([loadSdk(), loadCatalog(), loadPrompts()])
   const noteTask = prompts.isNoteTask(task) ? task : prompts.NOTE_TASK.TRANSCRIPT_SUMMARY
   const modelId = await loadLlmFeature(
     sdk,
     catalog,
     prompts,
-    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
   )
   const run = sdk.completion({
     modelId,

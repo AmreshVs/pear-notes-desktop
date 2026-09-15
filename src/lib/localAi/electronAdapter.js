@@ -96,12 +96,13 @@ export async function describeImage(image, extension) {
   return text
 }
 
-export async function runNoteTask(task, input) {
-  const { text } = await invoke('localAiSummarize', { text: input, task })
+export async function runNoteTask(task, input, featureConfig = {}) {
+  const { text } = await invoke('localAiSummarize', { text: input, task, featureConfig })
   return text
 }
 
-export const summarizeTranscript = (transcript) => runNoteTask('transcriptSummary', transcript)
+export const summarizeTranscript = (transcript, featureConfig = {}) =>
+  runNoteTask('transcriptSummary', transcript, featureConfig)
 
 export async function translateParagraphs(paragraphs, from, to) {
   const { translations } = await invoke('localAiTranslate', { paragraphs, from, to })
