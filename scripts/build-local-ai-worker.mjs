@@ -35,10 +35,16 @@ const registryModels = await import(
     path.join(runtimeRoot, 'node_modules', '@qvac', 'inference', 'dist', 'models', 'registry', 'models.js')
   ).href
 )
-const { findLocalAiRegistryMismatches } = await import(
+const { findLocalAiRegistryMismatches, findMissingLocalAiModelNames } = await import(
   '@pear-notes/core/store/services/localAiRegistryCheck.js'
 )
-const registryProblems = findLocalAiRegistryMismatches(registryModels)
+const localeModelNames = JSON.parse(
+  fs.readFileSync(path.join(projectRoot, 'src', 'locales', 'en.json'), 'utf8')
+).settings?.onDeviceAi?.modelNames
+const registryProblems = [
+  ...findLocalAiRegistryMismatches(registryModels),
+  ...findMissingLocalAiModelNames(localeModelNames)
+]
 if (registryProblems.length) {
   console.error(
     `The local AI model catalog doesn't match the installed QVAC SDK:\n  ${registryProblems.join('\n  ')}`

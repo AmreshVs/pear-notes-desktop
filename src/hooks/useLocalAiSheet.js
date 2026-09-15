@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 
 import {
+  LOCAL_AI_ERROR,
   LOCAL_AI_FEATURE,
   LOCAL_AI_MODEL_STATUS,
   LOCAL_AI_NOTICE
@@ -218,7 +219,14 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         setText(result)
         updatePhase('preview')
       } catch (err) {
-        fail(err?.code === 'download' ? 'download' : failCode, runId)
+        fail(
+          err?.code === LOCAL_AI_ERROR.NOT_ENOUGH_MEMORY
+            ? 'notEnoughMemory'
+            : err?.code === 'download'
+              ? 'download'
+              : failCode,
+          runId
+        )
       }
     },
     [fail, updatePhase, updateSummaryPhase]

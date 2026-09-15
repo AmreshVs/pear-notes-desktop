@@ -144,7 +144,38 @@ async function unloadCurrentModel(sdk) {
   } catch {}
 }
 
+const MODEL_IDLE_UNLOAD_MS = 2 * 60 * 1000
+let activeModelWork = 0
+let idleUnloadTimer = null
+
+function clearIdleUnload() {
+  if (idleUnloadTimer) clearTimeout(idleUnloadTimer)
+  idleUnloadTimer = null
+}
+
+function withModelWork(handler) {
+  return async (...args) => {
+    activeModelWork += 1
+    clearIdleUnload()
+    try {
+      return await handler(...args)
+    } finally {
+      activeModelWork = Math.max(0, activeModelWork - 1)
+      if (activeModelWork === 0) {
+        idleUnloadTimer = setTimeout(() => {
+          idleUnloadTimer = null
+          if (activeModelWork === 0 && sdkPromise) sdkPromise.then(unloadCurrentModel).catch(() => {})
+        }, MODEL_IDLE_UNLOAD_MS)
+      }
+    }
+  }
+}
+
 async function ensureModelLoaded(sdk, key, load) {
+  const catalog = await loadCatalog()
+  if (!catalog.canRunModels(key.split('|'), os.totalmem())) {
+    throw new LocalAiError(catalog.LOCAL_AI_ERROR.NOT_ENOUGH_MEMORY)
+  }
   if (loadedModel?.key === key) return loadedModel.modelId
   await unloadCurrentModel(sdk)
   const modelId = await load()
@@ -423,16 +454,17 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:cancel', 'TASK_FAILED', cancel)
   handle('local-ai:delete-model', 'TASK_FAILED', deleteModel)
   handle('local-ai:close-and-wipe', 'TASK_FAILED', closeAndWipe)
-  handle('local-ai:transcribe', 'TASK_FAILED', transcribe)
-  handle('local-ai:extract-text', 'TASK_FAILED', extractText)
-  handle('local-ai:describe-image', 'TASK_FAILED', describeImage)
-  handle('local-ai:summarize', 'TASK_FAILED', summarize)
-  handle('local-ai:translate', 'TASK_FAILED', translateParagraphs)
+  handle('local-ai:transcribe', 'TASK_FAILED', withModelWork(transcribe))
+  handle('local-ai:extract-text', 'TASK_FAILED', withModelWork(extractText))
+  handle('local-ai:describe-image', 'TASK_FAILED', withModelWork(describeImage))
+  handle('local-ai:summarize', 'TASK_FAILED', withModelWork(summarize))
+  handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
   watchPower()
 }
 
 function shutdownLocalAi() {
+  clearIdleUnload()
   const pendingSdk = sdkPromise
   sdkPromise = null
   if (!pendingSdk) return
