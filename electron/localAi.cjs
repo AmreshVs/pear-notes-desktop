@@ -430,7 +430,10 @@ function handle(channel, fallbackCode, handler) {
           : fallbackCode === LOCAL_AI_ERROR.DOWNLOAD_FAILED && wasInterrupted()
             ? LOCAL_AI_ERROR.INTERRUPTED
             : fallbackCode
-      return { ok: false, code, message: error instanceof Error ? error.message : String(error) }
+      const message = error instanceof Error ? error.message : String(error)
+      const cause = error?.cause?.message ?? (error?.cause ? String(error.cause) : '')
+      console.error(`[local-ai] ${channel} failed: ${code} ${message}${cause ? ` | cause: ${cause}` : ''}`)
+      return { ok: false, code, message }
     }
   })
 }

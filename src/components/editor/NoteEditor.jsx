@@ -51,7 +51,6 @@ import {
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { getFontFamilyValue } from '../../utils/fonts'
-import { formatRelativeDate } from '../../utils/formatters'
 import UploadProgressToast from '../common/UploadProgressToast'
 import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
@@ -672,10 +671,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         )}
 
         <div className='absolute bottom-6 right-8 z-30 flex items-center gap-4'>
-          <span className='pointer-events-none text-xs font-bold text-text-secondary tracking-widest'>
-            {t('noteEditor.edited')}{' '}
-            {formatRelativeDate(noteData?.updatedAt || noteData?.createdAt)}
-          </span>
           {LOCAL_AI_ENABLED && (summarizeReady || translateReady) && (
             <AiToolsButton
               content={content}
