@@ -15,6 +15,7 @@ export class LocalAiError extends Error {
 }
 
 let downloadCounter = 0
+let taskCounter = 0
 
 function getBridge() {
   return typeof window !== 'undefined' ? window.electronBridge : null
@@ -26,6 +27,21 @@ async function invoke(method, payload, fallbackCode = LOCAL_AI_ERROR.TASK_FAILED
   const result = await bridge[method](payload)
   if (!result?.ok) throw new LocalAiError(result?.code ?? fallbackCode, result?.message)
   return result
+}
+
+async function invokeWithProgress(method, payload, onProgress) {
+  taskCounter += 1
+  const taskId = `local-ai-task-${Date.now()}-${taskCounter}`
+  const unsubscribe = onProgress
+    ? getBridge()?.onLocalAiTaskProgress?.((progress) => {
+        if (progress?.taskId === taskId) onProgress(progress)
+      })
+    : null
+  try {
+    return await invoke(method, { ...payload, taskId })
+  } finally {
+    unsubscribe?.()
+  }
 }
 
 async function getDeviceSupport() {
@@ -81,31 +97,43 @@ async function closeAndWipe() {
   await invoke('localAiCloseAndWipe')
 }
 
-export async function transcribePcm(pcm, feature, featureConfig) {
-  const { text } = await invoke('localAiTranscribe', { pcm, feature, featureConfig })
+export async function transcribePcm(pcm, feature, featureConfig, { onProgress } = {}) {
+  const { text } = await invokeWithProgress(
+    'localAiTranscribe',
+    { pcm, feature, featureConfig },
+    onProgress
+  )
   return text
 }
 
-export async function extractTextFromImage(image) {
-  const { text } = await invoke('localAiExtractText', { image })
+export async function extractTextFromImage(image, { onProgress } = {}) {
+  const { text } = await invokeWithProgress('localAiExtractText', { image }, onProgress)
   return text
 }
 
-export async function describeImage(image, extension) {
-  const { text } = await invoke('localAiDescribeImage', { image, extension })
+export async function describeImage(image, extension, { onProgress } = {}) {
+  const { text } = await invokeWithProgress('localAiDescribeImage', { image, extension }, onProgress)
   return text
 }
 
-export async function runNoteTask(task, input, featureConfig = {}) {
-  const { text } = await invoke('localAiSummarize', { text: input, task, featureConfig })
+export async function runNoteTask(task, input, featureConfig = {}, { onProgress } = {}) {
+  const { text } = await invokeWithProgress(
+    'localAiSummarize',
+    { text: input, task, featureConfig },
+    onProgress
+  )
   return text
 }
 
 export const summarizeTranscript = (transcript, featureConfig = {}) =>
   runNoteTask('transcriptSummary', transcript, featureConfig)
 
-export async function translateParagraphs(paragraphs, from, to) {
-  const { translations } = await invoke('localAiTranslate', { paragraphs, from, to })
+export async function translateParagraphs(paragraphs, from, to, { onProgress } = {}) {
+  const { translations } = await invokeWithProgress(
+    'localAiTranslate',
+    { paragraphs, from, to },
+    onProgress
+  )
   return Array.isArray(translations) ? translations : []
 }
 

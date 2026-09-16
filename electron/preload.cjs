@@ -60,6 +60,11 @@ window.electronBridge = {
     ipcRenderer.on('local-ai:download-progress', handler)
     return () => ipcRenderer.removeListener('local-ai:download-progress', handler)
   },
+  onLocalAiTaskProgress: (callback) => {
+    const handler = (event, progress) => callback(progress)
+    ipcRenderer.on('local-ai:task-progress', handler)
+    return () => ipcRenderer.removeListener('local-ai:task-progress', handler)
+  },
   localAiCancel: (payload) => ipcRenderer.invoke('local-ai:cancel', payload),
   localAiDeleteModel: (payload) => ipcRenderer.invoke('local-ai:delete-model', payload),
   localAiCloseAndWipe: () => ipcRenderer.invoke('local-ai:close-and-wipe'),

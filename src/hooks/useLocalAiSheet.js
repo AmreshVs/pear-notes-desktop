@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 
 import {
@@ -24,7 +24,15 @@ import {
   parseTitleOutput,
   REWRITE_MAX_CHARS
 } from '@pear-notes/core/store/services/localAiPrompts.js'
+import { diffRewriteText } from '@pear-notes/core/store/services/localAiRewriteDiff.js'
 import { TRANSLATION_SOURCE_LANGUAGE } from '@pear-notes/core/store/services/localAiTranslationModels.js'
+import {
+  countWords,
+  WORK_EVENT,
+  WORK_KIND,
+  WORK_SHORTER_TARGET_RATIO,
+  WORK_STEP
+} from '@pear-notes/core/store/services/localAiWorkProgress.js'
 import {
   clearLocalAiNotice,
   downloadLocalAiModelNow,
@@ -49,6 +57,8 @@ import {
 } from '../lib/localAi/electronAdapter'
 import { renderPdfPagesForOcr } from '../lib/pdfPreview'
 
+import { useLocalAiWorkProgress } from './useLocalAiWorkProgress'
+
 const OCR_MAX_PDF_PAGES = 20
 const DESCRIBABLE_IMAGE_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg' }
 const EMPTY_PARAGRAPHS = []
@@ -70,16 +80,26 @@ async function toDescribableImage(blob) {
 
 async function extractTextFromPdf(url, { signal, onProgress }) {
   const texts = []
+  let words = 0
   let ocrError = null
   try {
     await renderPdfPagesForOcr(url, {
       maxPages: OCR_MAX_PDF_PAGES,
       signal,
       onPage: async (image, page, total) => {
-        onProgress({ page, total })
+        const reportPage = (done) =>
+          onProgress({ type: WORK_EVENT.PAGE, page, total, done, words })
+        const forwardPageEvent = (event) => {
+          if (event.step === WORK_STEP.LOAD_MODEL) onProgress(event)
+          if (event.step === WORK_STEP.READ_TEXT) reportPage(page - 1)
+        }
         try {
-          const pageText = String((await extractTextFromImage(image)) ?? '').trim()
+          const pageText = String(
+            (await extractTextFromImage(image, { onProgress: forwardPageEvent })) ?? ''
+          ).trim()
           if (pageText) texts.push(pageText)
+          words += countWords(pageText)
+          reportPage(page)
         } catch (error) {
           ocrError = error
           throw error
@@ -140,7 +160,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   const [error, setError] = useState(null)
   const [text, setText] = useState('')
   const [elapsed, setElapsed] = useState(0)
-  const [pageProgress, setPageProgress] = useState(null)
+  const { workView, beginWork, endWork } = useLocalAiWorkProgress()
   const [summary, setSummary] = useState(null)
   const [summaryPhase, setSummaryPhase] = useState('idle')
   const [keyPoints, setKeyPoints] = useState([])
@@ -198,19 +218,19 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   )
 
   const run = useCallback(
-    async (work, failCode = 'failed') => {
+    async (work, failCode = 'failed', workKind = null, workOptions = {}) => {
       runIdRef.current += 1
       const runId = runIdRef.current
       abortRef.current?.abort()
       const controller = new AbortController()
       abortRef.current = controller
       setError(null)
-      setPageProgress(null)
       setSummary(null)
+      const onProgress = workKind ? beginWork(workKind, workOptions) : () => {}
       updateSummaryPhase('idle')
       updatePhase('working')
       try {
-        const result = String((await work(controller.signal, runId)) ?? '').trim()
+        const result = String((await work(controller.signal, runId, onProgress)) ?? '').trim()
         if (runId !== runIdRef.current) return
         if (!result) {
           fail(failCode, runId)
@@ -229,46 +249,64 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         )
       }
     },
-    [fail, updatePhase, updateSummaryPhase]
+    [beginWork, fail, updatePhase, updateSummaryPhase]
   )
 
   const processSource = useCallback(() => {
     if (!request?.url) return
-    run(async (signal, runId) => {
-      if (request.kind === 'pdf') {
-        return extractTextFromPdf(request.url, {
-          signal,
-          onProgress: (progress) => {
-            if (runId === runIdRef.current) setPageProgress(progress)
-          }
+    const isPdf = request.kind === 'pdf'
+    const workKind =
+      mode === 'describe'
+        ? WORK_KIND.DESCRIBE
+        : mode !== 'extract'
+          ? WORK_KIND.TRANSCRIBE
+          : isPdf
+            ? WORK_KIND.EXTRACT_PDF
+            : WORK_KIND.EXTRACT_IMAGE
+    run(
+      async (signal, runId, onProgress) => {
+        if (isPdf) return extractTextFromPdf(request.url, { signal, onProgress })
+        onProgress({
+          type: WORK_EVENT.STEP,
+          step: mode === 'transcribe' ? WORK_STEP.PREPARE_AUDIO : WORK_STEP.PREPARE_PHOTO
         })
-      }
-      let blob
-      try {
-        blob = await downloadAsBlob(request.url)
-      } catch {
-        throw Object.assign(new Error('download'), { code: 'download' })
-      }
-      if (mode === 'describe') {
-        const { bytes, extension } = await toDescribableImage(blob)
-        return describeImage(bytes, extension)
-      }
-      const buffer = await blob.arrayBuffer()
-      if (mode === 'extract') return extractTextFromImage(new Uint8Array(buffer))
-      return transcribePcm(await decodeAudioToPcm(buffer), feature, featureConfig ?? {})
-    })
+        let blob
+        try {
+          blob = await downloadAsBlob(request.url)
+        } catch {
+          throw Object.assign(new Error('download'), { code: 'download' })
+        }
+        if (mode === 'describe') {
+          const { bytes, extension } = await toDescribableImage(blob)
+          return describeImage(bytes, extension, { onProgress })
+        }
+        const buffer = await blob.arrayBuffer()
+        if (mode === 'extract') return extractTextFromImage(new Uint8Array(buffer), { onProgress })
+        return transcribePcm(await decodeAudioToPcm(buffer), feature, featureConfig ?? {}, {
+          onProgress
+        })
+      },
+      'failed',
+      workKind
+    )
   }, [feature, featureConfig, mode, request, run])
 
   const runTranslation = useCallback(() => {
     const pending = translateRequestRef.current
     if (!pending) return
-    run(async () => {
-      const translations = await translateParagraphs(paragraphs, pending.source, pending.target)
-      return translations
-        .map((line) => String(line ?? '').trim())
-        .filter(Boolean)
-        .join('\n')
-    })
+    run(
+      async (signal, runId, onProgress) => {
+        const translations = await translateParagraphs(paragraphs, pending.source, pending.target, {
+          onProgress
+        })
+        return translations
+          .map((line) => String(line ?? '').trim())
+          .filter(Boolean)
+          .join('\n')
+      },
+      'failed',
+      WORK_KIND.TRANSLATE
+    )
   }, [paragraphs, run])
 
   const checkDownload = useCallback(() => {
@@ -359,8 +397,12 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       updatePhase('error')
       return
     }
-    run(async (signal, runId) => {
-      const output = await runNoteTask(task, input, summaryConfig ?? {})
+    const workOptions = {
+      input,
+      targetRatio: mode === 'makeShorter' ? WORK_SHORTER_TARGET_RATIO : 1
+    }
+    run(async (signal, runId, onProgress) => {
+      const output = await runNoteTask(task, input, summaryConfig ?? {}, { onProgress })
       if (mode === 'summarizeNote') {
         const parsed = parseSummaryOutput(output)
         if (!parsed.summary && parsed.actionItems.length === 0) return ''
@@ -375,7 +417,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         return points.map((point) => `• ${point}`).join('\n')
       }
       return isRewriteTask(task) ? parseRewriteOutput(output) : parseTitleOutput(output)
-    })
+    }, 'failed', isRewriteTask(task) ? WORK_KIND.REWRITE : WORK_KIND.NOTE_TASK, workOptions)
   }, [mode, paragraphs, run, scope, summaryConfig, updatePhase])
 
   const handleRecord = useCallback(async () => {
@@ -430,17 +472,23 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   const transcribeSavedAudio = useCallback(() => {
     const saved = savedAudioRef.current
     if (!saved) return
-    run(async (signal, runId) => {
-      const transcript = String(
-        (await transcribePcm(
-          await decodeAudioToPcm(await saved.blob.arrayBuffer()),
-          feature,
-          featureConfig ?? {}
-        )) ?? ''
-      ).trim()
-      if (transcript && runId === runIdRef.current) keepSavedAudio(null)
-      return transcript
-    }, 'dictationFailed')
+    run(
+      async (signal, runId, onProgress) => {
+        onProgress({ type: WORK_EVENT.STEP, step: WORK_STEP.PREPARE_AUDIO })
+        const transcript = String(
+          (await transcribePcm(
+            await decodeAudioToPcm(await saved.blob.arrayBuffer()),
+            feature,
+            featureConfig ?? {},
+            { onProgress }
+          )) ?? ''
+        ).trim()
+        if (transcript && runId === runIdRef.current) keepSavedAudio(null)
+        return transcript
+      },
+      'dictationFailed',
+      WORK_KIND.TRANSCRIBE
+    )
   }, [feature, featureConfig, keepSavedAudio, run])
 
   const handleStop = useCallback(async () => {
@@ -569,6 +617,19 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
     onClose()
   }, [keepSavedAudio, onClose, stopRecorder, updatePhase, updateSummaryPhase])
 
+  useEffect(() => {
+    if (phase !== 'working') endWork()
+  }, [endWork, phase])
+
+  const isRewrite = isRewriteTask(NOTE_TASK_BY_MODE[mode])
+  const rewriteDiff = useMemo(
+    () =>
+      phase === 'preview' && scope === 'selection' && isRewrite && text
+        ? diffRewriteText(paragraphs.join('\n'), text)
+        : null,
+    [isRewrite, paragraphs, phase, scope, text]
+  )
+
   const handleInsert = useCallback(
     (action = 'insert') => {
       if (phaseRef.current !== 'preview' || !text || summaryPhaseRef.current === 'working') return
@@ -588,14 +649,15 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
     error,
     text,
     elapsed,
-    pageProgress,
+    workView,
     summary,
     summaryPhase,
     sourceLanguage,
     targetLanguage,
     scope,
-    canReplace:
-      scope === 'selection' && (mode === 'translate' || isRewriteTask(NOTE_TASK_BY_MODE[mode])),
+    canReplace: scope === 'selection' && (mode === 'translate' || isRewrite),
+    isRewrite,
+    rewriteDiff,
     translateLanguages: TRANSLATION_ALL_LANGUAGES,
     downloadProgress,
     noSpaceBytes,

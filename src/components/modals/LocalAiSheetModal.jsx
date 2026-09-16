@@ -12,6 +12,7 @@ import {
   Paperclip,
   RotateCcw,
   ScanText,
+  ShieldCheck,
   Smile,
   Sparkles,
   SpellCheck,
@@ -26,6 +27,10 @@ import { formatBytes } from '@pear-notes/core/utils.js'
 import { useLocalAiSheet } from '../../hooks/useLocalAiSheet'
 import { copyToClipboard } from '../../lib/clipboard'
 import { formatTime } from '../../utils/formatters'
+
+import LocalAiShimmer from './LocalAiShimmer'
+import LocalAiWorkProgress from './LocalAiWorkProgress'
+import RewriteChanges from './RewriteChanges'
 
 const COPIED_RESET_MS = 2000
 const REPORT_EMAIL = 'vsamreshpro@gmail.com'
@@ -112,11 +117,13 @@ export default function LocalAiSheetModal({
     error,
     text,
     elapsed,
-    pageProgress,
+    workView,
     summary,
     summaryPhase,
     scope,
     canReplace,
+    isRewrite,
+    rewriteDiff,
     sourceLanguage,
     targetLanguage,
     translateLanguages,
@@ -170,7 +177,10 @@ export default function LocalAiSheetModal({
   const canInsert = phase === 'preview' && !insertBlocked && summaryPhase !== 'working'
   const canSummarize = summaryAvailable && mode === 'transcribe' && phase === 'preview'
   const showReportLink = REPORTABLE_MODES.includes(mode) || canReplace || !!summary
-  const showGeneratedDisclaimer = mode === 'keyPoints' || mode === 'suggestTitle' || canReplace
+  const rewriteUnchanged = phase === 'preview' && !!rewriteDiff?.unchanged
+  const isWorking = phase === 'working' || (phase === 'idle' && mode !== 'dictate')
+  const showGeneratedDisclaimer =
+    (mode === 'keyPoints' || mode === 'suggestTitle' || canReplace) && !rewriteUnchanged
   const insertLabel =
     mode === 'suggestTitle'
       ? 'localAi.actions.useTitle'
@@ -200,7 +210,7 @@ export default function LocalAiSheetModal({
         role='dialog'
         aria-modal='true'
         aria-labelledby='local-ai-sheet-title'
-        className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] w-full max-w-md shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col'
+        className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] w-full ${isRewrite ? 'max-w-xl' : 'max-w-md'} shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out flex flex-col`}
       >
         <div className='absolute -top-32 -left-32 w-64 h-64 bg-accent-primary/10 blur-[80px] rounded-full pointer-events-none' />
         <div className='absolute -bottom-32 -right-32 w-64 h-64 bg-accent-primary/5 blur-[80px] rounded-full pointer-events-none' />
@@ -214,12 +224,19 @@ export default function LocalAiSheetModal({
                 id='local-ai-sheet-title'
                 className='text-text-primary font-black text-xl tracking-tighter leading-none'
               >
-                {t(keys.title, heroParams)}
+                {rewriteUnchanged
+                  ? t('localAi.rewriteChanges.noChangesTitle')
+                  : t(keys.title, heroParams)}
               </h2>
-              <span className='text-xs font-medium mt-1.5 text-text-tertiary'>
-                {phase === 'preview' && insertBlocked
-                  ? t('localAi.conflictBlocked')
-                  : t(keys.subtitle, heroParams)}
+              <span className='text-xs font-medium mt-1.5 text-text-tertiary flex items-center gap-1'>
+                {isWorking && <ShieldCheck className='w-3 h-3 shrink-0' aria-hidden='true' />}
+                {isWorking
+                  ? t('localAi.work.onDevice')
+                  : rewriteUnchanged
+                  ? t('localAi.rewriteChanges.noChangesSubtitle')
+                  : phase === 'preview' && insertBlocked
+                    ? t('localAi.conflictBlocked')
+                    : t(keys.subtitle, heroParams)}
               </span>
             </div>
           </div>
@@ -306,26 +323,26 @@ export default function LocalAiSheetModal({
             </div>
           )}
 
-          {(phase === 'working' || phase === 'idle') && (
+          {phase === 'working' && workView && (
+            <LocalAiWorkProgress view={workView} languageName={languageName} />
+          )}
+
+          {((phase === 'working' && !workView) || phase === 'idle') && (
             <div className='flex flex-col gap-4 py-2' role='progressbar' aria-busy='true'>
-              <div className='space-y-2.5' aria-hidden='true'>
-                {[94, 100, 82, 58].map((width, index) => (
-                  <div
-                    key={width}
-                    className='h-2.5 rounded-full bg-accent-primary/25 animate-pulse motion-reduce:animate-none'
-                    style={{ width: `${width}%`, animationDelay: `${index * 180}ms` }}
-                  />
-                ))}
-              </div>
-              {pageProgress && (
-                <span className='text-sm text-text-secondary'>
-                  {t('localAi.extract.pageProgress', pageProgress)}
-                </span>
-              )}
+              <LocalAiShimmer />
             </div>
           )}
 
-          {phase === 'preview' && (
+          {phase === 'preview' && rewriteDiff && (
+            <RewriteChanges
+              key={text}
+              diff={rewriteDiff}
+              resultText={text}
+              showFixCount={mode === 'fixGrammar'}
+            />
+          )}
+
+          {phase === 'preview' && !rewriteDiff && (
             <div className='max-h-72 overflow-y-auto custom-scrollbar rounded-xl bg-bg-tertiary/40 border border-overlay-soft px-4 py-3'>
               {mode !== 'summarizeNote' && (
                 <p
@@ -436,6 +453,10 @@ export default function LocalAiSheetModal({
                   {t('localAi.actions.again')}
                 </button>
               </>
+            ) : rewriteUnchanged ? (
+              <button onClick={handleClose} className={PRIMARY_BUTTON_CLASS}>
+                {t('common.close')}
+              </button>
             ) : phase === 'preview' && canReplace ? (
               <>
                 {copyButton}

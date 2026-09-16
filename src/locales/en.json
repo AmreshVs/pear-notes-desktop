@@ -119,7 +119,7 @@
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
       "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
       "activity": "See what each linked device has created, changed and removed.",
-      "onDeviceAi": "AI features that run on this computer. Your notes are never sent anywhere. Each feature downloads its model once, then works offline."
+      "onDeviceAi": "AI processes your notes, recordings and photos on this computer. Nothing ever leaves your computer. Each feature downloads its model once, then works offline."
     },
     "syncStatus": {
       "title": "Sync status",
@@ -144,7 +144,7 @@
       "rowTitle": "Link devices"
     },
     "onDeviceAi": {
-      "storageRow": "On-device AI models",
+      "storageRow": "Private AI models",
       "storageRowDesc": "Not included in backups or sync.",
       "loading": "Loading AI settings",
       "thisDevice": "This device",
@@ -160,15 +160,15 @@
       },
       "verdict": {
         "unknown": "Checking what this computer supports.",
-        "supported": "On-device AI is ready to use on this computer.",
+        "supported": "Private AI is ready to use on this computer.",
         "limited": "This computer has less memory, so the Best quality models may be slow. Lite and Standard work normally."
       },
       "unsupportedReason": {
-        "simulator": "On-device AI only runs on a physical device. Everything else in Pear Notes works as usual.",
-        "os-version": "On-device AI needs {{requirement}}. Everything else in Pear Notes works as usual.",
-        "architecture": "On-device AI isn't available for this processor. Everything else in Pear Notes works as usual.",
-        "gpu": "On-device AI needs a supported graphics driver. Everything else in Pear Notes works as usual.",
-        "store-build": "On-device AI isn't available in this build. Everything else in Pear Notes works as usual."
+        "simulator": "Private AI only runs on a physical device. Everything else in Pear Notes works as usual.",
+        "os-version": "Private AI needs {{requirement}}. Everything else in Pear Notes works as usual.",
+        "architecture": "Private AI isn't available for this processor. Everything else in Pear Notes works as usual.",
+        "gpu": "Private AI needs a supported graphics driver. Everything else in Pear Notes works as usual.",
+        "store-build": "Private AI isn't available in this build. Everything else in Pear Notes works as usual."
       },
       "requirementMac": "macOS 14 or later",
       "downloads": "Downloads",
@@ -927,7 +927,7 @@
     "backupPassword": "Backup password",
     "noteLockPassword": "Note lock password",
     "privacyAndSecurity": "Privacy & security",
-    "onDeviceAi": "On-device AI",
+    "onDeviceAi": "Private AI",
     "storage": "Storage",
     "activity": "Activity",
     "linkDevices": "Link devices",
@@ -1445,7 +1445,7 @@
     }
   },
   "localAi": {
-    "reportSubject": "Pear Notes on-device AI: problem with a result",
+    "reportSubject": "Pear Notes Private AI: problem with a result",
     "actions": {
       "insert": "Insert",
       "copy": "Copy",
@@ -1512,7 +1512,6 @@
     },
     "extract": {
       "actionLabel": "Extract text",
-      "pageProgress": "Reading page {{page}} of {{total}}",
       "working": {
         "title": "Reading the text",
         "subtitle": "Everything happens on this computer. PDFs are read up to 20 pages."
@@ -1529,7 +1528,7 @@
       },
       "failedDescribe": {
         "title": "Couldn't describe the image",
-        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+        "subtitle": "Try again. If it keeps failing, check the model in Private AI settings."
       },
       "emptyDescribe": {
         "title": "Nothing to describe",
@@ -1537,11 +1536,11 @@
       },
       "failedExtract": {
         "title": "Couldn't extract text",
-        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+        "subtitle": "Try again. If it keeps failing, check the model in Private AI settings."
       },
       "failed": {
         "title": "Couldn't transcribe",
-        "subtitle": "Try again. If it keeps failing, check the model in On-device AI settings."
+        "subtitle": "Try again. If it keeps failing, check the model in Private AI settings."
       },
       "empty": {
         "title": "Didn't catch anything",
@@ -1593,7 +1592,7 @@
       },
       "notEnoughMemory": {
         "title": "Not enough memory",
-        "subtitle": "This computer doesn't have enough free memory for this right now. Close other apps and try again, or choose a lighter quality in On-device AI settings."
+        "subtitle": "This computer doesn't have enough free memory for this right now. Close other apps and try again, or choose a lighter quality in Private AI settings."
       }
     },
     "translate": {
@@ -1660,6 +1659,62 @@
       }
     },
     "generatedDisclaimer": "AI results can be wrong. Check them before relying on them.",
+    "rewriteChanges": {
+      "viewLabel": "Result view",
+      "changes": "Changes",
+      "result": "Result",
+      "fixes_one": "{{count}} fix",
+      "fixes_other": "{{count}} fixes",
+      "words": "words",
+      "wordCountLabel": "Words added: {{added}}. Words removed: {{removed}}.",
+      "mostlyChanged": "Most of the text changed, so the result is shown first.",
+      "unchangedParagraphs_one": "{{count}} unchanged paragraph",
+      "unchangedParagraphs_other": "{{count}} unchanged paragraphs",
+      "showUnchangedHint": "Shows the paragraphs with no changes",
+      "removed": "Removed: {{text}}",
+      "added": "Added: {{text}}",
+      "noChangesTitle": "No changes needed",
+      "noChangesSubtitle": "Your text was left as it is.",
+      "noGrammarIssues": "No grammar or spelling issues found.",
+      "matchesText": "The result matches your text."
+    },
+    "work": {
+      "onDevice": "Processing privately on-device",
+      "progressLabel": "Progress",
+      "previewLabel": "Live preview",
+      "stepCount": "{{current}} of {{total}}",
+      "stepAccessibility": "{{label}}, step {{current}} of {{total}}",
+      "steps": {
+        "prepareAudio": "Preparing audio",
+        "preparePhoto": "Preparing photo",
+        "loadModel": "Loading model",
+        "loadModelNamed": "Loading {{model}}",
+        "modelReady": "{{model}} ready",
+        "modelReadyGeneric": "Model ready",
+        "readNote_one": "Reading {{count}} word",
+        "readNote_other": "Reading {{count}} words",
+        "readNoteLong": "Reading the first {{characters}} characters",
+        "write": "Writing",
+        "transcribe": "Transcribing",
+        "readText": "Reading text",
+        "readPages": "Reading pages",
+        "translate": "Translating",
+        "look": "Looking at the photo"
+      },
+      "detail": {
+        "wordsOfAbout": "{{written}} of about {{target}} words",
+        "almostDone": "Almost done",
+        "wordsWritten_one": "{{count}} word written",
+        "wordsWritten_other": "{{count}} words written",
+        "position": "{{done}} of {{total}}",
+        "page_one": "Page {{page}} of {{total}} · {{count}} word found",
+        "page_other": "Page {{page}} of {{total}} · {{count}} words found",
+        "paragraph": "Paragraph {{done}} of {{total}}",
+        "paragraphHop": "{{from}} to {{to}} · paragraph {{done}} of {{total}}",
+        "withElapsed": "{{detail}} · {{seconds}} s",
+        "elapsed": "{{seconds}} s"
+      }
+    },
     "writingTools": {
       "menuLabel": "AI tools",
       "title": "AI tools",

@@ -21,11 +21,16 @@ const PARAKEET_ENGINE = 'parakeet'
 const IMAGE_FILE_PREFIX = 'pear-notes-local-ai-image-'
 const IMAGE_EXTENSION_PATTERN = /^[a-z0-9]{2,5}$/i
 const DEFAULT_IMAGE_EXTENSION = 'png'
+const PCM_SAMPLE_RATE = 16000
+const PCM_BYTES_PER_SAMPLE = 2
+const TRANSLATE_BATCH_PARAGRAPHS = 8
+const TASK_PROGRESS_CHANNEL = 'local-ai:task-progress'
 
 let options = null
 let catalogPromise = null
 let textPromise = null
 let promptsPromise = null
+let workPromise = null
 let sdkPromise = null
 let loadedModel = null
 let systemSuspended = false
@@ -48,6 +53,34 @@ function loadCatalog() {
 function loadText() {
   if (!textPromise) textPromise = import('@pear-notes/core/store/services/localAiText.js')
   return textPromise
+}
+
+function loadWork() {
+  if (!workPromise) workPromise = import('@pear-notes/core/store/services/localAiWorkProgress.js')
+  return workPromise
+}
+
+function progressSender(event, taskId) {
+  return (payload) => {
+    if (!taskId || event.sender.isDestroyed()) return
+    event.sender.send(TASK_PROGRESS_CHANNEL, { taskId, ...payload })
+  }
+}
+
+function joinTranscript(current, next) {
+  const piece = String(next ?? '').trim()
+  if (!piece) return current
+  return current ? `${current} ${piece}` : piece
+}
+
+async function streamCompletion(sdk, params, onText) {
+  const run = sdk.completion({ ...params, stream: true })
+  let streamed = ''
+  for await (const token of run.tokenStream) {
+    streamed += token
+    onText(streamed)
+  }
+  return run.text
 }
 
 function loadPrompts() {
@@ -279,29 +312,65 @@ function loadSpeechModel(sdk, catalog, feature, featureConfig) {
   })
 }
 
-async function transcribe(event, { pcm, feature, featureConfig }) {
-  const [sdk, catalog] = await Promise.all([loadSdk(), loadCatalog()])
-  const modelId = await loadSpeechModel(sdk, catalog, feature, featureConfig ?? {})
+async function transcribeWithPosition(sdk, modelId, audioPath, totalMs, send, work) {
+  let transcript = ''
+  let received = false
+  try {
+    for await (const segment of sdk.transcribeStream({ modelId, audioChunk: audioPath, metadata: true })) {
+      received = true
+      transcript = joinTranscript(transcript, segment?.text)
+      send({ type: work.WORK_EVENT.TEXT, text: transcript })
+      if (Number(segment?.endMs) > 0) {
+        send({ type: work.WORK_EVENT.POSITION, doneMs: Number(segment.endMs), totalMs })
+      }
+    }
+  } catch (error) {
+    if (received) throw error
+    return String((await sdk.transcribe({ modelId, audioChunk: audioPath })) ?? '').trim()
+  }
+  return transcript.trim()
+}
+
+async function transcribe(event, { pcm, feature, featureConfig, taskId }) {
+  const [sdk, catalog, work] = await Promise.all([loadSdk(), loadCatalog(), loadWork()])
+  const send = progressSender(event, taskId)
+  const config = featureConfig ?? {}
+  const [modelName] = catalog.getFeatureRegistryNames(feature, config)
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
+  const modelId = await loadSpeechModel(sdk, catalog, feature, config)
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.TRANSCRIBE })
   pcmCounter += 1
   const pcmPath = path.join(
     os.tmpdir(),
     `${PCM_FILE_PREFIX}${process.pid}-${pcmCounter}${PCM_FILE_EXTENSION}`
   )
   try {
-    await fs.promises.writeFile(pcmPath, Buffer.from(pcm))
-    const text = await sdk.transcribe({ modelId, audioChunk: pcmPath })
-    return { text: String(text ?? '').trim() }
+    const bytes = Buffer.from(pcm)
+    await fs.promises.writeFile(pcmPath, bytes)
+    if (catalog.LOCAL_AI_REGISTRY_MODELS[modelName]?.engine === PARAKEET_ENGINE) {
+      const text = await sdk.transcribe({ modelId, audioChunk: pcmPath })
+      return { text: String(text ?? '').trim() }
+    }
+    const totalMs = Math.round((bytes.length / (PCM_SAMPLE_RATE * PCM_BYTES_PER_SAMPLE)) * 1000)
+    return { text: await transcribeWithPosition(sdk, modelId, pcmPath, totalMs, send, work) }
   } finally {
     await fs.promises.rm(pcmPath, { force: true })
   }
 }
 
-async function extractText(event, { image }) {
-  const [sdk, catalog, text] = await Promise.all([loadSdk(), loadCatalog(), loadText()])
+async function extractText(event, { image, taskId }) {
+  const [sdk, catalog, text, work] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadText(),
+    loadWork()
+  ])
+  const send = progressSender(event, taskId)
   const [recognizerName, detectorName] = catalog.getFeatureRegistryNames(
     catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT,
     {}
   )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: recognizerName })
   const modelId = await ensureModelLoaded(sdk, `${recognizerName}|${detectorName}|desktop`, () =>
     sdk.loadModel({
       modelSrc: registryAsset(sdk, catalog, recognizerName),
@@ -316,6 +385,7 @@ async function extractText(event, { image }) {
       }
     })
   )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
   const { blocks } = sdk.ocr({ modelId, image: Buffer.from(image) })
   return { text: text.formatOcrBlocks(await blocks) }
 }
@@ -334,9 +404,18 @@ function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}) {
   )
 }
 
-async function describeImage(event, { image, extension }) {
-  const [sdk, catalog, prompts] = await Promise.all([loadSdk(), loadCatalog(), loadPrompts()])
+async function describeImage(event, { image, extension, taskId }) {
+  const [sdk, catalog, prompts, work] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadWork()
+  ])
+  const send = progressSender(event, taskId)
+  const [modelName] = catalog.getFeatureRegistryNames(catalog.LOCAL_AI_FEATURE.DESCRIBE_IMAGES, {})
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOOK })
   pcmCounter += 1
   const safeExtension = IMAGE_EXTENSION_PATTERN.test(extension ?? '') ? extension : DEFAULT_IMAGE_EXTENSION
   const imagePath = path.join(
@@ -345,64 +424,108 @@ async function describeImage(event, { image, extension }) {
   )
   try {
     await fs.promises.writeFile(imagePath, Buffer.from(image))
-    const run = sdk.completion({
-      modelId,
-      history: [
-        { role: 'user', content: prompts.DESCRIBE_IMAGE_PROMPT, attachments: [{ path: imagePath }] }
-      ],
-      stream: false,
-      generationParams: { temp: prompts.LLM_TEMPERATURE, predict: prompts.DESCRIBE_MAX_TOKENS }
-    })
-    return { text: prompts.cleanModelOutput(await run.text) }
+    const output = await streamCompletion(
+      sdk,
+      {
+        modelId,
+        history: [
+          { role: 'user', content: prompts.DESCRIBE_IMAGE_PROMPT, attachments: [{ path: imagePath }] }
+        ],
+        generationParams: { temp: prompts.LLM_TEMPERATURE, predict: prompts.DESCRIBE_MAX_TOKENS }
+      },
+      (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
+    )
+    return { text: prompts.cleanModelOutput(output) }
   } finally {
     await fs.promises.rm(imagePath, { force: true })
   }
 }
 
-async function summarize(event, { text, task, featureConfig }) {
-  const [sdk, catalog, prompts] = await Promise.all([loadSdk(), loadCatalog(), loadPrompts()])
+async function summarize(event, { text, task, featureConfig, taskId }) {
+  const [sdk, catalog, prompts, work] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadWork()
+  ])
+  const send = progressSender(event, taskId)
   const noteTask = prompts.isNoteTask(task) ? task : prompts.NOTE_TASK.TRANSCRIPT_SUMMARY
+  const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+  const [modelName] = catalog.getFeatureRegistryNames(
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(
     sdk,
     catalog,
     prompts,
     catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-    featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+    config
   )
-  const run = sdk.completion({
-    modelId,
-    history: prompts.buildNoteTaskMessages(noteTask, text),
-    stream: false,
-    generationParams: {
-      temp: prompts.LLM_TEMPERATURE,
-      predict: prompts.getNoteTaskMaxTokens(noteTask, text)
-    }
-  })
-  return { text: prompts.cleanModelOutput(await run.text) }
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
+  const output = await streamCompletion(
+    sdk,
+    {
+      modelId,
+      history: prompts.buildNoteTaskMessages(noteTask, text),
+      generationParams: {
+        temp: prompts.LLM_TEMPERATURE,
+        predict: prompts.getNoteTaskMaxTokens(noteTask, text)
+      }
+    },
+    (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
+  )
+  return { text: prompts.cleanModelOutput(output) }
 }
 
-async function translateParagraphs(event, { paragraphs, from, to }) {
-  const [sdk, catalog, translation, language] = await Promise.all([
+async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
+  const [sdk, catalog, translation, language, work] = await Promise.all([
     loadSdk(),
     loadCatalog(),
     import('@pear-notes/core/store/services/localAiTranslationModels.js'),
-    import('@pear-notes/core/store/services/localAiLanguage.js')
+    import('@pear-notes/core/store/services/localAiLanguage.js'),
+    loadWork()
   ])
+  const send = progressSender(event, taskId)
   const steps = language.getTranslationSteps(from, to)
   let lines = Array.isArray(paragraphs) ? paragraphs.map((line) => String(line ?? '')) : []
   if (steps.length === 0 || lines.length === 0) {
     throw new LocalAiError(catalog.LOCAL_AI_ERROR.TASK_FAILED)
   }
-  for (const [stepFrom, stepTo] of steps) {
+  for (const [hopIndex, [stepFrom, stepTo]] of steps.entries()) {
     const modelName = translation.getTranslationModelName(stepFrom, stepTo)
+    send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
     const modelId = await ensureModelLoaded(sdk, `${modelName}|translate`, () =>
       sdk.loadModel({
         modelSrc: registryAsset(sdk, catalog, modelName),
         modelConfig: { engine: 'Bergamot', from: stepFrom, to: stepTo }
       })
     )
-    const run = sdk.translate({ modelId, text: lines, modelType: 'nmtcpp-translation', stream: false })
-    lines = (await run.translations).map((line) => String(line ?? ''))
+    send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.TRANSLATE })
+    const translated = []
+    const reportParagraphs = () =>
+      send({
+        type: work.WORK_EVENT.PARAGRAPHS,
+        done: translated.length,
+        total: lines.length,
+        hop: hopIndex + 1,
+        hops: steps.length,
+        from: stepFrom,
+        to: stepTo
+      })
+    reportParagraphs()
+    for (let start = 0; start < lines.length; start += TRANSLATE_BATCH_PARAGRAPHS) {
+      const run = sdk.translate({
+        modelId,
+        text: lines.slice(start, start + TRANSLATE_BATCH_PARAGRAPHS),
+        modelType: 'nmtcpp-translation',
+        stream: false
+      })
+      translated.push(...(await run.translations).map((line) => String(line ?? '')))
+      reportParagraphs()
+    }
+    lines = translated
   }
   return { translations: lines }
 }
