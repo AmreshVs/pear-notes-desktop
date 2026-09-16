@@ -280,6 +280,7 @@ async function installLocalAiRuntime() {
     cwd,
     heartbeat: 'still installing'
   })
+
   if (status !== 0) {
     process.stdout.write(output)
     throw new ReleaseError(
@@ -373,6 +374,16 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
     throw new ReleaseError(
       'On-device AI runtime is incomplete in the app',
       'Expected Contents/MacOS/bare-local-ai, the @qvac/sdk package and local-ai/qvac/worker.entry.mjs. Check the generateAssets and packageAfterPrune hooks in forge.config.cjs'
+    )
+  }
+  const packagedRpcClient = path.join(
+    appDir,
+    'Contents/Resources/app/local-ai/node_modules/@qvac/sdk/dist/src/client/rpc/node-rpc-client.js'
+  )
+  if (!fs.readFileSync(packagedRpcClient, 'utf8').includes('const socketName = `q${process.pid}')) {
+    throw new ReleaseError(
+      'The QVAC IPC socket name is not shortened in the packaged app',
+      'A sandboxed app has a long container path, so the default socket name exceeds the 104 character limit and every AI call fails with listen EINVAL. Run node scripts/patch-qvac-socket-path.mjs'
     )
   }
   ok('on-device AI runtime packaged, worker binary in Contents/MacOS')
