@@ -30,7 +30,7 @@ export default function GeneralSettings() {
           {t('settings.general.interface')}
         </h3>
 
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
               <label className='block text-text-primary text-base font-bold'>
@@ -63,7 +63,7 @@ export default function GeneralSettings() {
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.general.notesList')}
         </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden hardware-accelerated'>
           <div className='p-6 flex items-center justify-between group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
               <label className='block text-text-primary text-base font-bold'>
@@ -93,7 +93,7 @@ export default function GeneralSettings() {
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.general.editor')}
         </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden hardware-accelerated'>
           <div className='p-6 flex items-center justify-between border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1'>
               <label className='block text-text-primary text-base font-bold'>

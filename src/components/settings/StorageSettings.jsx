@@ -56,7 +56,7 @@ import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 import { deleteDbEncryptionKey } from '../../utils.js'
 
 const TRANSFER_LIST_CLASS =
-  'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px] backdrop-blur-md'
+  'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px]'
 
 const TOOLTIP_WIDTH = 256
 const TOOLTIP_GAP = 8
@@ -449,7 +449,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('storage.usage')}
         </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
           {isLoading && totalBlobBytes === 0 ? (
             <div className='px-6 py-8 flex items-center justify-center'>
               <svg
@@ -570,7 +570,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('backup.breakdownByType')}
           </h3>
-          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
             <div className='p-2'>
               {buckets.image.count > 0 && (
                 <div className='px-4 py-3 flex items-center justify-between hover:bg-overlay-subtle rounded-xl transition-colors'>
@@ -662,7 +662,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('storage.perNoteBreakdown')}
           </h3>
-          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
             ))}
@@ -674,7 +674,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('storage.dangerZone')}
         </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
           <div className='px-6 py-5 flex items-center justify-between'>
             <div className='space-y-1'>
               <p className='text-base font-bold text-text-primary'>{t('storage.clearAllData')}</p>

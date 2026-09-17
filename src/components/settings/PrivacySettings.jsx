@@ -92,7 +92,7 @@ export default function PrivacySettings() {
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('settings.privacy.noteLock')}
         </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md hardware-accelerated'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden hardware-accelerated'>
           <div className='p-6 flex items-start justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='flex items-center gap-4 min-w-0'>
               <div className='flex-shrink-0 w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center'>

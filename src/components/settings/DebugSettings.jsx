@@ -66,7 +66,7 @@ function Card({ title, children }) {
   return (
     <div className='mb-6'>
       <h3 className='text-text-primary text-sm font-bold tracking-tight mb-3 px-1'>{title}</h3>
-      <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+      <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
         {children}
       </div>
     </div>

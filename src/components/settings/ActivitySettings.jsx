@@ -128,7 +128,7 @@ export default function ActivitySettings() {
           {t('activity.settings.title')}
         </h3>
 
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden backdrop-blur-md'>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
           <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary group hover:bg-overlay-faint transition-colors'>
             <div className='space-y-1 min-w-0'>
               <label className='block text-text-primary text-base font-bold'>
