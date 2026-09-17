@@ -1837,13 +1837,6 @@
     "deviceLeader": "sync leader",
     "deviceOnline": "online",
     "deviceOffline": "offline",
-    "unblockMedia": "Unblock media",
-    "unblockingMedia": "Unblocking…",
-    "unblockMediaNothing": "No stuck media downloads found.",
-    "unblockMediaReset_one": "Reset {{count}} stuck media store. Its media is downloading again.",
-    "unblockMediaReset_other": "Reset {{count}} stuck media stores. Their media is downloading again.",
-    "unblockMediaSkipped_one": "{{count}} left as is ({{reasons}}).",
-    "unblockMediaSkipped_other": "{{count}} left as is ({{reasons}}).",
     "sections": {
       "autobase": "Autobase and indexer",
       "swarm": "Swarm and peers",

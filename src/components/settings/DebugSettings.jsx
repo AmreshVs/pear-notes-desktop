@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Check, Copy, RefreshCw, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Check, Copy, RefreshCw } from 'lucide-react'
 
 import { formatDebugReport } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
-import {
-  captureDebugSnapshot,
-  describeStalledMediaReset,
-  resetStalledMedia
-} from '../../lib/debugSnapshot'
+import { captureDebugSnapshot } from '../../lib/debugSnapshot'
 
 const POLL_INTERVAL_MS = 2000
 const COPIED_RESET_MS = 2000
@@ -20,7 +16,9 @@ const TIMESTAMP_KEYS = [
   'lastSyncAt',
   'lastWakeAt',
   'backgroundServiceFailedAt',
-  'activityOldestAt'
+  'activityOldestAt',
+  'mediaLastRebuildAt',
+  'mediaHealthCheckedAt'
 ]
 
 function shortenHex(value) {
@@ -131,8 +129,6 @@ export default function DebugSettings() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [unblocking, setUnblocking] = useState(false)
-  const [notice, setNotice] = useState('')
   const mountedRef = useRef(true)
   const copiedTimerRef = useRef(null)
   const heavyStorageRef = useRef(null)
@@ -186,15 +182,6 @@ export default function DebugSettings() {
     }
   }, [snapshot])
 
-  const handleUnblockMedia = useCallback(async () => {
-    setUnblocking(true)
-    const summary = await resetStalledMedia().catch((e) => ({ error: String(e?.message || e) }))
-    if (!mountedRef.current) return
-    setNotice(describeStalledMediaReset(summary, t))
-    setUnblocking(false)
-    await load(true)
-  }, [load, t])
-
   const devices = snapshot?.devices || []
   const downloads = snapshot?.swarm?.downloads || []
   const uploads = snapshot?.swarm?.uploads || []
@@ -218,26 +205,12 @@ export default function DebugSettings() {
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           {t('debug.refresh')}
         </button>
-        <button
-          onClick={handleUnblockMedia}
-          disabled={unblocking}
-          className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-secondary border border-border-primary text-text-secondary text-sm font-bold disabled:opacity-40'
-        >
-          <RotateCcw className={`w-4 h-4 ${unblocking ? 'animate-spin' : ''}`} />
-          {unblocking ? t('debug.unblockingMedia') : t('debug.unblockMedia')}
-        </button>
         {snapshot?.capturedAt ? (
           <span className='text-xs text-text-tertiary font-mono'>
             {new Date(snapshot.capturedAt).toLocaleTimeString()}
           </span>
         ) : null}
       </div>
-
-      {notice ? (
-        <div className='mb-6 px-5 py-4 rounded-2xl bg-bg-secondary border border-border-primary'>
-          <span className='text-sm text-text-secondary font-mono break-all'>{notice}</span>
-        </div>
-      ) : null}
 
       {error ? (
         <div className='mb-6 flex items-start gap-3 px-5 py-4 rounded-2xl bg-accent-danger/10 border border-accent-danger/30'>
