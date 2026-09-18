@@ -1487,7 +1487,7 @@
       "toolbarLabel": "Voice typing",
       "recording": {
         "title": "Listening",
-        "subtitle": "Your words appear when you stop."
+        "subtitle": "Keep talking. Your words appear as you speak."
       },
       "working": {
         "title": "Turning speech into text",
@@ -1496,7 +1496,12 @@
       "preview": {
         "title": "Here's what you said",
         "subtitle": "Insert adds it where your cursor was."
-      }
+      },
+      "preparing": {
+        "title": "Getting ready",
+        "subtitle": "Loading voice typing on this computer."
+      },
+      "stop": "Stop"
     },
     "transcribe": {
       "actionLabel": "Transcribe",
@@ -1738,14 +1743,23 @@
       "editsTitle_other": "{{count}} changes to the note",
       "apply": "Apply changes",
       "applied": "Changes applied",
+      "rewriteTitle": "Rewritten selection",
+      "replaceSelection": "Replace selection",
+      "replaced": "Selection replaced",
       "notFoundFallback": "This note doesn't cover that.",
       "droppedTurns": "Earlier questions are no longer used, to make room for the note.",
       "errors": {
         "failed": "Couldn't answer that. Try again or rephrase it.",
         "notEnoughMemory": "Not enough free memory right now. Close other apps and try again.",
         "unstable": "This model stopped the app before, so it's paused. Try a lighter quality in Private AI settings.",
-        "noMatch": "Couldn't find that text in the note, so nothing can be changed. Try quoting the exact words."
-      }
+        "noMatch": "Couldn't find that text in the note, so nothing can be changed. Try quoting the exact words.",
+        "unchanged": "Couldn't change the text. Try asking again with more detail.",
+        "unreliable": "Couldn't make that change reliably, so nothing was changed. Try naming the exact words to change, or select just that part first.",
+        "formatting": "Formatting like lists, headings and bold can't be changed here yet. Use the formatting toolbar instead.",
+        "newBlock": "Adding a new line or list item isn't supported yet. Add it in the note, then ask me to fix the wording."
+      },
+      "emptyNote": "This note is empty. Add some text first, then ask about it.",
+      "emptySelection": "The selection has no text. Select some text first, or switch to the whole note."
     },
     "writingTools": {
       "menuLabel": "AI tools",

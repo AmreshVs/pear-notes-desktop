@@ -25,6 +25,7 @@ const PCM_SAMPLE_RATE = 16000
 const PCM_BYTES_PER_SAMPLE = 2
 const TRANSLATE_BATCH_PARAGRAPHS = 8
 const TASK_PROGRESS_CHANNEL = 'local-ai:task-progress'
+const LIVE_TEXT_CHANNEL = 'local-ai:live-text'
 
 let options = null
 let catalogPromise = null
@@ -37,6 +38,7 @@ let systemSuspended = false
 let lastResumeAt = 0
 let pcmCounter = 0
 const pendingDownloads = new Map()
+const liveSessions = new Map()
 
 class LocalAiError extends Error {
   constructor(code, message) {
@@ -186,20 +188,27 @@ function clearIdleUnload() {
   idleUnloadTimer = null
 }
 
+function beginModelWork() {
+  activeModelWork += 1
+  clearIdleUnload()
+}
+
+function endModelWork() {
+  activeModelWork = Math.max(0, activeModelWork - 1)
+  if (activeModelWork > 0) return
+  idleUnloadTimer = setTimeout(() => {
+    idleUnloadTimer = null
+    if (activeModelWork === 0 && sdkPromise) sdkPromise.then(unloadCurrentModel).catch(() => {})
+  }, MODEL_IDLE_UNLOAD_MS)
+}
+
 function withModelWork(handler) {
   return async (...args) => {
-    activeModelWork += 1
-    clearIdleUnload()
+    beginModelWork()
     try {
       return await handler(...args)
     } finally {
-      activeModelWork = Math.max(0, activeModelWork - 1)
-      if (activeModelWork === 0) {
-        idleUnloadTimer = setTimeout(() => {
-          idleUnloadTimer = null
-          if (activeModelWork === 0 && sdkPromise) sdkPromise.then(unloadCurrentModel).catch(() => {})
-        }, MODEL_IDLE_UNLOAD_MS)
-      }
+      endModelWork()
     }
   }
 }
@@ -358,6 +367,79 @@ async function transcribe(event, { pcm, feature, featureConfig, taskId }) {
   }
 }
 
+function streamItemText(item) {
+  if (typeof item === 'string') return item
+  if (item && typeof item === 'object' && item.type === 'text') return String(item.text ?? '')
+  return ''
+}
+
+function closeLiveSession(sessionId, { destroy }) {
+  const entry = liveSessions.get(sessionId)
+  if (!entry) return null
+  liveSessions.delete(sessionId)
+  entry.sender.removeListener('destroyed', entry.onSenderGone)
+  try {
+    if (destroy) entry.session.destroy()
+    else entry.session.end()
+  } catch {}
+  endModelWork()
+  return entry
+}
+
+async function liveStart(event, { sessionId, feature, featureConfig }) {
+  if (!sessionId || liveSessions.has(sessionId)) throw new Error('invalid live session')
+  beginModelWork()
+  let started = false
+  try {
+    const [sdk, catalog] = await Promise.all([loadSdk(), loadCatalog()])
+    const config = featureConfig ?? {}
+    const modelId = await loadSpeechModel(sdk, catalog, feature, config)
+    const [modelName] = catalog.getFeatureRegistryNames(feature, config)
+    const isParakeet = catalog.LOCAL_AI_REGISTRY_MODELS[modelName]?.engine === PARAKEET_ENGINE
+    const session = await sdk.transcribeStream({
+      modelId,
+      ...(isParakeet ? { parakeetStreamingConfig: {} } : {})
+    })
+    const sender = event.sender
+    const entry = { session, sender, transcript: '', reading: null, onSenderGone: null }
+    entry.onSenderGone = () => closeLiveSession(sessionId, { destroy: true })
+    sender.once('destroyed', entry.onSenderGone)
+    entry.reading = (async () => {
+      for await (const item of session) {
+        const next = joinTranscript(entry.transcript, streamItemText(item))
+        if (next === entry.transcript) continue
+        entry.transcript = next
+        if (!sender.isDestroyed()) sender.send(LIVE_TEXT_CHANNEL, { sessionId, text: next })
+      }
+    })().catch(() => {})
+    liveSessions.set(sessionId, entry)
+    started = true
+    return {}
+  } finally {
+    if (!started) endModelWork()
+  }
+}
+
+function liveChunk(event, { sessionId, pcm }) {
+  const entry = liveSessions.get(sessionId)
+  if (!entry || !pcm) return
+  try {
+    entry.session.write(Buffer.from(pcm))
+  } catch {}
+}
+
+async function liveStop(event, { sessionId }) {
+  const entry = closeLiveSession(sessionId, { destroy: false })
+  if (!entry) return { text: '' }
+  await entry.reading
+  return { text: entry.transcript.trim() }
+}
+
+async function liveCancel(event, { sessionId }) {
+  closeLiveSession(sessionId, { destroy: true })
+  return {}
+}
+
 async function extractText(event, { image, taskId }) {
   const [sdk, catalog, text, work] = await Promise.all([
     loadSdk(),
@@ -513,7 +595,7 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
         history: ask.buildAskMessages({ note: noteText, turns: history, question: asked, forceEdits })
           .messages,
         responseFormat: ask.ASK_RESPONSE_FORMAT,
-        generationParams: ask.ASK_GENERATION_PARAMS
+        generationParams: ask.getAskGenerationParams(noteText)
       },
       (partial) => {
         const answer = ask.extractPartialAnswer(partial)
@@ -522,7 +604,18 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
     )
   const first = String((await run(false)) ?? '')
   if (!ask.shouldRetryAskForEdits(noteText, asked, first)) return { text: first }
-  return { text: ask.pickAskReply(noteText, first, String((await run(true)) ?? '')) }
+  const picked = ask.pickAskReply(noteText, first, String((await run(true)) ?? ''), asked)
+  if (!ask.shouldTryAskFullText(noteText, asked, picked)) return { text: picked }
+  const fullText = await streamCompletion(
+    sdk,
+    {
+      modelId,
+      history: ask.buildAskFullTextMessages({ note: noteText, question: asked }),
+      generationParams: ask.getAskFullTextParams(noteText)
+    },
+    () => {}
+  )
+  return { text: ask.toAskFullTextReply(noteText, asked, fullText) ?? picked }
 }
 
 async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
@@ -633,10 +726,15 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
   handle('local-ai:ask', 'TASK_FAILED', withModelWork(askAboutNote))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
+  handle('local-ai:live-start', 'TASK_FAILED', liveStart)
+  handle('local-ai:live-stop', 'TASK_FAILED', liveStop)
+  handle('local-ai:live-cancel', 'TASK_FAILED', liveCancel)
+  ipcMain.on('local-ai:live-chunk', liveChunk)
   watchPower()
 }
 
 function shutdownLocalAi() {
+  for (const sessionId of [...liveSessions.keys()]) closeLiveSession(sessionId, { destroy: true })
   clearIdleUnload()
   const pendingSdk = sdkPromise
   sdkPromise = null

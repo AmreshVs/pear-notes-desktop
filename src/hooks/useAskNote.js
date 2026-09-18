@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 
 import {
   applyTextEdits,
+  ASK_KIND,
   createAskTurn,
   getAskHistory,
   getAskScopeInfo,
@@ -28,6 +29,15 @@ function errorFromCause(cause) {
 
 const applyEditsToText = (text, edits) => applyTextEdits(text, edits).after
 
+export const canApplyAskTurn = (turn, scope) =>
+  turn.editedText !== null &&
+  (turn.kind === ASK_KIND.EDITS || (turn.kind === ASK_KIND.REWRITE && scope === 'selection'))
+
+function replaceOnce(text, find, replace) {
+  const index = text.indexOf(find)
+  return index === -1 ? text : `${text.slice(0, index)}${replace}${text.slice(index + find.length)}`
+}
+
 export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
   const summaryConfig = useSelector((state) =>
     getLocalAiFeatureConfig(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
@@ -48,7 +58,8 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
   const sourceText = scope === 'selection' ? texts.selection : texts.note
   const scopeInfo = useMemo(() => getAskScopeInfo(scope, sourceText), [scope, sourceText])
   const droppedTurns = useMemo(() => hasDroppedAskTurns(turns), [turns])
-  const canSend = question.trim().length > 0 && !busy
+  const emptySource = sourceText.trim().length === 0
+  const canSend = question.trim().length > 0 && !busy && !emptySource
 
   useEffect(
     () => () => {
@@ -95,16 +106,23 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
   const handleApply = useCallback(
     (id) => {
       const turn = turns.find((item) => item.id === id)
-      if (!turn || turn.applied || turn.editedText === null || busy) return
+      if (!turn || turn.applied || !canApplyAskTurn(turn, scope) || busy) return
+      const isRewrite = turn.kind === ASK_KIND.REWRITE
       onApplyEdits({
         scope,
         edits: turn.edits,
+        replaceText: isRewrite ? turn.editedText : null,
         lengthDelta: turn.editedText.length - sourceText.length
       })
       setTexts((current) => ({
         selection:
           scope === 'selection' ? turn.editedText : applyEditsToText(current.selection, turn.edits),
-        note: scope === 'note' ? turn.editedText : applyEditsToText(current.note, turn.edits)
+        note:
+          scope === 'note'
+            ? turn.editedText
+            : isRewrite
+              ? replaceOnce(current.note, current.selection, turn.editedText)
+              : applyEditsToText(current.note, turn.edits)
       }))
       updateTurn(id, (item) => ({ ...item, applied: true }))
     },
@@ -142,6 +160,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     busy,
     canSend,
     droppedTurns,
+    emptySource,
     copiedId,
     handleSend,
     handleToggleScope,

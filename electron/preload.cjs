@@ -74,5 +74,14 @@ window.electronBridge = {
   localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
   localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
   localAiAsk: (payload) => ipcRenderer.invoke('local-ai:ask', payload),
-  localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task')
+  localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task'),
+  localAiLiveStart: (payload) => ipcRenderer.invoke('local-ai:live-start', payload),
+  localAiLiveChunk: (payload) => ipcRenderer.send('local-ai:live-chunk', payload),
+  localAiLiveStop: (payload) => ipcRenderer.invoke('local-ai:live-stop', payload),
+  localAiLiveCancel: (payload) => ipcRenderer.invoke('local-ai:live-cancel', payload),
+  onLocalAiLiveText: (callback) => {
+    const handler = (event, update) => callback(update)
+    ipcRenderer.on('local-ai:live-text', handler)
+    return () => ipcRenderer.removeListener('local-ai:live-text', handler)
+  }
 }

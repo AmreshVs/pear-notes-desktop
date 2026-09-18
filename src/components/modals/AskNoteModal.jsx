@@ -14,15 +14,19 @@ import {
   X
 } from 'lucide-react'
 
-import { ASK_KIND } from '@pear-notes/core/store/services/localAiAsk.js'
+import { ASK_KIND, ASK_QUESTION_MAX_CHARS } from '@pear-notes/core/store/services/localAiAsk.js'
 import { SUMMARY_MAX_TRANSCRIPT_CHARS } from '@pear-notes/core/store/services/localAiPrompts.js'
 
-import { useAskNote } from '../../hooks/useAskNote'
+import { canApplyAskTurn, useAskNote } from '../../hooks/useAskNote'
 
 import LocalAiWorkProgress from './LocalAiWorkProgress'
 import RewriteChanges from './RewriteChanges'
 
 const NUMBER_FORMAT = new Intl.NumberFormat()
+const APPLY_LABELS = {
+  edits: { idle: 'localAi.ask.apply', done: 'localAi.ask.applied' },
+  rewrite: { idle: 'localAi.ask.replaceSelection', done: 'localAi.ask.replaced' }
+}
 const passLanguage = (code) => code ?? ''
 
 export default function AskNoteModal({
@@ -46,6 +50,7 @@ export default function AskNoteModal({
     busy,
     canSend,
     droppedTurns,
+    emptySource,
     copiedId,
     handleSend,
     handleToggleScope,
@@ -91,11 +96,14 @@ export default function AskNoteModal({
   const ScopeIcon = scope === 'selection' ? TextCursor : FileText
 
   const renderEdits = (turn) => {
+    const isRewrite = turn.kind === ASK_KIND.REWRITE
     const disabled = turn.applied || insertBlocked || busy
     return (
       <div className='flex flex-col gap-2.5'>
         <p className='text-sm font-bold text-text-primary'>
-          {t('localAi.ask.editsTitle', { count: turn.edits.length })}
+          {isRewrite
+            ? t('localAi.ask.rewriteTitle')
+            : t('localAi.ask.editsTitle', { count: turn.edits.length })}
         </p>
         <RewriteChanges diff={turn.diff} resultText={turn.editedText} showFixCount={false} />
         {insertBlocked && !turn.applied && (
@@ -111,7 +119,7 @@ export default function AskNoteModal({
           }`}
         >
           {turn.applied && <CheckCircle2 className='w-4 h-4' />}
-          {t(turn.applied ? 'localAi.ask.applied' : 'localAi.ask.apply')}
+          {t(APPLY_LABELS[isRewrite ? 'rewrite' : 'edits'][turn.applied ? 'done' : 'idle'])}
         </button>
       </div>
     )
@@ -120,10 +128,9 @@ export default function AskNoteModal({
   const renderAnswer = (turn) => {
     const notFound = turn.kind === ASK_KIND.NOT_FOUND
     const copied = copiedId === turn.id
-    const answer =
-      turn.error === 'noMatch'
-        ? t('localAi.ask.errors.noMatch')
-        : turn.answer || t(notFound ? 'localAi.ask.notFoundFallback' : 'localAi.ask.errors.failed')
+    const answer = turn.error
+      ? t(`localAi.ask.errors.${turn.error}`)
+      : turn.answer || t(notFound ? 'localAi.ask.notFoundFallback' : 'localAi.ask.errors.failed')
     return (
       <div
         className={`flex flex-col gap-2 rounded-xl border border-overlay-soft px-4 py-3 ${
@@ -162,7 +169,7 @@ export default function AskNoteModal({
         </p>
       )
     }
-    if (turn.kind === ASK_KIND.EDITS && turn.diff && turn.editedText !== null) {
+    if (turn.diff && canApplyAskTurn(turn, scope)) {
       return renderEdits(turn)
     }
     return renderAnswer(turn)
@@ -249,6 +256,12 @@ export default function AskNoteModal({
             <p className='text-xs text-text-tertiary'>{t('localAi.ask.droppedTurns')}</p>
           )}
 
+          {emptySource && (
+            <p className='text-xs text-text-tertiary'>
+              {t(scope === 'selection' ? 'localAi.ask.emptySelection' : 'localAi.ask.emptyNote')}
+            </p>
+          )}
+
           <div className='flex items-end gap-2'>
             <textarea
               ref={inputRef}
@@ -257,6 +270,7 @@ export default function AskNoteModal({
               onKeyDown={handleInputKeyDown}
               disabled={busy}
               rows={1}
+              maxLength={ASK_QUESTION_MAX_CHARS}
               placeholder={t(
                 turns.length > 0 ? 'localAi.ask.followUpPlaceholder' : 'localAi.ask.placeholder'
               )}

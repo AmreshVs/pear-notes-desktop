@@ -58,10 +58,16 @@ import AskNoteModal from '../modals/AskNoteModal'
 import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
 import AiToolsButton from './AiToolsButton'
+import DictationBar from './DictationBar'
 import FormattingToolbar from './FormattingToolbar'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
 import RichTextEditor from './RichTextEditor'
+
+const AUDIO_EXTENSION_BY_TYPE = [
+  ['wav', 'wav'],
+  ['ogg', 'ogg']
+]
 
 const paragraphNode = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
 
@@ -265,7 +271,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     clearLocalAiSheetRequest()
     if (!noteKey) return
     try {
-      const extension = blob.type.includes('ogg') ? 'ogg' : 'webm'
+      const extension = AUDIO_EXTENSION_BY_TYPE.find(([marker]) => blob.type.includes(marker))?.[1] ?? 'webm'
       const fileName = `Audio Recording ${new Date().toLocaleString()}.${extension}`
       const { link } = await backendApi.insertFile({
         key: noteKey,
@@ -290,6 +296,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   }
 
   const isAskRequest = localAiRequest?.mode === 'ask'
+  const isDictating = LOCAL_AI_ENABLED && localAiRequest?.mode === 'dictate' && !!editorInstance
   const askSelectionRef = useRef(null)
   const askNoteText = useMemo(
     () =>
@@ -306,9 +313,15 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localAiRequest?.id])
 
-  const handleApplyAskEdits = ({ scope, edits, lengthDelta }) => {
+  const handleApplyAskEdits = ({ scope, edits, replaceText, lengthDelta }) => {
     if (!editorInstance || editorInstance.isDestroyed) return
     const selection = scope === 'selection' ? askSelectionRef.current : null
+    if (replaceText !== null) {
+      if (!selection) return
+      insertForSelection(replaceText, 'ask', null, { action: 'replace' }, selection)
+      askSelectionRef.current = { ...selection, text: replaceText, to: selection.to + lengthDelta }
+      return
+    }
     const { tr } = buildNoteEditsTransaction(
       editorInstance.state,
       edits,
@@ -651,7 +664,16 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         <div className='absolute top-3 left-0 right-0 px-6 flex items-start justify-between z-50 gap-4'>
           <div className='flex-1 min-w-0 pointer-events-auto'>
             <div className='pb-2'>
-              <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+              {isDictating ? (
+                <DictationBar
+                  key={localAiRequest.id}
+                  editor={editorInstance}
+                  onDone={clearLocalAiSheetRequest}
+                  onAttachAudio={handleAttachLocalAiAudio}
+                />
+              ) : (
+                <FormattingToolbar editor={editorInstance} noteKey={selectedNoteKey} />
+              )}
             </div>
           </div>
         </div>
@@ -704,7 +726,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           />
         )}
 
-        {LOCAL_AI_ENABLED && localAiRequest && !isAskRequest && (
+        {LOCAL_AI_ENABLED && localAiRequest && !isAskRequest && !isDictating && (
           <LocalAiSheetModal
             key={localAiRequest.id}
             request={localAiRequest}
