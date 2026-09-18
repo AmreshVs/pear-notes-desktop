@@ -479,6 +479,52 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
   return { text: prompts.cleanModelOutput(output) }
 }
 
+async function askAboutNote(event, { note, turns, question, featureConfig, taskId }) {
+  const [sdk, catalog, prompts, work, ask] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadWork(),
+    import('@pear-notes/core/store/services/localAiAsk.js')
+  ])
+  const send = progressSender(event, taskId)
+  const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+  const [modelName] = catalog.getFeatureRegistryNames(
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
+  const modelId = await loadLlmFeature(
+    sdk,
+    catalog,
+    prompts,
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
+  const noteText = String(note ?? '')
+  const asked = String(question ?? '')
+  const history = Array.isArray(turns) ? turns : []
+  const run = (forceEdits) =>
+    streamCompletion(
+      sdk,
+      {
+        modelId,
+        history: ask.buildAskMessages({ note: noteText, turns: history, question: asked, forceEdits })
+          .messages,
+        responseFormat: ask.ASK_RESPONSE_FORMAT,
+        generationParams: ask.ASK_GENERATION_PARAMS
+      },
+      (partial) => {
+        const answer = ask.extractPartialAnswer(partial)
+        if (answer) send({ type: work.WORK_EVENT.TEXT, text: answer })
+      }
+    )
+  const first = String((await run(false)) ?? '')
+  if (!ask.shouldRetryAskForEdits(noteText, asked, first)) return { text: first }
+  return { text: ask.pickAskReply(noteText, first, String((await run(true)) ?? '')) }
+}
+
 async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
   const [sdk, catalog, translation, language, work] = await Promise.all([
     loadSdk(),
@@ -585,6 +631,7 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:describe-image', 'TASK_FAILED', withModelWork(describeImage))
   handle('local-ai:summarize', 'TASK_FAILED', withModelWork(summarize))
   handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
+  handle('local-ai:ask', 'TASK_FAILED', withModelWork(askAboutNote))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
   watchPower()
 }

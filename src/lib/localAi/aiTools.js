@@ -1,4 +1,5 @@
 export const AI_TOOL_GROUPS = [
+  { id: 'ask', labelKey: 'localAi.ask.group' },
   { id: 'edit', labelKey: 'localAi.writingTools.editGroup' },
   { id: 'understand', labelKey: 'localAi.writingTools.understandGroup' },
   { id: 'note', labelKey: 'localAi.writingTools.noteGroup' }
@@ -12,6 +13,7 @@ export function buildAiTools({ summarizeReady, translateReady, hasSelection }) {
   const tools = []
   if (hasSelection) {
     if (summarizeReady) {
+      tools.push(tool('ask', 'selection', 'ask', 'localAi.ask.menuLabelSelection'))
     for (const mode of REWRITE_TOOL_MODES) {
       tools.push(tool(mode, 'selection', 'edit', `localAi.${mode}.menuLabel`))
     }
@@ -27,6 +29,7 @@ export function buildAiTools({ summarizeReady, translateReady, hasSelection }) {
   }
   if (summarizeReady) {
     tools.push(
+      tool('ask', 'note', 'ask', 'localAi.ask.menuLabelNote'),
       tool('summarizeNote', 'note', 'note', 'localAi.summarizeNote.menuLabel'),
       tool('suggestTitle', 'note', 'note', 'localAi.suggestTitle.menuLabel'),
       tool('keyPoints', 'note', 'note', 'localAi.keyPoints.menuLabel')

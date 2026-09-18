@@ -73,5 +73,6 @@ window.electronBridge = {
   localAiDescribeImage: (payload) => ipcRenderer.invoke('local-ai:describe-image', payload),
   localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
   localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
+  localAiAsk: (payload) => ipcRenderer.invoke('local-ai:ask', payload),
   localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task')
 }

@@ -9,6 +9,8 @@ import {
   LOCAL_AI_ENABLED,
   LOCAL_AI_FEATURE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { buildNoteEditsTransaction } from '@pear-notes/core/store/services/localAiNoteEdits.js'
+import { htmlToParagraphs } from '@pear-notes/core/store/services/localAiPrompts.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
@@ -52,6 +54,7 @@ import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { getFontFamilyValue } from '../../utils/fonts'
 import UploadProgressToast from '../common/UploadProgressToast'
+import AskNoteModal from '../modals/AskNoteModal'
 import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
 import AiToolsButton from './AiToolsButton'
@@ -284,6 +287,36 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     } catch (error) {
       console.error('Error uploading audio:', error)
     }
+  }
+
+  const isAskRequest = localAiRequest?.mode === 'ask'
+  const askSelectionRef = useRef(null)
+  const askNoteText = useMemo(
+    () =>
+      isAskRequest && editorInstance && !editorInstance.isDestroyed
+        ? htmlToParagraphs(editorInstance.getHTML()).join('\n')
+        : '',
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [localAiRequest?.id]
+  )
+
+  useEffect(() => {
+    askSelectionRef.current =
+      isAskRequest && localAiRequest?.scope === 'selection' ? localAiRequest.selection : null
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localAiRequest?.id])
+
+  const handleApplyAskEdits = ({ scope, edits, lengthDelta }) => {
+    if (!editorInstance || editorInstance.isDestroyed) return
+    const selection = scope === 'selection' ? askSelectionRef.current : null
+    const { tr } = buildNoteEditsTransaction(
+      editorInstance.state,
+      edits,
+      selection ? { from: selection.from, to: selection.to } : {}
+    )
+    if (!tr) return
+    editorInstance.view.dispatch(tr)
+    if (selection) askSelectionRef.current = { ...selection, to: selection.to + lengthDelta }
   }
 
   const handleInsertLocalAiText = (text, mode, summary, meta) => {
@@ -658,7 +691,20 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         </div>
         <UploadProgressToast />
 
-        {LOCAL_AI_ENABLED && localAiRequest && (
+        {LOCAL_AI_ENABLED && isAskRequest && (
+          <AskNoteModal
+            key={localAiRequest.id}
+            selectionText={
+              localAiRequest.scope === 'selection' ? (localAiRequest.selection?.text ?? '') : ''
+            }
+            noteText={askNoteText}
+            insertBlocked={hasNoteConflict}
+            onApplyEdits={handleApplyAskEdits}
+            onClose={clearLocalAiSheetRequest}
+          />
+        )}
+
+        {LOCAL_AI_ENABLED && localAiRequest && !isAskRequest && (
           <LocalAiSheetModal
             key={localAiRequest.id}
             request={localAiRequest}

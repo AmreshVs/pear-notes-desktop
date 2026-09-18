@@ -192,9 +192,9 @@
           ]
         },
         "summarizeRecordings": {
-          "title": "Summaries and titles",
-          "inline": "summaries and titles",
-          "desc": "Summarize notes and recordings, list key points, and suggest titles.",
+          "title": "Ask, write and summarize",
+          "inline": "asking, writing and summaries",
+          "desc": "Ask questions about a note and have it make changes you approve. Fix, rewrite or shorten selected text. Summarize notes and recordings, list key points and suggest titles.",
           "tierDescriptions": {
             "standard": "Standard · Qwen3 0.6B · {{size}}",
             "best": "Best · Qwen3 1.7B · {{size}} · better with other languages"
@@ -202,8 +202,9 @@
           "limitations": [
             "Results can miss or get details wrong, so check them before you rely on them.",
             "Standard is fastest and works best in English. Best handles other languages better, but is slower and needs more memory.",
-            "Summaries, titles and key points use the first 8,000 characters of a note.",
-            "Writing tools work on up to 3,000 characters of selected text."
+            "Summaries, titles, key points and questions use the first 8,000 characters of a note.",
+            "Writing tools work on up to 3,000 characters of selected text.",
+            "Changes are only made after you review and apply them, and can be undone."
           ]
         },
         "describeImages": {
@@ -1713,6 +1714,37 @@
         "paragraphHop": "{{from}} to {{to}} · paragraph {{done}} of {{total}}",
         "withElapsed": "{{detail}} · {{seconds}} s",
         "elapsed": "{{seconds}} s"
+      }
+    },
+    "ask": {
+      "group": "Ask",
+      "menuLabelSelection": "Ask about selection",
+      "menuLabelNote": "Ask about this note",
+      "titleSelection": "Ask about selection",
+      "titleNote": "Ask about this note",
+      "subtitleSelection": "Answers and changes use only the selected text",
+      "subtitleNote": "Answers and changes use only this note",
+      "placeholder": "Ask a question or ask for a change…",
+      "followUpPlaceholder": "Ask a follow-up…",
+      "inputLabel": "Your question",
+      "send": "Send",
+      "scopeSelection_one": "Selection · {{count}} word",
+      "scopeSelection_other": "Selection · {{count}} words",
+      "scopeNote_one": "Whole note · {{count}} word",
+      "scopeNote_other": "Whole note · {{count}} words",
+      "scopeNoteLong": "Whole note · first {{characters}} characters",
+      "scopeSwitchHint": "Switches between the selection and the whole note, and starts a new conversation",
+      "editsTitle_one": "{{count}} change to the note",
+      "editsTitle_other": "{{count}} changes to the note",
+      "apply": "Apply changes",
+      "applied": "Changes applied",
+      "notFoundFallback": "This note doesn't cover that.",
+      "droppedTurns": "Earlier questions are no longer used, to make room for the note.",
+      "errors": {
+        "failed": "Couldn't answer that. Try again or rephrase it.",
+        "notEnoughMemory": "Not enough free memory right now. Close other apps and try again.",
+        "unstable": "This model stopped the app before, so it's paused. Try a lighter quality in Private AI settings.",
+        "noMatch": "Couldn't find that text in the note, so nothing can be changed. Try quoting the exact words."
       }
     },
     "writingTools": {

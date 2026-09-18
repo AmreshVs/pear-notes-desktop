@@ -137,6 +137,15 @@ export async function translateParagraphs(paragraphs, from, to, { onProgress } =
   return Array.isArray(translations) ? translations : []
 }
 
+export async function askAboutNote(note, turns, question, featureConfig = {}, { onProgress } = {}) {
+  const { text } = await invokeWithProgress(
+    'localAiAsk',
+    { note, turns, question, featureConfig },
+    onProgress
+  )
+  return text
+}
+
 export async function cancelLocalAiTask() {
   await invoke('localAiCancelTask')
 }

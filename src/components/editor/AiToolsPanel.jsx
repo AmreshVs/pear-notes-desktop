@@ -4,6 +4,7 @@ import {
   Briefcase,
   Languages,
   List,
+  MessageCircleQuestion,
   Minimize2,
   Smile,
   Sparkles,
@@ -18,6 +19,7 @@ import { AI_TOOL_GROUPS } from '../../lib/localAi/aiTools'
 const EXCERPT_MAX_CHARS = 120
 
 const TOOL_ICONS = {
+  ask: MessageCircleQuestion,
   fixGrammar: SpellCheck,
   rewrite: Wand2,
   makeShorter: Minimize2,
