@@ -551,10 +551,7 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
     {
       modelId,
       history: prompts.buildNoteTaskMessages(noteTask, text),
-      generationParams: {
-        temp: prompts.LLM_TEMPERATURE,
-        predict: prompts.getNoteTaskMaxTokens(noteTask, text)
-      }
+      generationParams: prompts.getNoteTaskGenerationParams(noteTask, text)
     },
     (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
   )
