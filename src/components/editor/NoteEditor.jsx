@@ -10,7 +10,7 @@ import {
   LOCAL_AI_FEATURE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { buildNoteEditsTransaction } from '@pear-notes/core/store/services/localAiNoteEdits.js'
-import { htmlToParagraphs } from '@pear-notes/core/store/services/localAiPrompts.js'
+import { htmlToNoteText } from '@pear-notes/core/store/services/localAiPrompts.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
@@ -301,7 +301,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const askNoteText = useMemo(
     () =>
       isAskRequest && editorInstance && !editorInstance.isDestroyed
-        ? htmlToParagraphs(editorInstance.getHTML()).join('\n')
+        ? htmlToNoteText(editorInstance.getHTML())
         : '',
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [localAiRequest?.id]
