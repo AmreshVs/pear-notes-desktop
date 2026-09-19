@@ -468,8 +468,15 @@ async function extractText(event, { image, taskId }) {
     })
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
-  const { blocks } = sdk.ocr({ modelId, image: Buffer.from(image) })
-  return { text: text.formatOcrBlocks(await blocks) }
+  const { blockStream } = sdk.ocr({ modelId, image: Buffer.from(image), stream: true })
+  const found = []
+  let extracted = ''
+  for await (const chunk of blockStream) {
+    found.push(...chunk)
+    extracted = text.formatOcrBlocks(found)
+    send({ type: work.WORK_EVENT.TEXT, text: extracted })
+  }
+  return { text: extracted }
 }
 
 function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}) {
@@ -660,6 +667,7 @@ async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
       })
       translated.push(...(await run.translations).map((line) => String(line ?? '')))
       reportParagraphs()
+      send({ type: work.WORK_EVENT.TEXT, text: translated.filter(Boolean).join('\n\n') })
     }
     lines = translated
   }

@@ -1712,6 +1712,8 @@
         "almostDone": "Almost done",
         "wordsWritten_one": "{{count}} word written",
         "wordsWritten_other": "{{count}} words written",
+        "wordsFound_one": "{{count}} word found",
+        "wordsFound_other": "{{count}} words found",
         "position": "{{done}} of {{total}}",
         "page_one": "Page {{page}} of {{total}} · {{count}} word found",
         "page_other": "Page {{page}} of {{total}} · {{count}} words found",

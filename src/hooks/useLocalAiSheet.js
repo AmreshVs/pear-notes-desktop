@@ -65,6 +65,8 @@ const EMPTY_PARAGRAPHS = []
 const EMPTY_PROGRESS = { percent: 0, missingBytes: 0 }
 const WAITING_STATUSES = [LOCAL_AI_MODEL_STATUS.WAITING_NETWORK, LOCAL_AI_MODEL_STATUS.PAUSED]
 
+const joinPages = (pages) => pages.filter(Boolean).join('\n\n')
+
 async function toDescribableImage(blob) {
   const extension = DESCRIBABLE_IMAGE_TYPES[blob.type]
   if (extension) return { bytes: new Uint8Array(await blob.arrayBuffer()), extension }
@@ -92,6 +94,9 @@ async function extractTextFromPdf(url, { signal, onProgress }) {
         const forwardPageEvent = (event) => {
           if (event.step === WORK_STEP.LOAD_MODEL) onProgress(event)
           if (event.step === WORK_STEP.READ_TEXT) reportPage(page - 1)
+          if (event.type === WORK_EVENT.TEXT) {
+            onProgress({ type: WORK_EVENT.TEXT, text: joinPages([...texts, event.text ?? '']) })
+          }
         }
         try {
           const pageText = String(
@@ -110,7 +115,7 @@ async function extractTextFromPdf(url, { signal, onProgress }) {
     if (ocrError) throw ocrError
     throw Object.assign(new Error('download', { cause: error }), { code: 'download' })
   }
-  return texts.join('\n\n')
+  return joinPages(texts)
 }
 
 const NOTE_TASK_BY_MODE = {
