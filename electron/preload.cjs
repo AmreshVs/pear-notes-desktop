@@ -29,6 +29,9 @@ window.electronBridge = {
     return () => ipcRenderer.removeListener('power-state', handler)
   },
 
+  // A resume that arrived while no window existed, claimed once.
+  takePendingPowerState: () => ipcRenderer.invoke('power-state:pending'),
+
   authenticate: (reason) => ipcRenderer.invoke('device-auth:authenticate', reason),
   isDeviceAuthSupported: () => ipcRenderer.invoke('device-auth:is-supported'),
 

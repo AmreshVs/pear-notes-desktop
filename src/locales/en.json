@@ -187,8 +187,7 @@
           "limitations": [
             "Works best in a quiet place with one person speaking.",
             "Accuracy depends on language and accent. Lite and Standard are most accurate in English; Best covers about 25 languages.",
-            "Punctuation and names can be wrong, so check the text before you insert it.",
-            "Your voice is processed on this computer and never uploaded."
+            "Punctuation and names can be wrong, so check the text before you insert it."
           ]
         },
         "summarizeRecordings": {
@@ -287,6 +286,7 @@
         "message": "{{feature}} needs {{size}}. Pear Notes keeps some space free so your notes can always save. Free up {{short}} and try again.",
         "messageGeneric": "A model download stopped because this computer is almost full. Free up some space and try again."
       },
+      "footerLibrary": "QVAC",
       "footer": "Models are downloaded from the QVAC model library and checked before use. These settings apply to this computer only.",
       "modelsTitle": "AI models",
       "modelsEmpty": "No models yet. Turn on a feature to download its model.",
@@ -465,11 +465,17 @@
         "vi": "Vietnamese"
       },
       "quality": "Quality",
+      "tiers": {
+        "lite": "Lite",
+        "standard": "Standard",
+        "best": "Best"
+      },
       "tierDescriptions": {
         "lite": "Lite · Whisper tiny · {{size}}",
         "standard": "Standard · Whisper base · {{size}}",
         "best": "Best · Parakeet · {{size}}"
       },
+      "modelDocs": "View documentation",
       "tierSwitchNote": "Switching downloads the new model. The current one stays on this computer until you delete it.",
       "model": "Model",
       "deleteModel": "Delete model",
@@ -487,11 +493,11 @@
       },
       "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it.",
       "limitations": "Limitations",
-      "tierNeedsMemory": "Needs more memory than this computer has"
+      "tierNeedsMemory": "Needs more memory than this computer has \u2014 may be slow or close the app"
     }
   },
   "sync": {
-    "title": "Link devices",
+    "title": "My devices",
     "tabs": {
       "link": "Link device",
       "devices": "My devices"
@@ -931,7 +937,7 @@
     "onDeviceAi": "On-device AI",
     "storage": "Storage",
     "activity": "Activity",
-    "linkDevices": "Link devices",
+    "linkDevices": "My devices",
     "sync": "Sync",
     "debug": "Debug"
   },

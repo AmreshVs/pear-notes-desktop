@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react'
 import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
+import { keepSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { buildAiTools } from '../../lib/localAi/aiTools'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 
@@ -17,10 +18,12 @@ const toLines = (text) =>
     .filter(Boolean)
 
 function readSelection(editor) {
-  if (!editor || editor.isDestroyed || editor.state.selection.empty) return null
-  const { from, to } = editor.state.selection
-  const text = editor.state.doc.textBetween(from, to, '\n', ' ')
-  return text.trim() ? { from, to, text } : null
+  if (!editor || editor.isDestroyed) return null
+  const live = editor.state.selection
+  const range = live.empty ? keptSelectionRange(editor.state) : { from: live.from, to: live.to }
+  if (!range) return null
+  const text = editor.state.doc.textBetween(range.from, range.to, '\n', ' ')
+  return text.trim() ? { from: range.from, to: range.to, text } : null
 }
 
 export default function SelectionAiTools({ editor }) {
@@ -61,6 +64,7 @@ export default function SelectionAiTools({ editor }) {
     const target = selection
     setSelection(null)
     if (!target) return
+    keepSelection(editor, target)
     requestLocalAiSheet({
       mode: tool.mode,
       paragraphs: toLines(target.text),

@@ -20,6 +20,7 @@ import {
   getFeatureLanguages,
   getFeatureRegistryNames,
   getFeatureTiers,
+  getModelDocsUrl,
   getOnDemandModelNames,
   getRegistryNamesBytes,
   LOCAL_AI_DEVICE_STATUS,
@@ -30,8 +31,8 @@ import {
   LOCAL_AI_MODEL_STATUS,
   LOCAL_AI_NETWORK,
   LOCAL_AI_NOTICE,
-  LOCAL_AI_REGISTRY_MODELS
-} from '@pear-notes/core/store/services/localAiCatalog.js'
+  LOCAL_AI_REGISTRY_MODELS,
+  QVAC_MODEL_LIBRARY_URL} from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   cancelLocalAiFeatureDownload,
   clearLocalAiNotice,
@@ -144,6 +145,10 @@ function ConfirmModal({ icon: Icon, danger, title, message, onDismiss, children 
 
 export default function LocalAiSettings() {
   const { t } = useTranslation()
+  // The footer names the model library mid-sentence, so the label is split out
+  // of the translated string rather than the sentence being cut into pieces.
+  const footerLibrary = t('settings.onDeviceAi.footerLibrary')
+  const [footerBefore, footerAfter] = t('settings.onDeviceAi.footer').split(footerLibrary)
   const dispatch = useDispatch()
   const state = useSelector(getLocalAiState)
   const bytesOnDisk = useSelector(selectLocalAiBytesOnDisk)
@@ -565,10 +570,10 @@ export default function LocalAiSettings() {
                                   onClick={() =>
                                     dispatch(setLocalAiFeatureTier({ feature: row.feature, tier }))
                                   }
-                                  disabled={!fits}
                                   title={fits ? undefined : t('settings.onDeviceAi.tierNeedsMemory')}
                                   aria-pressed={selected}
-                                  className={`${optionClass(selected)} disabled:opacity-45 disabled:cursor-not-allowed`}
+                                  aria-describedby={fits ? undefined : `${row.feature}-${tier}-memory`}
+                                  className={optionClass(selected)}
                                 >
                                   {selected && <Check className='w-3.5 h-3.5' />}
                                   {t(
@@ -583,6 +588,25 @@ export default function LocalAiSettings() {
                               )
                             })}
                           </div>
+                          {getFeatureTiers(row.feature)
+                            .filter(
+                              (tier) =>
+                                !canRunFeature(
+                                  row.feature,
+                                  { ...config.features[row.feature], tier },
+                                  device.totalMemoryBytes
+                                )
+                            )
+                            .map((tier) => (
+                              <p
+                                key={tier}
+                                id={`${row.feature}-${tier}-memory`}
+                                className='text-sm text-accent-warning-text'
+                              >
+                                {t(`settings.onDeviceAi.tiers.${tier}`)}:{' '}
+                                {t('settings.onDeviceAi.tierNeedsMemory')}
+                              </p>
+                            ))}
                           <p className={DESC_CLASS}>{t('settings.onDeviceAi.tierSwitchNote')}</p>
                         </div>
                       )}
@@ -632,6 +656,16 @@ export default function LocalAiSettings() {
                                       })}
                                     </p>
                                   )}
+                                  {getModelDocsUrl(name) && (
+                                    <a
+                                      href={getModelDocsUrl(name)}
+                                      target='_blank'
+                                      rel='noreferrer'
+                                      className='text-sm text-accent-primary hover:underline'
+                                    >
+                                      {t('settings.onDeviceAi.modelDocs')}
+                                    </a>
+                                  )}
                                 </div>
                                 {!model.onDevice && (
                                   <span className='text-sm text-text-tertiary flex-shrink-0 ml-4'>
@@ -678,6 +712,16 @@ export default function LocalAiSettings() {
                   </label>
                   <p className={DESC_CLASS}>{`${formatBytes(row.bytes)} · ${modelUsage(row)}`}</p>
                   <p className={DESC_CLASS}>{licenseLabel(row)}</p>
+                  {getModelDocsUrl(row.name) && (
+                    <a
+                      href={getModelDocsUrl(row.name)}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='text-sm text-accent-primary hover:underline'
+                    >
+                      {t('settings.onDeviceAi.modelDocs')}
+                    </a>
+                  )}
                 </div>
                 <button
                   onClick={() => requestDeleteModel(row)}
@@ -713,7 +757,16 @@ export default function LocalAiSettings() {
       </div>
 
       <p className='text-sm text-text-tertiary font-medium opacity-60 leading-relaxed ml-2'>
-        {t('settings.onDeviceAi.footer')}
+        {footerBefore}
+        <a
+          href={QVAC_MODEL_LIBRARY_URL}
+          target='_blank'
+          rel='noreferrer'
+          className='text-accent-primary hover:underline'
+        >
+          {footerLibrary}
+        </a>
+        {footerAfter}
       </p>
 
       {confirm?.kind === 'turnOn' && (

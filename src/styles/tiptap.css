@@ -229,6 +229,12 @@
   background-color: var(--selection-bg);
 }
 
+/* The range an AI tool will act on, drawn while the real selection is gone. */
+.ProseMirror .kept-selection {
+  background-color: var(--selection-bg);
+  border-radius: 2px;
+}
+
 /* Focus */
 .ProseMirror:focus {
   outline: none;

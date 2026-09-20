@@ -154,8 +154,18 @@ function startWorker() {
 const WINDOW_AWAY_RESUME_MS = 5 * 60 * 1000
 let windowAwaySince = null
 
+let pendingPowerState = null
+
 function sendPowerState(state) {
-  if (!mainWindow || mainWindow.isDestroyed()) return
+  // The app outlives its window — closed to tray, or just closed on macOS — and
+  // a resume dropped here is not made up for anywhere else. The next renderer
+  // boot calls getChore, which relists the blob server but never rechecks the
+  // swarm, so the backend keeps whatever connections it held before the machine
+  // slept. Latch it for whoever loads next instead.
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    if (state === 'resume') pendingPowerState = state
+    return
+  }
   mainWindow.webContents.send('power-state', state)
 }
 
@@ -184,6 +194,9 @@ function watchWindowActivity(window) {
 function watchPowerState() {
   powerMonitor.on('suspend', () => sendPowerState('suspend'))
   powerMonitor.on('resume', () => sendPowerState('resume'))
+  // A macOS screen lock does not raise 'suspend', so a long locked session ends
+  // with the swarm holding connections the network has already dropped.
+  powerMonitor.on('unlock-screen', () => sendPowerState('resume'))
 }
 
 const MIN_WINDOW_WIDTH = 880
@@ -328,6 +341,14 @@ function createTray() {
 }
 
 function setupIPC() {
+  // Pulled by the renderer once its listener is live, rather than pushed at a
+  // window that may not have finished loading yet.
+  ipcMain.handle('power-state:pending', () => {
+    const state = pendingPowerState
+    pendingPowerState = null
+    return state
+  })
+
   ipcMain.on('worker-data', (event, data) => {
     if (worker) {
       worker.write(Buffer.from(data))

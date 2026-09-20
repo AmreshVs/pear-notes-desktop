@@ -4,8 +4,8 @@ import { Check, Link2, X } from 'lucide-react'
 
 export default function SyncScreen({ onClose }) {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState('invite')
-  const [inviteCode] = useState('abc123xyz789')
+  const [activeTab, setActiveTab] = useState('manage')
+  const [inviteCode] = useState('')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
 
@@ -41,16 +41,6 @@ export default function SyncScreen({ onClose }) {
 
         <div className='flex border-b border-border-primary px-6 bg-bg-panel'>
           <button
-            onClick={() => setActiveTab('invite')}
-            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'invite'
-                ? 'border-accent-primary text-text-primary'
-                : 'border-transparent text-text-tertiary hover:text-text-primary'
-            }`}
-          >
-            {t('sync.tabs.link')}
-          </button>
-          <button
             onClick={() => setActiveTab('manage')}
             className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
               activeTab === 'manage'
@@ -59,6 +49,16 @@ export default function SyncScreen({ onClose }) {
             }`}
           >
             {t('sync.tabs.devices')}
+          </button>
+          <button
+            onClick={() => setActiveTab('invite')}
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              activeTab === 'invite'
+                ? 'border-accent-primary text-text-primary'
+                : 'border-transparent text-text-tertiary hover:text-text-primary'
+            }`}
+          >
+            {t('sync.tabs.link')}
           </button>
         </div>
 

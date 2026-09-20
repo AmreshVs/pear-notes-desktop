@@ -214,10 +214,8 @@ function withModelWork(handler) {
 }
 
 async function ensureModelLoaded(sdk, key, load) {
-  const catalog = await loadCatalog()
-  if (!catalog.canRunModels(key.split('|'), os.totalmem())) {
-    throw new LocalAiError(catalog.LOCAL_AI_ERROR.NOT_ENOUGH_MEMORY)
-  }
+  // No pre-emptive memory refusal: quality is the user's choice even on a
+  // machine under the bar for it, and the settings row warns them.
   if (loadedModel?.key === key) return loadedModel.modelId
   await unloadCurrentModel(sdk)
   const modelId = await load()

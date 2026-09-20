@@ -103,7 +103,7 @@ export default function DevicesSettings({ onClose }) {
     !inviteExpired && inviteRemainingMs > 0 && inviteRemainingMs <= INVITE_EXPIRY_WARNING_MS
   const isInviteGenerated = !!inviteCode && !inviteExpired
 
-  const [syncTab, setSyncTab] = useState('invite')
+  const [syncTab, setSyncTab] = useState('manage')
   const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
   const [pendingInvite, setPendingInvite] = useState(null)
@@ -152,16 +152,6 @@ export default function DevicesSettings({ onClose }) {
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
       <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-overlay-soft w-fit mx-auto'>
         <button
-          onClick={() => setSyncTab('invite')}
-          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            syncTab === 'invite'
-              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-          }`}
-        >
-          {t('sync.tabs.link')}
-        </button>
-        <button
           onClick={() => setSyncTab('manage')}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
             syncTab === 'manage'
@@ -170,6 +160,16 @@ export default function DevicesSettings({ onClose }) {
           }`}
         >
           {t('sync.tabs.devices')}
+        </button>
+        <button
+          onClick={() => setSyncTab('invite')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+            syncTab === 'invite'
+              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
+          }`}
+        >
+          {t('sync.tabs.link')}
         </button>
       </div>
 

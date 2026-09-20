@@ -65,11 +65,13 @@ import * as Y from 'yjs'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { COLLABORATION_ENABLED } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
+import { getEditorBaseKey, setEditorFocused } from '@pear-notes/core/store/slices/editorSlice.js'
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getCollaboratorIdentity } from '@pear-notes/core/utils.js'
 
+import { clearEditorHistory } from '../../lib/editorHistory'
+import { KeptSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
 import { getFontClass, getFontFamilyValue } from '../../utils/fonts'
@@ -104,10 +106,12 @@ const RichTextEditor = forwardRef(
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const currentNoteKey = useSelector(getSelectedNote)
+    const baseKey = useSelector(getEditorBaseKey)
     const fontFamily = useSelector(getFontFamily)
     const editorFontSize = useSelector(getEditorFontSize)
     const isUpdatingRef = useRef(false)
     const lastSyncTokenRef = useRef(-1)
+    const historyNoteKeyRef = useRef(null)
     const hasReceivedSyncRef = useRef(false)
     const lowlight = createLowlight(all)
 
@@ -203,6 +207,7 @@ const RichTextEditor = forwardRef(
           }),
           FileAttachment,
           AudioAttachment,
+          KeptSelection,
           ...(COLLABORATION_ENABLED
             ? [
                 Collaboration.configure({
@@ -369,8 +374,15 @@ const RichTextEditor = forwardRef(
       if (COLLABORATION_ENABLED || !editor || content === undefined) return
       if (syncToken === lastSyncTokenRef.current) return
       lastSyncTokenRef.current = syncToken
+      // Undo history belongs to one note. baseKey, not the selected key, says which note
+      // this content came from - the selection changes before the note's data arrives.
+      const isNoteSwitch = historyNoteKeyRef.current !== baseKey
+      historyNoteKeyRef.current = baseKey
       const currentContent = editor.getHTML()
-      if (content === currentContent) return
+      if (content === currentContent) {
+        if (isNoteSwitch) clearEditorHistory(editor)
+        return
+      }
       const isInitialLoad = currentContent === '<p></p>'
       isUpdatingRef.current = true
       const { from, to } = editor.state.selection
@@ -380,7 +392,8 @@ const RichTextEditor = forwardRef(
         editor.commands.setTextSelection({ from: Math.min(from, size), to: Math.min(to, size) })
       }
       isUpdatingRef.current = false
-    }, [content, syncToken, editor])
+      if (isNoteSwitch) clearEditorHistory(editor)
+    }, [content, syncToken, editor, baseKey])
 
     useEffect(() => {
       if (!COLLABORATION_ENABLED || !editor || !ydoc) return
@@ -507,13 +520,19 @@ const RichTextEditor = forwardRef(
             editor={editor}
             pluginKey='textSelectionMenu'
             tippyOptions={{ duration: 100 }}
-            shouldShow={({ editor, state, from, to }) =>
-              from !== to &&
-              !state.selection.empty &&
-              !editor.isActive('table') &&
-              !editor.isActive('codeBlock') &&
-              state.doc.textBetween(from, to).trim().length > 0
-            }
+            shouldShow={({ editor, state, from, to }) => {
+              if (editor.isActive('table') || editor.isActive('codeBlock')) return false
+              // A range kept for the AI tools has no live selection behind it,
+              // but the menu is the only way back to those tools — hiding it
+              // would force the user to select the same text again.
+              const kept = keptSelectionRange(state)
+              if (kept) return true
+              return (
+                from !== to &&
+                !state.selection.empty &&
+                state.doc.textBetween(from, to).trim().length > 0
+              )
+            }}
             className='flex items-center gap-0.5 p-1 bg-bg-panel border border-border-secondary rounded-lg shadow-xl z-[60]'
           >
             <BubbleButton
