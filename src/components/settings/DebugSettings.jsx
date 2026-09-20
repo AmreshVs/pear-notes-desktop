@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Check, Copy, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Eye, RefreshCw } from 'lucide-react'
 
-import { formatDebugReport } from '@pear-notes/core/utils.js'
+import {
+  SENSITIVE_DEBUG_KEYS,
+  SHOW_SENSITIVE_DEBUG_INFO
+} from '@pear-notes/core/constant.js'
+import { formatDebugReport, shortenHex } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
 import { captureDebugSnapshot } from '../../lib/debugSnapshot'
+import CopyFullReportModal from '../modals/CopyFullReportModal'
 
 const POLL_INTERVAL_MS = 2000
 const COPIED_RESET_MS = 2000
-const HEX_PREVIEW_LENGTH = 8
 
 const TIMESTAMP_KEYS = [
   'lastBaseErrorAt',
@@ -21,44 +25,75 @@ const TIMESTAMP_KEYS = [
   'mediaHealthCheckedAt'
 ]
 
-function shortenHex(value) {
-  if (typeof value !== 'string') return value
-  if (value.length <= HEX_PREVIEW_LENGTH * 2) return value
-  if (!/^[0-9a-f]+$/i.test(value)) return value
-  return `${value.slice(0, HEX_PREVIEW_LENGTH)}…`
-}
-
 function formatTimestamp(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return '—'
   return new Date(value).toLocaleString()
 }
 
-function displayValue(value, key) {
+function displayValue(value, key, { shorten = true } = {}) {
   if (key && TIMESTAMP_KEYS.includes(key)) return formatTimestamp(value)
   if (value === null || value === undefined) return '—'
   if (typeof value === 'boolean') return value ? 'yes' : 'no'
   if (Array.isArray(value)) {
     if (value.length === 0) return '—'
-    return value.map(shortenHex).join(', ')
+    return value.map((item) => displayValue(item, null, { shorten })).join(', ')
   }
   if (typeof value === 'object') return JSON.stringify(value)
   if (typeof value === 'number') return value.toLocaleString()
-  return shortenHex(String(value))
+  return shorten ? shortenHex(String(value)) : String(value)
 }
 
 function Row({ label, value, emphasis, valueKey }) {
+  const { t } = useTranslation()
+  const [revealed, setRevealed] = useState(false)
+  const shown = displayValue(value, valueKey)
+  const full = displayValue(value, valueKey, { shorten: false })
+  const canReveal = full !== shown
+
+  const toggleReveal = useCallback(() => setRevealed((current) => !current), [])
+
+  const valueClassName = `text-sm font-mono text-right break-all ${
+    emphasis ? 'text-accent-primary font-bold' : 'text-text-secondary'
+  }`
+
   return (
     <div className='px-6 py-2.5 flex items-start justify-between gap-6 border-b border-border-primary/40 last:border-b-0'>
       <span className='text-sm text-text-tertiary font-mono shrink-0'>{label}</span>
-      <span
-        className={`text-sm font-mono text-right break-all ${
-          emphasis ? 'text-accent-primary font-bold' : 'text-text-secondary'
-        }`}
-        title={typeof value === 'string' ? value : undefined}
-      >
-        {displayValue(value, valueKey)}
-      </span>
+      {canReveal ? (
+        <button
+          type='button'
+          onClick={toggleReveal}
+          title={revealed ? t('debug.hideValue') : t('debug.revealValue')}
+          aria-label={revealed ? t('debug.hideValue') : t('debug.revealValue')}
+          className={`${valueClassName} cursor-pointer hover:text-text-primary`}
+        >
+          {revealed ? full : shown}
+        </button>
+      ) : (
+        <span className={valueClassName}>{shown}</span>
+      )}
     </div>
+  )
+}
+
+function RevealableKey({ value, className }) {
+  const { t } = useTranslation()
+  const [revealed, setRevealed] = useState(false)
+  const toggleReveal = useCallback(() => setRevealed((current) => !current), [])
+  const short = shortenHex(value)
+
+  if (!value || short === value) return <span className={className}>{value || '—'}</span>
+
+  return (
+    <button
+      type='button'
+      onClick={toggleReveal}
+      title={revealed ? t('debug.hideValue') : t('debug.revealValue')}
+      aria-label={revealed ? t('debug.hideValue') : t('debug.revealValue')}
+      className={`${className} cursor-pointer break-all hover:text-text-secondary`}
+    >
+      {revealed ? value : short}
+    </button>
   )
 }
 
@@ -76,7 +111,11 @@ function Card({ title, children }) {
 function Section({ title, data, emphasis = [] }) {
   if (!data || typeof data !== 'object') return null
   const entries = Object.entries(data).filter(
-    ([key]) => key !== 'downloads' && key !== 'uploads' && key !== 'devices'
+    ([key]) =>
+      key !== 'downloads' &&
+      key !== 'uploads' &&
+      key !== 'devices' &&
+      (SHOW_SENSITIVE_DEBUG_INFO || !SENSITIVE_DEBUG_KEYS.includes(key))
   )
   if (entries.length === 0) return null
   return (
@@ -129,6 +168,7 @@ export default function DebugSettings() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [confirmFullReport, setConfirmFullReport] = useState(false)
   const mountedRef = useRef(true)
   const copiedTimerRef = useRef(null)
   const heavyStorageRef = useRef(null)
@@ -169,18 +209,32 @@ export default function DebugSettings() {
     if (mountedRef.current) setRefreshing(false)
   }, [load])
 
-  const handleCopy = useCallback(async () => {
-    if (!snapshot) return
-    try {
-      const ok = await copyToClipboard(formatDebugReport(snapshot))
-      if (!ok) throw new Error('clipboard write failed')
-      setCopied(true)
-      clearTimeout(copiedTimerRef.current)
-      copiedTimerRef.current = setTimeout(() => setCopied(false), COPIED_RESET_MS)
-    } catch (e) {
-      setError(String(e?.message || e))
-    }
-  }, [snapshot])
+  const copy = useCallback(
+    async (redact) => {
+      if (!snapshot) return
+      try {
+        const ok = await copyToClipboard(formatDebugReport(snapshot, { redact }))
+        if (!ok) throw new Error('clipboard write failed')
+        setCopied(true)
+        clearTimeout(copiedTimerRef.current)
+        copiedTimerRef.current = setTimeout(() => setCopied(false), COPIED_RESET_MS)
+      } catch (e) {
+        setError(String(e?.message || e))
+      }
+    },
+    [snapshot]
+  )
+
+  const handleCopy = useCallback(() => copy(true), [copy])
+
+  const openFullReportConfirm = useCallback(() => setConfirmFullReport(true), [])
+
+  const closeFullReportConfirm = useCallback(() => setConfirmFullReport(false), [])
+
+  const handleCopyFull = useCallback(() => {
+    setConfirmFullReport(false)
+    copy(false)
+  }, [copy])
 
   const devices = snapshot?.devices || []
   const downloads = snapshot?.swarm?.downloads || []
@@ -188,6 +242,11 @@ export default function DebugSettings() {
 
   return (
     <div className='pb-4'>
+      <CopyFullReportModal
+        open={confirmFullReport}
+        onConfirm={handleCopyFull}
+        onCancel={closeFullReportConfirm}
+      />
       <div className='flex items-center gap-3 mb-6'>
         <button
           onClick={handleCopy}
@@ -197,6 +256,16 @@ export default function DebugSettings() {
           {copied ? <Check className='w-4 h-4' /> : <Copy className='w-4 h-4' />}
           {copied ? t('debug.copied') : t('debug.copy')}
         </button>
+        {SHOW_SENSITIVE_DEBUG_INFO ? (
+          <button
+            onClick={openFullReportConfirm}
+            disabled={!snapshot}
+            className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-secondary border border-border-primary text-text-secondary text-sm font-bold disabled:opacity-40'
+          >
+            <Eye className='w-4 h-4' />
+            {t('debug.copyFull')}
+          </button>
+        ) : null}
         <button
           onClick={handleRefresh}
           disabled={refreshing}
@@ -252,9 +321,14 @@ export default function DebugSettings() {
                         .join(' · ')}
                     </span>
                   </div>
-                  <div className='text-xs font-mono text-text-tertiary mt-1'>
-                    {shortenHex(device.localKey)}
-                  </div>
+                  {SHOW_SENSITIVE_DEBUG_INFO ? (
+                    <div className='mt-1'>
+                      <RevealableKey
+                        value={device.localKey}
+                        className='text-xs font-mono text-text-tertiary'
+                      />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </Card>

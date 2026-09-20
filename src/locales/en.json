@@ -493,7 +493,7 @@
       },
       "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it.",
       "limitations": "Limitations",
-      "tierNeedsMemory": "Needs more memory than this computer has \u2014 may be slow or close the app"
+      "tierNeedsMemory": "Needs more memory than this computer has — may be slow or close the app"
     }
   },
   "sync": {
@@ -1883,6 +1883,12 @@
   },
   "debug": {
     "copy": "Copy diagnostics",
+    "copyFull": "Copy full report",
+    "copyFullTitle": "Copy the full report?",
+    "copyFullDesc": "The full report contains complete device keys, file paths and attachment file names. Only share it with someone you trust.",
+    "copyFullConfirm": "Copy",
+    "revealValue": "Reveal full value",
+    "hideValue": "Hide full value",
     "copied": "Copied",
     "refresh": "Refresh",
     "loading": "Collecting diagnostics…",
