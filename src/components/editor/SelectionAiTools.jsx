@@ -32,6 +32,8 @@ export default function SelectionAiTools({ editor }) {
   const translateReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSLATE_NOTES)
   const [selection, setSelection] = useState(null)
   const rootRef = useRef(null)
+  const buttonRef = useRef(null)
+  const panelRef = useRef(null)
 
   useEffect(() => {
     if (!selection || !editor) return
@@ -40,7 +42,9 @@ export default function SelectionAiTools({ editor }) {
       if (event.key === 'Escape') setSelection(null)
     }
     const handlePointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target)) setSelection(null)
+      if (rootRef.current?.contains(event.target)) return
+      if (panelRef.current?.contains(event.target)) return
+      setSelection(null)
     }
     editor.on('selectionUpdate', handleSelectionUpdate)
     window.addEventListener('keydown', handleKeyDown)
@@ -77,6 +81,7 @@ export default function SelectionAiTools({ editor }) {
     <div ref={rootRef} className='relative flex items-center'>
       <div className='w-px h-5 bg-border-primary mx-1' />
       <button
+        ref={buttonRef}
         onMouseDown={(event) => event.preventDefault()}
         onClick={handleToggle}
         aria-expanded={!!selection}
@@ -98,7 +103,10 @@ export default function SelectionAiTools({ editor }) {
           selectionText={selection.text}
           onChoose={handleChoose}
           onClose={() => setSelection(null)}
-          className='absolute top-full right-0 mt-2 slide-in-from-top-2 origin-top-right'
+          anchorRef={buttonRef}
+          panelRef={panelRef}
+          placement='bottom'
+          className='slide-in-from-top-2 origin-top-right'
         />
       )}
     </div>

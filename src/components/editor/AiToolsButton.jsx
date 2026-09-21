@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
@@ -12,14 +12,25 @@ import AiToolsPanel from './AiToolsPanel'
 export default function AiToolsButton({ content, summarizeReady, translateReady }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const buttonRef = useRef(null)
+  const panelRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') setOpen(false)
     }
+    const handlePointerDown = (event) => {
+      if (panelRef.current?.contains(event.target)) return
+      if (buttonRef.current?.contains(event.target)) return
+      setOpen(false)
+    }
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousedown', handlePointerDown)
+    }
   }, [open])
 
   const tools = open ? buildAiTools({ summarizeReady, translateReady, hasSelection: false }) : []
@@ -31,19 +42,21 @@ export default function AiToolsButton({ content, summarizeReady, translateReady 
 
   return (
     <div className='relative'>
-      {open && <div className='fixed inset-0 z-40' onMouseDown={() => setOpen(false)} />}
-
       {open && (
         <AiToolsPanel
           tools={tools}
           selectionText=''
           onChoose={handleChoose}
           onClose={() => setOpen(false)}
-          className='absolute bottom-14 right-0 slide-in-from-bottom-2 origin-bottom-right'
+          anchorRef={buttonRef}
+          panelRef={panelRef}
+          placement='top'
+          className='slide-in-from-bottom-2 origin-bottom-right'
         />
       )}
 
       <button
+        ref={buttonRef}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}

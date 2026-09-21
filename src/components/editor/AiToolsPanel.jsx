@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import {
   AlignLeft,
@@ -17,6 +19,11 @@ import {
 import { AI_TOOL_GROUPS } from '../../lib/localAi/aiTools'
 
 const EXCERPT_MAX_CHARS = 120
+
+const PANEL_WIDTH = 320
+const PANEL_GAP = 8
+const VIEWPORT_MARGIN = 12
+const MIN_PANEL_HEIGHT = 220
 
 const TOOL_ICONS = {
   ask: MessageCircleQuestion,
@@ -38,16 +45,84 @@ function toExcerpt(text) {
   return flat.length > EXCERPT_MAX_CHARS ? `${flat.slice(0, EXCERPT_MAX_CHARS).trimEnd()}…` : flat
 }
 
-export default function AiToolsPanel({ tools, selectionText, onChoose, onClose, className = '' }) {
+// The panel is anchored to a button that lives inside the editor, where every
+// ancestor clips (`.ProseMirror-wrapper` and the editor column both hide their
+// overflow) and the notes list paints over anything that escapes. So it is
+// placed against the viewport from the trigger's rect instead, and portalled
+// out of the editor. `bottom` carries the upward placement so the panel's own
+// height never has to be measured.
+function panelPosition(rect, placement) {
+  const spaceAbove = rect.top - PANEL_GAP - VIEWPORT_MARGIN
+  const spaceBelow = window.innerHeight - rect.bottom - PANEL_GAP - VIEWPORT_MARGIN
+  const wantsAbove = placement === 'top'
+  const preferred = wantsAbove ? spaceAbove : spaceBelow
+  const other = wantsAbove ? spaceBelow : spaceAbove
+  const above = preferred < MIN_PANEL_HEIGHT && other > preferred ? !wantsAbove : wantsAbove
+
+  const maxLeft = Math.max(VIEWPORT_MARGIN, window.innerWidth - VIEWPORT_MARGIN - PANEL_WIDTH)
+  return {
+    left: Math.min(Math.max(rect.right - PANEL_WIDTH, VIEWPORT_MARGIN), maxLeft),
+    top: above ? undefined : rect.bottom + PANEL_GAP,
+    bottom: above ? window.innerHeight - rect.top + PANEL_GAP : undefined,
+    maxHeight: Math.max(
+      MIN_PANEL_HEIGHT,
+      Math.min(window.innerHeight * 0.6, above ? spaceAbove : spaceBelow)
+    )
+  }
+}
+
+export default function AiToolsPanel({
+  tools,
+  selectionText,
+  onChoose,
+  onClose,
+  anchorRef,
+  placement = 'bottom',
+  panelRef,
+  className = ''
+}) {
   const { t } = useTranslation()
   const excerpt = toExcerpt(selectionText)
+  const reposition = useCallback(() => {
+    const rect = anchorRef?.current?.getBoundingClientRect()
+    return rect ? panelPosition(rect, placement) : null
+  }, [anchorRef, placement])
 
-  return (
+  // Nothing is drawn until the trigger has been measured, so the panel never
+  // paints in the wrong place for a frame.
+  const [position, setPosition] = useState(null)
+
+  // Measured on the frame after opening, then kept in step with a trigger that
+  // moves under it: Floating UI repositions the selection toolbar on scroll,
+  // and the floating button follows the window.
+  useEffect(() => {
+    const update = () => setPosition(reposition)
+    const frame = requestAnimationFrame(update)
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, true)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [reposition])
+
+  if (!position) return null
+
+  return createPortal(
     <div
+      ref={panelRef}
       role='dialog'
       aria-label={t('localAi.writingTools.title')}
       onMouseDown={(event) => event.preventDefault()}
-      className={`z-50 w-80 max-h-[60vh] overflow-y-auto custom-scrollbar rounded-2xl bg-bg-panel/95 backdrop-blur-3xl border border-border-primary shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-3 animate-in fade-in zoom-in-95 duration-150 ${className}`}
+      style={{
+        left: position.left,
+        top: position.top,
+        bottom: position.bottom,
+        width: PANEL_WIDTH,
+        maxHeight: position.maxHeight
+      }}
+      className={`fixed z-[100] overflow-y-auto custom-scrollbar rounded-2xl bg-bg-panel/95 backdrop-blur-3xl border border-border-primary shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-3 animate-in fade-in zoom-in-95 duration-150 ${className}`}
     >
       <div className='flex items-start gap-3 px-2 pt-1 pb-2'>
         <div className='w-8 h-8 shrink-0 rounded-xl bg-accent-primary/10 text-accent-primary flex items-center justify-center'>
@@ -95,6 +170,7 @@ export default function AiToolsPanel({ tools, selectionText, onChoose, onClose, 
           </div>
         )
       })}
-    </div>
+    </div>,
+    document.body
   )
 }
