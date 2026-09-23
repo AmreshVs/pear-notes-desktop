@@ -792,7 +792,12 @@
     "vaultSealedTitle": "Pear Notes cannot unlock this vault",
     "vaultSealed": "Your notes are encrypted with a key held in this computer’s keychain, and that key is no longer available.\n\nYour notes have not been deleted. To get back in, restore a backup or link this computer to another device that still has your notes.",
     "startFailedTitle": "Pear Notes could not start",
-    "startFailed": "The backend did not start. Restart Pear Notes, and if it keeps happening, restore a backup."
+    "startFailed": "The backend did not start. Restart Pear Notes, and if it keeps happening, restore a backup.",
+    "legacyVaultTitle": "This vault needs an update",
+    "legacyVault": "Your notes were saved by an older version of Pear Notes and can’t be opened by this one. Nothing has been changed or deleted.\n\nInstall the previous version, export a backup, then come back and import it here. If you start fresh instead, your old notes stay on this computer in a separate folder.",
+    "legacyVaultQuit": "Quit",
+    "legacyVaultStartFresh": "Start fresh and import a backup",
+    "legacyVaultStartFreshFailed": "Pear Notes could not set up a new vault. Your old notes have not been changed. Restart Pear Notes and try again."
   },
   "errorBoundary": {
     "title": "Something went wrong",

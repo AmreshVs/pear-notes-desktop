@@ -100,11 +100,41 @@ function App() {
       // A vault whose key is sealed and whose entropy is gone must stop here
       // with an explanation. Carrying on would open an empty vault, which is
       // indistinguishable from having lost every note.
-      const result = await backendApi.ready({
-        storage: storagePath,
-        encryption: key,
-        entropy: getVaultEntropy()
-      })
+      const openVault = () =>
+        backendApi.ready({
+          storage: storagePath,
+          encryption: key,
+          entropy: getVaultEntropy()
+        })
+      let result = await openVault()
+      let startedFresh = false
+
+      // LEGACY(hyperdb-migration): remove with the core's preserveLegacyVault.
+      // See docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8.
+      //
+      // The vault predates the HyperDB view. The backend refused it without
+      // opening it; the only way forward from here is an empty vault plus an
+      // import, and the old one is moved aside on disk, never deleted.
+      if (result?.done !== true && result?.reason === 'LEGACY_VAULT') {
+        const choice = await window.electronBridge.askLegacyVault({
+          title: t('error.legacyVaultTitle'),
+          message: t('error.legacyVault'),
+          quitLabel: t('error.legacyVaultQuit'),
+          startFreshLabel: t('error.legacyVaultStartFresh')
+        })
+        if (choice !== 'start-fresh') return
+        const fresh = await backendApi.startFreshVault({ storage: storagePath })
+        if (fresh?.done !== true) {
+          window.electronBridge.showFatalError(
+            t('error.startFailedTitle'),
+            t('error.legacyVaultStartFreshFailed')
+          )
+          return
+        }
+        result = await openVault()
+        startedFresh = true
+      }
+
       if (result?.done !== true) {
         const sealed = result?.reason === 'VAULT_KEY_SEALED'
         window.electronBridge.showFatalError(
@@ -117,6 +147,8 @@ function App() {
       appBoot.mark('backendApi.ready resolved')
       dispatch(appReady())
       setLocalDeviceName(window.electronBridge.getDeviceName())
+      // Straight to where the import is: an empty vault is not the goal.
+      if (startedFresh) dispatch(setShowSettings('backup'))
     }
 
     load()
