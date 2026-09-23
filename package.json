@@ -28,7 +28,7 @@
     "test": "brittle test/*.test.js"
   },
   "dependencies": {
-    "@pear-notes/core": "github:AmreshVs/pear-notes-core#c334dbbf26c0dc2aed8ed20e124dab5a1b9d25df",
+    "@pear-notes/core": "github:AmreshVs/pear-notes-core#1b67e49ba292aa92ed2b34685aa0945b6878fef9",
     "@reduxjs/toolkit": "^2.10.1",
     "@tiptap/extension-bubble-menu": "^3.15.3",
     "@tiptap/extension-code-block-lowlight": "^3.15.3",
