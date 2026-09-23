@@ -31,7 +31,10 @@ import {
   getActivityRetentionDays,
   updateSetting
 } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
+import {
+  getHasLinkedDevices,
+  getSyncedDevices
+} from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import { resolveActivityDeviceName } from '../../lib/activityDevice'
@@ -60,6 +63,7 @@ export default function ActivitySettings() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
 
+  const hasLinkedDevices = useSelector(getHasLinkedDevices)
   const enabled = useSelector(getActivityLogEnabled)
   const retentionDays = useSelector(getActivityRetentionDays)
   const groups = useSelector(getActivityDayGroups)
@@ -119,11 +123,14 @@ export default function ActivitySettings() {
     dispatch(clearActivity())
   }
 
-  const isEmpty = !isLoading && groups.length === 0
+  const isEmpty = !hasLinkedDevices || (!isLoading && groups.length === 0)
 
   return (
     <div className='space-y-8 animate-in fade-in duration-500'>
-      <div className='space-y-1'>
+      <div
+        className={`space-y-1 ${hasLinkedDevices ? '' : 'opacity-50 pointer-events-none select-none'}`}
+        aria-disabled={!hasLinkedDevices}
+      >
         <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
           {t('activity.settings.title')}
         </h3>
@@ -273,10 +280,18 @@ export default function ActivitySettings() {
               <History className='w-6 h-6 text-text-tertiary' />
             </div>
             <p className='text-text-primary font-bold'>
-              {enabled ? t('activity.empty.title') : t('activity.empty.disabledTitle')}
+              {!hasLinkedDevices
+                ? t('activity.empty.noDevicesTitle')
+                : enabled
+                  ? t('activity.empty.title')
+                  : t('activity.empty.disabledTitle')}
             </p>
             <p className='text-sm text-text-tertiary max-w-sm leading-relaxed'>
-              {enabled ? t('activity.empty.description') : t('activity.empty.disabledDescription')}
+              {!hasLinkedDevices
+                ? t('activity.empty.noDevicesDescription')
+                : enabled
+                  ? t('activity.empty.description')
+                  : t('activity.empty.disabledDescription')}
             </p>
           </div>
         ) : (

@@ -17,6 +17,7 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 const PearRuntime = require('pear-runtime')
+const secretStore = require('./secretStore.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 
@@ -361,6 +362,29 @@ function setupIPC() {
 
   ipcMain.on('get-app-dir', (event) => {
     event.returnValue = getAppDir()
+  })
+
+  // Sync, like the other boot-time reads next to it: the renderer needs the
+  // vault key and its entropy before it can start the backend at all.
+  ipcMain.on('app:fatal-error', (event, { title, message } = {}) => {
+    if (!title || !message) return
+    dialog.showErrorBox(title, message)
+  })
+
+  ipcMain.on('secret:available', (event) => {
+    event.returnValue = secretStore.isAvailable()
+  })
+
+  ipcMain.on('secret:get', (event, name) => {
+    event.returnValue = secretStore.getSecret(name)
+  })
+
+  ipcMain.on('secret:set', (event, { name, value } = {}) => {
+    event.returnValue = secretStore.setSecret(name, value)
+  })
+
+  ipcMain.on('secret:delete', (event, name) => {
+    event.returnValue = secretStore.deleteSecret(name)
   })
 
   ipcMain.on('get-device-name', (event) => {

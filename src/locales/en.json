@@ -788,7 +788,11 @@
   "error": {
     "initFailed": "Initialization failed",
     "retry": "Retry",
-    "backendFailed": "Failed to initialize backend runtime."
+    "backendFailed": "Failed to initialize backend runtime.",
+    "vaultSealedTitle": "Pear Notes cannot unlock this vault",
+    "vaultSealed": "Your notes are encrypted with a key held in this computer’s keychain, and that key is no longer available.\n\nYour notes have not been deleted. To get back in, restore a backup or link this computer to another device that still has your notes.",
+    "startFailedTitle": "Pear Notes could not start",
+    "startFailed": "The backend did not start. Restart Pear Notes, and if it keeps happening, restore a backup."
   },
   "errorBoundary": {
     "title": "Something went wrong",
@@ -1385,7 +1389,9 @@
       "disabledTitle": "Activity recording is off",
       "disabledDescription": "Turn on recording above to start keeping a history of what each device changes.",
       "noteTitle": "No history for this note",
-      "noteDescription": "Edits made from here on will be listed with the device that made them."
+      "noteDescription": "Edits made from here on will be listed with the device that made them.",
+      "noDevicesTitle": "Link a device to use activity",
+      "noDevicesDescription": "Activity keeps a history of what each linked device changed. Link a device under Link devices to start recording."
     },
     "diff": {
       "plainText": "Plain text",
@@ -1908,6 +1914,7 @@
       "runtime": "Runtime",
       "backendBoot": "Backend boot timeline",
       "appBoot": "App boot timeline"
-    }
+    },
+    "openDiagnostics": "Diagnostics"
   }
 }

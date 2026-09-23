@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSelector } from 'react-redux'
 import {
   Database,
   HardDrive,
@@ -14,7 +13,6 @@ import {
 } from 'lucide-react'
 
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
 import { version as appVersion } from '../../../package.json'
 import { useDialog } from '../../hooks/useDialog'
@@ -30,17 +28,13 @@ import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
 
-const DEBUG_HOLD_MS = 3000
-
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
-  const hasLinkedDevices = useSelector(getHasLinkedDevices)
   const [selectedSection, setSelectedSection] = useState(initialSection)
   const [isExiting, setIsExiting] = useState(false)
   const contentScrollRef = useRef(null)
 
-  const activeSection =
-    !hasLinkedDevices && selectedSection === 'activity' ? 'general' : selectedSection
+  const activeSection = selectedSection
 
   useEffect(() => {
     if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0
@@ -53,29 +47,6 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
 
   const dialogRef = useDialog(handleAnimatedClose)
 
-  const debugHoldRef = useRef(null)
-
-  const cancelDebugHold = useCallback(() => {
-    clearTimeout(debugHoldRef.current)
-    debugHoldRef.current = null
-  }, [])
-
-  const startDebugHold = useCallback(() => {
-    clearTimeout(debugHoldRef.current)
-    debugHoldRef.current = setTimeout(() => {
-      debugHoldRef.current = null
-      setSelectedSection('debug')
-    }, DEBUG_HOLD_MS)
-  }, [])
-
-  useEffect(() => {
-    window.addEventListener('blur', cancelDebugHold)
-    return () => {
-      window.removeEventListener('blur', cancelDebugHold)
-      cancelDebugHold()
-    }
-  }, [cancelDebugHold])
-
   const sections = [
     { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
@@ -84,16 +55,14 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
       : []),
     { id: 'devices', name: t('layouts.linkDevices'), icon: Laptop },
     { id: 'sync', name: t('layouts.sync'), icon: RefreshCw },
-    ...(hasLinkedDevices
-      ? [{ id: 'activity', name: t('layouts.activity'), icon: History }]
-      : []),
+    { id: 'activity', name: t('layouts.activity'), icon: History },
     { id: 'backup', name: t('layouts.backupRestore'), icon: HardDrive },
     { id: 'storage', name: t('layouts.storage'), icon: Database }
   ]
 
-  const hiddenSections = [{ id: 'debug', name: t('layouts.debug') }]
-  const allSections = [...sections, ...hiddenSections]
-
+  // Diagnostics is not a sidebar entry: it is reached from the visible link at the
+  // foot of the Sync page. Nothing in the app is gesture-gated.
+  const allSections = [...sections, { id: 'debug', name: t('layouts.debug') }]
 
 
   return (
@@ -150,13 +119,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           </div>
 
           <div className='px-6 pb-6'>
-            <p
-              onMouseDown={startDebugHold}
-              onMouseUp={cancelDebugHold}
-              onMouseLeave={cancelDebugHold}
-              onContextMenu={cancelDebugHold}
-              className='text-text-tertiary text-xs text-center opacity-50 select-none'
-            >
+            <p className='text-text-tertiary text-xs text-center opacity-50 select-none'>
               {getAppVersionLabel(appVersion)}
             </p>
           </div>
@@ -191,7 +154,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'privacy' && <PrivacySettings />}
             {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
             {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
-            {activeSection === 'sync' && <SyncSettings />}
+            {activeSection === 'sync' && (
+              <SyncSettings onOpenDiagnostics={() => setSelectedSection('debug')} />
+            )}
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && (

@@ -49,7 +49,7 @@ function Toggle({ on, onClick, disabled }) {
   )
 }
 
-export default function SyncSettings() {
+export default function SyncSettings({ onOpenDiagnostics }) {
   const { t } = useTranslation()
   const hasLinkedDevices = useSelector(getHasLinkedDevices)
   const remoteDevices = useSelector(getRemoteSyncedDevices)
@@ -225,6 +225,17 @@ export default function SyncSettings() {
           </div>
         </div>
       </div>
+
+      {onOpenDiagnostics ? (
+        <div className='pt-2 text-center'>
+          <button
+            onClick={onOpenDiagnostics}
+            className='text-text-tertiary text-xs opacity-60 hover:opacity-100 hover:underline transition-opacity'
+          >
+            {t('debug.openDiagnostics')}
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

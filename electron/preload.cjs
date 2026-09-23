@@ -10,6 +10,13 @@ window.electronBridge = {
   },
 
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
+
+  showFatalError: (title, message) => ipcRenderer.send('app:fatal-error', { title, message }),
+
+  isSecretStoreAvailable: () => ipcRenderer.sendSync('secret:available'),
+  getSecret: (name) => ipcRenderer.sendSync('secret:get', name),
+  setSecret: (name, value) => ipcRenderer.sendSync('secret:set', { name, value }),
+  deleteSecret: (name) => ipcRenderer.sendSync('secret:delete', name),
   getDeviceName: () => ipcRenderer.sendSync('get-device-name'),
   getAppDir: () => ipcRenderer.sendSync('get-app-dir'),
   getAppFlags: () => ipcRenderer.sendSync('get-app-flags'),

@@ -57,7 +57,7 @@ import {
 } from './lib/appBehavior'
 import { useAppUpdateStatus } from './lib/appUpdateCheck'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
-import { getDbEncryptionKey, setDbEncryptionKey } from './utils.js'
+import { getDbEncryptionKey, getVaultEntropy, setDbEncryptionKey } from './utils.js'
 
 function App() {
   const { t } = useTranslation()
@@ -92,14 +92,35 @@ function App() {
       appBoot.mark('renderer reached backendApi.ready')
       const key = getDbEncryptionKey()
       const storagePath = window.electronBridge.getStoragePath()
-      await backendApi.ready({ storage: storagePath, encryption: key })
+      if (!key) {
+        window.electronBridge.showFatalError(t('error.startFailedTitle'), t('error.startFailed'))
+        return
+      }
+
+      // A vault whose key is sealed and whose entropy is gone must stop here
+      // with an explanation. Carrying on would open an empty vault, which is
+      // indistinguishable from having lost every note.
+      const result = await backendApi.ready({
+        storage: storagePath,
+        encryption: key,
+        entropy: getVaultEntropy()
+      })
+      if (result?.done !== true) {
+        const sealed = result?.reason === 'VAULT_KEY_SEALED'
+        window.electronBridge.showFatalError(
+          t(sealed ? 'error.vaultSealedTitle' : 'error.startFailedTitle'),
+          t(sealed ? 'error.vaultSealed' : 'error.startFailed')
+        )
+        return
+      }
+
       appBoot.mark('backendApi.ready resolved')
       dispatch(appReady())
       setLocalDeviceName(window.electronBridge.getDeviceName())
     }
 
     load()
-  }, [dispatch])
+  }, [dispatch, t])
 
   const hasLinkedDevices = useSelector(getHasLinkedDevices)
   const pairedEncryptionKey = useSelector(getReceiverStatus)?.encryptionKey
