@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "node scripts/postinstall.cjs",
-    "setup": "npm install --ignore-scripts && node scripts/postinstall.cjs",
+    "setup": "node scripts/setup.cjs",
     "start": "electron-forge start",
     "predev": "vite build",
     "dev": "concurrently \"npm:dev:*\"",
