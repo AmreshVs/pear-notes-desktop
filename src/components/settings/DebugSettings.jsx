@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Check, Copy, Eye, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Eye, FileWarning, RefreshCw } from 'lucide-react'
 
-import {
-  SENSITIVE_DEBUG_KEYS,
-  SHOW_SENSITIVE_DEBUG_INFO
-} from '@pear-notes/core/constant.js'
+import { SENSITIVE_DEBUG_KEYS, SHOW_SENSITIVE_DEBUG_INFO } from '@pear-notes/core/constant.js'
 import { formatDebugReport, shortenHex } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
@@ -22,7 +19,10 @@ const TIMESTAMP_KEYS = [
   'backgroundServiceFailedAt',
   'activityOldestAt',
   'mediaLastRebuildAt',
-  'mediaHealthCheckedAt'
+  'mediaHealthCheckedAt',
+  'lastViewBackfillAt',
+  'lastFastForwardAt',
+  'lastErrorAt'
 ]
 
 function formatTimestamp(value) {
@@ -162,7 +162,7 @@ function Timeline({ title, timeline }) {
   )
 }
 
-export default function DebugSettings() {
+export default function DebugSettings({ onOpenErrorLog }) {
   const { t } = useTranslation()
   const [snapshot, setSnapshot] = useState(null)
   const [error, setError] = useState('')
@@ -237,6 +237,8 @@ export default function DebugSettings() {
   }, [copy])
 
   const devices = snapshot?.devices || []
+  const writers = snapshot?.writers || []
+  const deviceTitles = new Map(devices.map((device) => [device.localKey, device.title]))
   const downloads = snapshot?.swarm?.downloads || []
   const uploads = snapshot?.swarm?.uploads || []
 
@@ -274,6 +276,15 @@ export default function DebugSettings() {
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           {t('debug.refresh')}
         </button>
+        {onOpenErrorLog ? (
+          <button
+            onClick={onOpenErrorLog}
+            className='flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-secondary border border-border-primary text-text-secondary text-sm font-bold'
+          >
+            <FileWarning className='w-4 h-4' />
+            {t('debug.openErrorLog')}
+          </button>
+        ) : null}
         {snapshot?.capturedAt ? (
           <span className='text-xs text-text-tertiary font-mono'>
             {new Date(snapshot.capturedAt).toLocaleTimeString()}
@@ -330,6 +341,25 @@ export default function DebugSettings() {
                     </div>
                   ) : null}
                 </div>
+              ))}
+            </Card>
+          ) : null}
+
+          {writers.length > 0 ? (
+            <Card title={t('debug.sections.writers')}>
+              {writers.map((writer) => (
+                <Row
+                  key={writer.key}
+                  label={deviceTitles.get(writer.key) || t('debug.untitledDevice')}
+                  value={t('debug.writerSummary', {
+                    linearized: writer.linearized ?? '—',
+                    indexed: writer.indexed ?? '—',
+                    contiguous: writer.contiguousLength ?? '—',
+                    length: writer.coreLength ?? '—',
+                    peers: writer.peers ?? '—'
+                  })}
+                  emphasis={writer.isIndexer}
+                />
               ))}
             </Card>
           ) : null}

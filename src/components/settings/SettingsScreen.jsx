@@ -22,6 +22,7 @@ import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
 import DebugSettings from './DebugSettings'
 import DevicesSettings from './DevicesSettings'
+import ErrorLogSettings from './ErrorLogSettings'
 import GeneralSettings from './GeneralSettings'
 import LocalAiSettings from './LocalAiSettings'
 import PrivacySettings from './PrivacySettings'
@@ -62,8 +63,11 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
 
   // Diagnostics is not a sidebar entry: it is reached from the visible link at the
   // foot of the Sync page. Nothing in the app is gesture-gated.
-  const allSections = [...sections, { id: 'debug', name: t('layouts.debug') }]
-
+  const allSections = [
+    ...sections,
+    { id: 'debug', name: t('layouts.debug') },
+    { id: 'errorLog', name: t('layouts.errorLog') }
+  ]
 
   return (
     <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
@@ -162,7 +166,10 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'storage' && (
               <StorageSettings onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')} />
             )}
-            {activeSection === 'debug' && <DebugSettings />}
+            {activeSection === 'debug' && (
+              <DebugSettings onOpenErrorLog={() => setSelectedSection('errorLog')} />
+            )}
+            {activeSection === 'errorLog' && <ErrorLogSettings />}
           </div>
         </div>
       </div>

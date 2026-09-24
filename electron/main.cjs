@@ -517,6 +517,14 @@ function setupIPC() {
     return await dialog.showSaveDialog(win, options)
   })
 
+  ipcMain.handle('dialog:saveTextFile', async (event, { defaultPath, filters, text } = {}) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
+    const result = await dialog.showSaveDialog(win, { defaultPath, filters })
+    if (result.canceled || !result.filePath) return { canceled: true, filePath: null }
+    await fs.promises.writeFile(result.filePath, String(text ?? ''), 'utf-8')
+    return { canceled: false, filePath: result.filePath }
+  })
+
   ipcMain.handle('dialog:showOpenDialog', async (event, options) => {
     const win = BrowserWindow.fromWebContents(event.sender) || mainWindow
     return await dialog.showOpenDialog(win, options)

@@ -55,6 +55,7 @@ window.electronBridge = {
 
   showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
   showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options),
+  saveTextFile: (options) => ipcRenderer.invoke('dialog:saveTextFile', options),
 
   checkAppUpdate: () => ipcRenderer.invoke('app-update:check-manifest'),
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),

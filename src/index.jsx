@@ -47,6 +47,7 @@ const workerStream = new WorkerIPCStream()
 const stream = new FramedStream(workerStream)
 const rpc = new HRPC(stream)
 setRPC(rpc)
+backendApi.captureAppLogs()
 
 if (LOCAL_AI_ENABLED) setLocalAiAdapter(electronAdapter)
 
