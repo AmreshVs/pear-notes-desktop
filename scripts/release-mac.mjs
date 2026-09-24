@@ -5,6 +5,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { formatDuration, streamCommand } from './progress.mjs'
+import { findHypercoreFiles, hypercoreFileState } from './patch-hypercore.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const configPath = path.join(root, '.release.mac.env')
@@ -387,6 +388,18 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
     )
   }
   ok('on-device AI runtime packaged, worker binary in Contents/MacOS')
+
+  const packagedHypercore = findHypercoreFiles(path.join(appDir, 'Contents', 'Resources', 'app'))
+  const unguardedHypercore = packagedHypercore.filter(
+    (file) => !['patched', 'unaffected'].includes(hypercoreFileState(fs.readFileSync(file, 'utf8')))
+  )
+  if (packagedHypercore.length === 0 || unguardedHypercore.length > 0) {
+    throw new ReleaseError(
+      'The packaged hypercore is missing the null-atom guard',
+      'hypercore 11.27.11+ can abort the Bare sidecar at random while devices link. Run node scripts/patch-hypercore.mjs, then package again'
+    )
+  }
+  ok(`hypercore null-atom guard in all ${packagedHypercore.length} packaged copies`)
 
   const frameworks = path.join(appDir, 'Contents', 'Frameworks')
   const helpers = fs.existsSync(frameworks)

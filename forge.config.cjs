@@ -407,6 +407,11 @@ module.exports = {
 
   hooks: {
     generateAssets: async () => {
+      require('child_process').execFileSync(
+        process.execPath,
+        [path.join(__dirname, 'scripts', 'patch-hypercore.mjs')],
+        { stdio: 'inherit' }
+      )
       if (!fs.existsSync(path.join(__dirname, 'local-ai', 'node_modules', '@qvac', 'sdk'))) {
         if (isMas) {
           throw new Error(
