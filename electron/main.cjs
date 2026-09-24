@@ -212,11 +212,7 @@ function defaultWindowSize() {
   const clamp = (min, value, max) => Math.max(min, Math.min(max, value))
 
   return {
-    width: clamp(
-      MIN_WINDOW_WIDTH,
-      Math.round(workAreaSize.width * 0.85),
-      MAX_DEFAULT_WINDOW_WIDTH
-    ),
+    width: clamp(MIN_WINDOW_WIDTH, Math.round(workAreaSize.width * 0.85), MAX_DEFAULT_WINDOW_WIDTH),
     height: clamp(
       MIN_WINDOW_HEIGHT,
       Math.round(workAreaSize.height * 0.85),
@@ -394,6 +390,28 @@ function setupIPC() {
   ipcMain.on('app:fatal-error', (event, { title, message } = {}) => {
     if (!title || !message) return
     dialog.showErrorBox(title, message)
+  })
+
+  // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
+  ipcMain.handle('app:legacy-vault', async (event, texts = {}) => {
+    const { title, message, quitLabel, startFreshLabel } = texts
+    const owner = BrowserWindow.fromWebContents(event.sender)
+    const options = {
+      type: 'warning',
+      title,
+      message: title,
+      detail: message,
+      buttons: [quitLabel, startFreshLabel],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    }
+    const { response } = owner
+      ? await dialog.showMessageBox(owner, options)
+      : await dialog.showMessageBox(options)
+    if (response === 1) return 'start-fresh'
+    app.quit()
+    return 'quit'
   })
 
   ipcMain.on('secret:available', (event) => {

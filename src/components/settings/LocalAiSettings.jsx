@@ -56,7 +56,6 @@ import {
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
-import { peekAiSettingsFocus, takeAiSettingsFocus } from '../../lib/localAi/aiSettingsFocus'
 import { setShowAiTools, useShowAiTools } from '../../lib/localAi/aiToolsPreference'
 
 const SECTION_TITLE_CLASS = 'text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'
@@ -156,7 +155,7 @@ export default function LocalAiSettings() {
   const state = useSelector(getLocalAiState)
   const bytesOnDisk = useSelector(selectLocalAiBytesOnDisk)
   const [confirm, setConfirm] = useState(null)
-  const [expandedFeature, setExpandedFeature] = useState(peekAiSettingsFocus)
+  const [expandedFeature, setExpandedFeature] = useState(null)
 
   const showAiTools = useShowAiTools()
 
@@ -165,17 +164,6 @@ export default function LocalAiSettings() {
   }, [dispatch])
 
   const { loaded, device, config } = state
-
-  useEffect(() => {
-    if (!loaded) return
-    const feature = takeAiSettingsFocus()
-    if (!feature) return
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`local-ai-feature-${feature}`)
-        ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    })
-  }, [loaded])
   const isUnsupported = device.status === LOCAL_AI_DEVICE_STATUS.UNSUPPORTED
   const notice = state.notice?.type === LOCAL_AI_NOTICE.INSUFFICIENT_SPACE ? state.notice : null
 
@@ -434,7 +422,6 @@ export default function LocalAiSettings() {
               return (
                 <div
                   key={row.feature}
-                  id={`local-ai-feature-${row.feature}`}
                   className='p-6 space-y-4 hover:bg-overlay-faint transition-colors'
                 >
                   <div className='flex items-center justify-between gap-6'>

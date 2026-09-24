@@ -46,6 +46,14 @@ const step = (m) => {
 
 const took = (ms) => console.log(`${ansi.dim}      took ${formatDuration(ms)}${ansi.reset}`)
 
+const HYPERCORE_FIRST_BAD = [11, 35, 5]
+
+function isHypercoreWithLinkingHang(version) {
+  const parts = version.split('.').map(Number)
+  const index = parts.findIndex((part, i) => part !== HYPERCORE_FIRST_BAD[i])
+  return index === -1 || parts[index] > HYPERCORE_FIRST_BAD[index]
+}
+
 class ReleaseError extends Error {
   constructor(message, hint) {
     super(message)
@@ -387,6 +395,22 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
     )
   }
   ok('on-device AI runtime packaged, worker binary in Contents/MacOS')
+
+  const appModules = path.join(appDir, 'Contents', 'Resources', 'app', 'node_modules')
+  for (const manifest of [
+    path.join(appModules, 'hypercore', 'package.json'),
+    path.join(appModules, '@pear-notes', 'core', 'node_modules', 'hypercore', 'package.json')
+  ]) {
+    if (!fs.existsSync(manifest)) continue
+    const { version } = JSON.parse(fs.readFileSync(manifest, 'utf8'))
+    if (isHypercoreWithLinkingHang(version)) {
+      throw new ReleaseError(
+        `The packaged hypercore is ${version}`,
+        'hypercore 11.35.5 and later hang a joiner in multi-device linking. Keep it at 11.35.4 or below'
+      )
+    }
+  }
+  ok('packaged hypercore predates the linking hang')
 
   const frameworks = path.join(appDir, 'Contents', 'Frameworks')
   const helpers = fs.existsSync(frameworks)
