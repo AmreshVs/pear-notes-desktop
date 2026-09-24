@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
-import { AlertTriangle, Check } from 'lucide-react'
+import { AlertTriangle, Check, Stethoscope } from 'lucide-react'
 
 import { MEDIA_SYNC_PAUSED_KEY, METERED_CONNECTION_KEY } from '@pear-notes/core/constant.js'
 import {
@@ -227,11 +227,12 @@ export default function SyncSettings({ onOpenDiagnostics }) {
       </div>
 
       {onOpenDiagnostics ? (
-        <div className='pt-2 text-center'>
+        <div className='pt-2 flex justify-center'>
           <button
             onClick={onOpenDiagnostics}
-            className='text-text-tertiary text-xs opacity-60 hover:opacity-100 hover:underline transition-opacity'
+            className='px-8 py-3.5 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium hover:text-text-primary transition-all active:scale-95 flex items-center gap-2'
           >
+            <Stethoscope className='w-4 h-4' />
             {t('debug.openDiagnostics')}
           </button>
         </div>
