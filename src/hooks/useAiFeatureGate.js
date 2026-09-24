@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector, useStore } from 'react-redux'
+import { useSelector, useStore } from 'react-redux'
 
 import {
   LOCAL_AI_ENABLED,
@@ -12,9 +12,7 @@ import {
   selectLocalAiFeatureStatus
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
-import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { requestAiSettingsFocus } from '../lib/localAi/aiSettingsFocus'
 import { useShowAiTools } from '../lib/localAi/aiToolsPreference'
 import { showToast } from '../lib/toast'
 
@@ -33,7 +31,6 @@ export function useAiToolsVisible() {
 
 export function useAiFeatureGate() {
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const store = useStore()
 
   return useCallback(
@@ -44,6 +41,7 @@ export function useAiFeatureGate() {
       if (status === LOCAL_AI_FEATURE_STATUS.READY) return true
 
       const name = t(`settings.onDeviceAi.features.${feature}.title`)
+      const inline = t(`settings.onDeviceAi.features.${feature}.inline`)
       if (status === LOCAL_AI_FEATURE_STATUS.UNSUPPORTED) {
         const reason = getLocalAiDevice(state)?.reason ?? 'store-build'
         showToast(
@@ -58,11 +56,11 @@ export function useAiFeatureGate() {
         return false
       }
 
-      showToast(t(`localAi.gate.${IN_PROGRESS_KEYS[status] ?? 'setup'}`, { feature: name }))
-      requestAiSettingsFocus(feature)
-      dispatch(setShowSettings('onDeviceAi'))
+      showToast(
+        t(`localAi.gate.${IN_PROGRESS_KEYS[status] ?? 'setup'}`, { feature: name, featureInline: inline })
+      )
       return false
     },
-    [dispatch, store, t]
+    [store, t]
   )
 }

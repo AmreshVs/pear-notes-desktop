@@ -1895,10 +1895,10 @@
       }
     },
     "gate": {
-      "setup": "{{feature}} needs a one-time model download. Turn it on here to download it.",
-      "downloading": "{{feature}} is still downloading. It will work as soon as the download finishes.",
+      "setup": "{{feature}} needs a one-time model download. Turn it on in Settings > On-device AI.",
+      "downloading": "{{feature}} is still downloading. Try again once it finishes.",
       "waitingNetwork": "{{feature}} is waiting for a network connection to finish downloading.",
-      "paused": "{{feature}} is paused partway through its download. Resume it here to use it.",
+      "paused": "The download for {{featureInline}} is paused. Resume it in Settings > On-device AI.",
       "needsMemory": "{{feature}} needs more memory than this device has."
     }
   },
