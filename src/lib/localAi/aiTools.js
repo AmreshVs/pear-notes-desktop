@@ -1,3 +1,5 @@
+import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
+
 export const AI_TOOL_GROUPS = [
   { id: 'ask', labelKey: 'localAi.ask.group' },
   { id: 'edit', labelKey: 'localAi.writingTools.editGroup' },
@@ -7,36 +9,35 @@ export const AI_TOOL_GROUPS = [
 
 const REWRITE_TOOL_MODES = ['fixGrammar', 'rewrite', 'makeShorter', 'makeProfessional', 'makeFriendly']
 
-const tool = (mode, scope, group, labelKey) => ({ id: `${scope}:${mode}`, mode, scope, group, labelKey })
+const WRITING = LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+const TRANSLATE = LOCAL_AI_FEATURE.TRANSLATE_NOTES
 
-export function buildAiTools({ summarizeReady, translateReady, hasSelection }) {
-  const tools = []
+const tool = (mode, scope, group, labelKey, feature) => ({
+  id: `${scope}:${mode}`,
+  mode,
+  scope,
+  group,
+  labelKey,
+  feature
+})
+
+export function buildAiTools({ hasSelection }) {
   if (hasSelection) {
-    if (summarizeReady) {
-      tools.push(tool('ask', 'selection', 'ask', 'localAi.ask.menuLabelSelection'))
-    for (const mode of REWRITE_TOOL_MODES) {
-      tools.push(tool(mode, 'selection', 'edit', `localAi.${mode}.menuLabel`))
-    }
-    tools.push(
-      tool('summarizeNote', 'selection', 'understand', 'localAi.summarizeSelection.menuLabel'),
-      tool('keyPoints', 'selection', 'understand', 'localAi.keyPointsSelection.menuLabel')
-    )
+    return [
+      tool('ask', 'selection', 'ask', 'localAi.ask.menuLabelSelection', WRITING),
+      ...REWRITE_TOOL_MODES.map((mode) =>
+        tool(mode, 'selection', 'edit', `localAi.${mode}.menuLabel`, WRITING)
+      ),
+      tool('summarizeNote', 'selection', 'understand', 'localAi.summarizeSelection.menuLabel', WRITING),
+      tool('keyPoints', 'selection', 'understand', 'localAi.keyPointsSelection.menuLabel', WRITING),
+      tool('translate', 'selection', 'understand', 'localAi.translateSelection.menuLabel', TRANSLATE)
+    ]
   }
-    if (translateReady) {
-      tools.push(tool('translate', 'selection', 'understand', 'localAi.translateSelection.menuLabel'))
-    }
-    return tools
-  }
-  if (summarizeReady) {
-    tools.push(
-      tool('ask', 'note', 'ask', 'localAi.ask.menuLabelNote'),
-      tool('summarizeNote', 'note', 'note', 'localAi.summarizeNote.menuLabel'),
-      tool('suggestTitle', 'note', 'note', 'localAi.suggestTitle.menuLabel'),
-      tool('keyPoints', 'note', 'note', 'localAi.keyPoints.menuLabel')
-    )
-  }
-  if (translateReady) {
-    tools.push(tool('translate', 'note', 'note', 'localAi.translate.actionLabel'))
-  }
-  return tools
+  return [
+    tool('ask', 'note', 'ask', 'localAi.ask.menuLabelNote', WRITING),
+    tool('summarizeNote', 'note', 'note', 'localAi.summarizeNote.menuLabel', WRITING),
+    tool('suggestTitle', 'note', 'note', 'localAi.suggestTitle.menuLabel', WRITING),
+    tool('keyPoints', 'note', 'note', 'localAi.keyPoints.menuLabel', WRITING),
+    tool('translate', 'note', 'note', 'localAi.translate.actionLabel', TRANSLATE)
+  ]
 }

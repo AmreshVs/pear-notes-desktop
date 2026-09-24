@@ -248,6 +248,7 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
       webSecurity: !isDev,
+      devTools: isDev,
       plugins: true,
       pdfViewer: true
     }
@@ -287,6 +288,30 @@ function createWindow() {
   })
 
   watchWindowActivity(mainWindow)
+}
+
+function setAppMenu() {
+  const developerItems = isDev
+    ? [{ role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' }, { type: 'separator' }]
+    : []
+  const template = [
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
+    { role: 'fileMenu' },
+    { role: 'editMenu' },
+    {
+      label: 'View',
+      submenu: [
+        ...developerItems,
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    { role: 'windowMenu' }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
 function createTray() {
@@ -591,6 +616,7 @@ if (!lock) {
       return false
     })
 
+    setAppMenu()
     setupIPC()
     setupLocalAi({ getStoragePath, isMas })
     createWindow()

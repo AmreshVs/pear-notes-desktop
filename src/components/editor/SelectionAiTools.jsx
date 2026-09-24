@@ -2,9 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 
-import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
-
-import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
+import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { keepSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { buildAiTools } from '../../lib/localAi/aiTools'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
@@ -28,8 +26,8 @@ function readSelection(editor) {
 
 export default function SelectionAiTools({ editor }) {
   const { t } = useTranslation()
-  const summarizeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
-  const translateReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSLATE_NOTES)
+  const aiToolsVisible = useAiToolsVisible()
+  const gateAiFeature = useAiFeatureGate()
   const [selection, setSelection] = useState(null)
   const rootRef = useRef(null)
   const buttonRef = useRef(null)
@@ -56,9 +54,9 @@ export default function SelectionAiTools({ editor }) {
     }
   }, [editor, selection])
 
-  if (!summarizeReady && !translateReady) return null
+  if (!aiToolsVisible) return null
 
-  const tools = selection ? buildAiTools({ summarizeReady, translateReady, hasSelection: true }) : []
+  const tools = selection ? buildAiTools({ hasSelection: true }) : []
 
   const handleToggle = () => {
     setSelection((current) => (current ? null : readSelection(editor)))
@@ -68,6 +66,7 @@ export default function SelectionAiTools({ editor }) {
     const target = selection
     setSelection(null)
     if (!target) return
+    if (!gateAiFeature(tool.feature)) return
     keepSelection(editor, target)
     requestLocalAiSheet({
       mode: tool.mode,

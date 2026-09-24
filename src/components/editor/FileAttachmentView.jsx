@@ -23,7 +23,7 @@ import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
+import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import usePdfPreview from '../../hooks/usePdfPreview'
 import {
   base64ToBlob,
@@ -71,11 +71,13 @@ export default function FileAttachmentView({ node, deleteNode }) {
   const isAudio = fileType?.startsWith('audio/')
   const isPdf = isPdfAttachment(fileName, fileType)
   const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null)
-  const extractTextReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.EXTRACT_TEXT)
+  const aiToolsVisible = useAiToolsVisible()
+  const gateAiFeature = useAiFeatureGate()
 
   const handleExtractText = (e) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!gateAiFeature(LOCAL_AI_FEATURE.EXTRACT_TEXT)) return
     const source = resolvedUrl || fileData
     if (!source) return
     requestLocalAiSheet({ mode: 'extract', url: source, fileName, kind: 'pdf' })
@@ -531,7 +533,7 @@ export default function FileAttachmentView({ node, deleteNode }) {
             </div>
 
             <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-20'>
-              {isPdf && extractTextReady && (resolvedUrl || fileData) && (
+              {isPdf && aiToolsVisible && (resolvedUrl || fileData) && (
                 <button
                   onClick={handleExtractText}
                   className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-tertiary transition-all duration-200'

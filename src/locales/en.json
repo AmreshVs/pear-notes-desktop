@@ -493,7 +493,10 @@
       },
       "noLanguagesYet": "No languages yet. A language downloads the first time you translate into it.",
       "limitations": "Limitations",
-      "tierNeedsMemory": "Needs more memory than this computer has — may be slow or close the app"
+      "tierNeedsMemory": "Needs more memory than this computer has — may be slow or close the app",
+      "showAiTools": "Show AI tools",
+      "showAiToolsDesc": "Show AI actions in the note editor. Turning this off only hides them — downloaded models stay on this device.",
+      "noteEditor": "Note editor"
     }
   },
   "sync": {
@@ -1890,6 +1893,13 @@
         "title": "Translation ready",
         "subtitle": "Machine translation can be wrong. Replace swaps it into your note, Insert below keeps both."
       }
+    },
+    "gate": {
+      "setup": "{{feature}} needs a one-time model download. Turn it on here to download it.",
+      "downloading": "{{feature}} is still downloading. It will work as soon as the download finishes.",
+      "waitingNetwork": "{{feature}} is waiting for a network connection to finish downloading.",
+      "paused": "{{feature}} is paused partway through its download. Resume it here to use it.",
+      "needsMemory": "{{feature}} needs more memory than this device has."
     }
   },
   "debug": {

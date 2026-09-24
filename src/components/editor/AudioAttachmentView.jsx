@@ -9,7 +9,7 @@ import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
+import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import {
   base64ToBlob,
   createDownloadLink,
@@ -29,10 +29,12 @@ export default function AudioAttachmentView({ node, deleteNode }) {
   const noteKey = useSelector(getSelectedNote)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
-  const transcribeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
+  const aiToolsVisible = useAiToolsVisible()
+  const gateAiFeature = useAiFeatureGate()
 
   const handleTranscribe = (e) => {
     e.stopPropagation()
+    if (!gateAiFeature(LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)) return
     const finalUrl = resolvedUrl || audioData
     if (!finalUrl) return
     requestLocalAiSheet({
@@ -95,7 +97,7 @@ export default function AudioAttachmentView({ node, deleteNode }) {
         )}
 
         <div className='absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20'>
-          {transcribeReady && (resolvedUrl || audioData) && (
+          {aiToolsVisible && (resolvedUrl || audioData) && (
             <button
               onClick={handleTranscribe}
               className='flex-shrink-0 p-2.5 rounded-lg hover:bg-bg-panel transition-all duration-200'
