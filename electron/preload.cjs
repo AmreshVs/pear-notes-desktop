@@ -12,7 +12,7 @@ window.electronBridge = {
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
 
   showFatalError: (title, message) => ipcRenderer.send('app:fatal-error', { title, message }),
-  // LEGACY(hyperdb-migration): resolves 'start-fresh' or 'quit' (and quits).
+  // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
   askLegacyVault: (texts) => ipcRenderer.invoke('app:legacy-vault', texts),
 
   isSecretStoreAvailable: () => ipcRenderer.sendSync('secret:available'),

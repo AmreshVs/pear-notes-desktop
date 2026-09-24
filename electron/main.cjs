@@ -367,13 +367,7 @@ function setupIPC() {
     dialog.showErrorBox(title, message)
   })
 
-  // LEGACY(hyperdb-migration): remove with the core's preserveLegacyVault. See
-  // docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8.
-  //
-  // The vault predates the HyperDB view and was refused untouched. Same native
-  // dialog family as the fatal error above, plus the one way forward. Quit is
-  // the default and the cancel action: starting fresh creates an empty vault,
-  // so it must never be what Enter or Escape does.
+  // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
   ipcMain.handle('app:legacy-vault', async (event, texts = {}) => {
     const { title, message, quitLabel, startFreshLabel } = texts
     const owner = BrowserWindow.fromWebContents(event.sender)
