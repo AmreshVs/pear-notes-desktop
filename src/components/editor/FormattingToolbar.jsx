@@ -25,6 +25,7 @@ import {
 
 import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 
+import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { useFormattingToolbar } from '../../hooks/useFormattingToolbar'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
@@ -72,7 +73,8 @@ export default function FormattingToolbar({ editor, noteKey }) {
     handleInsertAudio,
     handleToggleCodeBlock
   } = useFormattingToolbar(editor, noteKey)
-  const voiceTypingReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.VOICE_TYPING)
+  const aiToolsVisible = useAiToolsVisible()
+  const gateAiFeature = useAiFeatureGate()
   const transcribeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS)
 
   if (!editor) {
@@ -351,9 +353,11 @@ export default function FormattingToolbar({ editor, noteKey }) {
           )}
         </div>
 
-        {voiceTypingReady && (
+        {aiToolsVisible && (
           <Button
-            onClick={() => requestLocalAiSheet({ mode: 'dictate' })}
+            onClick={() => {
+              if (gateAiFeature(LOCAL_AI_FEATURE.VOICE_TYPING)) requestLocalAiSheet({ mode: 'dictate' })
+            }}
             title={t('localAi.dictate.toolbarLabel')}
             className='w-9 h-9'
           >

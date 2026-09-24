@@ -4,13 +4,15 @@ import { Sparkles } from 'lucide-react'
 
 import { htmlToParagraphs } from '@pear-notes/core/store/services/localAiPrompts.js'
 
+import { useAiFeatureGate } from '../../hooks/useAiFeatureGate'
 import { buildAiTools } from '../../lib/localAi/aiTools'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 
 import AiToolsPanel from './AiToolsPanel'
 
-export default function AiToolsButton({ content, summarizeReady, translateReady }) {
+export default function AiToolsButton({ content }) {
   const { t } = useTranslation()
+  const gateAiFeature = useAiFeatureGate()
   const [open, setOpen] = useState(false)
   const buttonRef = useRef(null)
   const panelRef = useRef(null)
@@ -33,10 +35,11 @@ export default function AiToolsButton({ content, summarizeReady, translateReady 
     }
   }, [open])
 
-  const tools = open ? buildAiTools({ summarizeReady, translateReady, hasSelection: false }) : []
+  const tools = open ? buildAiTools({ hasSelection: false }) : []
 
   const handleChoose = (tool) => {
     setOpen(false)
+    if (!gateAiFeature(tool.feature)) return
     requestLocalAiSheet({ mode: tool.mode, paragraphs: htmlToParagraphs(content) })
   }
 

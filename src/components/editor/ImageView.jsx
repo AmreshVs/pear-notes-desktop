@@ -12,7 +12,7 @@ import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
-import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
+import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { deleteHyperdriveFile } from '../../lib/fileManager'
 import { requestLocalAiSheet } from '../../lib/localAi/localAiRequests'
 import MediaPreviewModal from '../modals/MediaPreviewModal'
@@ -24,8 +24,8 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
     src && src.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, src) : src
   )
   const noteKey = useSelector(getSelectedNote)
-  const extractTextReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.EXTRACT_TEXT)
-  const describeImagesReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
+  const aiToolsVisible = useAiToolsVisible()
+  const gateAiFeature = useAiFeatureGate()
 
   const [width, setWidth] = useState(initialWidth || 300)
   const [height, setHeight] = useState(initialHeight || 'auto')
@@ -95,11 +95,12 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
             <Trash2 className='w-4 h-4' />
           </button>
         )}
-        {selected && extractTextReady && resolvedUrl && (
+        {selected && aiToolsVisible && resolvedUrl && (
           <button
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
+              if (!gateAiFeature(LOCAL_AI_FEATURE.EXTRACT_TEXT)) return
               requestLocalAiSheet({ mode: 'extract', url: resolvedUrl, fileName: title || alt })
             }}
             className='absolute -top-3 right-7 w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto'
@@ -109,11 +110,12 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
             <ScanText className='w-4 h-4' />
           </button>
         )}
-        {selected && describeImagesReady && resolvedUrl && (
+        {selected && aiToolsVisible && resolvedUrl && (
           <button
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
+              if (!gateAiFeature(LOCAL_AI_FEATURE.DESCRIBE_IMAGES)) return
               requestLocalAiSheet({
                 mode: 'describe',
                 url: resolvedUrl,
@@ -121,7 +123,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
                 attachmentUrl: src
               })
             }}
-            className={`absolute -top-3 ${extractTextReady ? 'right-[4.25rem]' : 'right-7'} w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto`}
+            className='absolute -top-3 right-[4.25rem] w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto'
             title={t('localAi.describe.actionLabel')}
             aria-label={t('localAi.describe.actionLabel')}
           >

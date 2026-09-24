@@ -56,6 +56,9 @@ import {
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
+import { peekAiSettingsFocus, takeAiSettingsFocus } from '../../lib/localAi/aiSettingsFocus'
+import { setShowAiTools, useShowAiTools } from '../../lib/localAi/aiToolsPreference'
+
 const SECTION_TITLE_CLASS = 'text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'
 const CARD_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden divide-y divide-border-primary'
@@ -153,13 +156,26 @@ export default function LocalAiSettings() {
   const state = useSelector(getLocalAiState)
   const bytesOnDisk = useSelector(selectLocalAiBytesOnDisk)
   const [confirm, setConfirm] = useState(null)
-  const [expandedFeature, setExpandedFeature] = useState(null)
+  const [expandedFeature, setExpandedFeature] = useState(peekAiSettingsFocus)
+
+  const showAiTools = useShowAiTools()
 
   useEffect(() => {
     if (LOCAL_AI_ENABLED) dispatch(initLocalAi())
   }, [dispatch])
 
   const { loaded, device, config } = state
+
+  useEffect(() => {
+    if (!loaded) return
+    const feature = takeAiSettingsFocus()
+    if (!feature) return
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`local-ai-feature-${feature}`)
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    })
+  }, [loaded])
   const isUnsupported = device.status === LOCAL_AI_DEVICE_STATUS.UNSUPPORTED
   const notice = state.notice?.type === LOCAL_AI_NOTICE.INSUFFICIENT_SPACE ? state.notice : null
 
@@ -382,6 +398,19 @@ export default function LocalAiSettings() {
       </div>
 
       <div className='space-y-1'>
+        <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.noteEditor')}</h3>
+        <div className={CARD_CLASS}>
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>{t('settings.onDeviceAi.showAiTools')}</label>
+              <p className={DESC_CLASS}>{t('settings.onDeviceAi.showAiToolsDesc')}</p>
+            </div>
+            <Toggle on={showAiTools} onClick={() => setShowAiTools(!showAiTools)} />
+          </div>
+        </div>
+      </div>
+
+      <div className='space-y-1'>
         <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.downloads')}</h3>
         <div className={CARD_CLASS}>
           <div className={ROW_CLASS}>
@@ -403,7 +432,11 @@ export default function LocalAiSettings() {
                 row.status === LOCAL_AI_FEATURE_STATUS.DOWNLOADING ||
                 row.status === LOCAL_AI_FEATURE_STATUS.PAUSED
               return (
-                <div key={row.feature} className='p-6 space-y-4 hover:bg-overlay-faint transition-colors'>
+                <div
+                  key={row.feature}
+                  id={`local-ai-feature-${row.feature}`}
+                  className='p-6 space-y-4 hover:bg-overlay-faint transition-colors'
+                >
                   <div className='flex items-center justify-between gap-6'>
                     <button
                       onClick={() =>

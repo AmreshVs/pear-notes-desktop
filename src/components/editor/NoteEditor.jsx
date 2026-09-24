@@ -38,6 +38,7 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
+import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
 import { copyToClipboard } from '../../lib/clipboard'
@@ -124,7 +125,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const editorConflict = useSelector(getEditorConflict)
   const hasNoteConflict = !!editorConflict && editorConflict.key === selectedNoteKey
   const summarizeReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
-  const translateReady = useLocalAiFeatureReady(LOCAL_AI_FEATURE.TRANSLATE_NOTES)
+  const aiToolsVisible = useAiToolsVisible()
 
   useEffect(() => {
     clearLocalAiSheetRequest()
@@ -739,13 +740,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         )}
 
         <div className='absolute bottom-6 right-8 z-30 flex items-center gap-4'>
-          {LOCAL_AI_ENABLED && (summarizeReady || translateReady) && (
-            <AiToolsButton
-              content={content}
-              summarizeReady={summarizeReady}
-              translateReady={translateReady}
-            />
-          )}
+          {aiToolsVisible && <AiToolsButton content={content} />}
         </div>
       </div>
 

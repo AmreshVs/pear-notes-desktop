@@ -32,6 +32,7 @@ import { debounce } from '@pear-notes/core/utils.js'
 
 import appIcon from '../build/icon.png'
 
+import AppToast from './components/common/AppToast'
 import BackupProgressBanner from './components/common/BackupProgressBanner'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
@@ -257,6 +258,7 @@ function App() {
         <PairingStatusOverlay />
         <DeviceRemovedModal />
         <BackupProgressBanner />
+        <AppToast />
         {updateStatus?.mandatory && (
           <UpdateRequiredModal
             latestVersion={updateStatus.latestVersion}
