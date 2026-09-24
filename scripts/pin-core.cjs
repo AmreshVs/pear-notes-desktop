@@ -16,6 +16,11 @@ const DEPENDENCY = '@pear-notes/core'
 const COMMIT_PATHS = ['package.json', 'package-lock.json']
 const NO_COMMIT = process.argv.slice(2).includes('--no-commit')
 
+function installPinnedCore() {
+  fs.rmSync(path.join(ROOT, 'node_modules', DEPENDENCY), { recursive: true, force: true })
+  execSync('npm install --no-audit --no-fund', { cwd: ROOT, stdio: 'inherit' })
+}
+
 function abort(message) {
   console.error(`\n  pin-core: ${message}\n`)
   process.exit(1)
@@ -127,17 +132,15 @@ function main() {
 
   const pinned = `github:${resolveSlug(previous)}#${sha}`
   if (previous === pinned) {
-    console.log(`\n  pin-core: already pinned to ${sha.slice(0, 12)}\n`)
+    console.log(`\n  pin-core: already pinned to ${sha.slice(0, 12)}, refreshing the installed copy\n`)
+    installPinnedCore()
     return
   }
 
   json.dependencies[DEPENDENCY] = pinned
   fs.writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`)
 
-  execSync('npm install --package-lock-only --no-audit --no-fund', {
-    cwd: ROOT,
-    stdio: 'inherit',
-  })
+  installPinnedCore()
 
   console.log(`\n  pin-core: ${DEPENDENCY} pinned to ${sha.slice(0, 12)} (was ${previous})`)
 
