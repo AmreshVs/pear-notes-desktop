@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "node scripts/postinstall.cjs",
+    "setup": "npm install --ignore-scripts && node scripts/postinstall.cjs",
     "start": "electron-forge start",
     "predev": "vite build",
     "dev": "concurrently \"npm:dev:*\"",
@@ -28,7 +29,7 @@
     "test": "brittle test/*.test.js"
   },
   "dependencies": {
-    "@pear-notes/core": "github:AmreshVs/pear-notes-core#8de17e3dd5cdf581077e3beb54460afdb6f286d9",
+    "@pear-notes/core": "github:AmreshVs/pear-notes-core#85685cf7a4a3f65ba60f450dee0efa4c4638a0c7",
     "@reduxjs/toolkit": "^2.10.1",
     "@tiptap/extension-bubble-menu": "^3.15.3",
     "@tiptap/extension-code-block-lowlight": "^3.15.3",
@@ -86,7 +87,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "@vitejs/plugin-react": "^5.0.1",
     "brittle": "^3.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.5",
     "electron": "^40.10.5",
     "electron-forge-plugin-universal-prebuilds": "^1.0.0",
     "eslint": "^9.39.1",

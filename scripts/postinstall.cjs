@@ -27,6 +27,9 @@ if (process.platform === 'darwin') {
 // Rebuild the device-auth addon against Electron's ABI (it loads in the main process)
 const deviceAuthDir = path.join('native', 'pear-device-auth')
 if (fs.existsSync(path.join(deviceAuthDir, 'binding.gyp'))) {
+  if (!fs.existsSync(path.join(deviceAuthDir, 'node_modules', 'node-addon-api'))) {
+    run(`npm ci --ignore-scripts --prefix ${deviceAuthDir}`)
+  }
   try {
     const electronVersion = require('electron/package.json').version
     run(
