@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
+  CircleMinus,
   Crown,
   Globe,
   Info,
@@ -22,15 +23,17 @@ import { QRCodeCanvas } from 'qrcode.react'
 
 import { DEVICE_NAME_MAX_LENGTH, INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
 import {
+  canAddSyncLeader,
+  canRemoveSyncLeader,
   clearIndexerError,
   deleteSyncedDevice,
-  getIndexerDevice,
   getIndexerError,
   getIndexerErrorDeviceKey,
   getIndexerPendingKey,
   getIndexerPendingStep,
   getLocalPreferences,
   getSyncedDevices,
+  getSyncLeaderPlan,
   setDeviceIndexer,
   updateSyncedDevice
 } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
@@ -52,12 +55,7 @@ import {
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
-import {
-  canPromoteDevice,
-  getIndexerErrorKey,
-  getIndexerStepKey,
-  isIndexerTransferBlocked
-} from '../../lib/indexerUtils'
+import { getIndexerErrorKey, getIndexerStepKey } from '../../lib/indexerUtils'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
@@ -86,9 +84,19 @@ export default function DevicesSettings({ onClose }) {
   const syncedDevices = useSelector(getSyncedDevices)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
-  const indexerDevice = useSelector(getIndexerDevice)
-  const indexerOffline = isIndexerTransferBlocked(indexerDevice)
-  const indexerName = indexerDevice ? getDeviceDisplayName(indexerDevice) : ''
+  const leaderPlan = useSelector(getSyncLeaderPlan)
+  const [leaderAction, setLeaderAction] = useState(null)
+
+  const openLeaderAction = (device, isIndexer) => {
+    dispatch(clearIndexerError())
+    setLeaderAction({ device, isIndexer })
+  }
+
+  const confirmLeaderAction = () => {
+    const { device, isIndexer } = leaderAction
+    setLeaderAction(null)
+    dispatch(setDeviceIndexer({ key: device.key, localKey: device.localKey, isIndexer }))
+  }
 
   const [countdownTick, setCountdownTick] = useState(0)
 
@@ -333,7 +341,12 @@ export default function DevicesSettings({ onClose }) {
                 {syncedDevices
                   .filter((d) => d.isLocal)
                   .map((device) => (
-                    <DeviceItem key={device.key} device={device} />
+                    <DeviceItem
+                      key={device.key}
+                      device={device}
+                      leaderPlan={leaderPlan}
+                      onLeaderAction={openLeaderAction}
+                    />
                   ))}
               </div>
             </div>
@@ -346,7 +359,15 @@ export default function DevicesSettings({ onClose }) {
                 {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
                   syncedDevices
                     .filter((d) => !d.isLocal)
-                    .map((device) => <DeviceItem key={device.key} device={device} isOther />)
+                    .map((device) => (
+                      <DeviceItem
+                        key={device.key}
+                        device={device}
+                        isOther
+                        leaderPlan={leaderPlan}
+                        onLeaderAction={openLeaderAction}
+                      />
+                    ))
                 ) : (
                   <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
                     <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
@@ -357,21 +378,10 @@ export default function DevicesSettings({ onClose }) {
                 )}
               </div>
 
-              <div className='flex items-start gap-2 mt-6 ml-1'>
-                <Crown className='w-3.5 h-3.5 text-accent-primary shrink-0 mt-0.5' />
-                <p className='text-xs text-text-tertiary leading-relaxed'>
-                  {t('sync.devices.indexerExplain')}
-                </p>
-              </div>
-
-              {indexerOffline && (
-                <div className='flex items-start gap-2 mt-3 ml-1'>
-                  <TriangleAlert className='w-3.5 h-3.5 text-text-tertiary shrink-0 mt-0.5' />
-                  <p className='text-xs text-text-tertiary leading-relaxed'>
-                    {t('sync.devices.indexerOfflineNotice', { name: indexerName })}
-                  </p>
-                </div>
-              )}
+              <SyncLeadersPanel
+                plan={leaderPlan}
+                onSuggest={(device) => openLeaderAction(device, true)}
+              />
             </div>
           </div>
         )}
@@ -384,6 +394,15 @@ export default function DevicesSettings({ onClose }) {
         </div>
       </div>
 
+      {leaderAction && (
+        <LeaderConfirmModal
+          device={leaderAction.device}
+          isIndexer={leaderAction.isIndexer}
+          onCancel={() => setLeaderAction(null)}
+          onConfirm={confirmLeaderAction}
+        />
+      )}
+
       <MergeConfirmModal
         open={!!pendingInvite}
         onConfirm={handleConfirmMerge}
@@ -393,13 +412,12 @@ export default function DevicesSettings({ onClose }) {
   )
 }
 
-function DeviceItem({ device, isOther }) {
+function DeviceItem({ device, isOther, leaderPlan, onLeaderAction }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const Icon = device.deviceType === 'desktop' ? Monitor : Smartphone
   const [isEditing, setIsEditing] = useState(false)
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
-  const [isConfirmingTransfer, setIsConfirmingTransfer] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const [editedTitle, setEditedTitle] = useState(device.title || '')
 
@@ -407,25 +425,12 @@ function DeviceItem({ device, isOther }) {
   const indexerPendingStep = useSelector(getIndexerPendingStep)
   const indexerError = useSelector(getIndexerError)
   const indexerErrorDeviceKey = useSelector(getIndexerErrorDeviceKey)
-  const currentIndexer = useSelector(getIndexerDevice)
-  const canPromote = canPromoteDevice(device, currentIndexer)
+  const canAddLeader = canAddSyncLeader(device, leaderPlan)
+  const canRemoveLeader = canRemoveSyncLeader(device, leaderPlan)
   const isTransferring = indexerPendingKey === device.key
   const indexerStepKey = getIndexerStepKey(indexerPendingStep)
   const indexerErrorKey =
     indexerErrorDeviceKey === device.key ? getIndexerErrorKey(indexerError) : ''
-  const outgoingName = currentIndexer ? getDeviceDisplayName(currentIndexer) : ''
-
-  const handleOpenTransfer = () => {
-    dispatch(clearIndexerError())
-    setIsConfirmingTransfer(true)
-  }
-
-  const handleConfirmTransfer = () => {
-    setIsConfirmingTransfer(false)
-    dispatch(
-      setDeviceIndexer({ key: device.key, localKey: device.localKey, isIndexer: true })
-    )
-  }
 
   const presenceLabelKey = !device.presenceKnown
     ? 'sync.devices.presenceUnknown'
@@ -545,14 +550,25 @@ function DeviceItem({ device, isOther }) {
           </span>
         )}
 
-        {canPromote && !isTransferring && (
+        {canAddLeader && !isTransferring && (
           <button
-            onClick={handleOpenTransfer}
+            onClick={() => onLeaderAction(device, true)}
             aria-label={t('sync.devices.makeIndexer')}
             title={t('sync.devices.makeIndexer')}
             className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-accent-primary/10 rounded-lg text-accent-primary transition-all flex items-center gap-2'
           >
             <Crown className='w-4 h-4' />
+          </button>
+        )}
+
+        {canRemoveLeader && !isTransferring && (
+          <button
+            onClick={() => onLeaderAction(device, false)}
+            aria-label={t('sync.devices.removeIndexer')}
+            title={t('sync.devices.removeIndexer')}
+            className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-accent-primary/10 rounded-lg text-accent-primary transition-all flex items-center gap-2'
+          >
+            <CircleMinus className='w-4 h-4' />
           </button>
         )}
 
@@ -578,53 +594,6 @@ function DeviceItem({ device, isOther }) {
           </button>
         )}
       </div>
-
-      {isConfirmingTransfer && (
-        <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
-          <div
-            className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300'
-            onClick={() => setIsConfirmingTransfer(false)}
-          />
-
-          <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
-            <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/20 blur-[80px] rounded-full' />
-
-            <div className='relative z-10 flex flex-col items-center text-center space-y-6'>
-              <div className='w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2'>
-                <Crown className='w-10 h-10 text-accent-primary' />
-              </div>
-
-              <div className='space-y-2'>
-                <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-                  {device.isLocal
-                    ? t('sync.devices.makeIndexerTitleLocal')
-                    : t('sync.devices.makeIndexerTitle', { name: getDeviceDisplayName(device) })}
-                </h3>
-                <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                  {device.isLocal
-                    ? t('sync.devices.makeIndexerBodyLocal', { name: outgoingName })
-                    : t('sync.devices.makeIndexerBody', { name: getDeviceDisplayName(device) })}
-                </p>
-              </div>
-
-              <div className='flex gap-3 w-full pt-2'>
-                <button
-                  onClick={() => setIsConfirmingTransfer(false)}
-                  className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
-                >
-                  {t('sync.delete.cancel')}
-                </button>
-                <button
-                  onClick={handleConfirmTransfer}
-                  className='flex-1 py-4 bg-accent-primary text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95'
-                >
-                  {t('sync.devices.makeIndexerConfirm')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isConfirmingDelete && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
@@ -675,5 +644,125 @@ function DeviceItem({ device, isOther }) {
         </div>
       )}
     </>
+  )
+}
+
+function SyncLeadersPanel({ plan, onSuggest }) {
+  const { t } = useTranslation()
+  const offlineNames = plan.offlineLeaders.map(getDeviceDisplayName).join(', ')
+
+  return (
+    <div className='mt-6 ml-1 space-y-3'>
+      <div className='flex items-center gap-2'>
+        <Crown className='w-3.5 h-3.5 text-accent-primary shrink-0' />
+        <p className='text-xs font-bold text-text-primary'>
+          {t('sync.devices.leadersSummary', { count: plan.leaderCount, max: plan.max })}
+        </p>
+        <p className='text-xs text-text-tertiary'>
+          {t('sync.devices.leadersRecommended', { count: plan.recommended })}
+        </p>
+      </div>
+
+      <p className='text-xs text-text-tertiary leading-relaxed'>
+        {t('sync.devices.indexerExplain')}
+      </p>
+
+      {plan.needsBothOnline && (
+        <div className='flex items-start gap-2'>
+          <TriangleAlert className='w-3.5 h-3.5 text-text-tertiary shrink-0 mt-0.5' />
+          <p className='text-xs text-text-tertiary leading-relaxed'>
+            {t('sync.devices.leadersTwoWarning')}
+          </p>
+        </div>
+      )}
+
+      {!!offlineNames && (
+        <div className='flex items-start gap-2'>
+          <TriangleAlert className='w-3.5 h-3.5 text-text-tertiary shrink-0 mt-0.5' />
+          <p className='text-xs text-text-tertiary leading-relaxed'>
+            {t('sync.devices.indexerOfflineNotice', { name: offlineNames })}
+          </p>
+        </div>
+      )}
+
+      {plan.suggested && (
+        <button
+          onClick={() => onSuggest(plan.suggested)}
+          className='w-full p-4 bg-accent-primary/10 border border-accent-primary/30 rounded-2xl flex items-center gap-3 text-left hover:bg-accent-primary/15 transition-colors'
+        >
+          <Crown className='w-4 h-4 text-accent-primary shrink-0' />
+          <span className='flex-1 min-w-0'>
+            <span className='block text-sm font-bold text-text-primary truncate'>
+              {t('sync.devices.leadersSuggest', { name: getDeviceDisplayName(plan.suggested) })}
+            </span>
+            <span className='block text-xs text-text-tertiary'>
+              {t('sync.devices.leadersSuggestHint')}
+            </span>
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
+
+function LeaderConfirmModal({ device, isIndexer, onCancel, onConfirm }) {
+  const { t } = useTranslation()
+  const name = getDeviceDisplayName(device)
+  const title = isIndexer
+    ? device.isLocal
+      ? t('sync.devices.makeIndexerTitleLocal')
+      : t('sync.devices.makeIndexerTitle', { name })
+    : device.isLocal
+      ? t('sync.devices.removeIndexerTitleLocal')
+      : t('sync.devices.removeIndexerTitle', { name })
+  const body = isIndexer
+    ? device.isLocal
+      ? t('sync.devices.makeIndexerBodyLocal')
+      : t('sync.devices.makeIndexerBody', { name })
+    : t('sync.devices.removeIndexerBody')
+
+  return (
+    <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-0'>
+      <div
+        className='absolute inset-0 bg-backdrop-medium backdrop-blur-3xl animate-in fade-in duration-300'
+        onClick={onCancel}
+      />
+
+      <div className='relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2rem] p-10 max-w-sm w-full animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 ease-out overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)]'>
+        <div className='absolute -top-24 -left-24 w-48 h-48 bg-accent-primary/20 blur-[80px] rounded-full' />
+
+        <div className='relative z-10 flex flex-col items-center text-center space-y-6'>
+          <div className='w-20 h-20 bg-accent-primary/15 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/30 mb-2'>
+            {isIndexer ? (
+              <Crown className='w-10 h-10 text-accent-primary' />
+            ) : (
+              <CircleMinus className='w-10 h-10 text-accent-primary' />
+            )}
+          </div>
+
+          <div className='space-y-2'>
+            <h3 className='text-2xl font-bold text-text-primary tracking-tight'>{title}</h3>
+            <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>{body}</p>
+          </div>
+
+          <div className='flex gap-3 w-full pt-2'>
+            <button
+              onClick={onCancel}
+              className='flex-1 py-4 bg-overlay-subtle border border-overlay-soft text-text-tertiary rounded-xl font-bold text-sm hover:bg-overlay-medium transition-all active:scale-95'
+            >
+              {t('sync.delete.cancel')}
+            </button>
+            <button
+              onClick={onConfirm}
+              className='flex-1 py-4 bg-accent-primary text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95'
+            >
+              {isIndexer
+                ? t('sync.devices.makeIndexerConfirm')
+                : t('sync.devices.removeIndexerConfirm')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

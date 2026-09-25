@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, Check, Copy, Eye, FileWarning, RefreshCw } from 'lucide-react'
+import {
+  AlertTriangle,
+  Check,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Copy,
+  Eye,
+  FileWarning,
+  RefreshCw
+} from 'lucide-react'
 
 import { SENSITIVE_DEBUG_KEYS, SHOW_SENSITIVE_DEBUG_INFO } from '@pear-notes/core/constant.js'
-import { formatDebugReport, shortenHex } from '@pear-notes/core/utils.js'
+import { assessSyncHealth, formatDebugReport, shortenHex } from '@pear-notes/core/utils.js'
 
 import { copyToClipboard } from '../../lib/clipboard'
 import { captureDebugSnapshot } from '../../lib/debugSnapshot'
@@ -94,6 +104,41 @@ function RevealableKey({ value, className }) {
     >
       {revealed ? value : short}
     </button>
+  )
+}
+
+const HEALTH_STYLES = {
+  healthy: { Icon: CircleCheck, text: 'text-accent-success', dot: 'bg-accent-success' },
+  syncing: { Icon: RefreshCw, text: 'text-accent-primary', dot: 'bg-accent-primary' },
+  attention: { Icon: CircleAlert, text: 'text-accent-warning', dot: 'bg-accent-warning' },
+  problem: { Icon: CircleX, text: 'text-accent-danger', dot: 'bg-accent-danger' }
+}
+
+function HealthCard({ snapshot }) {
+  const { t } = useTranslation()
+  const health = assessSyncHealth(snapshot)
+  const { Icon, text } = HEALTH_STYLES[health.level]
+
+  return (
+    <Card title={t('debug.health.title')}>
+      <div className='px-6 py-4 flex items-center gap-3 border-b border-border-primary/40'>
+        <Icon className={`w-5 h-5 shrink-0 ${text}`} />
+        <span className={`text-base font-bold ${text}`}>{t(`debug.health.${health.level}`)}</span>
+      </div>
+      {health.checks.map((check) => (
+        <div
+          key={check.id}
+          className='px-6 py-2.5 flex items-start gap-3 border-b border-border-primary/40 last:border-b-0'
+        >
+          <span
+            className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${HEALTH_STYLES[check.level].dot}`}
+          />
+          <span className='text-sm text-text-secondary'>
+            {t(`debug.health.${check.id}`, check.params)}
+          </span>
+        </div>
+      ))}
+    </Card>
   )
 }
 
@@ -303,6 +348,7 @@ export default function DebugSettings({ onOpenErrorLog }) {
         <p className='text-sm text-text-tertiary'>{t('debug.loading')}</p>
       ) : (
         <>
+          <HealthCard snapshot={snapshot} />
           <Section
             title={t('debug.sections.autobase')}
             data={snapshot.autobase}

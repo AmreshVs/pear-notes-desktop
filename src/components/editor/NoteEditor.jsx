@@ -36,7 +36,6 @@ import {
   getFontFamily,
   getLockMethod
 } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { getSyncedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 
 import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
@@ -102,8 +101,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
   const folders = useSelector(getFolders)
-  const syncedDevices = useSelector(getSyncedDevices)
-  const localDevice = useMemo(() => syncedDevices.find((d) => d.isLocal), [syncedDevices])
 
   const activityEnabled = useSelector(getActivityLogEnabled)
   const historyNoteKey = useSelector(getHistoryNoteKey)
@@ -272,7 +269,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     clearLocalAiSheetRequest()
     if (!noteKey) return
     try {
-      const extension = AUDIO_EXTENSION_BY_TYPE.find(([marker]) => blob.type.includes(marker))?.[1] ?? 'webm'
+      const extension =
+        AUDIO_EXTENSION_BY_TYPE.find(([marker]) => blob.type.includes(marker))?.[1] ?? 'webm'
       const fileName = `Audio Recording ${new Date().toLocaleString()}.${extension}`
       const { link } = await backendApi.insertFile({
         key: noteKey,
@@ -707,7 +705,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
                 syncToken={syncToken}
                 onChange={handleContentChange}
                 placeholder={t('noteEditor.placeholder')}
-                localDevice={localDevice}
               />
             </div>
           </div>

@@ -158,10 +158,7 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     browser: false,
-    conditions: ['node'],
-    alias: {
-      'y-prosemirror': '@tiptap/y-tiptap'
-    }
+    conditions: ['node']
   },
   // Strip diagnostic logging from production builds. console.error survives so
   // genuine failures are still reportable; core's log.js already gates
