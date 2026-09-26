@@ -19,6 +19,8 @@ import {
 
 import { getVaultErrorText, getVaultLabel } from '../../lib/vaultNames'
 
+import JoinVaultForm from './JoinVaultForm'
+
 export default function VaultsSettings() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
@@ -204,6 +206,8 @@ export default function VaultsSettings() {
           {t('vaults.limitReached', { max: MAX_VAULTS })}
         </p>
       )}
+
+      <JoinVaultForm />
     </div>
   )
 }
