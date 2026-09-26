@@ -1187,7 +1187,12 @@
     "stalled": "Stalled — retry to try again",
     "removeFromNote": "Remove from note",
     "waitingOnlineTooltip": "Waiting for the other device to come online",
-    "liveMediaProgressLabel": "Live media as a share of on-disk storage"
+    "liveMediaProgressLabel": "Live media as a share of on-disk storage",
+    "clearVault": "Clear \"{{name}}\"",
+    "clearVaultDesc": "Deletes \"{{name}}\" and its notes from this device only. Other devices keep it, and your other vaults are not touched.",
+    "clearVaultBtn": "Clear vault",
+    "clearVaultConfirmTitle": "Clear \"{{name}}\" from this device?",
+    "clearAllVaultsDesc": "Permanently deletes every vault on this device, with all their notes, folders, settings and media."
   },
   "update": {
     "overlay": {

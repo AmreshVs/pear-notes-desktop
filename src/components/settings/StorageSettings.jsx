@@ -51,8 +51,14 @@ import {
   unsubscribeStorageInfo
 } from '@pear-notes/core/store/slices/storageSlice.js'
 import { clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
+import {
+  getCurrentVault,
+  getHasMultipleVaults,
+  removeVault
+} from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
+import { getVaultLabel } from '../../lib/vaultNames'
 import { deleteDbEncryptionKey } from '../../utils.js'
 
 const TRANSFER_LIST_CLASS =
@@ -295,6 +301,8 @@ function TransferNoteGroup({ group, renderRow }) {
   )
 }
 
+const CLEAR_TARGET = { vault: 'vault', all: 'all' }
+
 export default function StorageSettings({ onOpenOnDeviceAi }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
@@ -314,6 +322,9 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
   const isLoading = useSelector(getStorageIsLoading)
   const error = useSelector(getStorageError)
   const [confirmClear, setConfirmClear] = useState(false)
+  const hasMultipleVaults = useSelector(getHasMultipleVaults)
+  const currentVault = useSelector(getCurrentVault)
+  const currentVaultName = getVaultLabel(currentVault, t)
   const [isClearing, setIsClearing] = useState(false)
 
   const noteTitleByKey = useMemo(() => {
@@ -348,6 +359,11 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
 
   const handlePauseDownload = (url) => {
     dispatch(pauseDownload({ url }))
+  }
+
+  const handleClearVault = () => {
+    setConfirmClear(false)
+    if (currentVault) dispatch(removeVault({ id: currentVault.id }))
   }
 
   const handleClearStorage = () => {
@@ -675,15 +691,36 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           {t('storage.dangerZone')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
-          <div className='px-6 py-5 flex items-center justify-between'>
+          {hasMultipleVaults && (
+            <div className='px-6 py-5 flex items-center justify-between gap-4 border-b border-border-primary/50'>
+              <div className='space-y-1'>
+                <p className='text-base font-bold text-text-primary'>
+                  {t('storage.clearVault', { name: currentVaultName })}
+                </p>
+                <p className='text-sm text-text-tertiary font-medium opacity-60'>
+                  {t('storage.clearVaultDesc', { name: currentVaultName })}
+                </p>
+              </div>
+              <button
+                onClick={() => setConfirmClear(CLEAR_TARGET.vault)}
+                className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95'
+              >
+                <Trash2 className='w-3.5 h-3.5' />
+                {t('storage.clearVaultBtn')}
+              </button>
+            </div>
+          )}
+          <div className='px-6 py-5 flex items-center justify-between gap-4'>
             <div className='space-y-1'>
               <p className='text-base font-bold text-text-primary'>{t('storage.clearAllData')}</p>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {t('storage.clearAllDataDesc')}
+                {hasMultipleVaults
+                  ? t('storage.clearAllVaultsDesc')
+                  : t('storage.clearAllDataDesc')}
               </p>
             </div>
             <button
-              onClick={() => setConfirmClear(true)}
+              onClick={() => setConfirmClear(CLEAR_TARGET.all)}
               className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
             >
               <Trash2 className='w-3.5 h-3.5' />
@@ -718,10 +755,16 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
               </div>
               <div className='space-y-2'>
                 <h3 className='text-lg font-bold text-text-primary'>
-                  {t('backup.clearAllDataTitle')}
+                  {confirmClear === CLEAR_TARGET.vault
+                    ? t('storage.clearVaultConfirmTitle', { name: currentVaultName })
+                    : t('backup.clearAllDataTitle')}
                 </h3>
                 <p className='text-sm text-text-tertiary leading-relaxed'>
-                  {t('backup.clearAllDataDesc')}
+                  {confirmClear === CLEAR_TARGET.vault
+                    ? t('storage.clearVaultDesc', { name: currentVaultName })
+                    : hasMultipleVaults
+                      ? t('storage.clearAllVaultsDesc')
+                      : t('backup.clearAllDataDesc')}
                 </p>
               </div>
               <div className='flex gap-3 w-full pt-2'>
@@ -732,7 +775,9 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
                   {t('common.cancel')}
                 </button>
                 <button
-                  onClick={handleClearStorage}
+                  onClick={
+                    confirmClear === CLEAR_TARGET.vault ? handleClearVault : handleClearStorage
+                  }
                   className='flex-1 py-3 bg-accent-danger text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 shadow-[0_4px_15px_rgba(var(--accent-danger-rgb),0.3)]'
                 >
                   {t('common.clear')}
