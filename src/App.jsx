@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 import { backendApi, setLocalDeviceName } from '@pear-notes/core/backend/api.js'
 import { appBoot } from '@pear-notes/core/bootTimeline.js'
+import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import {
   createFolder,
   deleteFolder,
@@ -28,6 +29,7 @@ import {
   setSearchQuery,
   setShowSettings
 } from '@pear-notes/core/store/slices/uiSlice.js'
+import { getHasMultipleVaults, getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { debounce } from '@pear-notes/core/utils.js'
 
 import appIcon from '../build/icon.png'
@@ -45,9 +47,11 @@ import SettingsScreen from './components/settings/SettingsScreen'
 import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
 import ResizablePanel from './components/sidebar/ResizablePanel'
+import VaultRail from './components/sidebar/VaultRail'
 import { useAppReload } from './hooks/useAppReload'
 import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
+import { useVaultReload } from './hooks/useVaultReload'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
   applyCloseToTray,
@@ -76,6 +80,7 @@ function App() {
   }, [width])
 
   useAppReload()
+  useVaultReload()
   usePdfThumbSweep()
   usePowerState()
   useLocalAiBridge()
@@ -85,6 +90,10 @@ function App() {
   const selectedFolder = useSelector(getSelectedFolder)
   const searchQuery = useSelector(getSearchQuery)
   const showSettings = useSelector(getShowSettings)
+  const hasMultipleVaults = useSelector(getHasMultipleVaults)
+  const vaultPending = useSelector(getVaultPending)
+  const showVaultRail = isMultiVaultEnabled() && hasMultipleVaults
+  const isVaultOpening = ['create', 'switch', 'remove'].includes(vaultPending)
   const folders = useSelector(getFolders)
   const updateStatus = useAppUpdateStatus()
 
@@ -225,6 +234,7 @@ function App() {
     </div>
   ) : (
     <div className='flex-1 flex overflow-hidden relative z-10'>
+      {showVaultRail && !isSidebarCollapsed && <VaultRail />}
       <ResizablePanel
         storageKey='folders'
         defaultWidth={280}
@@ -280,6 +290,17 @@ function App() {
             initialSection={typeof showSettings === 'string' ? showSettings : 'general'}
             onClose={() => dispatch(setShowSettings(false))}
           />
+        )}
+        {isVaultOpening && (
+          <div
+            role='status'
+            className='fixed inset-0 z-[2200] flex items-center justify-center bg-backdrop-medium backdrop-blur-xl'
+          >
+            <div className='flex flex-col items-center gap-4'>
+              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary' />
+              <p className='text-base text-text-secondary'>{t('vaults.openingVault')}</p>
+            </div>
+          </div>
         )}
         <PairingStatusOverlay />
         <DeviceRemovedModal />

@@ -1,10 +1,20 @@
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { Link2 } from 'lucide-react'
 
+import { isMultiVaultEnabled, VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
+
 export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
   const { t } = useTranslation()
+  const [mode, setMode] = useState('add')
+  const [vaultName, setVaultName] = useState('')
   if (!open) return null
+
+  const offersVaults = isMultiVaultEnabled()
+  const adding = offersVaults && mode === 'add'
+  const handleConfirm = () =>
+    offersVaults ? onConfirm({ mode, vaultName: vaultName.trim() }) : onConfirm()
 
   return createPortal(
     <div className='fixed inset-0 z-[2100] flex items-center justify-center p-6 sm:p-0'>
@@ -24,12 +34,50 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
 
           <div className='space-y-2'>
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-              {t('mergeConfirm.title')}
+              {offersVaults ? t('vaults.join.title') : t('mergeConfirm.title')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {t('mergeConfirm.description')}
+              {offersVaults ? t('vaults.join.description') : t('mergeConfirm.description')}
             </p>
           </div>
+
+          {offersVaults && (
+            <div role='radiogroup' className='w-full space-y-2 text-left'>
+              {[
+                { id: 'add', title: t('vaults.join.addTitle'), body: t('vaults.join.addBody') },
+                {
+                  id: 'replace',
+                  title: t('vaults.join.combineTitle'),
+                  body: t('mergeConfirm.description')
+                }
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type='button'
+                  role='radio'
+                  aria-checked={mode === option.id}
+                  onClick={() => setMode(option.id)}
+                  className={`w-full rounded-xl border p-3 text-left ${mode === option.id ? 'border-[var(--accent-selected-border)] bg-[var(--accent-selected-bg)]' : 'border-border-primary'}`}
+                >
+                  <span className='block text-sm font-bold text-text-primary'>{option.title}</span>
+                  <span className='block text-xs text-text-tertiary leading-relaxed'>
+                    {option.body}
+                  </span>
+                </button>
+              ))}
+              {adding && (
+                <input
+                  id='join-vault-name'
+                  value={vaultName}
+                  maxLength={VAULT_NAME_MAX_LENGTH}
+                  onChange={(e) => setVaultName(e.target.value)}
+                  placeholder={t('vaults.namePlaceholder')}
+                  aria-label={t('vaults.nameLabel')}
+                  className='w-full bg-bg-panel text-text-primary px-3 py-2 rounded-lg border border-border-secondary text-sm focus:outline-none focus:border-accent-primary'
+                />
+              )}
+            </div>
+          )}
 
           <div className='flex gap-3 w-full'>
             <button
@@ -39,10 +87,11 @@ export default function MergeConfirmModal({ open, onConfirm, onCancel }) {
               {t('common.cancel')}
             </button>
             <button
-              onClick={onConfirm}
-              className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
+              onClick={handleConfirm}
+              disabled={adding && !vaultName.trim()}
+              className='flex-1 py-3 disabled:opacity-50 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95'
             >
-              {t('mergeConfirm.combineBtn')}
+              {adding ? t('vaults.join.addBtn') : t('mergeConfirm.combineBtn')}
             </button>
           </div>
         </div>

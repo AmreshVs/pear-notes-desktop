@@ -119,7 +119,8 @@
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
       "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
       "activity": "See what each linked device has created, changed and removed.",
-      "onDeviceAi": "AI processes your notes, recordings and photos on this computer. Nothing ever leaves your computer. Each feature downloads its model once, then works offline."
+      "onDeviceAi": "AI processes your notes, recordings and photos on this computer. Nothing ever leaves your computer. Each feature downloads its model once, then works offline.",
+      "vaults": "Each vault has its own notes, devices and settings. Only the open vault syncs."
     },
     "syncStatus": {
       "title": "Sync status",
@@ -965,7 +966,8 @@
     "linkDevices": "My devices",
     "sync": "Sync",
     "debug": "Debug",
-    "errorLog": "Logs"
+    "errorLog": "Logs",
+    "vaults": "Vaults"
   },
   "noteLockPassword": {
     "createTitle": "Set note lock password",
@@ -1980,6 +1982,44 @@
       "pending": "{{count}} changes waiting to be confirmed by the sync leaders.",
       "stalled": "{{count}} attachment downloads are stalled.",
       "title": "Status"
+    }
+  },
+  "vaults": {
+    "title": "Vaults",
+    "defaultName": "My vault",
+    "manage": "Manage vaults",
+    "newVault": "New vault",
+    "nameLabel": "Vault name",
+    "namePlaceholder": "Vault name, for example Shared",
+    "create": "Create",
+    "creating": "Creating…",
+    "newVaultHint": "A new vault starts empty and only on this device. Open it, then link other devices from My devices.",
+    "open": "Open now",
+    "notOpen": "Not syncing while closed",
+    "openBtn": "Open",
+    "opening": "Opening…",
+    "openingVault": "Opening vault…",
+    "rename": "Rename",
+    "remove": "Remove from this device",
+    "removeDescription": "\"{{name}}\" and its notes will be deleted from this device. Other devices keep it. Keep its sync leader online so they see this device leave.",
+    "removeConfirm": "Remove",
+    "removing": "Leaving the vault and removing it…",
+    "limitReached": "You can have up to {{max}} vaults on a device.",
+    "join": {
+      "title": "Link to another vault?",
+      "description": "Choose what happens to the notes already on this device.",
+      "addTitle": "Add it as another vault",
+      "addBody": "Your notes here stay in their own vault. You can switch between the two at any time.",
+      "combineTitle": "Combine into it",
+      "addBtn": "Add vault"
+    },
+    "errors": {
+      "emptyName": "Enter a name for the vault.",
+      "maxVaults": "This device already has the most vaults it can hold. Remove one first.",
+      "lastVault": "A device always keeps at least one vault.",
+      "busy": "Another vault change is still in progress. Try again in a moment.",
+      "syncLeader": "This device is the only sync leader for that vault. Make another device the sync leader first.",
+      "openFailed": "The vault could not be opened. The previous vault is open again."
     }
   }
 }

@@ -5,6 +5,7 @@ import {
   HardDrive,
   History,
   Laptop,
+  Layers,
   RefreshCw,
   Settings as SettingsIcon,
   ShieldCheck,
@@ -12,6 +13,7 @@ import {
   X
 } from 'lucide-react'
 
+import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 
 import { version as appVersion } from '../../../package.json'
@@ -28,6 +30,7 @@ import LocalAiSettings from './LocalAiSettings'
 import PrivacySettings from './PrivacySettings'
 import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
+import VaultsSettings from './VaultsSettings'
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
@@ -54,6 +57,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
     ...(LOCAL_AI_ENABLED
       ? [{ id: 'onDeviceAi', name: t('layouts.onDeviceAi'), icon: Sparkles }]
       : []),
+    ...(isMultiVaultEnabled() ? [{ id: 'vaults', name: t('layouts.vaults'), icon: Layers }] : []),
     { id: 'devices', name: t('layouts.linkDevices'), icon: Laptop },
     { id: 'sync', name: t('layouts.sync'), icon: RefreshCw },
     { id: 'activity', name: t('layouts.activity'), icon: History },
@@ -139,6 +143,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
                 {activeSection === 'general' && t('settings.descriptions.general')}
                 {activeSection === 'privacy' && t('settings.privacy.screenDesc')}
                 {activeSection === 'onDeviceAi' && t('settings.descriptions.onDeviceAi')}
+                {activeSection === 'vaults' && t('settings.descriptions.vaults')}
                 {activeSection === 'sync' && t('settings.descriptions.sync')}
                 {activeSection === 'activity' && t('settings.descriptions.activity')}
                 {activeSection === 'backup' && t('settings.descriptions.backup')}
@@ -157,6 +162,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
             {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
+            {isMultiVaultEnabled() && activeSection === 'vaults' && <VaultsSettings />}
             {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
             {activeSection === 'sync' && (
               <SyncSettings onOpenDiagnostics={() => setSelectedSection('debug')} />

@@ -128,9 +128,9 @@ export default function PairingStatusOverlay() {
     }
   }
 
-  const handleConfirmMerge = () => {
+  const handleConfirmMerge = (options) => {
     if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite }))
+    dispatch(subscribePairUser({ invite: pendingInvite, ...options }))
     dispatch(setShowPairingInput(false))
     setPendingInvite(null)
     setPasteCode('')

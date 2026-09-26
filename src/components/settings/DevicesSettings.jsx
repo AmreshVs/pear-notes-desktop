@@ -140,9 +140,9 @@ export default function DevicesSettings({ onClose }) {
     }
   }
 
-  const handleConfirmMerge = () => {
+  const handleConfirmMerge = (options) => {
     if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite }))
+    dispatch(subscribePairUser({ invite: pendingInvite, ...options }))
     setPendingInvite(null)
     setPasteCode('')
     if (onClose) {

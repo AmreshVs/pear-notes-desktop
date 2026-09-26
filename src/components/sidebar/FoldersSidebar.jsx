@@ -17,10 +17,12 @@ import {
   getShouldAutoRenameNextFolder,
   setShouldAutoRenameNextFolder
 } from '@pear-notes/core/store/slices/uiSlice.js'
+import { getCurrentVault, getHasMultipleVaults } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
+import { getVaultLabel } from '../../lib/vaultNames'
 
 const ICON_PICKER_WIDTH = 268
 const ICON_PICKER_HEIGHT = 400
@@ -47,6 +49,8 @@ export default function FoldersSidebar({
   const inputRef = useRef(null)
   const iconPickerRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
+  const hasMultipleVaults = useSelector(getHasMultipleVaults)
+  const currentVault = useSelector(getCurrentVault)
   const foldersRef = useRef(folders)
 
   useEffect(() => {
@@ -298,9 +302,14 @@ export default function FoldersSidebar({
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative transition-none'>
       <div className='px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none'>
         <div className='flex items-center justify-between h-[40px] transition-none'>
-          <h2 className='text-title font-bold text-text-primary tracking-tight transition-none'>
-            {t('folders.title')}
-          </h2>
+          <div className='min-w-0'>
+            <h2 className='text-title font-bold text-text-primary tracking-tight transition-none truncate'>
+              {hasMultipleVaults ? getVaultLabel(currentVault, t) : t('folders.title')}
+            </h2>
+            {hasMultipleVaults && (
+              <p className='text-xs font-medium text-text-tertiary'>{t('folders.title')}</p>
+            )}
+          </div>
           <button
             onClick={handleCreateNewFolder}
             className='p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-0'
