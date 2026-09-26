@@ -56,7 +56,12 @@ import {
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
-import { setShowAiTools, useShowAiTools } from '../../lib/localAi/aiToolsPreference'
+import {
+  setShowAiTools,
+  setShowAiToolsInLocked,
+  useShowAiTools,
+  useShowAiToolsInLocked
+} from '../../lib/localAi/aiToolsPreference'
 
 const SECTION_TITLE_CLASS = 'text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'
 const CARD_CLASS =
@@ -158,6 +163,7 @@ export default function LocalAiSettings() {
   const [expandedFeature, setExpandedFeature] = useState(null)
 
   const showAiTools = useShowAiTools()
+  const showAiToolsInLocked = useShowAiToolsInLocked()
 
   useEffect(() => {
     if (LOCAL_AI_ENABLED) dispatch(initLocalAi())
@@ -394,6 +400,17 @@ export default function LocalAiSettings() {
               <p className={DESC_CLASS}>{t('settings.onDeviceAi.showAiToolsDesc')}</p>
             </div>
             <Toggle on={showAiTools} onClick={() => setShowAiTools(!showAiTools)} />
+          </div>
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>{t('settings.onDeviceAi.showAiToolsInLocked')}</label>
+              <p className={DESC_CLASS}>{t('settings.onDeviceAi.showAiToolsInLockedDesc')}</p>
+            </div>
+            <Toggle
+              on={showAiToolsInLocked}
+              onClick={() => setShowAiToolsInLocked(!showAiToolsInLocked)}
+              disabled={!showAiTools}
+            />
           </div>
         </div>
       </div>

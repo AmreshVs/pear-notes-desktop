@@ -1,11 +1,15 @@
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 import { Info, X } from 'lucide-react'
+
+import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { dismissToast, useToast } from '../../lib/toast'
 
 export default function AppToast() {
   const { t } = useTranslation()
   const toast = useToast()
+  const noteOpen = !!useSelector(getSelectedNote)
   if (!toast) return null
 
   return (
@@ -13,7 +17,7 @@ export default function AppToast() {
       key={toast.id}
       role='status'
       aria-live='polite'
-      className='fixed bottom-6 left-1/2 -translate-x-1/2 w-96 max-w-[calc(100%-4rem)] bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex items-center gap-3 z-[120] animate-in slide-in-from-bottom-5 fade-in duration-300'
+      className={`fixed ${noteOpen ? 'bottom-28' : 'bottom-6'} left-1/2 -translate-x-1/2 w-96 max-w-[calc(100%-4rem)] bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex items-center gap-3 z-[120] animate-in slide-in-from-bottom-5 fade-in duration-300`}
     >
       <div className='w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-accent-primary/10 text-accent-primary'>
         <Info className='w-5 h-5' />

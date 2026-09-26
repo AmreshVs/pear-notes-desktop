@@ -13,7 +13,7 @@ import {
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
-import { useShowAiTools } from '../lib/localAi/aiToolsPreference'
+import { useShowAiTools, useShowAiToolsInLocked } from '../lib/localAi/aiToolsPreference'
 import { showToast } from '../lib/toast'
 
 const IN_PROGRESS_KEYS = {
@@ -24,9 +24,10 @@ const IN_PROGRESS_KEYS = {
 
 export function useAiToolsVisible() {
   const showAiTools = useShowAiTools()
+  const showInLocked = useShowAiToolsInLocked()
   const selectedNoteKey = useSelector(getSelectedNote)
   const locked = useSelector((state) => getNoteData(selectedNoteKey)(state)?.locked === true)
-  return LOCAL_AI_ENABLED && showAiTools && !locked
+  return LOCAL_AI_ENABLED && showAiTools && (!locked || showInLocked)
 }
 
 export function useAiFeatureGate() {
