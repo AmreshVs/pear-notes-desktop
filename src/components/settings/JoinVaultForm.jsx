@@ -6,7 +6,7 @@ import { LogIn } from 'lucide-react'
 import { VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { subscribePairUser } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
-import { getCanAddVault, getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
+import { getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { extractInvite, isValidInvite } from '@pear-notes/core/utils.js'
 
 const INPUT_CLASS =
@@ -15,12 +15,9 @@ const INPUT_CLASS =
 export default function JoinVaultForm() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const canAdd = useSelector(getCanAddVault)
   const pending = useSelector(getVaultPending)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
-
-  if (!canAdd) return null
 
   const isValid = isValidInvite(code)
   const canJoin = isValid && !!name.trim() && !pending
@@ -45,6 +42,7 @@ export default function JoinVaultForm() {
       <p className='text-xs text-text-tertiary leading-relaxed'>{t('vaults.join.screenDesc')}</p>
       <input
         id='vault-join-name'
+        autoFocus
         value={name}
         maxLength={VAULT_NAME_MAX_LENGTH}
         onChange={(e) => setName(e.target.value)}

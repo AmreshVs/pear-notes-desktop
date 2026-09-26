@@ -32,7 +32,8 @@ import {
   LOCAL_AI_NETWORK,
   LOCAL_AI_NOTICE,
   LOCAL_AI_REGISTRY_MODELS,
-  QVAC_MODEL_LIBRARY_URL} from '@pear-notes/core/store/services/localAiCatalog.js'
+  QVAC_MODEL_LIBRARY_URL
+} from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   cancelLocalAiFeatureDownload,
   clearLocalAiNotice,
@@ -231,7 +232,9 @@ export default function LocalAiSettings() {
     }
     if (row.onDemand && row.status === LOCAL_AI_FEATURE_STATUS.READY) {
       return row.onDemandBytes
-        ? t('settings.onDeviceAi.featureStatus.readyOnDemand', { size: formatBytes(row.onDemandBytes) })
+        ? t('settings.onDeviceAi.featureStatus.readyOnDemand', {
+            size: formatBytes(row.onDemandBytes)
+          })
         : t('settings.onDeviceAi.featureStatus.readyOnDemandEmpty')
     }
     switch (row.status) {
@@ -469,7 +472,8 @@ export default function LocalAiSettings() {
                       on={row.enabled}
                       onClick={() => handleToggleFeature(row)}
                       disabled={
-                        isUnsupported || (row.status === LOCAL_AI_FEATURE_STATUS.NEEDS_MEMORY && !row.enabled)
+                        isUnsupported ||
+                        (row.status === LOCAL_AI_FEATURE_STATUS.NEEDS_MEMORY && !row.enabled)
                       }
                     />
                   </div>
@@ -607,9 +611,13 @@ export default function LocalAiSettings() {
                                   onClick={() =>
                                     dispatch(setLocalAiFeatureTier({ feature: row.feature, tier }))
                                   }
-                                  title={fits ? undefined : t('settings.onDeviceAi.tierNeedsMemory')}
+                                  title={
+                                    fits ? undefined : t('settings.onDeviceAi.tierNeedsMemory')
+                                  }
                                   aria-pressed={selected}
-                                  aria-describedby={fits ? undefined : `${row.feature}-${tier}-memory`}
+                                  aria-describedby={
+                                    fits ? undefined : `${row.feature}-${tier}-memory`
+                                  }
                                   className={optionClass(selected)}
                                 >
                                   {selected && <Check className='w-3.5 h-3.5' />}
@@ -619,8 +627,9 @@ export default function LocalAiSettings() {
                                       `settings.onDeviceAi.tierDescriptions.${tier}`
                                     ],
                                     {
-                                    size: formatBytes(bytes)
-                                  })}
+                                      size: formatBytes(bytes)
+                                    }
+                                  )}
                                 </button>
                               )
                             })}
@@ -670,59 +679,57 @@ export default function LocalAiSettings() {
                         {featureModelNames(row.feature).length === 0 && (
                           <p className={DESC_CLASS}>{t('settings.onDeviceAi.noLanguagesYet')}</p>
                         )}
-                        {featureModelNames(row.feature).map(
-                          (name) => {
-                            const model = buildModelRow(state, name)
-                            const otherUsers = model.users.filter((user) => user !== row.feature)
-                            return (
-                              <div
-                                key={name}
-                                className='flex items-center justify-between py-2 px-3 rounded-xl hover:bg-overlay-subtle transition-colors'
-                              >
-                                <div className='min-w-0'>
-                                  <p className='text-sm text-text-secondary truncate'>
-                                    {t(`settings.onDeviceAi.modelNames.${name}`)}
-                                  </p>
+                        {featureModelNames(row.feature).map((name) => {
+                          const model = buildModelRow(state, name)
+                          const otherUsers = model.users.filter((user) => user !== row.feature)
+                          return (
+                            <div
+                              key={name}
+                              className='flex items-center justify-between py-2 px-3 rounded-xl hover:bg-overlay-subtle transition-colors'
+                            >
+                              <div className='min-w-0'>
+                                <p className='text-sm text-text-secondary truncate'>
+                                  {t(`settings.onDeviceAi.modelNames.${name}`)}
+                                </p>
+                                <p className='text-sm text-text-tertiary'>
+                                  {`${formatBytes(model.bytes)} · ${licenseLabel(model)}`}
+                                </p>
+                                {model.onDevice && otherUsers.length > 0 && (
                                   <p className='text-sm text-text-tertiary'>
-                                    {`${formatBytes(model.bytes)} · ${licenseLabel(model)}`}
+                                    {t('settings.onDeviceAi.sharedModel', {
+                                      features: featureTitles(otherUsers)
+                                    })}
                                   </p>
-                                  {model.onDevice && otherUsers.length > 0 && (
-                                    <p className='text-sm text-text-tertiary'>
-                                      {t('settings.onDeviceAi.sharedModel', {
-                                        features: featureTitles(otherUsers)
-                                      })}
-                                    </p>
-                                  )}
-                                  {getModelDocsUrl(name) && (
-                                    <a
-                                      href={getModelDocsUrl(name)}
-                                      target='_blank'
-                                      rel='noreferrer'
-                                      className='text-sm text-accent-primary hover:underline'
-                                    >
-                                      {t('settings.onDeviceAi.modelDocs')}
-                                    </a>
-                                  )}
-                                </div>
-                                {!model.onDevice && (
-                                  <span className='text-sm text-text-tertiary flex-shrink-0 ml-4'>
-                                    {t('settings.onDeviceAi.notDownloaded')}
-                                  </span>
                                 )}
-                                {model.onDevice && otherUsers.length === 0 && (
-                                  <button
-                                    onClick={() => requestDeleteModel(model)}
-                                    className={MODEL_DELETE_CLASS}
-                                    aria-label={t('settings.onDeviceAi.deleteModel')}
-                                    title={t('settings.onDeviceAi.deleteModel')}
+                                {getModelDocsUrl(name) && (
+                                  <a
+                                    href={getModelDocsUrl(name)}
+                                    target='_blank'
+                                    rel='noreferrer'
+                                    className='text-sm text-accent-primary hover:underline'
                                   >
-                                    <Trash2 className='w-3.5 h-3.5' />
-                                  </button>
+                                    {t('settings.onDeviceAi.modelDocs')}
+                                  </a>
                                 )}
                               </div>
-                            )
-                          }
-                        )}
+                              {!model.onDevice && (
+                                <span className='text-sm text-text-tertiary flex-shrink-0 ml-4'>
+                                  {t('settings.onDeviceAi.notDownloaded')}
+                                </span>
+                              )}
+                              {model.onDevice && otherUsers.length === 0 && (
+                                <button
+                                  onClick={() => requestDeleteModel(model)}
+                                  className={MODEL_DELETE_CLASS}
+                                  aria-label={t('settings.onDeviceAi.deleteModel')}
+                                  title={t('settings.onDeviceAi.deleteModel')}
+                                >
+                                  <Trash2 className='w-3.5 h-3.5' />
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -821,10 +828,7 @@ export default function LocalAiSettings() {
             <button onClick={() => setConfirm(null)} className={MODAL_CANCEL_CLASS}>
               {t('common.cancel')}
             </button>
-            <button
-              onClick={handleConfirmTurnOn}
-              className={MODAL_PRIMARY_CLASS}
-            >
+            <button onClick={handleConfirmTurnOn} className={MODAL_PRIMARY_CLASS}>
               {confirm.waitsForNetwork
                 ? t('settings.onDeviceAi.turnOn.confirmWaiting')
                 : t('settings.onDeviceAi.turnOn.confirm', { size: confirmSize })}
@@ -844,10 +848,7 @@ export default function LocalAiSettings() {
             <button onClick={() => handleConfirmTurnOff(false)} className={MODAL_CANCEL_CLASS}>
               {t('settings.onDeviceAi.turnOff.keep')}
             </button>
-            <button
-              onClick={() => handleConfirmTurnOff(true)}
-              className={MODAL_DANGER_CLASS}
-            >
+            <button onClick={() => handleConfirmTurnOff(true)} className={MODAL_DANGER_CLASS}>
               {t('settings.onDeviceAi.turnOff.delete')}
             </button>
             <button
@@ -872,10 +873,7 @@ export default function LocalAiSettings() {
             <button onClick={() => setConfirm(null)} className={MODAL_CANCEL_CLASS}>
               {t('common.cancel')}
             </button>
-            <button
-              onClick={handleConfirmDelete}
-              className={MODAL_DANGER_CLASS}
-            >
+            <button onClick={handleConfirmDelete} className={MODAL_DANGER_CLASS}>
               {t('common.delete')}
             </button>
           </div>

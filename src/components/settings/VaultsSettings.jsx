@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, LogIn, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import { MAX_VAULTS, VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import {
   clearVaultError,
-  createVault,
   getCanAddVault,
   getVaultError,
   getVaultPending,
@@ -19,7 +18,13 @@ import {
 
 import { getVaultErrorText, getVaultLabel } from '../../lib/vaultNames'
 
+import CreateVaultForm from './CreateVaultForm'
 import JoinVaultForm from './JoinVaultForm'
+
+const ADD_OPTIONS = [
+  { mode: 'create', icon: Plus, labelKey: 'vaults.newVault' },
+  { mode: 'join', icon: LogIn, labelKey: 'vaults.join.sectionTitle' }
+]
 
 export default function VaultsSettings() {
   const { t } = useTranslation()
@@ -30,19 +35,33 @@ export default function VaultsSettings() {
   const error = useSelector(getVaultError)
   const canAdd = useSelector(getCanAddVault)
 
-  const [newName, setNewName] = useState('')
+  const [addMode, setAddMode] = useState(null)
   const [renamingId, setRenamingId] = useState(null)
   const [renameText, setRenameText] = useState('')
   const [removingId, setRemovingId] = useState(null)
 
   const busy = !!pending
 
-  const handleCreate = (e) => {
-    e.preventDefault()
-    if (!newName.trim() || busy) return
-    dispatch(createVault({ name: newName }))
-    setNewName('')
-  }
+  const closeAddForm = () => setAddMode(null)
+  const toggleAddMode = (mode) => setAddMode((current) => (current === mode ? null : mode))
+
+  const renderAddOption = ({ mode, icon: Icon, labelKey }) => (
+    <button
+      key={mode}
+      type='button'
+      onClick={() => toggleAddMode(mode)}
+      disabled={busy}
+      aria-expanded={addMode === mode}
+      className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold border disabled:opacity-50 ${
+        addMode === mode
+          ? 'bg-[var(--accent-selected-bg)] border-[var(--accent-selected-border)] text-accent-primary'
+          : 'border-border-secondary text-text-secondary hover:bg-overlay-light hover:text-text-primary'
+      }`}
+    >
+      <Icon className='w-4 h-4' />
+      {t(labelKey)}
+    </button>
+  )
 
   const startRename = (vault) => {
     dispatch(clearVaultError())
@@ -177,37 +196,16 @@ export default function VaultsSettings() {
       )}
 
       {canAdd ? (
-        <form onSubmit={handleCreate} className='space-y-3'>
-          <label htmlFor='vault-new-name' className='block text-sm font-bold text-text-secondary'>
-            {t('vaults.newVault')}
-          </label>
-          <div className='flex gap-2'>
-            <input
-              id='vault-new-name'
-              value={newName}
-              maxLength={VAULT_NAME_MAX_LENGTH}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder={t('vaults.namePlaceholder')}
-              className='flex-1 bg-bg-panel text-text-primary px-4 py-3 rounded-xl border border-border-secondary text-sm focus:outline-none focus:border-accent-primary'
-            />
-            <button
-              type='submit'
-              disabled={busy || !newName.trim()}
-              className='flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-accent-primary text-accent-on-primary disabled:opacity-50'
-            >
-              <Plus className='w-4 h-4' />
-              {pending === 'create' ? t('vaults.creating') : t('vaults.create')}
-            </button>
-          </div>
-          <p className='text-xs text-text-tertiary leading-relaxed'>{t('vaults.newVaultHint')}</p>
-        </form>
+        <div className='space-y-4'>
+          <div className='flex gap-2'>{ADD_OPTIONS.map(renderAddOption)}</div>
+          {addMode === 'create' && <CreateVaultForm onDone={closeAddForm} />}
+          {addMode === 'join' && <JoinVaultForm />}
+        </div>
       ) : (
         <p className='text-sm text-text-tertiary'>
           {t('vaults.limitReached', { max: MAX_VAULTS })}
         </p>
       )}
-
-      <JoinVaultForm />
     </div>
   )
 }
