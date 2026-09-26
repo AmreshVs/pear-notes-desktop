@@ -14,7 +14,6 @@ import {
   HardDrive,
   Image as ImageIcon,
   Info,
-  Loader2,
   Mic,
   Pause,
   PenLine,
@@ -26,6 +25,7 @@ import {
   X
 } from 'lucide-react'
 
+import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   getLocalAiLoaded,
@@ -50,7 +50,6 @@ import {
   subscribeStorageInfo,
   unsubscribeStorageInfo
 } from '@pear-notes/core/store/slices/storageSlice.js'
-import { clearStorage } from '@pear-notes/core/store/slices/syncSlice.js'
 import {
   getCurrentVault,
   getHasMultipleVaults,
@@ -58,8 +57,11 @@ import {
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
+import { useClearAllData } from '../../hooks/useClearAllData'
 import { getVaultLabel } from '../../lib/vaultNames'
-import { deleteDbEncryptionKey } from '../../utils.js'
+
+import ClearingOverlay from './ClearingOverlay'
+import DangerConfirmModal from './DangerConfirmModal'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px]'
@@ -301,7 +303,27 @@ function TransferNoteGroup({ group, renderRow }) {
   )
 }
 
-const CLEAR_TARGET = { vault: 'vault', all: 'all' }
+function getClearCopy({ multiVault, onlyThisVault, name, t }) {
+  if (!multiVault) {
+    return {
+      title: t('storage.clearAllData'),
+      description: t('storage.clearAllDataDesc'),
+      button: t('storage.clearStorage'),
+      confirmTitle: t('backup.clearAllDataTitle'),
+      confirmDescription: t('backup.clearAllDataDesc')
+    }
+  }
+  const description = onlyThisVault
+    ? t('storage.clearVaultDesc', { name })
+    : t('storage.clearOnlyVaultDesc', { name })
+  return {
+    title: t('storage.clearVault', { name }),
+    description,
+    button: t('storage.clearVaultBtn'),
+    confirmTitle: t('storage.clearVaultConfirmTitle', { name }),
+    confirmDescription: description
+  }
+}
 
 export default function StorageSettings({ onOpenOnDeviceAi }) {
   const { t } = useTranslation()
@@ -325,7 +347,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const currentVault = useSelector(getCurrentVault)
   const currentVaultName = getVaultLabel(currentVault, t)
-  const [isClearing, setIsClearing] = useState(false)
+  const { isClearing, clearAll } = useClearAllData()
 
   const noteTitleByKey = useMemo(() => {
     const map = {}
@@ -361,16 +383,18 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
     dispatch(pauseDownload({ url }))
   }
 
-  const handleClearVault = () => {
-    setConfirmClear(false)
-    if (currentVault) dispatch(removeVault({ id: currentVault.id }))
-  }
+  const clearsOnlyThisVault = isMultiVaultEnabled() && hasMultipleVaults
+  const clearCopy = getClearCopy({
+    multiVault: isMultiVaultEnabled(),
+    onlyThisVault: clearsOnlyThisVault,
+    name: currentVaultName,
+    t
+  })
 
-  const handleClearStorage = () => {
+  const handleConfirmClear = () => {
     setConfirmClear(false)
-    setIsClearing(true)
-    deleteDbEncryptionKey()
-    dispatch(clearStorage())
+    if (clearsOnlyThisVault && currentVault) dispatch(removeVault({ id: currentVault.id }))
+    else clearAll()
   }
 
   const handleReclaim = () => {
@@ -691,101 +715,34 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           {t('storage.dangerZone')}
         </h3>
         <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
-          {hasMultipleVaults && (
-            <div className='px-6 py-5 flex items-center justify-between gap-4 border-b border-border-primary/50'>
-              <div className='space-y-1'>
-                <p className='text-base font-bold text-text-primary'>
-                  {t('storage.clearVault', { name: currentVaultName })}
-                </p>
-                <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                  {t('storage.clearVaultDesc', { name: currentVaultName })}
-                </p>
-              </div>
-              <button
-                onClick={() => setConfirmClear(CLEAR_TARGET.vault)}
-                className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95'
-              >
-                <Trash2 className='w-3.5 h-3.5' />
-                {t('storage.clearVaultBtn')}
-              </button>
-            </div>
-          )}
           <div className='px-6 py-5 flex items-center justify-between gap-4'>
             <div className='space-y-1'>
-              <p className='text-base font-bold text-text-primary'>{t('storage.clearAllData')}</p>
+              <p className='text-base font-bold text-text-primary'>{clearCopy.title}</p>
               <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {hasMultipleVaults
-                  ? t('storage.clearAllVaultsDesc')
-                  : t('storage.clearAllDataDesc')}
+                {clearCopy.description}
               </p>
             </div>
             <button
-              onClick={() => setConfirmClear(CLEAR_TARGET.all)}
-              className='flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:scale-95'
+              onClick={() => setConfirmClear(true)}
+              className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95'
             >
               <Trash2 className='w-3.5 h-3.5' />
-              {t('storage.clearStorage')}
+              {clearCopy.button}
             </button>
           </div>
         </div>
       </div>
 
-      {isClearing && (
-        <div className='fixed inset-0 z-[400] flex flex-col items-center justify-center gap-4 bg-backdrop-medium backdrop-blur-xl'>
-          <Loader2 className='w-8 h-8 text-accent-primary animate-spin' />
-          <h3 className='text-lg font-bold text-text-primary'>
-            {t('pairing.overlay.resettingTitle')}
-          </h3>
-          <p className='text-sm text-text-tertiary max-w-xs text-center leading-relaxed'>
-            {t('pairing.overlay.resettingDesc')}
-          </p>
-        </div>
-      )}
+      {isClearing && <ClearingOverlay />}
 
       {confirmClear && (
-        <div className='fixed inset-0 z-[300] flex items-center justify-center p-6'>
-          <div
-            className='absolute inset-0 bg-backdrop-medium backdrop-blur-xl'
-            onClick={() => setConfirmClear(false)}
-          />
-          <div className='relative bg-bg-panel/90 backdrop-blur-3xl border border-overlay-medium rounded-[2rem] p-8 max-w-sm w-full shadow-[0_50px_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 fade-in duration-200'>
-            <div className='flex flex-col items-center text-center space-y-4'>
-              <div className='w-14 h-14 rounded-2xl bg-accent-danger/10 flex items-center justify-center ring-1 ring-accent-danger/20'>
-                <Trash2 className='w-6 h-6 text-accent-danger' />
-              </div>
-              <div className='space-y-2'>
-                <h3 className='text-lg font-bold text-text-primary'>
-                  {confirmClear === CLEAR_TARGET.vault
-                    ? t('storage.clearVaultConfirmTitle', { name: currentVaultName })
-                    : t('backup.clearAllDataTitle')}
-                </h3>
-                <p className='text-sm text-text-tertiary leading-relaxed'>
-                  {confirmClear === CLEAR_TARGET.vault
-                    ? t('storage.clearVaultDesc', { name: currentVaultName })
-                    : hasMultipleVaults
-                      ? t('storage.clearAllVaultsDesc')
-                      : t('backup.clearAllDataDesc')}
-                </p>
-              </div>
-              <div className='flex gap-3 w-full pt-2'>
-                <button
-                  onClick={() => setConfirmClear(false)}
-                  className='flex-1 py-3 bg-overlay-light border border-overlay-medium text-text-secondary rounded-xl font-bold text-base hover:bg-overlay-medium transition-all active:scale-95'
-                >
-                  {t('common.cancel')}
-                </button>
-                <button
-                  onClick={
-                    confirmClear === CLEAR_TARGET.vault ? handleClearVault : handleClearStorage
-                  }
-                  className='flex-1 py-3 bg-accent-danger text-white rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 shadow-[0_4px_15px_rgba(var(--accent-danger-rgb),0.3)]'
-                >
-                  {t('common.clear')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DangerConfirmModal
+          title={clearCopy.confirmTitle}
+          description={clearCopy.confirmDescription}
+          confirmLabel={t('common.clear')}
+          onConfirm={handleConfirmClear}
+          onCancel={() => setConfirmClear(false)}
+        />
       )}
     </div>
   )

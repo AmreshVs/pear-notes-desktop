@@ -16,9 +16,12 @@ import {
   switchVault
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
+import { useClearAllData } from '../../hooks/useClearAllData'
 import { getVaultErrorText, getVaultLabel } from '../../lib/vaultNames'
 
+import ClearingOverlay from './ClearingOverlay'
 import CreateVaultForm from './CreateVaultForm'
+import DangerConfirmModal from './DangerConfirmModal'
 import JoinVaultForm from './JoinVaultForm'
 
 const ADD_OPTIONS = [
@@ -36,6 +39,13 @@ export default function VaultsSettings() {
   const canAdd = useSelector(getCanAddVault)
 
   const [addMode, setAddMode] = useState(null)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
+  const { isClearing, clearAll } = useClearAllData()
+
+  const handleDeleteAll = () => {
+    setConfirmDeleteAll(false)
+    clearAll()
+  }
   const [renamingId, setRenamingId] = useState(null)
   const [renameText, setRenameText] = useState('')
   const [removingId, setRemovingId] = useState(null)
@@ -206,6 +216,39 @@ export default function VaultsSettings() {
           {t('vaults.limitReached', { max: MAX_VAULTS })}
         </p>
       )}
+
+      <div className='space-y-3 pt-4'>
+        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2'>
+          {t('storage.dangerZone')}
+        </h3>
+        <div className='bg-bg-secondary border border-border-primary rounded-3xl px-6 py-5 flex items-center justify-between gap-4'>
+          <div className='space-y-1'>
+            <p className='text-base font-bold text-text-primary'>{t('vaults.deleteAll')}</p>
+            <p className='text-sm text-text-tertiary font-medium opacity-60'>
+              {t('vaults.deleteAllDesc', { count: vaults.length })}
+            </p>
+          </div>
+          <button
+            onClick={() => setConfirmDeleteAll(true)}
+            disabled={busy}
+            className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95 disabled:opacity-40'
+          >
+            <Trash2 className='w-3.5 h-3.5' />
+            {t('vaults.deleteAllBtn')}
+          </button>
+        </div>
+      </div>
+
+      {confirmDeleteAll && (
+        <DangerConfirmModal
+          title={t('vaults.deleteAllConfirmTitle')}
+          description={t('vaults.deleteAllDesc', { count: vaults.length })}
+          confirmLabel={t('vaults.deleteAllBtn')}
+          onConfirm={handleDeleteAll}
+          onCancel={() => setConfirmDeleteAll(false)}
+        />
+      )}
+      {isClearing && <ClearingOverlay />}
     </div>
   )
 }
