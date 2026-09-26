@@ -51,7 +51,7 @@ import VaultRail from './components/sidebar/VaultRail'
 import { useAppReload } from './hooks/useAppReload'
 import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
-import { useVaultReload } from './hooks/useVaultReload'
+import { useVaultErrors } from './hooks/useVaultErrors'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
   applyCloseToTray,
@@ -80,7 +80,7 @@ function App() {
   }, [width])
 
   useAppReload()
-  useVaultReload()
+  useVaultErrors()
   usePdfThumbSweep()
   usePowerState()
   useLocalAiBridge()
