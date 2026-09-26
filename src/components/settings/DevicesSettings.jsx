@@ -21,7 +21,11 @@ import {
 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 
-import { DEVICE_NAME_MAX_LENGTH, INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
+import {
+  DEVICE_NAME_MAX_LENGTH,
+  INVITE_EXPIRY_MINUTES,
+  isMultiVaultEnabled
+} from '@pear-notes/core/constant.js'
 import {
   canAddSyncLeader,
   canRemoveSyncLeader,
@@ -84,6 +88,7 @@ export default function DevicesSettings({ onClose }) {
   const syncedDevices = useSelector(getSyncedDevices)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
+  const showJoinSection = !isSynced || isMultiVaultEnabled()
   const leaderPlan = useSelector(getSyncLeaderPlan)
   const [leaderAction, setLeaderAction] = useState(null)
 
@@ -301,7 +306,7 @@ export default function DevicesSettings({ onClose }) {
               </div>
             )}
 
-            {!isSynced && (
+            {showJoinSection && (
               <div className='pt-6 border-t border-border-primary space-y-4'>
                 <div className='flex items-center gap-2 ml-1'>
                   <Plus className='w-4 h-4 text-accent-primary' />
