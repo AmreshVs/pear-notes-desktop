@@ -1993,7 +1993,7 @@
     "namePlaceholder": "Vault name, for example Shared",
     "create": "Create",
     "creating": "Creating…",
-    "newVaultHint": "A new vault starts empty and only on this device. To use a vault that another device already has, join it below instead.",
+    "newVaultHint": "A new vault starts empty and only on this device. To use a vault that another device already has, use Join a vault instead.",
     "open": "Open now",
     "notOpen": "Not syncing while closed",
     "openBtn": "Open",
@@ -2013,8 +2013,10 @@
       "combineTitle": "Combine into it",
       "addBtn": "Add vault",
       "sectionTitle": "Join a vault",
-      "joinBtn": "Join",
-      "hint": "Paste an invite from a device that already has the vault. On that device, open the vault, then My devices, and create an invite."
+      "joinBtn": "Join vault",
+      "hint": "On a device that already has the vault, open that vault, go to My devices and create an invite. Then paste the code here.",
+      "screenDesc": "Add a vault that another device already has. It opens next to your other vaults, and your notes here stay where they are.",
+      "codeLabel": "Invite code"
     },
     "errors": {
       "emptyName": "Enter a name for the vault.",
