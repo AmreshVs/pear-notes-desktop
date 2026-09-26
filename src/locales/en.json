@@ -2019,7 +2019,17 @@
       "lastVault": "A device always keeps at least one vault.",
       "busy": "Another vault change is still in progress. Try again in a moment.",
       "syncLeader": "This device is the only sync leader for that vault. Make another device the sync leader first.",
-      "openFailed": "The vault could not be opened. The previous vault is open again."
+      "openFailed": "The vault could not be opened. The previous vault is open again.",
+      "missingMedia": "Some attachments aren't on this device yet, so nothing was moved. Open those notes to download them, then try again.",
+      "nothingToMove": "There was nothing to move."
+    },
+    "move": {
+      "menu": "Move to vault",
+      "confirmNotes_one": "Move this note to \"{{name}}\"?",
+      "confirmNotes_other": "Move {{count}} notes to \"{{name}}\"?",
+      "confirmFolder": "Move the folder \"{{folder}}\" and its notes to \"{{name}}\"?",
+      "explain": "Every device linked to \"{{name}}\" will be able to read them. Attachments are copied. The originals go to Trash in this vault.",
+      "moving": "Moving notes…"
     }
   }
 }

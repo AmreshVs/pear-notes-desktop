@@ -17,12 +17,22 @@ import {
   getShouldAutoRenameNextFolder,
   setShouldAutoRenameNextFolder
 } from '@pear-notes/core/store/slices/uiSlice.js'
-import { getCurrentVault, getHasMultipleVaults } from '@pear-notes/core/store/slices/vaultsSlice.js'
+import {
+  getCurrentVault,
+  getHasMultipleVaults,
+  getOtherVaults,
+  moveToVault
+} from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
-import { getVaultLabel } from '../../lib/vaultNames'
+import {
+  confirmVaultMove,
+  getVaultLabel,
+  getVaultMenuItems,
+  VAULT_MENU_PREFIX
+} from '../../lib/vaultNames'
 
 const ICON_PICKER_WIDTH = 268
 const ICON_PICKER_HEIGHT = 400
@@ -51,6 +61,7 @@ export default function FoldersSidebar({
   const noteCounts = useSelector(getNoteCountsPerFolder)
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const currentVault = useSelector(getCurrentVault)
+  const otherVaults = useSelector(getOtherVaults)
   const foldersRef = useRef(folders)
 
   useEffect(() => {
@@ -201,6 +212,14 @@ export default function FoldersSidebar({
     }
   }
 
+  const handleMoveFolderToVault = (folder, vaultId) => {
+    const vault = otherVaults.find((v) => v.id === vaultId)
+    if (!vault) return
+    const folderName = folder.name || DEFAULT_FOLDER_NAME
+    if (!confirmVaultMove({ vault, folderName, t })) return
+    dispatch(moveToVault({ targetId: vaultId, folderKeys: [folder.id] }))
+  }
+
   const handleContextMenu = async (e, folder) => {
     e.preventDefault()
     e.stopPropagation()
@@ -214,10 +233,17 @@ export default function FoldersSidebar({
         { type: 'separator' },
         { id: 'rename', label: t('folders.buttons.rename') },
         { id: 'change-icon', label: t('folders.buttons.changeIcon') },
+        ...(otherVaults.length > 0
+          ? [{ label: t('vaults.move.menu'), submenu: getVaultMenuItems(otherVaults, t) }]
+          : []),
         { id: 'delete', label: t('folders.buttons.delete') }
       )
     }
     const result = await showContextMenu(items)
+    if (result?.startsWith(VAULT_MENU_PREFIX)) {
+      handleMoveFolderToVault(folder, result.slice(VAULT_MENU_PREFIX.length))
+      return
+    }
     if (result) handleMenuAction(result, folder, anchor)
   }
 

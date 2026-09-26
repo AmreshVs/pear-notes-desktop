@@ -93,7 +93,7 @@ function App() {
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const vaultPending = useSelector(getVaultPending)
   const showVaultRail = isMultiVaultEnabled() && hasMultipleVaults
-  const isVaultOpening = ['create', 'switch', 'remove'].includes(vaultPending)
+  const isVaultOpening = ['create', 'switch', 'remove', 'move'].includes(vaultPending)
   const folders = useSelector(getFolders)
   const updateStatus = useAppUpdateStatus()
 
@@ -298,7 +298,9 @@ function App() {
           >
             <div className='flex flex-col items-center gap-4'>
               <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary' />
-              <p className='text-base text-text-secondary'>{t('vaults.openingVault')}</p>
+              <p className='text-base text-text-secondary'>
+                {vaultPending === 'move' ? t('vaults.move.moving') : t('vaults.openingVault')}
+              </p>
             </div>
           </div>
         )}

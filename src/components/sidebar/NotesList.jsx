@@ -48,6 +48,11 @@ import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevices
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getHyperdriveAddress, setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import {
+  getOtherVaults,
+  getVaults,
+  moveToVault
+} from '@pear-notes/core/store/slices/vaultsSlice.js'
+import {
   formatDate,
   getAttachmentInfo,
   getFirstImage,
@@ -67,6 +72,7 @@ import {
   getCachedPdfThumb,
   subscribePdfThumbWrites
 } from '../../lib/pdfThumbCache'
+import { confirmVaultMove, getVaultMenuItems, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
 
 import { LockNowButton } from './LockNowButton'
 
@@ -205,6 +211,7 @@ const NotesItem = memo(
     const availableMoveFolders = allFolders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
     )
+    const otherVaults = useSelector(getOtherVaults)
 
     const handleRowClick = useCallback(
       (event) => {
@@ -231,6 +238,10 @@ const NotesItem = memo(
           availableMoveFolders.length > 0
             ? availableMoveFolders.map((f) => ({ id: `move:${f.id}`, label: f.name }))
             : [{ label: t('noteCard.actions.noFolders'), enabled: false }]
+        const vaultItems =
+          otherVaults.length > 0
+            ? [{ label: t('vaults.move.menu'), submenu: getVaultMenuItems(otherVaults, t) }]
+            : []
 
         if (isSelecting && isChecked) {
           const bulkResult = await showContextMenu(
@@ -242,12 +253,15 @@ const NotesItem = memo(
                 ]
               : [
                   { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
+                  ...vaultItems,
                   { type: 'separator' },
                   { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
                 ]
           )
           if (!bulkResult) return
           if (bulkResult.startsWith('move:')) onMenuAction('bulkMove', key, bulkResult.slice(5))
+          else if (bulkResult.startsWith(VAULT_MENU_PREFIX))
+            onMenuAction('bulkMoveToVault', key, bulkResult.slice(VAULT_MENU_PREFIX.length))
           else onMenuAction(bulkResult, key)
           return
         }
@@ -266,6 +280,7 @@ const NotesItem = memo(
                 },
                 { type: 'separator' },
                 { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
+                ...vaultItems,
                 { type: 'separator' },
                 ...(activityEnabled
                   ? [{ id: 'history', label: t('noteCard.actions.noteHistory') }]
@@ -280,10 +295,13 @@ const NotesItem = memo(
         )
         if (!result) return
         if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
+        else if (result.startsWith(VAULT_MENU_PREFIX))
+          onMenuAction('moveToVault', key, result.slice(VAULT_MENU_PREFIX.length))
         else onMenuAction(result, key)
       },
       [
         availableMoveFolders,
+        otherVaults,
         noteData?.locked,
         noteData?.pinned,
         activityEnabled,
@@ -435,6 +453,7 @@ export default function NotesList({
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
   const folders = useSelector(getFolders)
+  const vaults = useSelector(getVaults)
   const lockMethod = useSelector(getLockMethod)
   const { requestUnlockPassword, showLockUnavailable } = useNoteLockPassword()
   const { step } = useSelector(getInviterStatus)
@@ -609,11 +628,28 @@ export default function NotesList({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isSelecting, exitSelection, handleSelectAll])
 
+  const handleMoveToVault = useCallback(
+    (noteKeys, vaultId) => {
+      const vault = vaults.find((v) => v.id === vaultId)
+      if (!vault || noteKeys.length === 0) return false
+      if (!confirmVaultMove({ vault, noteCount: noteKeys.length, t })) return false
+      dispatch(moveToVault({ targetId: vaultId, noteKeys }))
+      return true
+    },
+    [dispatch, t, vaults]
+  )
+
   const handleMenuAction = useCallback(
     async (action, noteKey, folderId) => {
       const noteData = filteredNotes.find((n) => n.key === noteKey)
 
       switch (action) {
+        case 'moveToVault':
+          handleMoveToVault([noteKey], folderId)
+          break
+        case 'bulkMoveToVault':
+          if (handleMoveToVault(checkedKeys, folderId)) exitSelection()
+          break
         case 'bulkMove':
           await handleBulkMove(folderId)
           break
@@ -679,6 +715,9 @@ export default function NotesList({
       handleBulkMove,
       handleBulkDelete,
       handleBulkRestore,
+      handleMoveToVault,
+      checkedKeys,
+      exitSelection,
       t
     ]
   )
