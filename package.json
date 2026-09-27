@@ -14,7 +14,7 @@
     "predev": "vite build",
     "dev": "concurrently \"npm:dev:*\"",
     "dev:vite": "vite build --watch --sourcemap inline --mode development",
-    "dev:electron": "electron-forge start",
+    "dev:electron": "node scripts/dev-electron.cjs",
     "build": "vite build",
     "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make",

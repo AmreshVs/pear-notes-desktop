@@ -1,10 +1,12 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { writeFileSync } from 'fs'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const DEV_BUILD_STAMP = '.dev-build'
 
 const nodeExternals = [
   'electron',
@@ -86,10 +88,7 @@ function rewriteExternalImports(code, ext) {
       (_, names) => `const {${names.replace(/\bas\b/g, ':')}} = require("${ext}");`
     )
     .replace(
-      new RegExp(
-        `import\\s*\\*\\s*as\\s+(${IMPORT_BINDING})\\s*from\\s*["']${e}["']\\s*;?`,
-        'g'
-      ),
+      new RegExp(`import\\s*\\*\\s*as\\s+(${IMPORT_BINDING})\\s*from\\s*["']${e}["']\\s*;?`, 'g'),
       (_, name) => `const ${name} = require("${ext}");`
     )
     .replace(
@@ -137,8 +136,18 @@ function electronExternalsPlugin() {
   }
 }
 
+function devBuildStampPlugin(mode) {
+  return {
+    name: 'dev-build-stamp',
+    writeBundle(options) {
+      if (mode !== 'development') return
+      writeFileSync(resolve(options.dir, DEV_BUILD_STAMP), String(Date.now()))
+    }
+  }
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), electronExternalsPlugin()],
+  plugins: [react(), tailwindcss(), electronExternalsPlugin(), devBuildStampPlugin(mode)],
   build: {
     outDir: 'dist',
     // Must stay true: `npm run make` does not clean, so a stale bundle from
