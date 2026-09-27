@@ -54,7 +54,7 @@ if (LOCAL_AI_ENABLED) setLocalAiAdapter(electronAdapter)
 // `globalThis.production` was never assigned anywhere, so this branch always
 // ran - the packaged app exposed the full store (notes, folders, settings and
 // the pairing encryptionKey) on globalThis.
-if (import.meta.env.DEV) {
+if (globalThis.__PEAR_DEV__) {
   globalThis.store = store
 }
 
