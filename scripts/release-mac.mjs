@@ -18,6 +18,10 @@ const REQUIRED = [
   'MAS_PROVISIONING_PROFILE'
 ]
 const UPLOAD_REQUIRED = ['ASC_KEY_ID', 'ASC_ISSUER_ID']
+const DMG_REQUIRED = ['APPLE_BUNDLE_ID', 'MAC_CODESIGN_IDENTITY', ...UPLOAD_REQUIRED]
+const DMG_ARCH = 'arm64'
+const APP_STORE_CERT_OID = '1.2.840.113635.100.6.1.9'
+const TESTFLIGHT_CERT_OID = '1.2.840.113635.100.6.1.25.1'
 const NETWORK_RETRY_PATTERN = /ECONNRESET|ETIMEDOUT|socket hang up|EAI_AGAIN/i
 const BUILD_ATTEMPTS = 3
 
@@ -65,6 +69,7 @@ function parseArgs(argv) {
   const flags = new Set(argv.filter((a) => a.startsWith('--')))
   return {
     checkOnly: flags.has('--check'),
+    dmg: flags.has('--dmg'),
     upload: flags.has('--upload'),
     skipValidate: flags.has('--skip-validate'),
     bump: !flags.has('--no-bump'),
@@ -88,7 +93,7 @@ function loadConfig() {
       config[key] = value
     }
   }
-  for (const key of [...REQUIRED, ...UPLOAD_REQUIRED]) {
+  for (const key of [...REQUIRED, ...DMG_REQUIRED]) {
     if (process.env[key]) config[key] = process.env[key]
   }
   return config
@@ -179,7 +184,7 @@ function checkProfile(config) {
   ok(`profile "${profile.name}" matches ${appId}, ${daysLeft} days left`)
 }
 
-function ascToken(config) {
+function ascKeyPath(config) {
   const keyPath = path.join(
     process.env.HOME,
     '.appstoreconnect',
@@ -192,7 +197,11 @@ function ascToken(config) {
       'The filename must be exactly AuthKey_<KEYID>.p8 — altool will not find it otherwise'
     )
   }
-  const key = fs.readFileSync(keyPath)
+  return keyPath
+}
+
+function ascToken(config) {
+  const key = fs.readFileSync(ascKeyPath(config))
   const encode = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url')
   const issued = Math.floor(Date.now() / 1000)
   const header = encode({ alg: 'ES256', kid: config.ASC_KEY_ID, typ: 'JWT' })
@@ -349,6 +358,30 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
   }
   ok('provisioning profile embedded')
 
+  const { sidecar, localAiRuntime, helpers } = verifyBundle(config, appDir)
+
+  for (const target of [sidecar, localAiRuntime, ...helpers]) {
+    const entitlements = run('codesign', ['-d', '--entitlements', '-', target]).output
+    for (const required of ['app-sandbox', 'inherit', 'allow-jit']) {
+      if (!entitlements.includes(required)) {
+        throw new ReleaseError(
+          `${path.basename(target)} is missing the ${required} entitlement`,
+          required === 'allow-jit'
+            ? 'Nested code runs V8 under hardened runtime. Without allow-jit the process dies with "V8 process OOM (Failed to reserve virtual memory for CodeRange)" and the window renders blank'
+            : 'Check build/entitlements.mas.inherit.plist'
+        )
+      }
+    }
+  }
+  ok(
+    `nested code signed with inherit + allow-jit (${helpers.length} helpers, sidecar and AI runtime)`
+  )
+
+  const sizeMb = Math.round(fs.statSync(pkgPath).size / 1e6)
+  ok(`${path.basename(pkgPath)} (${sizeMb} MB)`)
+}
+
+function verifyBundle(config, appDir) {
   const verify = run('codesign', ['--verify', '--deep', '--strict', '--verbose=2', appDir])
   if (verify.status !== 0) {
     process.stdout.write(verify.output)
@@ -377,8 +410,20 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
     'sdk',
     'package.json'
   )
-  const localAiWorker = path.join(appDir, 'Contents', 'Resources', 'app', 'local-ai', 'qvac', 'worker.entry.mjs')
-  if (!fs.existsSync(localAiRuntime) || !fs.existsSync(localAiSdk) || !fs.existsSync(localAiWorker)) {
+  const localAiWorker = path.join(
+    appDir,
+    'Contents',
+    'Resources',
+    'app',
+    'local-ai',
+    'qvac',
+    'worker.entry.mjs'
+  )
+  if (
+    !fs.existsSync(localAiRuntime) ||
+    !fs.existsSync(localAiSdk) ||
+    !fs.existsSync(localAiWorker)
+  ) {
     throw new ReleaseError(
       'On-device AI runtime is incomplete in the app',
       'Expected Contents/MacOS/bare-local-ai, the @qvac/sdk package and local-ai/qvac/worker.entry.mjs. Check the generateAssets and packageAfterPrune hooks in forge.config.cjs'
@@ -419,22 +464,6 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
         .filter((n) => n.endsWith('.app'))
         .map((n) => path.join(frameworks, n))
     : []
-  for (const target of [sidecar, localAiRuntime, ...helpers]) {
-    const entitlements = run('codesign', ['-d', '--entitlements', '-', target]).output
-    for (const required of ['app-sandbox', 'inherit', 'allow-jit']) {
-      if (!entitlements.includes(required)) {
-        throw new ReleaseError(
-          `${path.basename(target)} is missing the ${required} entitlement`,
-          required === 'allow-jit'
-            ? 'Nested code runs V8 under hardened runtime. Without allow-jit the process dies with "V8 process OOM (Failed to reserve virtual memory for CodeRange)" and the window renders blank'
-            : 'Check build/entitlements.mas.inherit.plist'
-        )
-      }
-    }
-  }
-  ok(
-    `nested code signed with inherit + allow-jit (${helpers.length} helpers, sidecar and AI runtime)`
-  )
 
   const plist = path.join(appDir, 'Contents', 'Info.plist')
   const bundleId = run('plutil', [
@@ -458,8 +487,256 @@ function verifyArtifacts(config, { appDir, pkgPath }) {
     '-',
     plist
   ]).stdout.trim()
-  const sizeMb = Math.round(fs.statSync(pkgPath).size / 1e6)
-  ok(`${bundleId} build ${buildNumber} — ${path.basename(pkgPath)} (${sizeMb} MB)`)
+  ok(`${bundleId} build ${buildNumber}`)
+
+  return { sidecar, localAiRuntime, helpers }
+}
+
+function developerIdEnv(config) {
+  const env = {
+    ...process.env,
+    APPLE_BUNDLE_ID: config.APPLE_BUNDLE_ID,
+    MAC_CODESIGN_IDENTITY: config.MAC_CODESIGN_IDENTITY
+  }
+  delete env.MAS_BUILD
+  delete env.MAS_CODESIGN_IDENTITY
+  return env
+}
+
+function notaryAuth(config) {
+  return [
+    '--key',
+    ascKeyPath(config),
+    '--key-id',
+    config.ASC_KEY_ID,
+    '--issuer',
+    config.ASC_ISSUER_ID
+  ]
+}
+
+function checkNotaryCredentials(config) {
+  const history = run('xcrun', ['notarytool', 'history', ...notaryAuth(config)])
+  if (history.status !== 0) {
+    process.stdout.write(history.output)
+    throw new ReleaseError(
+      'The notary service rejected the App Store Connect API key',
+      'Notarization needs a Team key with the Developer role or higher, created under Users and Access -> Integrations'
+    )
+  }
+  ok('notary service accepts the API key')
+}
+
+async function forge(config, args, heartbeat) {
+  for (let attempt = 1; attempt <= BUILD_ATTEMPTS; attempt++) {
+    const { status, output, durationMs } = await streamCommand('npx', ['--no-install', ...args], {
+      cwd: root,
+      env: developerIdEnv(config),
+      heartbeat
+    })
+
+    if (status === 0) return took(durationMs)
+
+    if (NETWORK_RETRY_PATTERN.test(output) && attempt < BUILD_ATTEMPTS) {
+      warn(`network error (attempt ${attempt}/${BUILD_ATTEMPTS}), retrying`)
+      continue
+    }
+    throw new ReleaseError(
+      `${args.slice(0, 2).join(' ')} failed after ${formatDuration(durationMs)}`
+    )
+  }
+}
+
+async function buildDeveloperId(config) {
+  await installLocalAiRuntime()
+
+  const { status, output } = await streamCommand('npm', ['run', 'build'], { cwd: root })
+  if (status !== 0) {
+    process.stdout.write(output)
+    throw new ReleaseError('vite build failed')
+  }
+
+  await forge(
+    config,
+    ['electron-forge', 'package', '--platform=mas', `--arch=${DMG_ARCH}`],
+    'still packaging'
+  )
+}
+
+function verifyDeveloperIdApp(config, appDir) {
+  const { sidecar, localAiRuntime, helpers } = verifyBundle(config, appDir)
+
+  const identity = run('codesign', ['-dvv', appDir]).output
+  if (!identity.includes(`Authority=${config.MAC_CODESIGN_IDENTITY}`)) {
+    throw new ReleaseError(
+      `The app is not signed by ${config.MAC_CODESIGN_IDENTITY}`,
+      'Check MAC_CODESIGN_IDENTITY in .release.mac.env'
+    )
+  }
+
+  const requirement = run('codesign', ['-d', '-r-', appDir]).output
+  for (const oid of [APP_STORE_CERT_OID, TESTFLIGHT_CERT_OID]) {
+    if (!requirement.includes(oid)) {
+      throw new ReleaseError(
+        `The designated requirement does not accept the ${oid} signature`,
+        'Without it the App Store build cannot read the keychain key this install creates, and cannot open its vault'
+      )
+    }
+  }
+  ok('designated requirement also accepts App Store and TestFlight signatures')
+
+  const appEntitlements = run('codesign', ['-d', '--entitlements', '-', appDir]).output
+  const group = `${teamIdOf(config.MAC_CODESIGN_IDENTITY)}.${config.APPLE_BUNDLE_ID}`
+  if (!appEntitlements.includes('app-sandbox') || !appEntitlements.includes(group)) {
+    throw new ReleaseError(
+      `The app is not sandboxed with the app group ${group}`,
+      'The DMG must use the App Store container, or moving to the App Store build loses the vault'
+    )
+  }
+  if (appEntitlements.includes('application-identifier')) {
+    throw new ReleaseError(
+      'The app carries com.apple.application-identifier',
+      'That entitlement needs a provisioning profile outside the App Store, and the app will not launch'
+    )
+  }
+  ok(`sandboxed in the App Store container, app group ${group}`)
+
+  for (const target of [appDir, sidecar, localAiRuntime, ...helpers]) {
+    const details = run('codesign', ['-dv', target]).output
+    if (!/flags=0x[0-9a-f]*\([^)]*runtime/.test(details)) {
+      throw new ReleaseError(
+        `${path.basename(target)} is not signed with the hardened runtime`,
+        'Notarization rejects any executable without it'
+      )
+    }
+    const entitlements = run('codesign', ['-d', '--entitlements', '-', target]).output
+    for (const required of ['app-sandbox', 'allow-jit']) {
+      if (!entitlements.includes(required)) {
+        throw new ReleaseError(
+          `${path.basename(target)} is missing the ${required} entitlement`,
+          required === 'allow-jit'
+            ? 'V8 cannot reserve its code range under hardened runtime without it, and the window renders blank'
+            : 'Nested code must inherit the sandbox. Check build/entitlements.mas.inherit.plist'
+        )
+      }
+    }
+  }
+  ok(
+    `hardened runtime, sandbox and allow-jit on the app, ${helpers.length} helpers, sidecar and AI runtime`
+  )
+}
+
+function teamIdOf(identity) {
+  const teamId = identity.match(/\(([A-Z0-9]{10})\)$/)?.[1]
+  if (!teamId) throw new ReleaseError(`Cannot read the team id from ${identity}`)
+  return teamId
+}
+
+async function notarize(config, file, label) {
+  const { status, output } = await streamCommand(
+    'xcrun',
+    ['notarytool', 'submit', file, ...notaryAuth(config), '--wait', '--output-format', 'json'],
+    { cwd: root, heartbeat: `still notarizing ${label}` }
+  )
+  const id = output.match(/"id"\s*:\s*"([^"]+)"/)?.[1]
+  const result = output.match(/"status"\s*:\s*"([^"]+)"/)?.[1]
+
+  if (status !== 0 || result !== 'Accepted') {
+    if (id) {
+      const log = run('xcrun', ['notarytool', 'log', id, ...notaryAuth(config)])
+      process.stdout.write(log.output)
+    }
+    throw new ReleaseError(
+      `Notarization of ${label} ended with status ${result ?? 'unknown'}`,
+      id ? `The notary log is printed above (submission ${id})` : undefined
+    )
+  }
+  ok(`${label} notarized (submission ${id})`)
+}
+
+function staple(target) {
+  const stapled = run('xcrun', ['stapler', 'staple', target])
+  if (stapled.status !== 0) {
+    process.stdout.write(stapled.output)
+    throw new ReleaseError(`Could not staple the notarization ticket to ${path.basename(target)}`)
+  }
+  ok(`ticket stapled to ${path.basename(target)}`)
+}
+
+function assess(args, label) {
+  const result = run('spctl', ['--assess', '-vv', ...args])
+  if (result.status !== 0 || !result.output.includes('Notarized Developer ID')) {
+    process.stdout.write(result.output)
+    throw new ReleaseError(`Gatekeeper does not accept the ${label}`)
+  }
+  ok(`Gatekeeper accepts the ${label} as Notarized Developer ID`)
+}
+
+async function releaseDmg(config) {
+  const appDir = path.join(root, 'out', `${appName}-mas-${DMG_ARCH}`, `${appName}.app`)
+  const makeDir = path.join(root, 'out', 'make')
+  const version = JSON.parse(fs.readFileSync(packagePath, 'utf8')).version
+
+  step(`Building ${config.APPLE_BUNDLE_ID} ${version} (${DMG_ARCH}), Developer ID signed`)
+  fs.rmSync(path.dirname(appDir), { recursive: true, force: true })
+  await buildDeveloperId(config)
+  if (!fs.existsSync(appDir)) throw new ReleaseError(`Packaging produced no ${appDir}`)
+
+  step('Verifying the app')
+  verifyDeveloperIdApp(config, appDir)
+
+  step('Notarizing the app')
+  const appZip = path.join(root, 'out', `${appName}-${version}-${DMG_ARCH}.zip`)
+  fs.rmSync(appZip, { force: true })
+  execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', appDir, appZip])
+  try {
+    await notarize(config, appZip, 'the app')
+  } finally {
+    fs.rmSync(appZip, { force: true })
+  }
+  staple(appDir)
+  assess(['--type', 'execute', appDir], 'app')
+
+  step('Building the DMG')
+  await forge(
+    config,
+    [
+      'electron-forge',
+      'make',
+      '--skip-package',
+      '--platform=mas',
+      `--arch=${DMG_ARCH}`,
+      '--targets=@electron-forge/maker-dmg'
+    ],
+    'still building the DMG'
+  )
+  const dmgName = fs.existsSync(makeDir)
+    ? fs.readdirSync(makeDir).find((f) => f.endsWith('.dmg'))
+    : null
+  if (!dmgName) throw new ReleaseError('The DMG maker produced no .dmg')
+  const dmgPath = path.join(makeDir, dmgName)
+
+  const signed = run('codesign', [
+    '--sign',
+    config.MAC_CODESIGN_IDENTITY,
+    '--timestamp',
+    '--force',
+    dmgPath
+  ])
+  if (signed.status !== 0) {
+    process.stdout.write(signed.output)
+    throw new ReleaseError('Could not sign the DMG')
+  }
+  ok(`signed ${dmgName}`)
+
+  step('Notarizing the DMG')
+  await notarize(config, dmgPath, 'the DMG')
+  staple(dmgPath)
+  assess(['--type', 'open', '--context', 'context:primary-signature', dmgPath], 'DMG')
+
+  const sha256 = crypto.createHash('sha256').update(fs.readFileSync(dmgPath)).digest('hex')
+  const sizeMb = Math.round(fs.statSync(dmgPath).size / 1e6)
+  console.log(`\n${dmgPath}`)
+  console.log(`${sizeMb} MB  sha256 ${sha256}`)
 }
 
 async function altool(config, action, pkgPath, heartbeat) {
@@ -489,12 +766,11 @@ async function main() {
   const args = parseArgs(process.argv.slice(2))
   const config = loadConfig()
 
+  if (args.dmg) return mainDmg(args, config)
+
   stepCount = args.checkOnly
     ? 1
-    : 3 +
-      (args.bump && args.commit ? 1 : 0) +
-      (args.skipValidate ? 0 : 1) +
-      (args.upload ? 1 : 0)
+    : 3 + (args.bump && args.commit ? 1 : 0) + (args.skipValidate ? 0 : 1) + (args.upload ? 1 : 0)
 
   step('Preflight')
   const missing = [
@@ -548,6 +824,30 @@ async function main() {
     console.log('Re-run with --upload to send it to App Store Connect.')
   }
 
+  console.log(`${ansi.dim}\nTotal time ${formatDuration(Date.now() - startedAt)}${ansi.reset}`)
+}
+
+async function mainDmg(args, config) {
+  stepCount = args.checkOnly ? 1 : 6
+
+  step('Preflight (Developer ID DMG)')
+  const missing = DMG_REQUIRED.filter((key) => !config[key])
+  if (missing.length) {
+    throw new ReleaseError(
+      `Missing configuration: ${missing.join(', ')}`,
+      'Add them to .release.mac.env (see .release.mac.env.example)'
+    )
+  }
+  ok(`bundle id ${config.APPLE_BUNDLE_ID}`)
+  requireIdentity(config.MAC_CODESIGN_IDENTITY, 'Developer ID Application identity')
+  checkNotaryCredentials(config)
+
+  if (args.checkOnly) {
+    console.log('\nPreflight passed. Nothing was built.')
+    return
+  }
+
+  await releaseDmg(config)
   console.log(`${ansi.dim}\nTotal time ${formatDuration(Date.now() - startedAt)}${ansi.reset}`)
 }
 

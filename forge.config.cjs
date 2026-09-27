@@ -1,4 +1,5 @@
 const fs = require('fs')
+const os = require('os')
 const path = require('path')
 
 const pkg = require('./package.json')
@@ -7,6 +8,8 @@ const appName = pkg.productName ?? pkg.name
 const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID ?? 'com.amreshvs.pear-notes'
 const APPLE_BUILD_NUMBER = process.env.APPLE_BUILD_NUMBER ?? String(pkg.masBuildNumber ?? '1')
 const isMas = process.env.MAS_BUILD === '1'
+const isDeveloperIdRelease = !isMas && Boolean(process.env.MAC_CODESIGN_IDENTITY)
+const DEVELOPER_ID_DISTRIBUTION = 'developer-id'
 
 function getWindowsKitVersion() {
   const programFiles = process.env['PROGRAMFILES(X86)'] || process.env.PROGRAMFILES
@@ -136,27 +139,78 @@ if (isMas && process.env.MAS_CODESIGN_IDENTITY) {
       })
     }
   }
-} else if (process.env.MAC_CODESIGN_IDENTITY) {
-  packagerConfig = {
-    ...packagerConfig,
-    osxSign: {
-      identity: process.env.MAC_CODESIGN_IDENTITY,
-      optionsForFile: () => ({
-        entitlements: entitlements('entitlements.mac.plist')
-      })
+} else if (isDeveloperIdRelease) {
+  packagerConfig = developerIdPackagerConfig(packagerConfig)
+}
+
+// The DMG is the Mac App Store build (platform `mas`, same sandbox, same bundle
+// id) re-signed with Developer ID, so both distributions share one container
+// and a user can move between them without losing the vault. Notarization and
+// stapling happen in scripts/release-mac.mjs --dmg.
+function developerIdPackagerConfig(base) {
+  const identity = process.env.MAC_CODESIGN_IDENTITY
+  const teamId = identity.match(/\(([A-Z0-9]{10})\)$/)?.[1]
+  if (!teamId) throw new Error(`Cannot read the team id from MAC_CODESIGN_IDENTITY: ${identity}`)
+
+  return {
+    ...base,
+    extendInfo: {
+      ...base.extendInfo,
+      ElectronTeamID: teamId,
+      PearNotesDistribution: DEVELOPER_ID_DISTRIBUTION
     },
-    osxNotarize: {
-      tool: 'notarytool',
-      keychainProfile: process.env.KEYCHAIN_PROFILE
+    osxSign: {
+      identity,
+      continueOnError: false,
+      // application-identifier (what osx-sign would inject) is a restricted
+      // entitlement that needs a provisioning profile outside the App Store.
+      preAutoEntitlements: false,
+      optionsForFile: (filePath) =>
+        filePath.endsWith(`${appName}.app`)
+          ? {
+              entitlements: developerIdEntitlements(teamId),
+              requirements: sharedDesignatedRequirement(teamId)
+            }
+          : { entitlements: entitlements('entitlements.mas.inherit.plist') }
     }
   }
+}
+
+function developerIdEntitlements(teamId) {
+  const source = fs.readFileSync(entitlements('entitlements.mas.plist'), 'utf8')
+  const group = `${teamId}.${APPLE_BUNDLE_ID}`
+  const withGroup = source.replace(
+    '</dict>',
+    `    <key>com.apple.security.application-groups</key>\n    <array>\n        <string>${group}</string>\n    </array>\n</dict>`
+  )
+  const file = path.join(os.tmpdir(), `pear-notes-developer-id-${process.pid}.plist`)
+  fs.writeFileSync(file, withGroup)
+  return file
+}
+
+// Keychain items record their creator's designated requirement. Accepting the
+// App Store and TestFlight signatures too lets the App Store build read the
+// safeStorage key a DMG install created, without a keychain prompt.
+function sharedDesignatedRequirement(teamId) {
+  return (
+    `=designated => identifier "${APPLE_BUNDLE_ID}" and anchor apple generic and (` +
+    'certificate leaf[field.1.2.840.113635.100.6.1.9] or ' +
+    'certificate leaf[field.1.2.840.113635.100.6.1.25.1] or ' +
+    '(certificate 1[field.1.2.840.113635.100.6.2.6] and ' +
+    'certificate leaf[field.1.2.840.113635.100.6.1.13] and ' +
+    `certificate leaf[subject.OU] = "${teamId}"))`
+  )
 }
 
 const makers = [
   {
     name: '@electron-forge/maker-dmg',
-    platforms: ['darwin'],
-    config: {}
+    platforms: isDeveloperIdRelease ? ['mas'] : ['darwin'],
+    config: {
+      format: 'ULFO',
+      icon: path.join(__dirname, 'build', 'icon.icns'),
+      overwrite: true
+    }
   },
   {
     name: '@electron-forge/maker-msix',
@@ -420,7 +474,7 @@ module.exports = {
   hooks: {
     generateAssets: async () => {
       if (!fs.existsSync(path.join(__dirname, 'local-ai', 'node_modules', '@qvac', 'sdk'))) {
-        if (isMas) {
+        if (isMas || isDeveloperIdRelease) {
           throw new Error(
             'local-ai dependencies are not installed, so this build would ship without on-device AI. Run npm ci in local-ai first.'
           )

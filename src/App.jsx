@@ -39,6 +39,7 @@ import BackupProgressBanner from './components/common/BackupProgressBanner'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
 import TitleBar from './components/common/TitleBar'
+import { ToastStackProvider } from './components/common/ToastStack'
 import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
 import NoteEditor from './components/editor/NoteEditor'
 import DeviceRemovedModal from './components/modals/DeviceRemovedModal'
@@ -277,50 +278,52 @@ function App() {
 
   return (
     <NoteLockPasswordProvider>
-      <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
-        <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
-        <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+      <ToastStackProvider>
+        <main className='h-screen flex flex-col bg-bg-primary overflow-hidden relative'>
+          <div className='absolute -top-32 -left-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
+          <div className='absolute -bottom-32 -right-32 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
 
-        <div className='contents' inert={showSettings}>
-          <TitleBar />
-          {content}
-        </div>
-        {showSettings && (
-          <SettingsScreen
-            initialSection={typeof showSettings === 'string' ? showSettings : 'general'}
-            onClose={() => dispatch(setShowSettings(false))}
-          />
-        )}
-        {isVaultOpening && (
-          <div
-            role='status'
-            className='fixed inset-0 z-[2200] flex items-center justify-center bg-backdrop-medium backdrop-blur-xl'
-          >
-            <div className='flex flex-col items-center gap-4'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary' />
-              <p className='text-base text-text-secondary'>
-                {vaultPending === 'move' ? t('vaults.move.moving') : t('vaults.openingVault')}
-              </p>
-            </div>
+          <div className='contents' inert={showSettings}>
+            <TitleBar />
+            {content}
           </div>
-        )}
-        <PairingStatusOverlay />
-        <DeviceRemovedModal />
-        <BackupProgressBanner />
-        <AppToast />
-        {updateStatus?.mandatory && (
-          <UpdateRequiredModal
-            latestVersion={updateStatus.latestVersion}
-            downloadUrl={updateStatus.downloadUrl}
-          />
-        )}
-        {!updateStatus?.mandatory && updateStatus?.updateAvailable && (
-          <UpdateAvailableBanner
-            latestVersion={updateStatus.latestVersion}
-            downloadUrl={updateStatus.downloadUrl}
-          />
-        )}
-      </main>
+          {showSettings && (
+            <SettingsScreen
+              initialSection={typeof showSettings === 'string' ? showSettings : 'general'}
+              onClose={() => dispatch(setShowSettings(false))}
+            />
+          )}
+          {isVaultOpening && (
+            <div
+              role='status'
+              className='fixed inset-0 z-[2200] flex items-center justify-center bg-backdrop-medium backdrop-blur-xl'
+            >
+              <div className='flex flex-col items-center gap-4'>
+                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary' />
+                <p className='text-base text-text-secondary'>
+                  {vaultPending === 'move' ? t('vaults.move.moving') : t('vaults.openingVault')}
+                </p>
+              </div>
+            </div>
+          )}
+          <PairingStatusOverlay />
+          <DeviceRemovedModal />
+          <BackupProgressBanner />
+          <AppToast />
+          {updateStatus?.mandatory && (
+            <UpdateRequiredModal
+              latestVersion={updateStatus.latestVersion}
+              downloadUrl={updateStatus.downloadUrl}
+            />
+          )}
+          {!updateStatus?.mandatory && updateStatus?.updateAvailable && (
+            <UpdateAvailableBanner
+              latestVersion={updateStatus.latestVersion}
+              downloadUrl={updateStatus.downloadUrl}
+            />
+          )}
+        </main>
+      </ToastStackProvider>
     </NoteLockPasswordProvider>
   )
 }

@@ -34,17 +34,23 @@ const isMas = process.mas === true
 
 const fallbackBuildNumber = String(pkg.masBuildNumber ?? '1')
 
-function getBuildNumber() {
-  if (!app.isPackaged || !isMac) return fallbackBuildNumber
+function readInfoPlistString(key) {
+  if (!app.isPackaged || !isMac) return null
   try {
     const plistPath = path.join(path.dirname(app.getPath('exe')), '..', 'Info.plist')
     const plist = fs.readFileSync(plistPath, 'utf8')
-    const match = plist.match(/<key>CFBundleVersion<\/key>\s*<string>([^<]*)<\/string>/)
-    return match?.[1]?.trim() || fallbackBuildNumber
+    const match = plist.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]*)</string>`))
+    return match?.[1]?.trim() || null
   } catch {
-    return fallbackBuildNumber
+    return null
   }
 }
+
+function getBuildNumber() {
+  return readInfoPlistString('CFBundleVersion') ?? fallbackBuildNumber
+}
+
+const isAppStoreBuild = isMas && readInfoPlistString('PearNotesDistribution') !== 'developer-id'
 
 let deviceAuth = null
 try {
@@ -292,7 +298,12 @@ function createWindow() {
 
 function setAppMenu() {
   const developerItems = isDev
-    ? [{ role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' }, { type: 'separator' }]
+    ? [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' }
+      ]
     : []
   const template = [
     ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
@@ -531,7 +542,7 @@ function setupIPC() {
   })
 
   ipcMain.handle('app-update:check-manifest', async () => {
-    if (isMas) return null
+    if (isAppStoreBuild) return null
     try {
       const { APP_UPDATE_MANIFEST_URL } = await import('@pear-notes/core/constant.js')
       const res = await fetch(APP_UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(5000) })

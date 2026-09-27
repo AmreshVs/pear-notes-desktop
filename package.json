@@ -21,6 +21,8 @@
     "release:mac": "node scripts/release-mac.mjs",
     "release:mac:check": "node scripts/release-mac.mjs --check",
     "release:mac:upload": "node scripts/release-mac.mjs --upload",
+    "release:mac:dmg": "node scripts/release-mac.mjs --dmg",
+    "release:mac:dmg:check": "node scripts/release-mac.mjs --dmg --check",
     "pin-core": "node scripts/pin-core.cjs",
     "harden-core": "node scripts/harden-core.cjs",
     "clean": "rm -rf dist out",

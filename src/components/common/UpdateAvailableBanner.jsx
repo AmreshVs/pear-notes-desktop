@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, X } from 'lucide-react'
 
+import { Toast } from './ToastStack'
+
 const DISMISSED_VERSION_KEY = 'pear-notes:update-banner-dismissed-version'
 
 export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
@@ -22,36 +24,38 @@ export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
   }
 
   return (
-    <div className='fixed bottom-6 right-6 w-80 bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex flex-col gap-3 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300'>
-      <div className='flex items-center gap-3'>
-        <div className='w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-accent-primary/10 text-accent-primary'>
-          <Download className='w-5 h-5' />
-        </div>
+    <Toast>
+      <div className='w-80 max-w-full bg-bg-secondary border border-border-primary rounded-xl shadow-2xl p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-right-8 duration-300'>
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-accent-primary/10 text-accent-primary'>
+            <Download className='w-5 h-5' />
+          </div>
 
-        <div className='flex-1 min-w-0'>
-          <h4 className='text-text-primary font-semibold text-sm truncate'>
-            {t('update.banner.title')}
-          </h4>
-          <p className='text-text-tertiary text-xs truncate'>
-            {t('update.banner.description', { version: latestVersion })}
-          </p>
+          <div className='flex-1 min-w-0'>
+            <h4 className='text-text-primary font-semibold text-sm truncate'>
+              {t('update.banner.title')}
+            </h4>
+            <p className='text-text-tertiary text-xs truncate'>
+              {t('update.banner.description', { version: latestVersion })}
+            </p>
+          </div>
+
+          <button
+            onClick={handleDismiss}
+            className='w-7 h-7 rounded-full flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary transition-all shrink-0'
+            title={t('update.banner.dismiss')}
+          >
+            <X className='w-4 h-4' />
+          </button>
         </div>
 
         <button
-          onClick={handleDismiss}
-          className='w-7 h-7 rounded-full flex items-center justify-center text-text-tertiary hover:text-text-primary hover:bg-bg-tertiary transition-all shrink-0'
-          title={t('update.banner.dismiss')}
+          onClick={handleUpdate}
+          className='w-full py-2 bg-accent-primary text-accent-on-primary rounded-lg font-semibold text-sm hover:bg-accent-primary-hover transition-all active:scale-95'
         >
-          <X className='w-4 h-4' />
+          {t('update.banner.updateButton')}
         </button>
       </div>
-
-      <button
-        onClick={handleUpdate}
-        className='w-full py-2 bg-accent-primary text-accent-on-primary rounded-lg font-semibold text-sm hover:bg-accent-primary-hover transition-all active:scale-95'
-      >
-        {t('update.banner.updateButton')}
-      </button>
-    </div>
+    </Toast>
   )
 }
