@@ -23,6 +23,7 @@
         [ "OS=='win'", {
           "sources": [ "src/auth_win.cc" ],
           "defines": [ "_UNICODE", "UNICODE" ],
+          "libraries": [ "windowsapp.lib" ],
           "msvs_settings": {
             "VCCLCompilerTool": {
               "AdditionalOptions": [ "/std:c++17", "/EHsc", "/await" ]

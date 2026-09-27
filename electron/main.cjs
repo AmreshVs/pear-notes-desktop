@@ -247,8 +247,9 @@ function createWindow() {
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     backgroundColor: '#1F2430',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 12, y: 14 },
+    ...(isMac
+      ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 12, y: 14 } }
+      : { autoHideMenuBar: true }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: true,
