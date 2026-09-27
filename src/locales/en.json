@@ -965,7 +965,7 @@
     "activity": "Activity",
     "linkDevices": "My devices",
     "sync": "Sync",
-    "debug": "Debug",
+    "debug": "Diagnostics",
     "errorLog": "Logs",
     "vaults": "Vaults"
   },

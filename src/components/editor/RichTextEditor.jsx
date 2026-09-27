@@ -48,6 +48,7 @@ import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
 
 import { clearEditorHistory } from '../../lib/editorHistory'
+import { EmptyFirstLine } from '../../lib/emptyFirstLine'
 import { KeptSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
@@ -94,6 +95,7 @@ const RichTextEditor = forwardRef(
             link: false,
             codeBlock: false
           }),
+          EmptyFirstLine,
           Underline,
           Strike,
           TaskList,
