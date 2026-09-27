@@ -243,6 +243,18 @@ async function pruneUnusedLocalAiAddons(buildPath) {
   await fs.promises.rm(bundlePath, { force: true })
 }
 
+// @qvac/asr-ggml alone ships a 37 MB test/ fixture tree.
+const PACKAGE_DEV_DIRS = ['test', 'tests', '__tests__', 'example', 'examples']
+
+async function prunePackageDevDirs(modulesDir) {
+  for (const dir of await listPackageDirs(modulesDir)) {
+    for (const name of PACKAGE_DEV_DIRS) {
+      await fs.promises.rm(path.join(dir, name), { recursive: true, force: true })
+    }
+    await prunePackageDevDirs(path.join(dir, 'node_modules'))
+  }
+}
+
 async function listPackageDirs(modulesDir) {
   const dirs = []
   for (const entry of await readdir(modulesDir)) {
@@ -431,6 +443,8 @@ module.exports = {
       await prunePrebuilds(buildPath, nativePlatform, arch)
       await pruneUnusedLocalAiAddons(buildPath)
       await prunePrebuilds(path.join(buildPath, 'local-ai'), nativePlatform, arch)
+      await prunePackageDevDirs(path.join(buildPath, 'node_modules'))
+      await prunePackageDevDirs(path.join(buildPath, 'local-ai', 'node_modules'))
       if (nativePlatform === 'darwin') {
         relocateSidecarBinary(buildPath, nativePlatform, arch)
         relocateLocalAiRuntimeBinary(buildPath, nativePlatform, arch)
