@@ -25,7 +25,7 @@ function run(command, args, options = {}) {
 
 function npm(args, options) {
   if (fs.existsSync(SOCKET_FIREWALL)) run(SOCKET_FIREWALL, ['npm', ...args], options)
-  else run('npm', args, options)
+  else run('npm', args, { shell: process.platform === 'win32', ...options })
 }
 
 function checkNode() {

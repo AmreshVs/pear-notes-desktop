@@ -11,6 +11,33 @@ const isMas = process.env.MAS_BUILD === '1'
 const isDeveloperIdRelease = !isMas && Boolean(process.env.MAC_CODESIGN_IDENTITY)
 const DEVELOPER_ID_DISTRIBUTION = 'developer-id'
 
+// From Partner Center -> Product identity. The Store rejects an upload whose
+// identity or publisher differs from these.
+const MSIX_IDENTITY = {
+  name: 'AmreshVenkatesanSuresh.PearNotes-PrivateAISync',
+  publisher: 'CN=B816EEFE-E307-4467-A119-53E4B4207BCA',
+  publisherDisplayName: 'Amresh Venkatesan Suresh'
+}
+
+// MSIX_STORE_UPLOAD=1 leaves the package unsigned; the Store signs it.
+// Otherwise sign for side-loading: a hook, or a .pfx whose subject equals
+// MSIX_IDENTITY.publisher (see docs/windows-test-build.md).
+function msixSigning() {
+  if (process.env.MSIX_STORE_UPLOAD === '1') return { sign: false }
+  if (process.env.WINDOWS_SIGN_HOOK) {
+    return { windowsSignOptions: { hookModulePath: process.env.WINDOWS_SIGN_HOOK } }
+  }
+  if (process.env.WINDOWS_CERTIFICATE_FILE) {
+    return {
+      windowsSignOptions: {
+        certificateFile: process.env.WINDOWS_CERTIFICATE_FILE,
+        certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD
+      }
+    }
+  }
+  return {}
+}
+
 function getWindowsKitVersion() {
   const programFiles = process.env['PROGRAMFILES(X86)'] || process.env.PROGRAMFILES
   if (!programFiles) return undefined
@@ -91,6 +118,7 @@ function ignorePackagedFile(filePath) {
   // `.release.mac.env` and `.release.mac.env.example` carry the ASC key id,
   // issuer id and codesign identity common names.
   if (filePath.startsWith('/.release.')) return true
+  if (filePath.startsWith('/build/msix-assets')) return true
 
   const top = '/' + segments[1]
   if (IGNORED_TOP_LEVEL.has(top)) return true
@@ -103,6 +131,7 @@ function ignorePackagedFile(filePath) {
 
 let packagerConfig = {
   name: appName,
+  executableName: 'PearNotes',
   icon: path.join(__dirname, 'build', 'icon'),
   ignore: ignorePackagedFile,
   appBundleId: APPLE_BUNDLE_ID,
@@ -217,13 +246,18 @@ const makers = [
     platforms: ['win32'],
     config: {
       windowsKitVersion: getWindowsKitVersion(),
-      ...(process.env.WINDOWS_SIGN_HOOK
-        ? {
-            windowsSignOptions: {
-              hookModulePath: process.env.WINDOWS_SIGN_HOOK
-            }
-          }
-        : {})
+      packageAssets: path.join(__dirname, 'build', 'msix-assets'),
+      manifestVariables: {
+        packageIdentity: MSIX_IDENTITY.name,
+        publisher: MSIX_IDENTITY.publisher,
+        publisherDisplayName: MSIX_IDENTITY.publisherDisplayName,
+        packageDisplayName: appName,
+        appDisplayName: appName,
+        appExecutable: 'PearNotes.exe',
+        packageMinOSVersion: '10.0.19041.0',
+        packageMaxOSVersionTested: '10.0.26100.0'
+      },
+      ...msixSigning()
     }
   },
   {
@@ -235,6 +269,9 @@ const makers = [
     platforms: ['linux'],
     config: {
       options: {
+        name: 'pear-notes',
+        bin: 'PearNotes',
+        productName: appName,
         icon: path.join(__dirname, 'build', 'icon.png')
       }
     }
@@ -244,6 +281,9 @@ const makers = [
     platforms: ['linux'],
     config: {
       options: {
+        name: 'pear-notes',
+        bin: 'PearNotes',
+        productName: appName,
         icon: path.join(__dirname, 'build', 'icon.png')
       }
     }
