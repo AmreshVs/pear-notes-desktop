@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   windows-x64:
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 60
 
     steps:
@@ -53,6 +53,11 @@ jobs:
         id: collect
         shell: pwsh
         run: |
+          $addon = "out/Pear Notes-win32-x64/resources/app/native/pear-device-auth/build/Release/pear_device_auth.node"
+          if (-not (Test-Path $addon)) {
+            Write-Output "::error::The Windows Hello addon was not built: $addon"
+            exit 1
+          }
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           New-Item -ItemType Directory -Force release | Out-Null
           7z a -tzip "release/PearNotes-$version-windows-x64.zip" "./out/Pear Notes-win32-x64/*" | Out-Null
@@ -60,12 +65,48 @@ jobs:
           Get-ChildItem release | Format-Table Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB) } }
           "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Upload the app zip for testing
+      - name: Sign a test copy of the MSIX
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.WINDOWS_TEST_CERT_PFX }}
+          PFX_PASSWORD: ${{ secrets.WINDOWS_TEST_CERT_PASSWORD }}
+          VERSION: ${{ steps.collect.outputs.version }}
+        run: |
+          if (-not $env:PFX_BASE64 -or -not $env:PFX_PASSWORD) {
+            Write-Output "::error::Add the WINDOWS_TEST_CERT_PFX and WINDOWS_TEST_CERT_PASSWORD secrets"
+            exit 1
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'test-cert.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64))
+          try {
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
+              Sort-Object FullName | Select-Object -Last 1
+            $signed = "test/PearNotes-$env:VERSION-windows-x64-test-signed.msix"
+            New-Item -ItemType Directory -Force test | Out-Null
+            Copy-Item "release/PearNotes-$env:VERSION-windows-x64-store.msix" $signed
+            & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:PFX_PASSWORD $signed
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new($pfx, $env:PFX_PASSWORD)
+            [IO.File]::WriteAllBytes("test/PearNotes-test-cert.cer", $cert.Export('Cert'))
+            $signer = (Get-AuthenticodeSignature $signed).SignerCertificate.Subject
+            if ($signer -ne 'CN=B816EEFE-E307-4467-A119-53E4B4207BCA') {
+              Write-Output "::error::Signed by '$signer', which does not match the MSIX publisher"
+              exit 1
+            }
+            Get-ChildItem test | Format-Table Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB) } }
+          } finally {
+            Remove-Item $pfx -Force
+          }
+
+      - name: Upload MSIX files
         uses: actions/upload-artifact@v4
         with:
-          name: PearNotes-${{ steps.collect.outputs.version }}-windows-x64
-          path: release/*.zip
-          retention-days: 3
+          name: PearNotes-${{ steps.collect.outputs.version }}-windows-x64-msix
+          path: |
+            test/*
+            release/*.msix
+          retention-days: 2
 
       - name: Attach to a draft release
         if: startsWith(github.ref, 'refs/tags/')
