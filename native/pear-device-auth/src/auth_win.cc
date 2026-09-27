@@ -1,6 +1,7 @@
 #include "auth.h"
 
 #include <string>
+#include <thread>
 
 #include <windows.h>
 #include <winrt/base.h>
@@ -30,15 +31,20 @@ std::string Narrow(const winrt::hstring& value) {
 
 }  // namespace
 
+// Electron's main thread is already an STA, so joining the MTA there throws.
 bool PlatformIsSupported() {
-  try {
-    init_apartment(apartment_type::multi_threaded);
-    UserConsentVerifierAvailability availability =
-        UserConsentVerifier::CheckAvailabilityAsync().get();
-    return availability == UserConsentVerifierAvailability::Available;
-  } catch (...) {
-    return false;
-  }
+  bool supported = false;
+  std::thread worker([&supported] {
+    try {
+      init_apartment(apartment_type::multi_threaded);
+      supported = UserConsentVerifier::CheckAvailabilityAsync().get() ==
+                  UserConsentVerifierAvailability::Available;
+    } catch (...) {
+      supported = false;
+    }
+  });
+  worker.join();
+  return supported;
 }
 
 bool PlatformAuthenticate(const std::string& reason, void* windowHandle, std::string& error) {

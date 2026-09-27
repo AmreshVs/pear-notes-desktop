@@ -339,14 +339,7 @@ function createTray() {
   const menu = Menu.buildFromTemplate([
     {
       label: `Open ${appName}`,
-      click: () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.show()
-          mainWindow.focus()
-        } else {
-          createWindow()
-        }
-      }
+      click: showMainWindow
     },
     { type: 'separator' },
     {
@@ -361,17 +354,22 @@ function createTray() {
   tray.setContextMenu(menu)
 
   tray.on('click', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.isVisible()) {
-        mainWindow.hide()
-      } else {
-        mainWindow.show()
-        mainWindow.focus()
-      }
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
+      mainWindow.hide()
     } else {
-      createWindow()
+      showMainWindow()
     }
   })
+}
+
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow()
+    return
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
 }
 
 function setupIPC() {
@@ -616,10 +614,7 @@ if (!lock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
-    }
+    if (app.isReady()) showMainWindow()
   })
 
   app.whenReady().then(async () => {
