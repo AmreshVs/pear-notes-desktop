@@ -19,6 +19,7 @@ import {
   applyStartAtLogin,
   CLOSE_TO_TRAY_KEY,
   getAppBehaviorPreference,
+  openStartAtLoginSettings,
   readStartAtLogin,
   setAppBehaviorPreference,
   START_AT_LOGIN_KEY
@@ -56,6 +57,7 @@ export default function SyncSettings({ onOpenDiagnostics }) {
 
   const [closeToTray, setCloseToTray] = useState(true)
   const [startAtLogin, setStartAtLogin] = useState(false)
+  const [startAtLoginBlockedBy, setStartAtLoginBlockedBy] = useState(null)
   const [mediaPaused, setMediaPaused] = useState(false)
   const [metered, setMetered] = useState(false)
   const [snapshot, setSnapshot] = useState({ lastSyncAt: 0, lastReceived: 0 })
@@ -69,9 +71,14 @@ export default function SyncSettings({ onOpenDiagnostics }) {
     getAppBehaviorPreference(CLOSE_TO_TRAY_KEY, true).then((v) => {
       if (active) setCloseToTray(v)
     })
-    readStartAtLogin(false).then((v) => {
-      if (active) setStartAtLogin(v)
-    })
+    const refreshStartAtLogin = () =>
+      readStartAtLogin(false).then((status) => {
+        if (!active) return
+        setStartAtLogin(status.enabled)
+        setStartAtLoginBlockedBy(status.blockedBy)
+      })
+    refreshStartAtLogin()
+    window.addEventListener('focus', refreshStartAtLogin)
     getMediaSyncFlag(MEDIA_SYNC_PAUSED_KEY).then((v) => {
       if (active) setMediaPaused(v)
     })
@@ -80,6 +87,7 @@ export default function SyncSettings({ onOpenDiagnostics }) {
     })
     return () => {
       active = false
+      window.removeEventListener('focus', refreshStartAtLogin)
     }
   }, [])
 
@@ -110,9 +118,10 @@ export default function SyncSettings({ onOpenDiagnostics }) {
   const handleToggleStartAtLogin = async () => {
     const next = !startAtLogin
     setStartAtLogin(next)
-    const applied = await applyStartAtLogin(next)
-    setStartAtLogin(applied)
-    setAppBehaviorPreference(START_AT_LOGIN_KEY, applied)
+    const status = await applyStartAtLogin(next)
+    setStartAtLogin(status.enabled)
+    setStartAtLoginBlockedBy(status.blockedBy)
+    setAppBehaviorPreference(START_AT_LOGIN_KEY, status.enabled)
   }
 
   const handleToggleMediaPaused = () => {
@@ -199,8 +208,29 @@ export default function SyncSettings({ onOpenDiagnostics }) {
             <div className='space-y-1 min-w-0'>
               <label className={LABEL_CLASS}>{t('settings.general.startAtLogin')}</label>
               <p className={DESC_CLASS}>{t('settings.general.startAtLoginDesc')}</p>
+              {startAtLoginBlockedBy === 'user' && (
+                <p className='text-sm text-text-tertiary font-medium'>
+                  {t('settings.general.startAtLoginBlockedByUser')}{' '}
+                  <button
+                    type='button'
+                    onClick={openStartAtLoginSettings}
+                    className='text-accent-primary hover:underline'
+                  >
+                    {t('settings.general.startAtLoginOpenSettings')}
+                  </button>
+                </p>
+              )}
+              {startAtLoginBlockedBy === 'policy' && (
+                <p className='text-sm text-text-tertiary font-medium'>
+                  {t('settings.general.startAtLoginBlockedByPolicy')}
+                </p>
+              )}
             </div>
-            <Toggle on={startAtLogin} onClick={handleToggleStartAtLogin} />
+            <Toggle
+              on={startAtLogin}
+              onClick={handleToggleStartAtLogin}
+              disabled={startAtLoginBlockedBy === 'policy'}
+            />
           </div>
         </div>
       </div>

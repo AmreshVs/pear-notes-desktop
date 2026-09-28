@@ -84,6 +84,10 @@ const IGNORED_TOP_LEVEL = new Set([
   '/.core-build',
   '/src',
   '/docs',
+  '/flatpak',
+  '/flatpak-build',
+  '/flatpak-repo',
+  '/.flatpak-builder',
   '/test',
   '/scripts',
   '/.agents',
@@ -231,6 +235,73 @@ function sharedDesignatedRequirement(teamId) {
   )
 }
 
+const MSIX_MANIFEST_VARIABLES = {
+  packageIdentity: MSIX_IDENTITY.name,
+  publisher: MSIX_IDENTITY.publisher,
+  publisherDisplayName: MSIX_IDENTITY.publisherDisplayName,
+  packageDisplayName: appName,
+  appDisplayName: appName,
+  appExecutable: 'PearNotes.exe',
+  packageBackgroundColor: '#1F2430',
+  packageMinOSVersion: '10.0.19041.0',
+  packageMaxOSVersionTested: '10.0.26100.0'
+}
+
+// Must match STARTUP_TASK_ID in electron/main.cjs.
+const MSIX_STARTUP_TASK_ID = 'PearNotesStartup'
+
+// The stock manifest template has no startup task, and a packaged app's
+// Run-key write is virtualised, so "Start at login" needs this extension.
+function withStartupTask(manifestXml) {
+  const withNamespace = manifestXml.replace(
+    /\s+IgnorableNamespaces="([^"]*)"/,
+    '\n  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"\n  IgnorableNamespaces="$1 uap5"'
+  )
+  const extension = [
+    '      <Extensions>',
+    '        <uap5:Extension Category="windows.startupTask" Executable="app\\' +
+      MSIX_MANIFEST_VARIABLES.appExecutable +
+      '" EntryPoint="Windows.FullTrustApplication">',
+    `          <uap5:StartupTask TaskId="${MSIX_STARTUP_TASK_ID}" Enabled="false" DisplayName="${appName}" />`,
+    '        </uap5:Extension>',
+    '      </Extensions>'
+  ].join('\n')
+  const result = withNamespace.replace(
+    '</uap:VisualElements>',
+    `</uap:VisualElements>\n${extension}`
+  )
+  if (
+    result === manifestXml ||
+    !result.includes('xmlns:uap5') ||
+    !result.includes('uap5:StartupTask')
+  ) {
+    throw new Error('MSIX manifest template changed; could not add the startup task')
+  }
+  return result
+}
+
+async function msixConfig(targetArch) {
+  const { manifest } = require('electron-windows-msix/lib/manifestation.js')
+  const { toMsixArch } = require('@electron-forge/maker-msix/dist/util/arch.js')
+  const manifestVariables = {
+    packageDescription: pkg.description,
+    packageVersion: pkg.version,
+    targetArch: toMsixArch(targetArch),
+    ...MSIX_MANIFEST_VARIABLES
+  }
+  const manifestXml = await manifest({ manifestVariables })
+  const manifestDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-notes-msix-'))
+  const appManifest = path.join(manifestDir, 'AppxManifest.xml')
+  fs.writeFileSync(appManifest, withStartupTask(manifestXml))
+  return {
+    windowsKitVersion: getWindowsKitVersion(),
+    packageAssets: path.join(__dirname, 'build', 'msix-assets'),
+    appManifest,
+    manifestVariables: MSIX_MANIFEST_VARIABLES,
+    ...msixSigning()
+  }
+}
+
 const makers = [
   {
     name: '@electron-forge/maker-dmg',
@@ -244,22 +315,7 @@ const makers = [
   {
     name: '@electron-forge/maker-msix',
     platforms: ['win32'],
-    config: {
-      windowsKitVersion: getWindowsKitVersion(),
-      packageAssets: path.join(__dirname, 'build', 'msix-assets'),
-      manifestVariables: {
-        packageIdentity: MSIX_IDENTITY.name,
-        publisher: MSIX_IDENTITY.publisher,
-        publisherDisplayName: MSIX_IDENTITY.publisherDisplayName,
-        packageDisplayName: appName,
-        appDisplayName: appName,
-        appExecutable: 'PearNotes.exe',
-        packageBackgroundColor: '#1F2430',
-        packageMinOSVersion: '10.0.19041.0',
-        packageMaxOSVersionTested: '10.0.26100.0'
-      },
-      ...msixSigning()
-    }
+    config: msixConfig
   },
   {
     name: '@electron-forge/maker-zip',

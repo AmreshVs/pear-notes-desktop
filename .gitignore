@@ -14,3 +14,8 @@ local-ai/qvac/
 
 # harden-core preview staging (npm run harden-core)
 .core-hardened/
+
+.flatpak-builder/
+flatpak-build/
+flatpak-repo/
+*.flatpak

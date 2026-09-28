@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.amreshvs.PearNotes</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>Pear Notes</name>
+  <summary>Private notes, encrypted on-device and synced peer-to-peer</summary>
+  <developer id="io.github.amreshvs">
+    <name>Amresh Venkatesan Suresh</name>
+  </developer>
+  <description>
+    <p>Pear Notes keeps your notes on your own devices. Notes are encrypted on-device and sync directly between your linked devices, with no account and no server.</p>
+    <ul>
+      <li>Link your phone, tablet and computers and keep them in sync peer-to-peer</li>
+      <li>Attach images, PDFs and voice notes</li>
+      <li>Lock individual notes</li>
+      <li>Encrypted backups you can restore on any device</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.amreshvs.PearNotes.desktop</launchable>
+  <url type="homepage">https://amreshvs.github.io/pear-notes/</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://amreshvs.github.io/pear-notes/screenshots/linux-main.png</image>
+      <caption>Notes and folders</caption>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.0.0" date="2026-09-28"/>
+  </releases>
+</component>

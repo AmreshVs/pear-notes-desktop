@@ -21,7 +21,7 @@
           }
         } ],
         [ "OS=='win'", {
-          "sources": [ "src/auth_win.cc" ],
+          "sources": [ "src/auth_win.cc", "src/startup_task_win.cc" ],
           "defines": [ "_UNICODE", "UNICODE" ],
           "libraries": [ "windowsapp.lib" ],
           "msvs_settings": {

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pear Notes
+Comment=Private notes, encrypted on-device and synced peer-to-peer
+Exec=pear-notes %U
+Icon=io.github.amreshvs.PearNotes
+Terminal=false
+Categories=Office;Utility;
+Keywords=notes;encrypted;sync;private;
+StartupWMClass=Pear Notes

@@ -51,7 +51,23 @@ function getBuildNumber() {
   return readInfoPlistString('CFBundleVersion') ?? fallbackBuildNumber
 }
 
-const isAppStoreBuild = isMas && readInfoPlistString('PearNotesDistribution') !== 'developer-id'
+const isMacAppStoreBuild = isMas && readInfoPlistString('PearNotesDistribution') !== 'developer-id'
+const isStoreManagedBuild =
+  isMacAppStoreBuild || process.windowsStore === true || Boolean(process.env.FLATPAK_ID)
+
+const STARTUP_TASK_ID = 'PearNotesStartup'
+
+function startupTaskStatus(state) {
+  return {
+    enabled: state === 'enabled' || state === 'enabledByPolicy',
+    blockedBy:
+      state === 'disabledByUser'
+        ? 'user'
+        : state === 'disabledByPolicy' || state === 'enabledByPolicy'
+          ? 'policy'
+          : null
+  }
+}
 
 let deviceAuth = null
 try {
@@ -59,6 +75,8 @@ try {
 } catch (e) {
   console.warn('pear-device-auth native module unavailable:', e.message)
 }
+
+const usesStartupTask = process.windowsStore === true && deviceAuth !== null
 
 let mainWindow = null
 let worker = null
@@ -501,16 +519,28 @@ function setupIPC() {
     }
   })
 
-  ipcMain.handle('login-item:set', (event, enabled) => {
+  ipcMain.handle('login-item:set', async (event, enabled) => {
+    if (usesStartupTask) {
+      const method = enabled === true ? 'startupTaskEnable' : 'startupTaskDisable'
+      return startupTaskStatus(await deviceAuth[method](STARTUP_TASK_ID))
+    }
     try {
       app.setLoginItemSettings({ openAtLogin: enabled === true })
     } catch (err) {
       console.error('[login-item] could not update', err)
     }
-    return app.getLoginItemSettings().openAtLogin === true
+    return { enabled: app.getLoginItemSettings().openAtLogin === true, blockedBy: null }
   })
 
-  ipcMain.handle('login-item:get', () => app.getLoginItemSettings().openAtLogin === true)
+  ipcMain.handle('login-item:get', async () => {
+    if (usesStartupTask)
+      return startupTaskStatus(await deviceAuth.startupTaskState(STARTUP_TASK_ID))
+    return { enabled: app.getLoginItemSettings().openAtLogin === true, blockedBy: null }
+  })
+
+  ipcMain.handle('login-item:open-system-settings', () => {
+    if (process.platform === 'win32') shell.openExternal('ms-settings:startupapps')
+  })
 
   ipcMain.handle('ui:context-menu', (event, items) => {
     return new Promise((resolve) => {
@@ -546,7 +576,7 @@ function setupIPC() {
   })
 
   ipcMain.handle('app-update:check-manifest', async () => {
-    if (isAppStoreBuild) return null
+    if (isStoreManagedBuild) return null
     try {
       const { APP_UPDATE_MANIFEST_URL } = await import('@pear-notes/core/constant.js')
       const res = await fetch(APP_UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(5000) })

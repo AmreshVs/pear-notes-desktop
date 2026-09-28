@@ -1,0 +1,44 @@
+app-id: io.github.amreshvs.PearNotes
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '24.08'
+command: pear-notes
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.secrets
+modules:
+  - name: pear-notes
+    buildsystem: simple
+    build-commands:
+      - cp -a app /app/pear-notes
+      - install -Dm755 pear-notes.sh /app/bin/pear-notes
+      - install -Dm644 io.github.amreshvs.PearNotes.desktop /app/share/applications/io.github.amreshvs.PearNotes.desktop
+      - install -Dm644 io.github.amreshvs.PearNotes.metainfo.xml /app/share/metainfo/io.github.amreshvs.PearNotes.metainfo.xml
+      - install -Dm644 icon-512.png /app/share/icons/hicolor/512x512/apps/io.github.amreshvs.PearNotes.png
+    sources:
+      - type: dir
+        path: ../out/Pear Notes-linux-x64
+        dest: app
+        only-arches: [x86_64]
+      - type: dir
+        path: ../out/Pear Notes-linux-arm64
+        dest: app
+        only-arches: [aarch64]
+      - type: file
+        path: pear-notes.sh
+      - type: file
+        path: io.github.amreshvs.PearNotes.desktop
+      - type: file
+        path: io.github.amreshvs.PearNotes.metainfo.xml
+      - type: file
+        path: icon-512.png

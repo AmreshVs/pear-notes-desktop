@@ -26,4 +26,16 @@ function authenticate(reason, windowHandle) {
   return native.authenticate(String(reason || 'Authenticate'), windowHandle || null)
 }
 
-module.exports = { isSupported, authenticate, loadError: () => loadError }
+function startupTask(method, taskId) {
+  if (!native || typeof native[method] !== 'function') return Promise.resolve('unavailable')
+  return native[method](String(taskId)).catch(() => 'unavailable')
+}
+
+module.exports = {
+  isSupported,
+  authenticate,
+  startupTaskState: (taskId) => startupTask('startupTaskState', taskId),
+  startupTaskEnable: (taskId) => startupTask('startupTaskEnable', taskId),
+  startupTaskDisable: (taskId) => startupTask('startupTaskDisable', taskId),
+  loadError: () => loadError
+}

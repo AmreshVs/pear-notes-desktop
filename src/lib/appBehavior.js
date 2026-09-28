@@ -31,23 +31,38 @@ export function applyCloseToTray(enabled) {
   }
 }
 
+function toLoginStatus(result, fallbackEnabled) {
+  if (result && typeof result === 'object') {
+    return { enabled: result.enabled === true, blockedBy: result.blockedBy ?? null }
+  }
+  return { enabled: result === undefined ? fallbackEnabled : result === true, blockedBy: null }
+}
+
 export async function applyStartAtLogin(enabled) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null
-  if (!bridge || typeof bridge.setStartAtLogin !== 'function') return enabled === true
+  if (!bridge || typeof bridge.setStartAtLogin !== 'function') {
+    return { enabled: enabled === true, blockedBy: null }
+  }
   try {
-    return (await bridge.setStartAtLogin(enabled === true)) === true
+    return toLoginStatus(await bridge.setStartAtLogin(enabled === true), false)
   } catch (e) {
     console.error('applyStartAtLogin failed', e)
-    return false
+    return { enabled: false, blockedBy: null }
   }
 }
 
 export async function readStartAtLogin(defaultValue = false) {
   const bridge = typeof window !== 'undefined' ? window.electronBridge : null
-  if (!bridge || typeof bridge.getStartAtLogin !== 'function') return defaultValue
-  try {
-    return (await bridge.getStartAtLogin()) === true
-  } catch {
-    return defaultValue
+  if (!bridge || typeof bridge.getStartAtLogin !== 'function') {
+    return { enabled: defaultValue, blockedBy: null }
   }
+  try {
+    return toLoginStatus(await bridge.getStartAtLogin(), defaultValue)
+  } catch {
+    return { enabled: defaultValue, blockedBy: null }
+  }
+}
+
+export function openStartAtLoginSettings() {
+  window.electronBridge?.openStartAtLoginSettings?.()
 }

@@ -44,6 +44,9 @@
       "keepRunningDesc": "Closing the window keeps Pear Notes running in the tray so your notes stay in sync.",
       "startAtLogin": "Start at login",
       "startAtLoginDesc": "Launch Pear Notes automatically when you sign in to this device.",
+      "startAtLoginBlockedByUser": "Turned off in Windows settings.",
+      "startAtLoginOpenSettings": "Open startup apps",
+      "startAtLoginBlockedByPolicy": "Managed by your organization.",
       "meteredConnection": "Metered connection",
       "meteredConnectionDesc": "Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.",
       "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background."
