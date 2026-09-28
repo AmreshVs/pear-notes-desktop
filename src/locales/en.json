@@ -1958,6 +1958,8 @@
     "writerSummary": "applied {{linearized}} · indexed {{indexed}} · blocks {{contiguous}}/{{length}} · peers {{peers}}",
     "errorLog": {
       "description": "Everything this device logged, from the app and its backend: errors, warnings, crashes and routine activity. Kept across restarts; the report includes the diagnostics too.",
+      "record": "Record logs",
+      "recordDesc": "Keep a log of errors and routine activity on this device to help troubleshoot problems.",
       "save": "Save report",
       "saved": "Saved",
       "copy": "Copy error report",
@@ -1965,6 +1967,7 @@
       "clearYes": "Clear",
       "clearConfirm": "Clear every log entry on this device?",
       "empty": "Nothing recorded on this device yet.",
+      "emptyOff": "Recording is off. Turn on Record logs to start keeping a log.",
       "loading": "Reading logs…",
       "count_one": "{{count}} entry",
       "count_other": "{{count}} entries",

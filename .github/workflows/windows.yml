@@ -2,6 +2,11 @@ name: Windows build
 
 on:
   workflow_dispatch:
+    inputs:
+      store:
+        description: 'For Microsoft Partner Center (unsigned MSIX). Unchecked = test-signed MSIX for test PCs.'
+        type: boolean
+        default: false
   push:
     tags: ['v*']
 
@@ -16,6 +21,8 @@ jobs:
   windows-x64:
     runs-on: windows-2022
     timeout-minutes: 60
+    env:
+      STORE_BUILD: ${{ github.event_name == 'push' || inputs.store }}
 
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: npm run setup
 
-      - name: Build app and Store MSIX
+      - name: Build app and MSIX
         env:
           MSIX_STORE_UPLOAD: '1'
         run: npm run make -- --targets=@electron-forge/maker-msix
@@ -59,18 +66,24 @@ jobs:
             exit 1
           }
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          New-Item -ItemType Directory -Force release | Out-Null
-          7z a -tzip "release/PearNotes-$version-windows-x64.zip" "./out/Pear Notes-win32-x64/*" | Out-Null
-          Copy-Item "out/make/msix/x64/Pear Notes.msix" "release/PearNotes-$version-windows-x64-store.msix"
-          Get-ChildItem release | Format-Table Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB) } }
+          $kind = if ($env:STORE_BUILD -eq 'true') { 'store' } else { 'test-signed' }
+          $msix = "artifacts/PearNotes-$version-windows-x64-$kind.msix"
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          Copy-Item "out/make/msix/x64/Pear Notes.msix" $msix
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            7z a -tzip "artifacts/PearNotes-$version-windows-x64.zip" "./out/Pear Notes-win32-x64/*" | Out-Null
+          }
           "version=$version" >> $env:GITHUB_OUTPUT
+          "kind=$kind" >> $env:GITHUB_OUTPUT
+          "msix=$msix" >> $env:GITHUB_OUTPUT
 
-      - name: Sign a test copy of the MSIX
+      - name: Sign with the test certificate
+        if: env.STORE_BUILD != 'true'
         shell: pwsh
         env:
           PFX_BASE64: ${{ secrets.WINDOWS_TEST_CERT_PFX }}
           PFX_PASSWORD: ${{ secrets.WINDOWS_TEST_CERT_PASSWORD }}
-          VERSION: ${{ steps.collect.outputs.version }}
+          MSIX: ${{ steps.collect.outputs.msix }}
         run: |
           if (-not $env:PFX_BASE64 -or -not $env:PFX_PASSWORD) {
             Write-Output "::error::Add the WINDOWS_TEST_CERT_PFX and WINDOWS_TEST_CERT_PASSWORD secrets"
@@ -81,31 +94,31 @@ jobs:
           try {
             $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
               Sort-Object FullName | Select-Object -Last 1
-            $signed = "test/PearNotes-$env:VERSION-windows-x64-test-signed.msix"
-            New-Item -ItemType Directory -Force test | Out-Null
-            Copy-Item "release/PearNotes-$env:VERSION-windows-x64-store.msix" $signed
-            & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:PFX_PASSWORD $signed
+            & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:PFX_PASSWORD $env:MSIX
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
             $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new($pfx, $env:PFX_PASSWORD)
-            [IO.File]::WriteAllBytes("test/PearNotes-test-cert.cer", $cert.Export('Cert'))
-            $signer = (Get-AuthenticodeSignature $signed).SignerCertificate.Subject
+            [IO.File]::WriteAllBytes("artifacts/PearNotes-test-cert.cer", $cert.Export('Cert'))
+            $signer = (Get-AuthenticodeSignature $env:MSIX).SignerCertificate.Subject
             if ($signer -ne 'CN=B816EEFE-E307-4467-A119-53E4B4207BCA') {
               Write-Output "::error::Signed by '$signer', which does not match the MSIX publisher"
               exit 1
             }
-            Get-ChildItem test | Format-Table Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB) } }
           } finally {
             Remove-Item $pfx -Force
           }
 
-      - name: Upload MSIX files
+      - name: List files
+        shell: pwsh
+        run: Get-ChildItem artifacts | Format-Table Name, @{ n = 'MB'; e = { [math]::Round($_.Length / 1MB) } }
+
+      - name: Upload files
         uses: actions/upload-artifact@v4
         with:
-          name: PearNotes-${{ steps.collect.outputs.version }}-windows-x64-msix
+          name: PearNotes-${{ steps.collect.outputs.version }}-windows-x64-${{ steps.collect.outputs.kind }}
           path: |
-            test/*
-            release/*.msix
+            artifacts/*.msix
+            artifacts/*.cer
           retention-days: 2
 
       - name: Attach to a draft release
@@ -116,4 +129,4 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes ""
-          gh release upload "$TAG" release/* --clobber
+          gh release upload "$TAG" artifacts/*.msix artifacts/*.zip --clobber

@@ -169,6 +169,19 @@ export default function ErrorLogSettings() {
 
   const cancelClear = useCallback(() => setConfirmingClear(false), [])
 
+  const recording = log?.enabled === true
+
+  const handleToggleRecording = useCallback(async () => {
+    const next = !recording
+    setLog((current) => ({ ...(current || {}), enabled: next }))
+    try {
+      await backendApi.setErrorLogEnabled(next)
+    } catch (e) {
+      if (mountedRef.current) setError(String(e?.message || e))
+    }
+    await load()
+  }, [recording, load])
+
   const entries = log?.entries || []
 
   return (
@@ -176,6 +189,34 @@ export default function ErrorLogSettings() {
       <p className='text-sm text-text-tertiary mb-6 max-w-xl leading-relaxed'>
         {t('debug.errorLog.description')}
       </p>
+
+      <div className='mb-6 bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
+        <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
+          <div className='space-y-1 min-w-0'>
+            <label className='block text-text-primary text-base font-bold'>
+              {t('debug.errorLog.record')}
+            </label>
+            <p className='text-sm text-text-tertiary font-medium opacity-60'>
+              {t('debug.errorLog.recordDesc')}
+            </p>
+          </div>
+          <button
+            onClick={handleToggleRecording}
+            disabled={!log}
+            aria-label={t('debug.errorLog.record')}
+            aria-pressed={recording}
+            className={`relative w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-40 ${
+              recording ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'
+            }`}
+          >
+            <span
+              className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${
+                recording ? 'translate-x-5' : ''
+              }`}
+            />
+          </button>
+        </div>
+      </div>
 
       <div className='flex flex-wrap items-center gap-3 mb-6'>
         <button
@@ -233,7 +274,9 @@ export default function ErrorLogSettings() {
       {!log ? (
         <p className='text-sm text-text-tertiary'>{t('debug.errorLog.loading')}</p>
       ) : entries.length === 0 ? (
-        <p className='text-sm text-text-tertiary'>{t('debug.errorLog.empty')}</p>
+        <p className='text-sm text-text-tertiary'>
+          {t(recording ? 'debug.errorLog.empty' : 'debug.errorLog.emptyOff')}
+        </p>
       ) : (
         <div className='mb-6'>
           <h3 className='text-text-primary text-sm font-bold tracking-tight mb-3 px-1'>
