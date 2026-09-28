@@ -16,6 +16,15 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/local/share/powershell \
+            /usr/share/swift /usr/local/julia* /opt/az "$AGENT_TOOLSDIRECTORY/PyPy"
+          sudo docker image prune --all --force >/dev/null || true
+          df -h /
+
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -45,6 +54,12 @@ jobs:
 
       - name: Build deb, rpm and zip
         run: npm run make -- --platform=linux --arch=x64
+
+      - name: Disk usage
+        if: always()
+        run: |
+          df -h /
+          du -sh node_modules local-ai/node_modules out/* 2>/dev/null || true
 
       - name: Check the packaged app
         run: |
