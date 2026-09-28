@@ -254,6 +254,7 @@ const makers = [
         packageDisplayName: appName,
         appDisplayName: appName,
         appExecutable: 'PearNotes.exe',
+        packageBackgroundColor: '#1F2430',
         packageMinOSVersion: '10.0.19041.0',
         packageMaxOSVersionTested: '10.0.26100.0'
       },
