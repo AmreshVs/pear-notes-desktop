@@ -108,6 +108,33 @@ const IGNORED_TOP_LEVEL = new Set([
   '/package-lock.json'
 ])
 
+function cliFlag(name) {
+  const args = process.argv
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === `--${name}`) return args[i + 1]
+    if (args[i].startsWith(`--${name}=`)) return args[i].slice(name.length + 3)
+  }
+  return undefined
+}
+
+const targetPlatform = (() => {
+  const platform = cliFlag('platform') ?? process.platform
+  return platform === 'mas' ? 'darwin' : platform
+})()
+
+const PREBUILD_PLATFORMS = new Set(['android', 'darwin', 'ios', 'linux', 'win32'])
+
+function isForeignPrebuild(segments) {
+  const at = segments.indexOf('prebuilds')
+  if (at < 2 || at === segments.length - 1) return false
+  const packageRoot =
+    segments[at - 2] === 'node_modules' ||
+    (segments[at - 3] === 'node_modules' && segments[at - 2].startsWith('@'))
+  if (!packageRoot) return false
+  const platform = segments[at + 1].split('-')[0]
+  return PREBUILD_PLATFORMS.has(platform) && platform !== targetPlatform
+}
+
 function ignorePackagedFile(filePath) {
   if (!filePath) return false
 
@@ -129,6 +156,8 @@ function ignorePackagedFile(filePath) {
 
   // Core is consumed from node_modules by the Bare worker; its test suite is not.
   if (filePath.startsWith('/node_modules/@pear-notes/core/tests')) return true
+
+  if (isForeignPrebuild(segments)) return true
 
   return false
 }

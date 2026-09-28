@@ -1,0 +1,73 @@
+name: Linux build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install packaging tools
+        run: sudo apt-get update && sudo apt-get install -y fakeroot dpkg rpm
+
+      - name: Give git read access to pear-notes-core
+        env:
+          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+        run: |
+          if [ -z "$CORE_REPO_TOKEN" ]; then
+            echo "::error::Add a CORE_REPO_TOKEN secret (fine-grained token, pear-notes-core, Contents: read-only)"
+            exit 1
+          fi
+          base="https://x-access-token:${CORE_REPO_TOKEN}@github.com/"
+          git config --global url."$base".insteadOf "https://github.com/"
+          git config --global --add url."$base".insteadOf "ssh://git@github.com/"
+          git config --global --add url."$base".insteadOf "git@github.com:"
+
+      - name: Install dependencies
+        run: npm run setup
+
+      - name: Build deb, rpm and zip
+        run: npm run make -- --platform=linux --arch=x64
+
+      - name: Check the packaged app
+        run: |
+          app="out/Pear Notes-linux-x64/resources/app"
+          bare="$app/node_modules/bare-sidecar/prebuilds/linux-x64/bare"
+          addon="$app/native/pear-device-auth/build/Release/pear_device_auth.node"
+          [ -x "$bare" ] || { echo "::error::bare sidecar missing or not executable: $bare"; exit 1; }
+          [ -f "$addon" ] || { echo "::error::pear-device-auth addon was not built: $addon"; exit 1; }
+          file "$addon" | grep -q 'ELF 64-bit.*x86-64' || { echo "::error::pear-device-auth is not a linux-x64 binary"; exit 1; }
+          dpkg-deb --info out/make/deb/x64/*.deb
+
+      - name: Collect files
+        id: collect
+        run: |
+          version=$(node -p "require('./package.json').version")
+          mkdir -p artifacts
+          cp out/make/deb/x64/*.deb out/make/rpm/x64/*.rpm out/make/zip/linux/x64/*.zip artifacts/
+          ls -l artifacts
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Upload files
+        uses: actions/upload-artifact@v4
+        with:
+          name: PearNotes-${{ steps.collect.outputs.version }}-linux-x64
+          path: artifacts/*
+          retention-days: 2
