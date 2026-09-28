@@ -226,7 +226,7 @@ function App() {
         <img
           src={appIcon}
           alt=''
-          className='h-16 w-16 mx-auto mb-4 shadow-lg select-none'
+          className='h-16 w-16 mx-auto mb-4 drop-shadow-[var(--shadow-lg)] select-none'
           draggable={false}
         />
         <div className='animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-3 border-accent-primary'></div>
