@@ -77,6 +77,36 @@ try {
 }
 
 const usesStartupTask = process.windowsStore === true && deviceAuth !== null
+const usesXdgAutostart = process.platform === 'linux' && !process.env.FLATPAK_ID
+
+function xdgAutostartPath() {
+  const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
+  return path.join(configHome, 'autostart', 'pear-notes.desktop')
+}
+
+function desktopEntryExec(file) {
+  return `"${file.replace(/(["`$\\])/g, '\\$1')}"`.replace(/\\/g, '\\\\')
+}
+
+function setXdgAutostart(enabled) {
+  const file = xdgAutostartPath()
+  if (!enabled) {
+    fs.rmSync(file, { force: true })
+    return
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  const entry = [
+    '[Desktop Entry]',
+    'Type=Application',
+    `Name=${appName}`,
+    `Exec=${desktopEntryExec(process.env.APPIMAGE || process.execPath)}`,
+    'Icon=pear-notes',
+    'Terminal=false',
+    'X-GNOME-Autostart-enabled=true',
+    ''
+  ].join('\n')
+  fs.writeFileSync(file, entry)
+}
 
 let mainWindow = null
 let worker = null
@@ -524,6 +554,14 @@ function setupIPC() {
       const method = enabled === true ? 'startupTaskEnable' : 'startupTaskDisable'
       return startupTaskStatus(await deviceAuth[method](STARTUP_TASK_ID))
     }
+    if (usesXdgAutostart) {
+      try {
+        setXdgAutostart(enabled === true)
+      } catch (err) {
+        console.error('[login-item] could not update autostart entry', err)
+      }
+      return { enabled: fs.existsSync(xdgAutostartPath()), blockedBy: null }
+    }
     try {
       app.setLoginItemSettings({ openAtLogin: enabled === true })
     } catch (err) {
@@ -535,6 +573,7 @@ function setupIPC() {
   ipcMain.handle('login-item:get', async () => {
     if (usesStartupTask)
       return startupTaskStatus(await deviceAuth.startupTaskState(STARTUP_TASK_ID))
+    if (usesXdgAutostart) return { enabled: fs.existsSync(xdgAutostartPath()), blockedBy: null }
     return { enabled: app.getLoginItemSettings().openAtLogin === true, blockedBy: null }
   })
 
