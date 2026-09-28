@@ -11,7 +11,8 @@ const {
   powerSaveBlocker,
   screen,
   shell,
-  clipboard
+  clipboard,
+  nativeTheme
 } = require('electron')
 const os = require('os')
 const path = require('path')
@@ -479,6 +480,10 @@ function setupIPC() {
       mainWindow.setContentProtection(enabled === true)
     }
     return true
+  })
+
+  ipcMain.on('native-theme:set', (event, theme) => {
+    nativeTheme.themeSource = theme === 'light' || theme === 'dark' ? theme : 'system'
   })
 
   ipcMain.on('close-to-tray:set', (event, enabled) => {

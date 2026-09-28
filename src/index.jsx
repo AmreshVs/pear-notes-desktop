@@ -14,6 +14,7 @@ import HRPC from '@pear-notes/core/spec/hrpc/index.js'
 import { setLocalAiAdapter } from '@pear-notes/core/store/services/localAiAdapter.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
+import { getTheme } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { store } from '@pear-notes/core/store/store.js'
 
 import ErrorBoundary from './components/common/ErrorBoundary.jsx'
@@ -63,6 +64,15 @@ window.addEventListener('beforeunload', () => {
 })
 
 themeStorage.apply(themeStorage.load())
+
+window.electronBridge.setNativeTheme(themeStorage.load())
+let storeTheme = getTheme(store.getState())
+store.subscribe(() => {
+  const theme = getTheme(store.getState())
+  if (theme === storeTheme) return
+  storeTheme = theme
+  window.electronBridge.setNativeTheme(theme || 'system')
+})
 
 const container = document.getElementById('root')
 const root = createRoot(container)

@@ -46,6 +46,8 @@ window.electronBridge = {
 
   setContentProtection: (enabled) => ipcRenderer.invoke('content-protection:set', enabled),
 
+  setNativeTheme: (theme) => ipcRenderer.send('native-theme:set', theme),
+
   setCloseToTray: (enabled) => ipcRenderer.send('close-to-tray:set', enabled),
   setStartAtLogin: (enabled) => ipcRenderer.invoke('login-item:set', enabled),
   getStartAtLogin: () => ipcRenderer.invoke('login-item:get'),
