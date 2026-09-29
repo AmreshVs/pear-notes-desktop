@@ -16,8 +16,12 @@ const DEVELOPER_ID_DISTRIBUTION = 'developer-id'
 const MSIX_IDENTITY = {
   name: 'AmreshVenkatesanSuresh.PearNotes-PrivateAISync',
   publisher: 'CN=B816EEFE-E307-4467-A119-53E4B4207BCA',
-  publisherDisplayName: 'Amresh Venkatesan Suresh'
+  publisherDisplayName: 'Amresh Venkatesan Suresh',
+  displayName: 'Pear Notes - Private AI & Sync'
 }
+
+const escapeXml = (value) =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 // MSIX_STORE_UPLOAD=1 leaves the package unsigned; the Store signs it.
 // Otherwise sign for side-loading: a hook, or a .pfx whose subject equals
@@ -268,7 +272,7 @@ const MSIX_MANIFEST_VARIABLES = {
   packageIdentity: MSIX_IDENTITY.name,
   publisher: MSIX_IDENTITY.publisher,
   publisherDisplayName: MSIX_IDENTITY.publisherDisplayName,
-  packageDisplayName: appName,
+  packageDisplayName: escapeXml(MSIX_IDENTITY.displayName),
   appDisplayName: appName,
   appExecutable: 'PearNotes.exe',
   packageBackgroundColor: '#1F2430',

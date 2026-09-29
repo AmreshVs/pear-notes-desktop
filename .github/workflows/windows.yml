@@ -7,6 +7,10 @@ on:
         description: 'For Microsoft Partner Center (unsigned MSIX). Unchecked = test-signed MSIX for test PCs.'
         type: boolean
         default: false
+      bump:
+        description: 'Bump the version (1.0.0 -> 1.0.1). The Store needs a higher version for every submission.'
+        type: boolean
+        default: false
   push:
     tags: ['v*']
 
@@ -32,6 +36,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+
+      - name: Bump the version
+        id: bump
+        if: inputs.bump
+        shell: bash
+        run: |
+          version=$(node -e "
+            const fs = require('fs')
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+            const [major, minor, patch] = pkg.version.split('.').map(Number)
+            pkg.version = [major, minor, patch + 1].join('.')
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')
+            process.stdout.write(pkg.version)
+          ")
+          echo "Building version $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Give git read access to pear-notes-core
         shell: bash
@@ -130,3 +150,34 @@ jobs:
         run: |
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes ""
           gh release upload "$TAG" artifacts/*.msix artifacts/*.zip --clobber
+
+      - name: Record the bumped version
+        if: success() && inputs.bump
+        shell: bash
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git stash --include-untracked --quiet || true
+          git fetch "$PUSH_URL" "$GITHUB_REF_NAME"
+          git checkout -B record-version FETCH_HEAD
+          ahead=$(node -e "
+            const current = require('./package.json').version.split('.').map(Number)
+            const built = process.env.VERSION.split('.').map(Number)
+            const i = current.findIndex((part, index) => part !== built[index])
+            process.stdout.write(String(i !== -1 && built[i] > current[i]))
+          ")
+          if [ "$ahead" != "true" ]; then
+            echo "The branch is already at $(node -p "require('./package.json').version"), leaving it"
+            exit 0
+          fi
+          node -e "
+            const fs = require('fs')
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+            pkg.version = process.env.VERSION
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')
+          "
+          git commit -am "Bump version to ${VERSION}"
+          git push "$PUSH_URL" "HEAD:${GITHUB_REF_NAME}"
