@@ -154,6 +154,7 @@ function ignorePackagedFile(filePath) {
   // issuer id and codesign identity common names.
   if (filePath.startsWith('/.release.')) return true
   if (filePath.startsWith('/build/msix-assets')) return true
+  if (filePath.startsWith('/build/dmg-background')) return true
 
   const top = '/' + segments[1]
   if (IGNORED_TOP_LEVEL.has(top)) return true
@@ -342,7 +343,14 @@ const makers = [
     config: {
       format: 'ULFO',
       icon: path.join(__dirname, 'build', 'icon.icns'),
-      overwrite: true
+      background: path.join(__dirname, 'build', 'dmg-background.png'),
+      iconSize: 128,
+      overwrite: true,
+      additionalDMGOptions: { window: { size: { width: 660, height: 400 } } },
+      contents: (opts) => [
+        { x: 180, y: 200, type: 'file', path: opts.appPath },
+        { x: 480, y: 200, type: 'link', path: '/Applications' }
+      ]
     }
   },
   {
