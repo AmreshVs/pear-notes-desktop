@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
@@ -19,7 +19,6 @@ import {
   PenLine,
   Play,
   RotateCw,
-  Sparkles,
   Trash2,
   WifiOff,
   X
@@ -27,11 +26,7 @@ import {
 
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
-import {
-  getLocalAiLoaded,
-  initLocalAi,
-  selectLocalAiBytesOnDisk
-} from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getLocalAiLoaded, initLocalAi } from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNoteMedia,
   getActiveDownloads,
@@ -62,6 +57,7 @@ import { getVaultLabel } from '../../lib/vaultNames'
 
 import ClearingOverlay from './ClearingOverlay'
 import DangerConfirmModal from './DangerConfirmModal'
+import DeviceStorageSection from './DeviceStorageSection'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px]'
@@ -328,7 +324,6 @@ function getClearCopy({ multiVault, onlyThisVault, name, t }) {
 export default function StorageSettings({ onOpenOnDeviceAi }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const aiModelBytes = useSelector(selectLocalAiBytesOnDisk) ?? 0
   const localAiLoaded = useSelector(getLocalAiLoaded)
 
   useEffect(() => {
@@ -401,32 +396,38 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
     dispatch(reclaimStorage())
   }
 
-  const [cacheBytes, setCacheBytes] = useState(0)
+  const [deviceStorage, setDeviceStorage] = useState(null)
   const [isClearingCache, setIsClearingCache] = useState(false)
+  const [isDeletingOldVaults, setIsDeletingOldVaults] = useState(false)
+  const [confirmOldVaults, setConfirmOldVaults] = useState(false)
+
+  const refreshDeviceStorage = useCallback(async () => {
+    const summary = await window.electronBridge?.getDeviceStorage?.().catch(() => null)
+    if (summary) setDeviceStorage(summary)
+  }, [])
 
   useEffect(() => {
-    let active = true
-    window.electronBridge
-      ?.getCacheSize?.()
-      .then((bytes) => {
-        if (active) setCacheBytes(bytes || 0)
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [])
+    if (!isReclaiming) refreshDeviceStorage()
+  }, [isReclaiming, refreshDeviceStorage])
 
   const handleClearCache = async () => {
     setIsClearingCache(true)
     try {
       await window.electronBridge?.clearCache?.()
-      const bytes = await window.electronBridge?.getCacheSize?.()
-      setCacheBytes(bytes || 0)
-    } catch {
-      // A cache that will not clear is not worth interrupting the user for.
+      await refreshDeviceStorage()
     } finally {
       setIsClearingCache(false)
+    }
+  }
+
+  const handleConfirmDeleteOldVaults = async () => {
+    setConfirmOldVaults(false)
+    setIsDeletingOldVaults(true)
+    try {
+      await window.electronBridge?.deleteOldVaults?.()
+      await refreshDeviceStorage()
+    } finally {
+      setIsDeletingOldVaults(false)
     }
   }
 
@@ -560,50 +561,20 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
                 </button>
               </div>
 
-              <div className='px-6 py-5 flex items-center justify-between border-t border-border-primary/50'>
-                <div className='flex flex-col'>
-                  <span className='text-base font-semibold text-text-tertiary'>
-                    {t('storage.cache')} · {formatBytes(cacheBytes)}
-                  </span>
-                  <span className='text-sm text-text-tertiary/70'>{t('storage.cacheDesc')}</span>
-                </div>
-                <button
-                  onClick={handleClearCache}
-                  disabled={isClearingCache}
-                  className='px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                >
-                  {isClearingCache ? t('storage.clearingCache') : t('storage.clearCache')}
-                </button>
-              </div>
-
-              {LOCAL_AI_ENABLED && (
-                <button
-                  onClick={onOpenOnDeviceAi}
-                  className='w-full px-6 py-5 flex items-center justify-between border-t border-border-primary/50 hover:bg-overlay-subtle transition-colors text-left'
-                >
-                  <div className='flex items-center gap-3 min-w-0'>
-                    <Sparkles className='w-4 h-4 text-text-tertiary flex-shrink-0' />
-                    <div className='flex flex-col min-w-0'>
-                      <span className='text-base font-semibold text-text-tertiary'>
-                        {t('settings.onDeviceAi.storageRow')}
-                      </span>
-                      <span className='text-sm text-text-tertiary/70'>
-                        {t('settings.onDeviceAi.storageRowDesc')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className='flex items-center gap-2 flex-shrink-0'>
-                    <span className='text-base font-bold text-text-secondary'>
-                      {formatBytes(aiModelBytes)}
-                    </span>
-                    <ChevronRight className='w-4 h-4 text-text-tertiary' />
-                  </div>
-                </button>
-              )}
             </>
           )}
         </div>
       </div>
+
+      <DeviceStorageSection
+        summary={deviceStorage}
+        showAiModels={LOCAL_AI_ENABLED}
+        isClearingCache={isClearingCache}
+        isDeletingOldVaults={isDeletingOldVaults}
+        onClearCache={handleClearCache}
+        onDeleteOldVaults={() => setConfirmOldVaults(true)}
+        onOpenAiModels={onOpenOnDeviceAi}
+      />
 
       {hasBreakdown && (
         <div className='space-y-1'>
@@ -702,7 +673,7 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
             {t('storage.perNoteBreakdown')}
           </h3>
-          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
+          <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[440px]'>
             {notesStorageInfo.map((note) => (
               <NoteRow key={note.key} note={note} onDeleteMedia={handleDeleteMedia} />
             ))}
@@ -742,6 +713,16 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
           confirmLabel={t('common.clear')}
           onConfirm={handleConfirmClear}
           onCancel={() => setConfirmClear(false)}
+        />
+      )}
+
+      {confirmOldVaults && (
+        <DangerConfirmModal
+          title={t('storage.device.deleteOldVaultsTitle')}
+          description={t('storage.device.deleteOldVaultsMessage')}
+          confirmLabel={t('storage.device.deleteOldVaults')}
+          onConfirm={handleConfirmDeleteOldVaults}
+          onCancel={() => setConfirmOldVaults(false)}
         />
       )}
     </div>

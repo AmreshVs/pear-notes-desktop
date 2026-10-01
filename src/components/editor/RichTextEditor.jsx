@@ -313,7 +313,7 @@ const RichTextEditor = forwardRef(
       const isInitialLoad = currentContent === '<p></p>'
       isUpdatingRef.current = true
       const { from, to } = editor.state.selection
-      editor.commands.setContent(content || '', false)
+      editor.commands.setContent(content || '', { emitUpdate: false })
       const size = editor.state.doc.content.size
       if (!isInitialLoad) {
         editor.commands.setTextSelection({ from: Math.min(from, size), to: Math.min(to, size) })

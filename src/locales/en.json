@@ -1196,7 +1196,29 @@
     "clearVaultBtn": "Clear vault",
     "clearVaultConfirmTitle": "Clear \"{{name}}\" from this device?",
     "clearAllVaultsDesc": "Permanently deletes every vault on this device, with all their notes, folders, settings and media.",
-    "clearOnlyVaultDesc": "Deletes \"{{name}}\" and its notes from this device. It is your only vault, so the app starts fresh. Other devices keep their copies."
+    "clearOnlyVaultDesc": "Deletes \"{{name}}\" and its notes from this device. It is your only vault, so the app starts fresh. Other devices keep their copies.",
+    "device": {
+      "title": "On this computer",
+      "total": "Total",
+      "totalDesc": "Everything Pear Notes keeps on this computer, including the app itself.",
+      "measuring": "Measuring…",
+      "app": "App",
+      "appDesc": "The installed app itself.",
+      "notes": "Notes and attachments",
+      "notesDesc": "Your vault, its sync history and database files.",
+      "oldVaults": "Old vault copies",
+      "oldVaultsDesc": "Set aside by an earlier storage upgrade. Nothing uses them.",
+      "deleteOldVaults": "Delete",
+      "deletingOldVaults": "Deleting…",
+      "deleteOldVaultsTitle": "Delete old vault copies?",
+      "deleteOldVaultsMessage": "These copies were set aside during an earlier storage upgrade and are no longer used. Your current notes are not affected.",
+      "previews": "Attachment previews",
+      "previewsDesc": "Thumbnails shown in the notes list.",
+      "logs": "Logs",
+      "logsDesc": "Kept while Record logs is on.",
+      "other": "Other",
+      "otherDesc": "Settings and browser engine data the app needs to run."
+    }
   },
   "update": {
     "overlay": {
@@ -1952,8 +1974,6 @@
       "storage": "Storage and hyperdrive",
       "app": "App",
       "runtime": "Runtime",
-      "backendBoot": "Backend boot timeline",
-      "appBoot": "App boot timeline",
       "writers": "Writers"
     },
     "openDiagnostics": "Diagnostics",

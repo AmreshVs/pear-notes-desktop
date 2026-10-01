@@ -1,5 +1,4 @@
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import { appBoot } from '@pear-notes/core/bootTimeline.js'
 
 import { version as appVersion } from '../../package.json'
 
@@ -14,11 +13,19 @@ function hostVersions() {
   }
 }
 
+const MOBILE_ONLY_SYNC_KEYS = ['lastWakeAt', 'lastWakeResult', 'backgroundServiceFailedAt']
+
+function withoutMobileOnlySync(sync) {
+  if (!sync) return sync
+  return Object.fromEntries(
+    Object.entries(sync).filter(([key]) => !MOBILE_ONLY_SYNC_KEYS.includes(key))
+  )
+}
+
 function appSection() {
   return {
     version: getAppVersionLabel(appVersion),
     buildNumber: getBuildNumber() || null,
-    surface: 'desktop',
     platform: globalThis.process?.platform || null,
     arch: globalThis.process?.arch || null,
     masBuild: isMasBuild(),
@@ -30,8 +37,8 @@ export async function captureDebugSnapshot({ heavy = false } = {}) {
   const backend = await backendApi.getDebugInfo({ heavy })
   return {
     ...backend,
+    sync: withoutMobileOnlySync(backend?.sync),
     capturedAt: backend?.capturedAt || Date.now(),
-    app: appSection(),
-    appBoot: appBoot.snapshot()
+    app: appSection()
   }
 }

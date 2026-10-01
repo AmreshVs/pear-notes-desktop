@@ -67,6 +67,8 @@ window.electronBridge = {
 
   getCacheSize: () => ipcRenderer.invoke('cache:size'),
   clearCache: () => ipcRenderer.invoke('cache:clear'),
+  getDeviceStorage: () => ipcRenderer.invoke('storage:device-usage'),
+  deleteOldVaults: () => ipcRenderer.invoke('storage:delete-old-vaults'),
 
   localAiGetDeviceSupport: () => ipcRenderer.invoke('local-ai:device-support'),
   localAiGetDiskSpace: () => ipcRenderer.invoke('local-ai:disk-space'),

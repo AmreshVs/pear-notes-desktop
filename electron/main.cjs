@@ -20,7 +20,8 @@ const fs = require('fs')
 const PearRuntime = require('pear-runtime')
 const secretStore = require('./secretStore.cjs')
 const { isMac, isLinux } = require('which-runtime')
-const { setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
+const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
+const deviceStorage = require('./deviceStorage.cjs')
 
 const pkg = require('../package.json')
 const appName = pkg.productName ?? pkg.name
@@ -645,6 +646,30 @@ function setupIPC() {
       return await session.defaultSession.getCacheSize()
     } catch {
       return 0
+    }
+  })
+
+  ipcMain.handle('storage:device-usage', async () => {
+    try {
+      const storagePath = getStoragePath()
+      return await deviceStorage.measureDeviceStorage({
+        storagePath,
+        aiRoot: getLocalAiRoot(storagePath),
+        userData: app.getPath('userData')
+      })
+    } catch (err) {
+      console.error('[storage] device usage failed', err)
+      return null
+    }
+  })
+
+  ipcMain.handle('storage:delete-old-vaults', async () => {
+    try {
+      await deviceStorage.deleteOldVaults(getStoragePath())
+      return true
+    } catch (err) {
+      console.error('[storage] deleting old vaults failed', err)
+      return false
     }
   })
 

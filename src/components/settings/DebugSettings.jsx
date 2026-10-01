@@ -172,41 +172,6 @@ function Section({ title, data, emphasis = [] }) {
   )
 }
 
-function Timeline({ title, timeline }) {
-  const blocks = timeline?.blocks || []
-  if (blocks.length === 0) return null
-  return (
-    <Card title={title}>
-      <div className='px-6 py-4 overflow-x-auto'>
-        {blocks.map((block, blockIndex) => {
-          let previousAt = 0
-          return (
-            <div key={blockIndex} className='mb-3 last:mb-0'>
-              <div className='text-xs text-text-tertiary font-mono mb-1'>
-                {block.continued ? '(continued)' : '(boot)'}
-              </div>
-              {(block.marks || []).map((mark, markIndex) => {
-                const step = mark.at - previousAt
-                previousAt = mark.at
-                return (
-                  <div
-                    key={markIndex}
-                    className='flex items-baseline gap-4 text-xs font-mono whitespace-nowrap'
-                  >
-                    <span className='text-text-secondary flex-1'>{mark.label}</span>
-                    <span className='text-text-tertiary w-20 text-right'>{mark.at}ms</span>
-                    <span className='text-text-tertiary w-20 text-right'>+{step}ms</span>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })}
-      </div>
-    </Card>
-  )
-}
-
 export default function DebugSettings({ onOpenErrorLog }) {
   const { t } = useTranslation()
   const [snapshot, setSnapshot] = useState(null)
@@ -435,8 +400,6 @@ export default function DebugSettings({ onOpenErrorLog }) {
           <Section title={t('debug.sections.storage')} data={snapshot.storage} />
           <Section title={t('debug.sections.app')} data={snapshot.app} />
           <Section title={t('debug.sections.runtime')} data={snapshot.runtime} />
-          <Timeline title={t('debug.sections.backendBoot')} timeline={snapshot.backendBoot} />
-          <Timeline title={t('debug.sections.appBoot')} timeline={snapshot.appBoot} />
         </>
       )}
     </div>

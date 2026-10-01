@@ -90,9 +90,12 @@ function loadPrompts() {
   return promptsPromise
 }
 
-function getRuntimeRoot() {
-  const storagePath = options.getStoragePath()
+function getLocalAiRoot(storagePath) {
   return path.join(path.dirname(storagePath), `${path.basename(storagePath)}-local-ai`)
+}
+
+function getRuntimeRoot() {
+  return getLocalAiRoot(options.getStoragePath())
 }
 
 function getModelsDir() {
@@ -745,4 +748,4 @@ function shutdownLocalAi() {
   pendingSdk.then((sdk) => sdk.close()).catch(() => {})
 }
 
-module.exports = { setupLocalAi, shutdownLocalAi }
+module.exports = { getLocalAiRoot, setupLocalAi, shutdownLocalAi }
