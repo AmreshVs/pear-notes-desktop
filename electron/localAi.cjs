@@ -589,38 +589,14 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
     config
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
-  const noteText = String(note ?? '')
-  const asked = String(question ?? '')
-  const history = Array.isArray(turns) ? turns : []
-  const run = (forceEdits) =>
-    streamCompletion(
-      sdk,
-      {
-        modelId,
-        history: ask.buildAskMessages({ note: noteText, turns: history, question: asked, forceEdits })
-          .messages,
-        responseFormat: ask.ASK_RESPONSE_FORMAT,
-        generationParams: ask.getAskGenerationParams(noteText)
-      },
-      (partial) => {
-        const answer = ask.extractPartialAnswer(partial)
-        if (answer) send({ type: work.WORK_EVENT.TEXT, text: answer })
-      }
-    )
-  const first = String((await run(false)) ?? '')
-  if (!ask.shouldRetryAskForEdits(noteText, asked, first)) return { text: first }
-  const picked = ask.pickAskReply(noteText, first, String((await run(true)) ?? ''), asked)
-  if (!ask.shouldTryAskFullText(noteText, asked, picked)) return { text: picked }
-  const fullText = await streamCompletion(
-    sdk,
-    {
-      modelId,
-      history: ask.buildAskFullTextMessages({ note: noteText, question: asked }),
-      generationParams: ask.getAskFullTextParams(noteText)
-    },
-    () => {}
-  )
-  return { text: ask.toAskFullTextReply(noteText, asked, fullText) ?? picked }
+  const text = await ask.runAsk({
+    note: String(note ?? ''),
+    turns: Array.isArray(turns) ? turns : [],
+    question: String(question ?? ''),
+    complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
+    onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
+  })
+  return { text }
 }
 
 async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
