@@ -86,7 +86,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
         aria-modal='true'
         aria-label={t('settings.title')}
         tabIndex={-1}
-        className={`relative bg-bg-panel/95 backdrop-blur-3xl border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden outline-none will-change-transform animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}
+        className={`relative bg-bg-panel/95 border border-border-primary rounded-[2.5rem] w-full max-w-5xl h-[80vh] flex shadow-xl overflow-hidden outline-none will-change-transform animate-in ${isExiting ? 'animate-out zoom-out-95 slide-out-to-bottom-8' : 'zoom-in-95 slide-in-from-bottom-8'} duration-300 ease-out`}
       >
         <div className='absolute -top-48 -left-48 w-96 h-96 bg-accent-primary/10 blur-[120px] rounded-full pointer-events-none' />
         <div className='absolute -bottom-48 -right-48 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
