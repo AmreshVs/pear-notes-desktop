@@ -3,10 +3,11 @@ const os = require('os')
 const path = require('path')
 
 const pkg = require('./package.json')
+const { storeBuild } = require('./electron/storeBuild.cjs')
 const appName = pkg.productName ?? pkg.name
 
 const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID ?? 'com.amreshvs.pear-notes'
-const APPLE_BUILD_NUMBER = process.env.APPLE_BUILD_NUMBER ?? String(pkg.masBuildNumber ?? '1')
+const APPLE_BUILD_NUMBER = process.env.APPLE_BUILD_NUMBER ?? String(storeBuild(pkg.version, pkg.buildNumber))
 const isMas = process.env.MAS_BUILD === '1'
 const isDeveloperIdRelease = !isMas && Boolean(process.env.MAC_CODESIGN_IDENTITY)
 const DEVELOPER_ID_DISTRIBUTION = 'developer-id'

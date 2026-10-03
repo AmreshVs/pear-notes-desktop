@@ -24,6 +24,7 @@ const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs
 const deviceStorage = require('./deviceStorage.cjs')
 
 const pkg = require('../package.json')
+const { storeBuild } = require('./storeBuild.cjs')
 const appName = pkg.productName ?? pkg.name
 // Pinned to the original product name and deliberately not derived from appName:
 // the storage directory is where every existing install keeps its notes, keys and
@@ -34,7 +35,7 @@ const storageDirName = 'PearNotes'
 const isDev = !app.isPackaged
 const isMas = process.mas === true
 
-const fallbackBuildNumber = String(pkg.masBuildNumber ?? '1')
+const fallbackBuildNumber = String(storeBuild(pkg.version, pkg.buildNumber))
 
 function readInfoPlistString(key) {
   if (!app.isPackaged || !isMac) return null

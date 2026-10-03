@@ -5,6 +5,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { formatDuration, streamCommand } from './progress.mjs'
+import { storeBuild } from '../electron/storeBuild.cjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const configPath = path.join(root, '.release.mac.env')
@@ -72,7 +73,7 @@ function parseArgs(argv) {
     dmg: flags.has('--dmg'),
     upload: flags.has('--upload'),
     skipValidate: flags.has('--skip-validate'),
-    bump: !flags.has('--no-bump'),
+    bump: flags.has('--bump'),
     commit: !flags.has('--no-commit')
   }
 }
@@ -240,14 +241,14 @@ async function checkAppRecord(config) {
 
 function bumpBuildNumber() {
   const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
-  const next = String(Number(pkg.masBuildNumber ?? '0') + 1)
-  pkg.masBuildNumber = next
+  pkg.buildNumber = Number(pkg.buildNumber ?? 0) + 1
   fs.writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`)
-  return next
+  return String(storeBuild(pkg.version, pkg.buildNumber))
 }
 
 function currentBuildNumber() {
-  return String(JSON.parse(fs.readFileSync(packagePath, 'utf8')).masBuildNumber ?? '1')
+  const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
+  return String(storeBuild(pkg.version, pkg.buildNumber))
 }
 
 function isGitRepo() {
