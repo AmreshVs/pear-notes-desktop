@@ -44,6 +44,7 @@ import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
 import NoteEditor from './components/editor/NoteEditor'
 import DeviceRemovedModal from './components/modals/DeviceRemovedModal'
 import UpdateRequiredModal from './components/modals/UpdateRequiredModal'
+import ForceVaultRemovalModal from './components/settings/ForceVaultRemovalModal'
 import SettingsScreen from './components/settings/SettingsScreen'
 import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
@@ -293,6 +294,7 @@ function App() {
               onClose={() => dispatch(setShowSettings(false))}
             />
           )}
+          <ForceVaultRemovalModal />
           {isVaultOpening && (
             <div
               role='status'

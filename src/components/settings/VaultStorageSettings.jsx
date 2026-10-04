@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
@@ -25,8 +25,8 @@ import {
 } from 'lucide-react'
 
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
-import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { getLocalAiLoaded, initLocalAi } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getFolderKeys } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { getNoteKeys } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   deleteNoteMedia,
   getActiveDownloads,
@@ -48,16 +48,17 @@ import {
 import {
   getCurrentVault,
   getHasMultipleVaults,
+  getVaults,
   removeVault
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
 import { useClearAllData } from '../../hooks/useClearAllData'
+import { buildClearVaultDetails } from '../../lib/removalDetails'
 import { getVaultLabel } from '../../lib/vaultNames'
 
 import ClearingOverlay from './ClearingOverlay'
 import DangerConfirmModal from './DangerConfirmModal'
-import DeviceStorageSection from './DeviceStorageSection'
 
 const TRANSFER_LIST_CLASS =
   'bg-bg-secondary border border-border-primary rounded-3xl overflow-y-auto overflow-x-hidden max-h-[340px]'
@@ -299,36 +300,9 @@ function TransferNoteGroup({ group, renderRow }) {
   )
 }
 
-function getClearCopy({ multiVault, onlyThisVault, name, t }) {
-  if (!multiVault) {
-    return {
-      title: t('storage.clearAllData'),
-      description: t('storage.clearAllDataDesc'),
-      button: t('storage.clearStorage'),
-      confirmTitle: t('backup.clearAllDataTitle'),
-      confirmDescription: t('backup.clearAllDataDesc')
-    }
-  }
-  const description = onlyThisVault
-    ? t('storage.clearVaultDesc', { name })
-    : t('storage.clearOnlyVaultDesc', { name })
-  return {
-    title: t('storage.clearVault', { name }),
-    description,
-    button: t('storage.clearVaultBtn'),
-    confirmTitle: t('storage.clearVaultConfirmTitle', { name }),
-    confirmDescription: description
-  }
-}
-
-export default function StorageSettings({ onOpenOnDeviceAi }) {
+export default function VaultStorageSettings() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const localAiLoaded = useSelector(getLocalAiLoaded)
-
-  useEffect(() => {
-    if (LOCAL_AI_ENABLED && !localAiLoaded) dispatch(initLocalAi())
-  }, [dispatch, localAiLoaded])
   const totalBlobBytes = useSelector(getTotalBlobBytes)
   const totalOnDiskBytes = useSelector(getTotalOnDiskBytes)
   const isReclaiming = useSelector(getIsReclaiming)
@@ -341,6 +315,9 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
   const [confirmClear, setConfirmClear] = useState(false)
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const currentVault = useSelector(getCurrentVault)
+  const vaults = useSelector(getVaults)
+  const noteKeys = useSelector(getNoteKeys)
+  const folderKeys = useSelector(getFolderKeys)
   const currentVaultName = getVaultLabel(currentVault, t)
   const { isClearing, clearAll } = useClearAllData()
 
@@ -379,12 +356,19 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
   }
 
   const clearsOnlyThisVault = isMultiVaultEnabled() && hasMultipleVaults
-  const clearCopy = getClearCopy({
-    multiVault: isMultiVaultEnabled(),
-    onlyThisVault: clearsOnlyThisVault,
-    name: currentVaultName,
-    t
-  })
+  const clearDetails = useMemo(
+    () =>
+      buildClearVaultDetails(t, {
+        vaultName: currentVaultName,
+        notes: noteKeys?.length ?? 0,
+        folders: folderKeys?.length ?? 0,
+        mediaBytes: totalBlobBytes,
+        otherVaultNames: clearsOnlyThisVault
+          ? vaults.filter((vault) => !vault.current).map((vault) => getVaultLabel(vault, t))
+          : []
+      }),
+    [clearsOnlyThisVault, currentVaultName, folderKeys, noteKeys, t, totalBlobBytes, vaults]
+  )
 
   const handleConfirmClear = () => {
     setConfirmClear(false)
@@ -394,41 +378,6 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
 
   const handleReclaim = () => {
     dispatch(reclaimStorage())
-  }
-
-  const [deviceStorage, setDeviceStorage] = useState(null)
-  const [isClearingCache, setIsClearingCache] = useState(false)
-  const [isDeletingOldVaults, setIsDeletingOldVaults] = useState(false)
-  const [confirmOldVaults, setConfirmOldVaults] = useState(false)
-
-  const refreshDeviceStorage = useCallback(async () => {
-    const summary = await window.electronBridge?.getDeviceStorage?.().catch(() => null)
-    if (summary) setDeviceStorage(summary)
-  }, [])
-
-  useEffect(() => {
-    if (!isReclaiming) refreshDeviceStorage()
-  }, [isReclaiming, refreshDeviceStorage])
-
-  const handleClearCache = async () => {
-    setIsClearingCache(true)
-    try {
-      await window.electronBridge?.clearCache?.()
-      await refreshDeviceStorage()
-    } finally {
-      setIsClearingCache(false)
-    }
-  }
-
-  const handleConfirmDeleteOldVaults = async () => {
-    setConfirmOldVaults(false)
-    setIsDeletingOldVaults(true)
-    try {
-      await window.electronBridge?.deleteOldVaults?.()
-      await refreshDeviceStorage()
-    } finally {
-      setIsDeletingOldVaults(false)
-    }
   }
 
   const hasBreakdown = useMemo(
@@ -560,21 +509,10 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
                   {isReclaiming ? t('storage.compacting') : t('storage.compactNow')}
                 </button>
               </div>
-
             </>
           )}
         </div>
       </div>
-
-      <DeviceStorageSection
-        summary={deviceStorage}
-        showAiModels={LOCAL_AI_ENABLED}
-        isClearingCache={isClearingCache}
-        isDeletingOldVaults={isDeletingOldVaults}
-        onClearCache={handleClearCache}
-        onDeleteOldVaults={() => setConfirmOldVaults(true)}
-        onOpenAiModels={onOpenOnDeviceAi}
-      />
 
       {hasBreakdown && (
         <div className='space-y-1'>
@@ -681,48 +619,27 @@ export default function StorageSettings({ onOpenOnDeviceAi }) {
         </div>
       )}
 
-      <div className='space-y-1'>
-        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
-          {t('storage.dangerZone')}
-        </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden'>
-          <div className='px-6 py-5 flex items-center justify-between gap-4'>
-            <div className='space-y-1'>
-              <p className='text-base font-bold text-text-primary'>{clearCopy.title}</p>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {clearCopy.description}
-              </p>
-            </div>
-            <button
-              onClick={() => setConfirmClear(true)}
-              className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95'
-            >
-              <Trash2 className='w-3.5 h-3.5' />
-              {clearCopy.button}
-            </button>
-          </div>
-        </div>
+      <div>
+        <button
+          onClick={() => setConfirmClear(true)}
+          className='flex items-center gap-2 px-4 py-2.5 rounded-xl border border-accent-danger/30 text-accent-danger text-sm font-bold hover:bg-accent-danger/10 transition-all active:scale-95'
+        >
+          <Trash2 className='w-3.5 h-3.5' />
+          {clearDetails.button}
+        </button>
       </div>
 
       {isClearing && <ClearingOverlay />}
 
       {confirmClear && (
         <DangerConfirmModal
-          title={clearCopy.confirmTitle}
-          description={clearCopy.confirmDescription}
-          confirmLabel={t('common.clear')}
+          title={clearDetails.title}
+          confirmLabel={clearDetails.confirmLabel}
+          removed={clearDetails.removed}
+          kept={clearDetails.kept}
+          note={clearDetails.note}
           onConfirm={handleConfirmClear}
           onCancel={() => setConfirmClear(false)}
-        />
-      )}
-
-      {confirmOldVaults && (
-        <DangerConfirmModal
-          title={t('storage.device.deleteOldVaultsTitle')}
-          description={t('storage.device.deleteOldVaultsMessage')}
-          confirmLabel={t('storage.device.deleteOldVaults')}
-          onConfirm={handleConfirmDeleteOldVaults}
-          onCancel={() => setConfirmOldVaults(false)}
         />
       )}
     </div>

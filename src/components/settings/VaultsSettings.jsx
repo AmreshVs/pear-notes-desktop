@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, LogIn, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, LogIn, Pencil, Plus, Trash2, UserPlus } from 'lucide-react'
 
 import { MAX_VAULTS, VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import {
@@ -16,14 +16,13 @@ import {
   switchVault
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
-import { useClearAllData } from '../../hooks/useClearAllData'
 import { getVaultErrorText, getVaultLabel } from '../../lib/vaultNames'
 
-import ClearingOverlay from './ClearingOverlay'
 import CreateVaultForm from './CreateVaultForm'
-import DangerConfirmModal from './DangerConfirmModal'
 import JoinVaultForm from './JoinVaultForm'
+import VaultInvitePanel from './VaultInvitePanel'
 
+const INVITE_OPTION = { mode: 'invite', icon: UserPlus, labelKey: 'vaults.invite.title' }
 const ADD_OPTIONS = [
   { mode: 'create', icon: Plus, labelKey: 'vaults.newVault' },
   { mode: 'join', icon: LogIn, labelKey: 'vaults.join.sectionTitle' }
@@ -39,18 +38,15 @@ export default function VaultsSettings() {
   const canAdd = useSelector(getCanAddVault)
 
   const [addMode, setAddMode] = useState(null)
-  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
-  const { isClearing, clearAll } = useClearAllData()
-
-  const handleDeleteAll = () => {
-    setConfirmDeleteAll(false)
-    clearAll()
-  }
   const [renamingId, setRenamingId] = useState(null)
   const [renameText, setRenameText] = useState('')
   const [removingId, setRemovingId] = useState(null)
 
   const busy = !!pending
+  const currentLabel = getVaultLabel(
+    vaults.find((vault) => vault.current),
+    t
+  )
 
   const closeAddForm = () => setAddMode(null)
   const toggleAddMode = (mode) => setAddMode((current) => (current === mode ? null : mode))
@@ -69,7 +65,7 @@ export default function VaultsSettings() {
       }`}
     >
       <Icon className='w-4 h-4' />
-      {t(labelKey)}
+      {t(labelKey, { name: currentLabel })}
     </button>
   )
 
@@ -100,7 +96,7 @@ export default function VaultsSettings() {
           const isPending = pendingId === vault.id
           return (
             <div key={vault.id} className='px-5 py-4 space-y-3'>
-              <div className='flex items-center gap-4'>
+              <div className='group flex items-center gap-4'>
                 <span
                   className={`w-10 h-10 rounded-xl grid place-items-center font-bold flex-shrink-0 ${vault.current ? 'bg-accent-primary text-accent-on-primary' : 'bg-bg-tertiary text-text-secondary'}`}
                 >
@@ -152,7 +148,7 @@ export default function VaultsSettings() {
                       disabled={busy}
                       title={t('vaults.rename')}
                       aria-label={t('vaults.rename')}
-                      className='p-2 rounded-lg text-text-secondary hover:bg-overlay-light disabled:opacity-50'
+                      className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 rounded-lg text-text-secondary hover:bg-overlay-light transition-all disabled:cursor-not-allowed'
                     >
                       <Pencil className='w-4 h-4' />
                     </button>
@@ -162,7 +158,7 @@ export default function VaultsSettings() {
                         disabled={busy}
                         title={t('vaults.remove')}
                         aria-label={t('vaults.remove')}
-                        className='p-2 rounded-lg text-accent-danger hover:bg-accent-danger/10 disabled:opacity-50'
+                        className={`p-2 rounded-lg text-accent-danger hover:bg-accent-danger/10 transition-all disabled:cursor-not-allowed ${removingId === vault.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}`}
                       >
                         <Trash2 className='w-4 h-4' />
                       </button>
@@ -205,50 +201,21 @@ export default function VaultsSettings() {
         </p>
       )}
 
-      {canAdd ? (
-        <div className='space-y-4'>
-          <div className='flex gap-2'>{ADD_OPTIONS.map(renderAddOption)}</div>
-          {addMode === 'create' && <CreateVaultForm onDone={closeAddForm} />}
-          {addMode === 'join' && <JoinVaultForm />}
+      <div className='space-y-4'>
+        <div className='flex flex-wrap gap-2'>
+          {renderAddOption(INVITE_OPTION)}
+          {canAdd && ADD_OPTIONS.map(renderAddOption)}
         </div>
-      ) : (
-        <p className='text-sm text-text-tertiary'>
-          {t('vaults.limitReached', { max: MAX_VAULTS })}
-        </p>
-      )}
-
-      <div className='space-y-3 pt-4'>
-        <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2'>
-          {t('storage.dangerZone')}
-        </h3>
-        <div className='bg-bg-secondary border border-border-primary rounded-3xl px-6 py-5 flex items-center justify-between gap-4'>
-          <div className='space-y-1'>
-            <p className='text-base font-bold text-text-primary'>{t('vaults.deleteAll')}</p>
-            <p className='text-sm text-text-tertiary font-medium opacity-60'>
-              {t('vaults.deleteAllDesc', { count: vaults.length })}
-            </p>
-          </div>
-          <button
-            onClick={() => setConfirmDeleteAll(true)}
-            disabled={busy}
-            className='flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-sm font-bold hover:bg-accent-danger/20 transition-all active:scale-95 disabled:opacity-40'
-          >
-            <Trash2 className='w-3.5 h-3.5' />
-            {t('vaults.deleteAllBtn')}
-          </button>
-        </div>
+        {!canAdd && (
+          <p className='text-sm text-text-tertiary'>
+            {t('vaults.limitReached', { max: MAX_VAULTS })}
+          </p>
+        )}
+        {addMode === 'invite' && <VaultInvitePanel name={currentLabel} />}
+        {canAdd && addMode === 'create' && <CreateVaultForm onDone={closeAddForm} />}
+        {canAdd && addMode === 'join' && <JoinVaultForm />}
       </div>
 
-      {confirmDeleteAll && (
-        <DangerConfirmModal
-          title={t('vaults.deleteAllConfirmTitle')}
-          description={t('vaults.deleteAllDesc', { count: vaults.length })}
-          confirmLabel={t('vaults.deleteAllBtn')}
-          onConfirm={handleDeleteAll}
-          onCancel={() => setConfirmDeleteAll(false)}
-        />
-      )}
-      {isClearing && <ClearingOverlay />}
     </div>
   )
 }

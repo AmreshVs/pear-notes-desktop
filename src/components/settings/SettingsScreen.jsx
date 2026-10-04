@@ -6,6 +6,7 @@ import {
   History,
   Laptop,
   Layers,
+  PieChart,
   RefreshCw,
   Settings as SettingsIcon,
   ShieldCheck,
@@ -24,13 +25,16 @@ import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
 import DebugSettings from './DebugSettings'
 import DevicesSettings from './DevicesSettings'
+import DeviceStorageSettings from './DeviceStorageSettings'
 import ErrorLogSettings from './ErrorLogSettings'
 import GeneralSettings from './GeneralSettings'
 import LocalAiSettings from './LocalAiSettings'
 import PrivacySettings from './PrivacySettings'
-import StorageSettings from './StorageSettings'
 import SyncSettings from './SyncSettings'
 import VaultsSettings from './VaultsSettings'
+import VaultStorageSettings from './VaultStorageSettings'
+
+const SETTINGS_GROUPS = ['vault', 'device']
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
@@ -52,18 +56,24 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const dialogRef = useDialog(handleAnimatedClose)
 
   const sections = [
-    { id: 'general', name: t('layouts.general'), icon: SettingsIcon },
-    { id: 'privacy', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
+    { id: 'general', group: 'vault', name: t('layouts.general'), icon: SettingsIcon },
+    { id: 'privacy', group: 'vault', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
+    { id: 'devices', group: 'vault', name: t('layouts.linkDevices'), icon: Laptop },
+    { id: 'sync', group: 'vault', name: t('layouts.sync'), icon: RefreshCw },
+    { id: 'activity', group: 'vault', name: t('layouts.activity'), icon: History },
+    { id: 'backup', group: 'vault', name: t('layouts.backupRestore'), icon: HardDrive },
+    { id: 'vaultStorage', group: 'vault', name: t('layouts.vaultStorage'), icon: PieChart },
     ...(LOCAL_AI_ENABLED
-      ? [{ id: 'onDeviceAi', name: t('layouts.onDeviceAi'), icon: Sparkles }]
+      ? [{ id: 'onDeviceAi', group: 'device', name: t('layouts.onDeviceAi'), icon: Sparkles }]
       : []),
-    ...(isMultiVaultEnabled() ? [{ id: 'vaults', name: t('layouts.vaults'), icon: Layers }] : []),
-    { id: 'devices', name: t('layouts.linkDevices'), icon: Laptop },
-    { id: 'sync', name: t('layouts.sync'), icon: RefreshCw },
-    { id: 'activity', name: t('layouts.activity'), icon: History },
-    { id: 'backup', name: t('layouts.backupRestore'), icon: HardDrive },
-    { id: 'storage', name: t('layouts.storage'), icon: Database }
+    { id: 'storage', group: 'device', name: t('layouts.storage'), icon: Database },
+    ...(isMultiVaultEnabled()
+      ? [{ id: 'vaults', group: 'device', name: t('layouts.vaults'), icon: Layers }]
+      : [])
   ]
+  const sectionGroups = SETTINGS_GROUPS.map((group) =>
+    sections.filter((section) => section.group === group)
+  ).filter((group) => group.length > 0)
 
   // Diagnostics is not a sidebar entry: it is reached from the visible link at the
   // foot of the Sync page. Nothing in the app is gesture-gated.
@@ -98,32 +108,39 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             </h2>
           </div>
 
-          <div className='flex-1 overflow-y-auto px-4 space-y-2'>
-            {sections.map((section) => {
-              const Icon = section.icon
-              const isActive = activeSection === section.id
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setSelectedSection(section.id)}
-                  className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
-                    ${
-                      isActive
-                        ? 'bg-[var(--accent-selected-bg)] text-accent-primary border border-[var(--accent-selected-border)]'
-                        : 'text-text-secondary hover:bg-overlay-light hover:text-text-primary border border-transparent'
-                    }`}
-                >
-                  <Icon
-                    className={`w-5 h-5 flex-shrink-0 transition-all duration-0 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
-                  />
-                  <span
-                    className={`text-base tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}
-                  >
-                    {section.name}
-                  </span>
-                </button>
-              )
-            })}
+          <div className='flex-1 overflow-y-auto px-4'>
+            {sectionGroups.map((group, index) => (
+              <div
+                key={group[0].group}
+                className={`space-y-2 ${index > 0 ? 'pt-3 mt-3 border-t border-border-primary/60' : ''}`}
+              >
+                {group.map((section) => {
+                  const Icon = section.icon
+                  const isActive = activeSection === section.id
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => setSelectedSection(section.id)}
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
+                        ${
+                          isActive
+                            ? 'bg-[var(--accent-selected-bg)] text-accent-primary border border-[var(--accent-selected-border)]'
+                            : 'text-text-secondary hover:bg-overlay-light hover:text-text-primary border border-transparent'
+                        }`}
+                    >
+                      <Icon
+                        className={`w-5 h-5 flex-shrink-0 transition-all duration-0 ${isActive ? 'scale-110 opacity-100' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}
+                      />
+                      <span
+                        className={`text-base tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}
+                      >
+                        {section.name}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </div>
 
           <div className='px-6 pb-6'>
@@ -148,6 +165,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
                 {activeSection === 'activity' && t('settings.descriptions.activity')}
                 {activeSection === 'backup' && t('settings.descriptions.backup')}
                 {activeSection === 'storage' && t('settings.descriptions.storage')}
+                {activeSection === 'vaultStorage' && t('settings.descriptions.vaultStorage')}
               </p>
             </div>
             <button
@@ -170,8 +188,12 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && (
-              <StorageSettings onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')} />
+              <DeviceStorageSettings
+                onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')}
+                onOpenVaultStorage={() => setSelectedSection('vaultStorage')}
+              />
             )}
+            {activeSection === 'vaultStorage' && <VaultStorageSettings />}
             {activeSection === 'debug' && (
               <DebugSettings onOpenErrorLog={() => setSelectedSection('errorLog')} />
             )}

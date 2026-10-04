@@ -37,6 +37,7 @@
   --color-accent-success: var(--accent-success);
   --color-accent-danger: var(--accent-danger);
   --color-accent-warning: var(--accent-warning);
+  --color-storage-other-vault: var(--storage-other-vault);
   --color-accent-warning-text: var(--accent-warning-text);
 
   /* Overlay Colors (theme-aware white/black overlays) */

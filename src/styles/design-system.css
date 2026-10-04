@@ -27,6 +27,7 @@
   --accent-success: #30d158;
   --accent-danger: #ff453a;
   --accent-warning: #ff9f0a;
+  --storage-other-vault: #7fa8ee;
   /* Fill-weight orange is ~2:1 on its background, so text needs its own value. */
   --accent-warning-text: #ff9f0a;
 
@@ -138,6 +139,7 @@
   --accent-success: #34c759;
   --accent-danger: #ff3b30;
   --accent-warning: #ff9500;
+  --storage-other-vault: #4f7fd6;
   --accent-warning-text: #a15200;
 
   --interactive-hover: rgba(0, 0, 0, 0.05);

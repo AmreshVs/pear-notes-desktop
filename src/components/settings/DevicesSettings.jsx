@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -6,8 +6,6 @@ import {
   CircleMinus,
   Crown,
   Globe,
-  Info,
-  Link2,
   Loader2,
   Monitor,
   Pencil,
@@ -15,17 +13,11 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
-  Timer,
   Trash2,
   TriangleAlert
 } from 'lucide-react'
-import { QRCodeCanvas } from 'qrcode.react'
 
-import {
-  DEVICE_NAME_MAX_LENGTH,
-  INVITE_EXPIRY_MINUTES,
-  isMultiVaultEnabled
-} from '@pear-notes/core/constant.js'
+import { DEVICE_NAME_MAX_LENGTH, INVITE_KIND } from '@pear-notes/core/constant.js'
 import {
   canAddSyncLeader,
   canRemoveSyncLeader,
@@ -42,9 +34,6 @@ import {
   updateSyncedDevice
 } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import {
-  createInvite,
-  getInvite,
-  getInviteExpiresAt,
   getInviterStatus,
   getSyncIsLoading,
   subscribePairUser
@@ -52,19 +41,19 @@ import {
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import {
   extractInvite,
-  formatInviteCountdown,
-  getInviteRemainingMs,
+  formatDeviceInvite,
+  isInviteForOtherKind,
   isValidInvite
 } from '@pear-notes/core/utils.js'
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
-import { copyToClipboard } from '../../lib/clipboard'
+import { useInviteLink } from '../../hooks/useInviteLink'
 import { getIndexerErrorKey, getIndexerStepKey } from '../../lib/indexerUtils'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
 
+import InviteLinkCard from './InviteLinkCard'
+
 const DEVICE_KEY_TAIL_LENGTH = 5
-const INVITE_COUNTDOWN_TICK_MS = 1000
-const INVITE_EXPIRY_WARNING_MS = 60 * 1000
 
 const PLATFORM_NAMES = {
   darwin: 'macOS',
@@ -81,14 +70,13 @@ function getPlatformName(platform) {
 export default function DevicesSettings({ onClose }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const inviteCode = useSelector(getInvite)
-  const expiresAt = useSelector(getInviteExpiresAt)
+  const invite = useInviteLink(formatDeviceInvite)
   const isLoading = useSelector(getSyncIsLoading)
   const { step } = useSelector(getInviterStatus)
   const syncedDevices = useSelector(getSyncedDevices)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
-  const showJoinSection = !isSynced || isMultiVaultEnabled()
+  const showJoinSection = !isSynced
   const leaderPlan = useSelector(getSyncLeaderPlan)
   const [leaderAction, setLeaderAction] = useState(null)
 
@@ -103,51 +91,36 @@ export default function DevicesSettings({ onClose }) {
     dispatch(setDeviceIndexer({ key: device.key, localKey: device.localKey, isIndexer }))
   }
 
-  const [countdownTick, setCountdownTick] = useState(0)
-
-  const inviteRemainingMs = useMemo(
-    () => getInviteRemainingMs(expiresAt),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [expiresAt, countdownTick]
-  )
-
-  const inviteExpired = !!inviteCode && !!expiresAt && inviteRemainingMs <= 0
-  const inviteExpiringSoon =
-    !inviteExpired && inviteRemainingMs > 0 && inviteRemainingMs <= INVITE_EXPIRY_WARNING_MS
-  const isInviteGenerated = !!inviteCode && !inviteExpired
-
   const [syncTab, setSyncTab] = useState('manage')
-  const [copied, setCopied] = useState(false)
   const [pasteCode, setPasteCode] = useState('')
   const [pendingInvite, setPendingInvite] = useState(null)
 
-  useEffect(() => {
-    if (!inviteCode || !expiresAt) return
-    const timer = setInterval(() => setCountdownTick((n) => n + 1), INVITE_COUNTDOWN_TICK_MS)
-    return () => clearInterval(timer)
-  }, [inviteCode, expiresAt])
-
-  const handleCopyInvite = async () => {
-    if (!isInviteGenerated) return
-    const copiedOk = await copyToClipboard(inviteCode)
-    if (!copiedOk) return
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleCreateInvite = () => {
-    dispatch(createInvite())
-  }
+  const pasteIsDeviceInvite = isValidInvite(pasteCode, INVITE_KIND.DEVICE)
+  const pasteIsVaultLink = isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE)
+  const deviceInviteCopy = useMemo(
+    () => ({
+      idleTitle: t('sync.hero.title'),
+      idleDesc: t('sync.hero.description'),
+      generateBtn: t('sync.hero.generateBtn'),
+      readyTitle: t('sync.invite.header'),
+      qrTitle: t('sync.invite.qrTitle'),
+      qrDescription: t('sync.invite.qrDescription'),
+      codeLabel: t('sync.invite.codeLabel'),
+      copyBtn: t('sync.invite.copyBtn'),
+      warning: t('sync.invite.warning')
+    }),
+    [t]
+  )
 
   const handleConnect = () => {
-    if (isValidInvite(pasteCode)) {
+    if (pasteIsDeviceInvite) {
       setPendingInvite(extractInvite(pasteCode))
     }
   }
 
-  const handleConfirmMerge = (options) => {
+  const handleConfirmMerge = () => {
     if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite, ...options }))
+    dispatch(subscribePairUser({ invite: pendingInvite }))
     setPendingInvite(null)
     setPasteCode('')
     if (onClose) {
@@ -189,122 +162,7 @@ export default function DevicesSettings({ onClose }) {
       <div className='space-y-6'>
         {syncTab === 'invite' ? (
           <div className='space-y-6'>
-            {!isInviteGenerated ? (
-              <div className='bg-bg-secondary border border-border-primary rounded-2xl p-10 flex flex-col items-center text-center space-y-5 hover:border-border-secondary transition-colors'>
-                <div className='w-20 h-20 bg-accent-primary/5 rounded-3xl flex items-center justify-center ring-1 ring-accent-primary/10 shadow-inner'>
-                  <Globe className='w-10 h-10 text-accent-primary' />
-                </div>
-                <div className='space-y-2'>
-                  <h3 className='text-text-primary font-bold text-xl'>
-                    {inviteExpired ? t('sync.invite.expiredTitle') : t('sync.hero.title')}
-                  </h3>
-                  <p className='text-text-tertiary text-sm max-w-sm leading-relaxed'>
-                    {inviteExpired
-                      ? t('sync.invite.expiredDesc', { minutes: INVITE_EXPIRY_MINUTES })
-                      : t('sync.hero.description')}
-                  </p>
-                </div>
-                <button
-                  onClick={handleCreateInvite}
-                  disabled={isLoading}
-                  className='group relative px-10 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95'
-                >
-                  <div className='absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity' />
-                  {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                  {isLoading
-                    ? t('sync.hero.preparing')
-                    : inviteExpired
-                      ? t('sync.invite.regenerateBtn')
-                      : t('sync.hero.generateBtn')}
-                </button>
-              </div>
-            ) : (
-              <div className='space-y-5'>
-                <div className='bg-bg-secondary border border-border-primary rounded-2xl p-8 relative overflow-hidden'>
-                  <div className='absolute -top-24 -right-24 w-48 h-48 bg-accent-primary/5 blur-3xl rounded-full pointer-events-none' />
-
-                  <div className='flex items-center gap-3 mb-6'>
-                    <div className='w-10 h-10 bg-accent-primary/10 rounded-full flex items-center justify-center border border-accent-primary/20'>
-                      <ShieldCheck className='w-5 h-5 text-accent-primary' />
-                    </div>
-                    <div>
-                      <h4 className='text-text-primary font-semibold'>{t('sync.invite.header')}</h4>
-                      <p
-                        className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 mt-1 ${
-                          inviteExpiringSoon
-                            ? 'text-accent-danger bg-accent-danger/10'
-                            : 'text-accent-primary bg-accent-primary/10'
-                        }`}
-                      >
-                        <Timer className='w-3.5 h-3.5' />
-                        {t('sync.invite.expiresIn', {
-                          countdown: formatInviteCountdown(inviteRemainingMs)
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='flex flex-col items-center mb-6 space-y-4'>
-                    <div className='p-3 bg-white rounded-2xl shadow-sm'>
-                      <QRCodeCanvas
-                        value={inviteCode}
-                        size={160}
-                        level={'H'}
-                        includeMargin={false}
-                      />
-                    </div>
-                    <div className='text-center space-y-1'>
-                      <h5 className='text-text-primary font-bold text-base'>
-                        {t('sync.invite.qrTitle')}
-                      </h5>
-                      <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                        {t('sync.invite.qrDescription')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='space-y-3'>
-                    <label className='text-xs tracking-wider font-bold text-text-tertiary ml-1'>
-                      {t('sync.invite.codeLabel')}
-                    </label>
-                    <div className='relative group'>
-                      <input
-                        type='text'
-                        readOnly
-                        value={inviteCode}
-                        className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-text-primary font-mono text-base tracking-wider shadow-inner outline-none transition-all group-hover:border-border-primary'
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleCopyInvite}
-                    className={`w-full flex items-center justify-center gap-2 mt-6 px-6 py-4 rounded-xl font-bold text-base transition-colors duration-300 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover active:scale-95 ${
-                      copied
-                        ? 'bg-accent-success text-white'
-                        : 'bg-accent-primary text-accent-on-primary'
-                    }`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className='w-4 h-4' strokeWidth={2.5} /> {t('sync.invite.copied')}
-                      </>
-                    ) : (
-                      <>
-                        <Link2 className='w-4 h-4' /> {t('sync.invite.copyBtn')}
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className='bg-accent-primary/5 border border-accent-primary/10 rounded-xl p-4 flex gap-4 items-start'>
-                  <Info className='w-5 h-5 text-accent-primary shrink-0' />
-                  <p className='text-xs text-text-tertiary leading-relaxed'>
-                    {t('sync.invite.warning')}
-                  </p>
-                </div>
-              </div>
-            )}
+            <InviteLinkCard invite={invite} copy={deviceInviteCopy} IdleIcon={Globe} />
 
             {showJoinSection && (
               <div className='pt-6 border-t border-border-primary space-y-4'>
@@ -323,14 +181,19 @@ export default function DevicesSettings({ onClose }) {
                   />
                   <button
                     onClick={handleConnect}
-                    disabled={!isValidInvite(pasteCode) || isLoading || step !== 'idle'}
+                    disabled={!pasteIsDeviceInvite || isLoading || step !== 'idle'}
                     className='px-6 py-4 bg-accent-primary text-accent-on-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-base font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
                   >
                     {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
                     {t('sync.paste.linkBtn')}
                   </button>
                 </div>
-                {pasteCode.trim() && !isValidInvite(pasteCode) && (
+                {pasteIsVaultLink && (
+                  <p className='text-xs font-medium text-accent-danger ml-1'>
+                    {t('sync.paste.vaultLinkError')}
+                  </p>
+                )}
+                {pasteCode.trim() && !pasteIsVaultLink && !isValidInvite(pasteCode) && (
                   <p className='text-xs text-text-tertiary ml-1'>{t('sync.paste.hintInvalid')}</p>
                 )}
               </div>

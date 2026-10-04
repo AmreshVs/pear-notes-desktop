@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Check, Globe, Link2, Loader2, ShieldCheck } from 'lucide-react'
 
+import { INVITE_KIND } from '@pear-notes/core/constant.js'
 import {
   confirmPairing,
   getInviterStatus,
@@ -14,7 +15,12 @@ import {
   setShowPairingInput,
   subscribePairUser
 } from '@pear-notes/core/store/slices/syncSlice.js'
-import { extractInvite, getFingerprint, isValidInvite } from '@pear-notes/core/utils.js'
+import {
+  extractInvite,
+  getFingerprint,
+  isInviteForOtherKind,
+  isValidInvite
+} from '@pear-notes/core/utils.js'
 
 import { getRelativeTime } from '../../utils/relativeTime'
 import MergeConfirmModal from '../modals/MergeConfirmModal'
@@ -123,14 +129,14 @@ export default function PairingStatusOverlay() {
   }
 
   const handleConnect = () => {
-    if (isValidInvite(pasteCode)) {
+    if (isValidInvite(pasteCode, INVITE_KIND.DEVICE)) {
       setPendingInvite(extractInvite(pasteCode))
     }
   }
 
-  const handleConfirmMerge = (options) => {
+  const handleConfirmMerge = () => {
     if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite, ...options }))
+    dispatch(subscribePairUser({ invite: pendingInvite }))
     dispatch(setShowPairingInput(false))
     setPendingInvite(null)
     setPasteCode('')
@@ -395,7 +401,14 @@ export default function PairingStatusOverlay() {
                     className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
                     autoFocus
                   />
-                  {pasteCode.trim() && !isValidInvite(pasteCode) && (
+                  {isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE) && (
+                    <p className='text-xs font-medium text-accent-danger text-left ml-1'>
+                      {t('sync.paste.vaultLinkError')}
+                    </p>
+                  )}
+                  {pasteCode.trim() &&
+                    !isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE) &&
+                    !isValidInvite(pasteCode) && (
                     <p className='text-xs text-text-tertiary text-left ml-1'>
                       {t('sync.paste.hintInvalid')}
                     </p>
@@ -411,7 +424,7 @@ export default function PairingStatusOverlay() {
                   </button>
                   <button
                     onClick={handleConnect}
-                    disabled={!isValidInvite(pasteCode)}
+                    disabled={!isValidInvite(pasteCode, INVITE_KIND.DEVICE)}
                     className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
                   >
                     {t('pairing.overlay.connectBtn')}

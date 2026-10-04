@@ -11,7 +11,7 @@ import {
 import { showToast } from '../lib/toast'
 import { getVaultErrorText } from '../lib/vaultNames'
 
-const TOASTED_ACTIONS = ['move', 'switch']
+const TOASTED_ACTIONS = ['move', 'switch', 'remove']
 
 export function useVaultErrors() {
   const { t } = useTranslation()

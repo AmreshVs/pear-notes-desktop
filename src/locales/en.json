@@ -120,7 +120,8 @@
       "general": "Customize your personal workspace experience, from aesthetics to native language supports.",
       "sync": "Manage your secure peer-to-peer network and linked devices with end-to-end encryption.",
       "backup": "Create encrypted backups of your notes and media, or restore from a previous backup file.",
-      "storage": "Monitor your notes data size, on-disk footprint, and reclaim storage by clearing unreachable media.",
+      "storage": "What Pear Notes keeps on this computer, by vault and by type.",
+      "vaultStorage": "Space used by the open vault's notes, media and files, with a per-note breakdown.",
       "activity": "See what each linked device has created, changed and removed.",
       "onDeviceAi": "AI processes your notes, recordings and photos on this computer. Nothing ever leaves your computer. Each feature downloads its model once, then works offline.",
       "vaults": "Each vault has its own notes, devices and settings. Only the open vault syncs."
@@ -545,7 +546,8 @@
       "scanBtn": "Scan QR",
       "placeholder": "Paste invite code here...",
       "linkBtn": "Link",
-      "hintInvalid": "That isn't a complete invite code yet."
+      "hintInvalid": "That isn't a complete invite code yet.",
+      "vaultLinkError": "This is a vault invite. Use it in Vaults › Join a vault."
     },
     "footer": "Your data moves directly between devices using encrypted Hypercore logs. No central server involved.",
     "devices": {
@@ -964,7 +966,8 @@
     "noteLockPassword": "Note lock password",
     "privacyAndSecurity": "Privacy & security",
     "onDeviceAi": "On-device AI",
-    "storage": "Storage",
+    "storage": "Device storage",
+    "vaultStorage": "Vault storage",
     "activity": "Activity",
     "linkDevices": "My devices",
     "sync": "Sync",
@@ -1154,6 +1157,24 @@
     }
   },
   "storage": {
+    "removal": {
+      "removed": "Removed",
+      "kept": "Kept",
+      "cantUndo": "This can't be undone.",
+      "cantUndoFresh": "This can't be undone. The app starts fresh.",
+      "allBtn": "Remove all data",
+      "allTitleComputer": "Remove all data from this computer?",
+      "vaultBtn": "Clear \"{{name}}\"",
+      "vaultTitleComputer": "Clear \"{{name}}\" from this computer?",
+      "notesAndFolders": "Notes: {{notes}} · Folders: {{folders}}",
+      "mediaFiles": "Media and files",
+      "otherDevices": "Copies on your other devices",
+      "backups": "Backup files you saved",
+      "vaultOtherDevices": "\"{{name}}\" on its other devices",
+      "vaults_one": "{{count}} vault · {{names}}",
+      "vaults_other": "{{count}} vaults · {{names}}",
+      "settingsCache": "Settings, cache and logs"
+    },
     "hero": {
       "title": "Storage",
       "description": "View and manage the space used by your notes, media, and files on this device."
@@ -1177,7 +1198,6 @@
     "cacheDesc": "Temporary files. Note thumbnails are kept.",
     "clearCache": "Clear",
     "clearingCache": "Clearing…",
-    "dangerZone": "Danger zone",
     "clearAllData": "Clear all data",
     "clearAllDataDesc": "Permanently deletes all notes, folders, settings, and media.",
     "clearStorage": "Clear storage",
@@ -1209,6 +1229,9 @@
       "oldVaults": "Old vault copies",
       "oldVaultsDesc": "Set aside by an earlier storage upgrade. Nothing uses them.",
       "deleteOldVaults": "Delete",
+      "onThisComputer": "Pear Notes on this computer",
+      "thisComputer": "This computer",
+      "openTag": "open",
       "deletingOldVaults": "Deleting…",
       "deleteOldVaultsTitle": "Delete old vault copies?",
       "deleteOldVaultsMessage": "These copies were set aside during an earlier storage upgrade and are no longer used. Your current notes are not affected.",
@@ -2033,22 +2056,36 @@
     "openingVault": "Opening vault…",
     "rename": "Rename",
     "remove": "Remove from this device",
-    "removeDescription": "\"{{name}}\" and its notes will be deleted from this device. Other devices keep it. Keep its sync leader online so they see this device leave.",
+    "removeDescription": "\"{{name}}\" and its notes will be deleted from this device. Other devices that have it keep their copy. If no other device has it, its notes are gone for good.",
     "removeConfirm": "Remove",
+    "forceRemove": {
+      "title": "No device can take over syncing",
+      "description": "This device is the only sync leader for \"{{name}}\", and none of its other devices are online to take over. If you remove it now, those devices keep their notes but can no longer sync \"{{name}}\" with each other. To avoid this, open \"{{name}}\" on another device and try again.",
+      "confirm": "Remove anyway"
+    },
     "removing": "Leaving the vault and removing it…",
     "limitReached": "You can have up to {{max}} vaults on a device.",
     "join": {
-      "title": "Link to another vault?",
-      "description": "Choose what happens to the notes already on this device.",
-      "addTitle": "Add it as another vault",
-      "addBody": "Your notes here stay in their own vault. You can switch between the two at any time.",
-      "combineTitle": "Combine into it",
-      "addBtn": "Add vault",
       "sectionTitle": "Join a vault",
       "joinBtn": "Join vault",
-      "hint": "On a device that already has the vault, open that vault, go to My devices and create an invite. Then paste the code here.",
+      "hint": "On a device that has the vault, open it and go to Vaults › Invite to vault. Then paste the link here.",
       "screenDesc": "Add a vault that another device already has. It opens next to your other vaults, and your notes here stay where they are.",
-      "codeLabel": "Invite code"
+      "codeLabel": "Invite link",
+      "linkPlaceholder": "Paste the vault invite link",
+      "nameFromInvite": "Suggested by the invite. You can change it.",
+      "deviceLinkError": "This is a device link. Use it in My devices."
+    },
+    "invite": {
+      "title": "Invite to {{name}}",
+      "idleTitle": "Share {{name}}",
+      "idleDesc": "Someone who joins with this link gets full access to {{name}}. You approve them before they join.",
+      "generateBtn": "Create invite link",
+      "readyTitle": "Invite ready",
+      "qrTitle": "Scan to join faster",
+      "qrDescription": "On the other device, open Vaults › Join a vault and scan this code.",
+      "codeLabel": "Vault invite link",
+      "copyBtn": "Copy link",
+      "warning": "Don't post this link publicly. Anyone who has it can ask to join {{name}}."
     },
     "errors": {
       "emptyName": "Enter a name for the vault.",
@@ -2067,11 +2104,6 @@
       "confirmFolder": "Move the folder \"{{folder}}\" and its notes to \"{{name}}\"?",
       "explain": "Every device linked to \"{{name}}\" will be able to read them. Attachments are copied. The originals go to Trash in this vault.",
       "moving": "Moving notes…"
-    },
-    "deleteAll": "Delete all vaults",
-    "deleteAllDesc_one": "Deletes your vault and every note, folder, attachment and setting from this device, then starts fresh. Other devices keep their copies.",
-    "deleteAllDesc_other": "Deletes all {{count}} vaults and every note, folder, attachment and setting from this device, then starts fresh. Other devices keep their copies.",
-    "deleteAllBtn": "Delete all",
-    "deleteAllConfirmTitle": "Delete every vault on this device?"
+    }
   }
 }

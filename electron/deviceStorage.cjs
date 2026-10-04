@@ -6,6 +6,8 @@ const CHROMIUM_CATEGORY = {
   IndexedDB: 'previews'
 }
 
+const VAULTS_DIR = 'vaults'
+
 let helpersPromise = null
 
 function loadHelpers() {
@@ -66,7 +68,15 @@ async function measureDeviceStorage({ storagePath, aiRoot, userData }) {
     items.push({ category: DEVICE_STORAGE.AI_MODELS, bytes: await entryBytes(aiRoot) })
   }
   await addDir(userData, (name) => CHROMIUM_CATEGORY[name])
-  return summarizeDeviceStorage(items)
+  return { ...summarizeDeviceStorage(items), vaults: await measureVaults(storagePath) }
+}
+
+async function measureVaults(storagePath) {
+  const vaults = {}
+  if (!storagePath) return vaults
+  const dir = path.join(storagePath, VAULTS_DIR)
+  for (const name of await children(dir)) vaults[name] = await entryBytes(path.join(dir, name))
+  return vaults
 }
 
 async function deleteOldVaults(storagePath) {
