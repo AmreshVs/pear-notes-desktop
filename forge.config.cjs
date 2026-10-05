@@ -3,7 +3,7 @@ const os = require('os')
 const path = require('path')
 
 const pkg = require('./package.json')
-const { storeBuild } = require('./electron/storeBuild.cjs')
+const { storeBuild, msixVersion } = require('./electron/storeBuild.cjs')
 const appName = pkg.productName ?? pkg.name
 
 const APPLE_BUNDLE_ID = process.env.APPLE_BUNDLE_ID ?? 'com.amreshvs.pear-notes'
@@ -320,7 +320,7 @@ async function msixConfig(targetArch) {
   const { toMsixArch } = require('@electron-forge/maker-msix/dist/util/arch.js')
   const manifestVariables = {
     packageDescription: pkg.description,
-    packageVersion: pkg.version,
+    packageVersion: msixVersion(pkg.version, pkg.buildNumber),
     targetArch: toMsixArch(targetArch),
     ...MSIX_MANIFEST_VARIABLES
   }
