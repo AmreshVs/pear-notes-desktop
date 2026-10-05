@@ -9,8 +9,11 @@ import {
   LOCAL_AI_ENABLED,
   LOCAL_AI_FEATURE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { buildNoteEditsTransaction } from '@pear-notes/core/store/services/localAiNoteEdits.js'
-import { htmlToNoteText } from '@pear-notes/core/store/services/localAiPrompts.js'
+import {
+  buildLineRewriteTransaction,
+  buildNoteEditsTransaction
+} from '@pear-notes/core/store/services/localAiNoteEdits.js'
+import { htmlToNoteText, isRewriteTask } from '@pear-notes/core/store/services/localAiPrompts.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
@@ -250,7 +253,20 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     const lines = toLines(text)
     if (lines.length === 0) return
     const unchanged = doc.textBetween(from, to, '\n', ' ') === selection.text
-    if (meta?.action === 'replace' && unchanged) {
+    if (meta?.action === 'replace' && unchanged && (isRewriteTask(mode) || mode === 'ask')) {
+      const rewrite = buildLineRewriteTransaction(
+        editorInstance.state,
+        { from, to },
+        selection.text,
+        text
+      )
+      if (rewrite) {
+        if (rewrite.applied > 0) editorInstance.view.dispatch(rewrite.tr)
+        editorInstance.commands.focus()
+        return
+      }
+    }
+    if (meta?.action === 'replace' && unchanged && !isRewriteTask(mode)) {
       editorInstance
         .chain()
         .focus()

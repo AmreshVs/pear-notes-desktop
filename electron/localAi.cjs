@@ -554,12 +554,22 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
     config
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
+  if (prompts.isRewriteTask(noteTask)) {
+    const writing = await import('@pear-notes/core/store/services/localAiWritingTools.js')
+    const rewritten = await writing.runNoteRewrite({
+      task: noteTask,
+      text: String(text ?? ''),
+      complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
+      onText: (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
+    })
+    return { text: rewritten }
+  }
   const output = await streamCompletion(
     sdk,
     {
       modelId,
       history: prompts.buildNoteTaskMessages(noteTask, text),
-      generationParams: prompts.getNoteTaskGenerationParams(noteTask, text)
+      generationParams: prompts.getNoteTaskGenerationParams(noteTask)
     },
     (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
   )
