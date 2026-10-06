@@ -39,7 +39,7 @@ import {
   purgeExpiredTrash,
   restoreNote,
   restoreNotes,
-  setSelectedNote,
+  selectNote,
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
@@ -54,14 +54,12 @@ import {
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import {
   formatDate,
-  getAttachmentInfo,
-  getFirstImage,
-  getFirstPdfAttachment,
   getGroupTitle,
-  getPreview,
+  getNoteSummary,
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
+import { useVisibleNotes } from '../../hooks/useVisibleNotes'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
 import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
@@ -156,15 +154,16 @@ const NotesItem = memo(
     useNoteLockVersion()
     const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
 
-    const rawImgSrc = useMemo(() => getFirstImage(noteData?.note), [noteData?.note])
+    const summary = useMemo(() => getNoteSummary(noteData), [noteData])
+    const rawImgSrc = summary.firstImage
     const resolvedImgSrc = useSelector((state) => getHyperdriveAddress(state, rawImgSrc))
     const imgSrc = isMasked ? null : resolvedImgSrc
 
     // A PDF fills the thumbnail slot only when there is no image, and only from the cache — a row
     // must never render a PDF itself. Attaching one, or opening the note, is what caches it.
     const pdfUrl = useMemo(
-      () => (isMasked || imgSrc ? null : getFirstPdfAttachment(noteData?.note)?.url || null),
-      [isMasked, imgSrc, noteData?.note]
+      () => (isMasked || imgSrc ? null : summary.pdfs?.[0]?.url || null),
+      [isMasked, imgSrc, summary]
     )
     // Keyed by url so a row whose note changed never flashes the previous note's thumbnail.
     const [pdfThumb, setPdfThumb] = useState(null)
@@ -196,11 +195,8 @@ const NotesItem = memo(
 
     const pdfThumbSrc = pdfUrl && pdfThumb?.url === pdfUrl ? pdfThumb.dataUrl : null
 
-    const rawPreviewText = useMemo(
-      () => getPreview(noteData?.note, noteData?.note),
-      [noteData?.note]
-    )
-    const attachmentInfo = useMemo(() => getAttachmentInfo(noteData?.note), [noteData?.note])
+    const rawPreviewText = summary.preview
+    const attachmentInfo = summary.attachment
     const showAttachmentPreview = !isMasked && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
       ? t('noteCard.lockedSummary')
@@ -220,7 +216,7 @@ const NotesItem = memo(
           onToggleSelect(key, event)
           return
         }
-        dispatch(setSelectedNote(key))
+        dispatch(selectNote(key))
       },
       [dispatch, isSelecting, onToggleSelect, key]
     )
@@ -322,7 +318,7 @@ const NotesItem = memo(
             onToggleSelect(key, event)
             return
           }
-          dispatch(setSelectedNote(key))
+          dispatch(selectNote(key))
           return
         }
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
@@ -341,6 +337,7 @@ const NotesItem = memo(
       <div className='relative'>
         <div
           key={key}
+          data-note-key={key}
           role='option'
           tabIndex={isSelected ? 0 : -1}
           aria-selected={isSelecting ? isChecked : isSelected}
@@ -462,6 +459,9 @@ export default function NotesList({
   const syncing = step === 'syncing'
   const currentFolderName =
     folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
+
+  const notesScrollRef = useRef(null)
+  useVisibleNotes(notesScrollRef, filteredNotes)
 
   const [selection, setSelection] = useState({ folder: null, active: false, keys: [] })
   const anchorKeyRef = useRef(null)
@@ -665,7 +665,7 @@ export default function NotesList({
           )
           break
         case 'history':
-          dispatch(setSelectedNote(noteKey))
+          dispatch(selectNote(noteKey))
           dispatch(openNoteHistory(noteKey))
           break
         case 'toggleLock':
@@ -880,6 +880,7 @@ export default function NotesList({
       </div>
 
       <div
+        ref={notesScrollRef}
         className='flex-1 overflow-y-auto pb-2 scrollbar-hide'
         role={filteredNotes.length === 0 ? undefined : 'listbox'}
         aria-multiselectable={isSelecting || undefined}

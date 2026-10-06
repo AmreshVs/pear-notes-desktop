@@ -63,6 +63,7 @@ import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 import AiToolsButton from './AiToolsButton'
 import DictationBar from './DictationBar'
 import FormattingToolbar from './FormattingToolbar'
+import NoteBodyPlaceholder from './NoteBodyPlaceholder'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
 import RichTextEditor from './RichTextEditor'
@@ -670,6 +671,17 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           )}
         </div>
       </div>
+    )
+  }
+
+  if (noteData.bodyOmitted) {
+    return (
+      <NoteBodyPlaceholder
+        key={selectedNoteKey}
+        noteData={noteData}
+        fontSize={editorFontSize}
+        fontFamily={editorFontFamily}
+      />
     )
   }
 

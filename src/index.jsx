@@ -11,9 +11,11 @@ import { Duplex } from 'stream'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { setRPC } from '@pear-notes/core/rpc.js'
 import HRPC from '@pear-notes/core/spec/hrpc/index.js'
+import { noteSavesSettled } from '@pear-notes/core/store/sagas/notesSaga.js'
 import { setLocalAiAdapter } from '@pear-notes/core/store/services/localAiAdapter.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { themeStorage } from '@pear-notes/core/store/services/storageService.js'
+import { flushNoteSaves } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getTheme } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { store } from '@pear-notes/core/store/store.js'
 
@@ -58,6 +60,13 @@ if (LOCAL_AI_ENABLED) setLocalAiAdapter(electronAdapter)
 if (globalThis.__PEAR_DEV__) {
   globalThis.store = store
 }
+
+window.electronBridge.onFlushSaves(() => {
+  store.dispatch(flushNoteSaves())
+  noteSavesSettled().finally(() => window.electronBridge.savesFlushed())
+})
+
+window.addEventListener('blur', () => store.dispatch(flushNoteSaves()))
 
 window.addEventListener('beforeunload', () => {
   backendApi.destroy()

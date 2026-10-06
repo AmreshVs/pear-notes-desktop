@@ -24,6 +24,12 @@ window.electronBridge = {
   getAppFlags: () => ipcRenderer.sendSync('get-app-flags'),
   reload: () => ipcRenderer.send('app-reload'),
   quit: () => ipcRenderer.send('app-quit'),
+  onFlushSaves: (callback) => {
+    const handler = () => callback()
+    ipcRenderer.on('flush-saves', handler)
+    return () => ipcRenderer.removeListener('flush-saves', handler)
+  },
+  savesFlushed: () => ipcRenderer.send('saves-flushed'),
 
   sendWorkerData: (data) => ipcRenderer.send('worker-data', data),
   onWorkerData: (callback) => {

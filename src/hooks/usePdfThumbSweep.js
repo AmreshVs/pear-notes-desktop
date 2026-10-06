@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useStore } from 'react-redux'
 
 import { getNotes } from '@pear-notes/core/store/slices/notesSlice.js'
-import { getPdfAttachments } from '@pear-notes/core/utils.js'
+import { getNoteSummary } from '@pear-notes/core/utils.js'
 
 import { attachmentIdentity, sweepPdfThumbs } from '../lib/pdfThumbCache'
 
@@ -34,9 +34,10 @@ export function usePdfThumbSweep() {
 
       const identities = new Set()
       for (const note of notes) {
-        const html = note?.value?.note
-        if (!html) continue
-        for (const pdf of getPdfAttachments(html)) identities.add(attachmentIdentity(pdf.url))
+        if (!note?.value) continue
+        for (const pdf of getNoteSummary(note.value).pdfs || []) {
+          identities.add(attachmentIdentity(pdf.url))
+        }
       }
       return identities
     }

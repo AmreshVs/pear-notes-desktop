@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -30,7 +30,6 @@ import {
   setShowSettings
 } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getHasMultipleVaults, getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
-import { debounce } from '@pear-notes/core/utils.js'
 
 import appIcon from '../build/icon.png'
 
@@ -193,16 +192,8 @@ function App() {
     dispatch(setSearchQuery(''))
   }
 
-  const debouncedUpdateNote = useMemo(
-    () =>
-      debounce(({ key, title, contentHtml }) => {
-        dispatch(updateNote({ key, title, note: contentHtml, fromEditor: true }))
-      }, 100),
-    [dispatch]
-  )
-
-  const handleUpdateNote = (data) => {
-    debouncedUpdateNote(data)
+  const handleUpdateNote = ({ key, title, contentHtml }) => {
+    dispatch(updateNote({ key, title, note: contentHtml, fromEditor: true }))
   }
 
   const handleDeleteNote = async (key) => {

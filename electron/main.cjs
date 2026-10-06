@@ -117,6 +117,26 @@ let closeToTray = true
 let isQuitting = false
 let powerSaveBlockerId = null
 let workerFailureReported = false
+let savesFlushed = false
+const SAVE_FLUSH_TIMEOUT_MS = 3000
+
+function flushRendererSaves() {
+  savesFlushed = true
+  return new Promise((resolve) => {
+    if (!mainWindow || mainWindow.isDestroyed() || !worker || workerFailureReported) {
+      resolve()
+      return
+    }
+    const done = () => {
+      clearTimeout(timer)
+      ipcMain.removeListener('saves-flushed', done)
+      resolve()
+    }
+    const timer = setTimeout(done, SAVE_FLUSH_TIMEOUT_MS)
+    ipcMain.on('saves-flushed', done)
+    mainWindow.webContents.send('flush-saves')
+  })
+}
 
 function getDeviceName() {
   const hostname = (os.hostname() || '').replace(/\.local$/i, '').trim()
@@ -291,6 +311,7 @@ function isExternallyOpenable(url) {
 
 function createWindow() {
   const { width, height } = defaultWindowSize()
+  savesFlushed = false
 
   mainWindow = new BrowserWindow({
     width,
@@ -338,7 +359,13 @@ function createWindow() {
     if (!isQuitting && closeToTray && tray) {
       event.preventDefault()
       mainWindow.hide()
+      return
     }
+    if (savesFlushed) return
+    event.preventDefault()
+    flushRendererSaves().then(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close()
+    })
   })
 
   mainWindow.on('closed', () => {
@@ -755,8 +782,13 @@ if (!lock) {
     }
   })
 
-  app.on('before-quit', () => {
+  app.on('before-quit', (event) => {
     isQuitting = true
+    if (!savesFlushed) {
+      event.preventDefault()
+      flushRendererSaves().then(() => app.quit())
+      return
+    }
     if (powerSaveBlockerId !== null) {
       powerSaveBlocker.stop(powerSaveBlockerId)
       powerSaveBlockerId = null
