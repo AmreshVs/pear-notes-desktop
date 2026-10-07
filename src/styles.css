@@ -513,3 +513,9 @@
   --tw-tracking: .1em;
   letter-spacing: .01em !important;
 }
+mark.search-match {
+  background-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}

@@ -49,6 +49,7 @@ import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/
 
 import { clearEditorHistory } from '../../lib/editorHistory'
 import { EmptyFirstLine } from '../../lib/emptyFirstLine'
+import { FindInNote } from '../../lib/findInNote'
 import { KeptSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
@@ -96,6 +97,7 @@ const RichTextEditor = forwardRef(
             codeBlock: false
           }),
           EmptyFirstLine,
+          FindInNote,
           Underline,
           Strike,
           TaskList,

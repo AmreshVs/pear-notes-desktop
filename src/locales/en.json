@@ -890,6 +890,15 @@
       "title": "Also edited on another device",
       "keepMine": "Keep mine",
       "useTheirs": "Use theirs"
+    },
+    "find": {
+      "label": "Find in note",
+      "placeholder": "Find in note",
+      "matchCount": "{{current}} of {{total}}",
+      "noMatches": "No matches",
+      "previous": "Previous match",
+      "next": "Next match",
+      "close": "Close find"
     }
   },
   "pairing": {
@@ -956,7 +965,9 @@
       "tryDifferent": "Try a different search term",
       "searchNotes": "Search your notes",
       "typeToFind": "Type above to find notes across your library"
-    }
+    },
+    "scopeLabel": "Search in",
+    "scopeAll": "All notes"
   },
   "layouts": {
     "settings": "Settings",

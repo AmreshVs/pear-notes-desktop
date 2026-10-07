@@ -42,6 +42,15 @@ import {
   selectNote,
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
+import {
+  getSearchHit,
+  getSearchScope,
+  getSearchSettled,
+  getSearchTerms,
+  prewarmSearch,
+  SEARCH_SCOPE,
+  setSearchIncludeLocked
+} from '@pear-notes/core/store/slices/searchSlice.js'
 import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getActivityLogEnabled } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
@@ -62,7 +71,7 @@ import {
 import { useVisibleNotes } from '../../hooks/useVisibleNotes'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
-import { isNoteUnlocked, useNoteLockVersion } from '../../lib/noteLock'
+import { isNoteUnlocked, useHasUnlockedNotes, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import {
@@ -71,8 +80,10 @@ import {
   subscribePdfThumbWrites
 } from '../../lib/pdfThumbCache'
 import { confirmVaultMove, getVaultMenuItems, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
+import HighlightedText from '../common/HighlightedText'
 
 import { LockNowButton } from './LockNowButton'
+import SearchScopeBar from './SearchScopeBar'
 
 const MIN_NOTES_FOR_MULTI_SELECT = 2
 
@@ -141,6 +152,7 @@ const NotesItem = memo(
     onMenuAction,
     allFolders,
     selectedFolder,
+    showFolder,
     isLast,
     isSelecting,
     isChecked,
@@ -150,6 +162,8 @@ const NotesItem = memo(
     const dispatch = useDispatch()
     const noteData = useSelector(getNoteData(key))
     const selectedNote = useSelector(getSelectedNote)
+    const searchTerms = useSelector(getSearchTerms)
+    const searchHit = useSelector((state) => getSearchHit(state, key))
 
     useNoteLockVersion()
     const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
@@ -197,7 +211,9 @@ const NotesItem = memo(
 
     const rawPreviewText = summary.preview
     const attachmentInfo = summary.attachment
-    const showAttachmentPreview = !isMasked && !rawPreviewText && !!attachmentInfo
+    const searchSnippet = !isMasked && searchHit?.snippet ? searchHit : null
+    const showAttachmentPreview =
+      !isMasked && !searchSnippet && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
       ? t('noteCard.lockedSummary')
       : rawPreviewText || t('noteCard.noAdditionalText')
@@ -371,7 +387,13 @@ const NotesItem = memo(
                 className={`text-base tracking-tight mb-0.5 flex items-center gap-1.5
                 ${isSelected ? 'text-accent-primary font-bold' : 'text-text-primary font-bold transition-colors group-hover:text-accent-primary'}`}
               >
-                <span className='truncate'>{noteData?.title || t('noteCard.untitled')}</span>
+                <span className='truncate'>
+                  {noteData?.title ? (
+                    <HighlightedText text={noteData.title} terms={searchTerms} />
+                  ) : (
+                    t('noteCard.untitled')
+                  )}
+                </span>
                 {noteData?.pinned && !isTrash && (
                   <Pin className='w-3.5 h-3.5 text-accent-primary flex-shrink-0 fill-accent-primary' />
                 )}
@@ -389,11 +411,15 @@ const NotesItem = memo(
                   className={`text-sm line-clamp-2 leading-relaxed opacity-80
                   ${isSelected ? 'text-text-primary' : 'text-text-primary/70'}`}
                 >
-                  {previewText}
+                  {searchSnippet ? (
+                    <HighlightedText text={searchSnippet.snippet} ranges={searchSnippet.ranges} />
+                  ) : (
+                    previewText
+                  )}
                 </p>
               )}
               <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold tracking-wider'>
-                {selectedFolder === ALL_NOTES_KEY && noteData?.folderKey && (
+                {showFolder && noteData?.folderKey && (
                   <>
                     <div className='flex items-center gap-1.5 min-w-0'>
                       <NoteFolderIcon
@@ -462,6 +488,34 @@ export default function NotesList({
 
   const notesScrollRef = useRef(null)
   useVisibleNotes(notesScrollRef, filteredNotes)
+
+  const searchScope = useSelector(getSearchScope)
+  const searchSettled = useSelector(getSearchSettled)
+  const hasSearchQuery = searchQuery.trim().length > 0
+  const canScopeSearch = selectedFolder !== ALL_NOTES_KEY && selectedFolder !== RECENTLY_DELETED_KEY
+  const showFolders =
+    selectedFolder === ALL_NOTES_KEY ||
+    (hasSearchQuery && canScopeSearch && searchScope === SEARCH_SCOPE.ALL)
+  const hasUnlockedNotes = useHasUnlockedNotes()
+
+  useEffect(() => {
+    dispatch(setSearchIncludeLocked(hasUnlockedNotes))
+  }, [dispatch, hasUnlockedNotes])
+
+  const handleSearchKeyDown = useCallback(
+    (event) => {
+      if (event.key === 'Escape' && searchQuery) {
+        event.preventDefault()
+        onSearchChange('')
+      } else if (event.key === 'ArrowDown') {
+        const firstRow = notesScrollRef.current?.querySelector('[role="option"]')
+        if (!firstRow) return
+        event.preventDefault()
+        firstRow.focus()
+      }
+    },
+    [searchQuery, onSearchChange]
+  )
 
   const [selection, setSelection] = useState({ folder: null, active: false, keys: [] })
   const anchorKeyRef = useRef(null)
@@ -732,6 +786,7 @@ export default function NotesList({
           onMenuAction={handleMenuAction}
           allFolders={folders}
           selectedFolder={selectedFolder}
+          showFolder={showFolders}
           isLast={isLast}
           isSelecting={isSelecting}
           isChecked={checkedKeys.includes(note.key)}
@@ -739,7 +794,15 @@ export default function NotesList({
         />
       )
     },
-    [folders, handleMenuAction, selectedFolder, isSelecting, checkedKeys, handleToggleSelect]
+    [
+      folders,
+      handleMenuAction,
+      selectedFolder,
+      showFolders,
+      isSelecting,
+      checkedKeys,
+      handleToggleSelect
+    ]
   )
 
   const getGroupName = (group) => {
@@ -873,9 +936,12 @@ export default function NotesList({
               value={searchQuery}
               maxLength={SEARCH_QUERY_MAX_LENGTH}
               onChange={(e) => onSearchChange(e.target.value)}
+              onFocus={() => dispatch(prewarmSearch())}
+              onKeyDown={handleSearchKeyDown}
               className='w-full pl-9 pr-4 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
             />
           </div>
+          {hasSearchQuery && canScopeSearch && <SearchScopeBar folderName={currentFolderName} />}
         </div>
       </div>
 
@@ -902,7 +968,7 @@ export default function NotesList({
               </div>
             ) : (
               <>
-                {searchQuery ? (
+                {searchQuery && !searchSettled ? null : searchQuery ? (
                   <div className='w-full px-8 flex flex-col items-center justify-center gap-4 py-12'>
                     <div className='space-y-3 text-center'>
                       <p className='text-lg text-text-primary font-bold tracking-tight'>

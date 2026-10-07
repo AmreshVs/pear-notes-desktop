@@ -235,6 +235,16 @@
   border-radius: 2px;
 }
 
+.ProseMirror .find-match {
+  background-color: color-mix(in srgb, var(--accent-primary) 32%, transparent);
+  border-radius: 2px;
+}
+
+.ProseMirror .find-match-active {
+  background-color: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
 /* Focus */
 .ProseMirror:focus {
   outline: none;

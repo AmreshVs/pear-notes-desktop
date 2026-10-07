@@ -41,6 +41,7 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 
 import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
+import { useFindInNote } from '../../hooks/useFindInNote'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
 import { copyToClipboard } from '../../lib/clipboard'
@@ -62,6 +63,7 @@ import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
 import AiToolsButton from './AiToolsButton'
 import DictationBar from './DictationBar'
+import FindBar from './FindBar'
 import FormattingToolbar from './FormattingToolbar'
 import NoteBodyPlaceholder from './NoteBodyPlaceholder'
 import NoteConflictBanner from './NoteConflictBanner'
@@ -121,6 +123,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const showLockScreen = isLocked && !noteUnlocked
 
   useLockedNoteProtection(isLocked && noteUnlocked)
+  const find = useFindInNote({
+    editor: editorInstance,
+    noteKey: selectedNoteKey,
+    enabled: !!editorInstance && !showLockScreen && !noteData?.bodyOmitted
+  })
 
   const localAiRequest = useLocalAiSheetRequest()
   const editorConflict = useSelector(getEditorConflict)
@@ -710,6 +717,21 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           onContextMenu={handleEditorContextMenu}
         >
           <div className='max-w-4xl px-6 py-4 w-full min-h-full bg-bg-primary'>
+            {find.open && (
+              <div className='sticky top-0 z-40 mb-3 flex justify-end'>
+                <FindBar
+                  query={find.query}
+                  onQueryChange={find.setQuery}
+                  count={find.count}
+                  active={find.active}
+                  inputRef={find.inputRef}
+                  onNext={find.next}
+                  onPrevious={find.previous}
+                  onClose={find.close}
+                  onEngage={find.keepFind}
+                />
+              </div>
+            )}
             <NoteConflictBanner noteKey={selectedNoteKey} />
             <input
               ref={titleRef}
