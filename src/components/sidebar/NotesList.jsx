@@ -47,6 +47,8 @@ import {
   getSearchScope,
   getSearchSettled,
   getSearchTerms,
+  getTitleHighlight,
+  parseHighlight,
   prewarmSearch,
   SEARCH_SCOPE,
   setSearchIncludeLocked
@@ -162,7 +164,10 @@ const NotesItem = memo(
     const dispatch = useDispatch()
     const noteData = useSelector(getNoteData(key))
     const selectedNote = useSelector(getSelectedNote)
-    const searchTerms = useSelector(getSearchTerms)
+    const titleHighlight = useSelector((state) =>
+      getTitleHighlight(noteData?.title, getSearchTerms(state))
+    )
+    const titleRanges = useMemo(() => parseHighlight(titleHighlight), [titleHighlight])
     const searchHit = useSelector((state) => getSearchHit(state, key))
 
     useNoteLockVersion()
@@ -389,7 +394,7 @@ const NotesItem = memo(
               >
                 <span className='truncate'>
                   {noteData?.title ? (
-                    <HighlightedText text={noteData.title} terms={searchTerms} />
+                    <HighlightedText text={noteData.title} ranges={titleRanges} />
                   ) : (
                     t('noteCard.untitled')
                   )}

@@ -126,7 +126,7 @@ export function useFindInNote({ editor, noteKey, enabled }) {
   }, [editor, keepFind])
 
   return {
-    open: open && enabled,
+    open: open && enabled && !fromList,
     query,
     setQuery,
     count,
