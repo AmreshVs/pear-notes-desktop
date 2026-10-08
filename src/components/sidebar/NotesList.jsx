@@ -1,6 +1,15 @@
-import { createElement, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createElement,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch, useSelector, useStore } from 'react-redux'
 import {
   Check,
   Film,
@@ -88,6 +97,7 @@ import { LockNowButton } from './LockNowButton'
 import SearchScopeBar from './SearchScopeBar'
 
 const MIN_NOTES_FOR_MULTI_SELECT = 2
+const NO_KEYS = []
 
 const ATTACHMENT_ICONS = {
   image: ImageIcon,
@@ -163,7 +173,7 @@ const NotesItem = memo(
     const { t } = useTranslation()
     const dispatch = useDispatch()
     const noteData = useSelector(getNoteData(key))
-    const selectedNote = useSelector(getSelectedNote)
+    const isSelected = useSelector((state) => getSelectedNote(state) === key)
     const titleHighlight = useSelector((state) =>
       getTitleHighlight(noteData?.title, getSearchTerms(state))
     )
@@ -217,13 +227,10 @@ const NotesItem = memo(
     const rawPreviewText = summary.preview
     const attachmentInfo = summary.attachment
     const searchSnippet = !isMasked && searchHit?.snippet ? searchHit : null
-    const showAttachmentPreview =
-      !isMasked && !searchSnippet && !rawPreviewText && !!attachmentInfo
+    const showAttachmentPreview = !isMasked && !searchSnippet && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
       ? t('noteCard.lockedSummary')
       : rawPreviewText || t('noteCard.noAdditionalText')
-
-    const isSelected = selectedNote === key
 
     const availableMoveFolders = allFolders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
@@ -574,7 +581,7 @@ export default function NotesList({
   )
 
   const checkedKeys = useMemo(
-    () => (isSelecting ? selection.keys.filter((key) => orderedKeys.includes(key)) : []),
+    () => (isSelecting ? selection.keys.filter((key) => orderedKeys.includes(key)) : NO_KEYS),
     [isSelecting, selection.keys, orderedKeys]
   )
 
@@ -583,8 +590,14 @@ export default function NotesList({
     setSelection({ folder: null, active: false, keys: [] })
   }, [])
 
+  const orderedKeysRef = useRef(orderedKeys)
+  useLayoutEffect(() => {
+    orderedKeysRef.current = orderedKeys
+  }, [orderedKeys])
+
   const handleToggleSelect = useCallback(
     (key, event) => {
+      const orderedKeys = orderedKeysRef.current
       setSelection((prev) => {
         const active = prev.active && prev.folder === selectedFolder
         const keys = active ? prev.keys : []
@@ -607,7 +620,7 @@ export default function NotesList({
         }
       })
     },
-    [orderedKeys, selectedFolder]
+    [selectedFolder]
   )
 
   const handleStartSelecting = useCallback(() => {
@@ -698,9 +711,11 @@ export default function NotesList({
     [dispatch, t, vaults]
   )
 
+  const store = useStore()
+
   const handleMenuAction = useCallback(
     async (action, noteKey, folderId) => {
-      const noteData = filteredNotes.find((n) => n.key === noteKey)
+      const noteData = getNoteData(noteKey)(store.getState())
 
       switch (action) {
         case 'moveToVault':
@@ -730,7 +745,7 @@ export default function NotesList({
         case 'toggleLock':
           await toggleNoteLock({
             key: noteKey,
-            currentlyLocked: noteData?.value?.locked === true,
+            currentlyLocked: noteData?.locked === true,
             reason: t('noteCard.unlockReason'),
             lockReason: t('noteCard.lockReason'),
             dispatch,
@@ -743,7 +758,7 @@ export default function NotesList({
           dispatch(
             updateNote({
               key: noteKey,
-              pinned: !(noteData?.value?.pinned === true)
+              pinned: !(noteData?.pinned === true)
             })
           )
           break
@@ -766,7 +781,7 @@ export default function NotesList({
     },
     [
       dispatch,
-      filteredNotes,
+      store,
       selectedFolder,
       lockMethod,
       requestUnlockPassword,

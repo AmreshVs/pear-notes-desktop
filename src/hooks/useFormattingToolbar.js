@@ -59,7 +59,7 @@ export function useFormattingToolbar(editor, noteKey) {
               ? 'justify'
               : 'left'
 
-      setEditorState({
+      const next = {
         isBold: editor.isActive('bold'),
         isItalic: editor.isActive('italic'),
         isUnderline: editor.isActive('underline'),
@@ -79,19 +79,18 @@ export function useFormattingToolbar(editor, noteKey) {
         textAlign,
         canUndo: editor.can().undo(),
         canRedo: editor.can().redo()
-      })
+      }
+      setEditorState((prev) =>
+        Object.keys(next).every((key) => prev[key] === next[key]) ? prev : next
+      )
     }
 
     updateState()
 
-    editor.on('selectionUpdate', updateState)
     editor.on('transaction', updateState)
-    editor.on('update', updateState)
 
     return () => {
-      editor.off('selectionUpdate', updateState)
       editor.off('transaction', updateState)
-      editor.off('update', updateState)
     }
   }, [editor])
 

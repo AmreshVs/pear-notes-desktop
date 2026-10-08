@@ -24,7 +24,7 @@ import Underline from '@tiptap/extension-underline'
 import { EditorContent, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
-import { all, createLowlight } from 'lowlight'
+import { common, createLowlight } from 'lowlight'
 import {
   Bold as BoldIcon,
   ChevronDown,
@@ -60,6 +60,8 @@ import FileAttachment from './FileAttachment'
 import ImageView from './ImageView'
 import SelectionAiTools from './SelectionAiTools'
 
+const lowlight = createLowlight(common)
+
 const RichTextEditor = forwardRef(
   ({ content, syncToken = 0, onChange, placeholder = 'Start writing...' }, ref) => {
     const { t } = useTranslation()
@@ -71,7 +73,6 @@ const RichTextEditor = forwardRef(
     const isUpdatingRef = useRef(false)
     const lastSyncTokenRef = useRef(-1)
     const historyNoteKeyRef = useRef(null)
-    const lowlight = createLowlight(all)
 
     const editorFontFamily = getFontFamilyValue(fontFamily)
     const editorFontClass = getFontClass(fontFamily)
