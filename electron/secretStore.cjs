@@ -12,6 +12,7 @@ const path = require('path')
 // storage directory (`PearNotes/`) so that copying or syncing the vault folder
 // does not carry even the sealed key along with it.
 const SECRETS_FILE = 'secrets.json'
+const UNSAFE_LINUX_BACKENDS = new Set(['basic_text', 'unknown'])
 
 function secretsPath() {
   return path.join(app.getPath('userData'), SECRETS_FILE)
@@ -36,12 +37,15 @@ function writeAll(secrets) {
   } catch {}
 }
 
-// False on a Linux box with no keyring available. Callers must degrade rather
-// than fail: writing the secret in the clear instead would defeat the point,
-// and refusing to start would lock the user out of their own notes.
+// False on a Linux box with no keyring available - including Chromium's
+// `basic_text` fallback, which "encrypts" with a hardcoded key. Callers must
+// degrade rather than fail: refusing to start would lock the user out of their
+// own notes.
 function isAvailable() {
   try {
-    return safeStorage.isEncryptionAvailable()
+    if (!safeStorage.isEncryptionAvailable()) return false
+    if (process.platform !== 'linux') return true
+    return !UNSAFE_LINUX_BACKENDS.has(safeStorage.getSelectedStorageBackend())
   } catch {
     return false
   }
