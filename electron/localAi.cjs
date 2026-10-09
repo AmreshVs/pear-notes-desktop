@@ -32,8 +32,10 @@ let catalogPromise = null
 let textPromise = null
 let promptsPromise = null
 let workPromise = null
+let tiersPromise = null
 let sdkPromise = null
 let loadedModel = null
+let embedInFlight = null
 let systemSuspended = false
 let lastResumeAt = 0
 let pcmCounter = 0
@@ -174,6 +176,7 @@ function registryAsset(sdk, catalog, name) {
 }
 
 async function unloadCurrentModel(sdk) {
+  await embedInFlight?.catch(() => {})
   const current = loadedModel
   loadedModel = null
   if (!current) return
@@ -219,6 +222,19 @@ function withModelWork(handler) {
 async function ensureModelLoaded(sdk, key, load) {
   // No pre-emptive memory refusal: quality is the user's choice even on a
   // machine under the bar for it, and the settings row warns them.
+  if (loadedModel?.key === key) return loadedModel.modelId
+  return withModelLock(() => switchModel(sdk, key, load))
+}
+
+let modelLock = Promise.resolve()
+
+function withModelLock(work) {
+  const run = modelLock.then(work)
+  modelLock = run.catch(() => {})
+  return run
+}
+
+async function switchModel(sdk, key, load) {
   if (loadedModel?.key === key) return loadedModel.modelId
   await unloadCurrentModel(sdk)
   const modelId = await load()
@@ -609,6 +625,47 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
   return { text }
 }
 
+function loadTiers() {
+  if (!tiersPromise) tiersPromise = import('@pear-notes/core/store/services/localAiTiers.js')
+  return tiersPromise
+}
+
+async function embedTexts(event, { texts }) {
+  const [sdk, catalog, tiers] = await Promise.all([loadSdk(), loadCatalog(), loadTiers()])
+  const input = Array.isArray(texts) ? texts.map((text) => String(text ?? '')) : []
+  if (input.length === 0) return { vectors: [] }
+  const { model, modelConfig } = tiers.LOCAL_AI_EMBEDDING_MODEL
+  const key = `${model}|embed`
+  return withModelLock(async () => {
+    if (loadedModel?.key !== key) {
+      if (activeModelWork > 1)
+        throw new LocalAiError(catalog.LOCAL_AI_ERROR.TASK_FAILED, 'model busy')
+      const info = await sdk.getModelInfo({ name: model }).catch(() => null)
+      if (!info?.isCached) throw new LocalAiError(catalog.LOCAL_AI_ERROR.MODEL_MISSING)
+    }
+    const modelId = await switchModel(sdk, key, () =>
+      sdk.loadModel({
+        modelSrc: registryAsset(sdk, catalog, model),
+        modelType: 'embeddings',
+        modelConfig
+      })
+    )
+    const run = sdk.embed({ modelId, text: input })
+    embedInFlight = run
+    try {
+      const { embedding } = await run
+      return { vectors: embedding.map((vector) => Float32Array.from(vector)) }
+    } catch (error) {
+      if (/(batch|context) overflow/i.test(String(error?.message ?? ''))) {
+        throw new LocalAiError(catalog.LOCAL_AI_ERROR.INPUT_TOO_LONG, error.message)
+      }
+      throw error
+    } finally {
+      if (embedInFlight === run) embedInFlight = null
+    }
+  })
+}
+
 async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
   const [sdk, catalog, translation, language, work] = await Promise.all([
     loadSdk(),
@@ -717,6 +774,7 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:summarize', 'TASK_FAILED', withModelWork(summarize))
   handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
   handle('local-ai:ask', 'TASK_FAILED', withModelWork(askAboutNote))
+  handle('local-ai:embed', 'TASK_FAILED', withModelWork(embedTexts))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
   handle('local-ai:live-start', 'TASK_FAILED', liveStart)
   handle('local-ai:live-stop', 'TASK_FAILED', liveStop)
