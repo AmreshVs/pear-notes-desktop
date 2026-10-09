@@ -62,6 +62,7 @@ import {
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
 import { useAppUpdateStatus } from './lib/appUpdateCheck'
+import { useAiJobConditions } from './lib/localAi/useAiJobConditions'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
 import { getDbEncryptionKey, getVaultEntropy, setDbEncryptionKey } from './utils.js'
 
@@ -85,6 +86,7 @@ function App() {
   usePdfThumbSweep()
   usePowerState()
   useLocalAiBridge()
+  useAiJobConditions()
 
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)

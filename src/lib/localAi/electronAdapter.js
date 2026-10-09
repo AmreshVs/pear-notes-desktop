@@ -5,6 +5,7 @@ import {
   LOCAL_AI_NETWORK,
   LOCAL_AI_UNSUPPORTED_REASON
 } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { holdAiJobs } from '@pear-notes/core/store/services/localAiJobs.js'
 import { getMediaSyncFlag } from '@pear-notes/core/utils.js'
 
 export class LocalAiError extends Error {
@@ -30,6 +31,7 @@ async function invoke(method, payload, fallbackCode = LOCAL_AI_ERROR.TASK_FAILED
 }
 
 async function invokeWithProgress(method, payload, onProgress) {
+  const releaseJobs = holdAiJobs()
   taskCounter += 1
   const taskId = `local-ai-task-${Date.now()}-${taskCounter}`
   const unsubscribe = onProgress
@@ -41,6 +43,7 @@ async function invokeWithProgress(method, payload, onProgress) {
     return await invoke(method, { ...payload, taskId })
   } finally {
     unsubscribe?.()
+    releaseJobs()
   }
 }
 
@@ -58,7 +61,8 @@ async function getDeviceSupport() {
 }
 
 export async function getLocalAiNetworkKind() {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return LOCAL_AI_NETWORK.OFFLINE
+  if (typeof navigator !== 'undefined' && navigator.onLine === false)
+    return LOCAL_AI_NETWORK.OFFLINE
   try {
     if (await getMediaSyncFlag(METERED_CONNECTION_KEY)) return LOCAL_AI_NETWORK.METERED
   } catch {
@@ -112,7 +116,11 @@ export async function extractTextFromImage(image, { onProgress } = {}) {
 }
 
 export async function describeImage(image, extension, { onProgress } = {}) {
-  const { text } = await invokeWithProgress('localAiDescribeImage', { image, extension }, onProgress)
+  const { text } = await invokeWithProgress(
+    'localAiDescribeImage',
+    { image, extension },
+    onProgress
+  )
   return text
 }
 
