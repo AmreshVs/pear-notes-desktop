@@ -176,7 +176,9 @@ export default function MediaPreviewModal({
       </div>
       <div
         className='flex-1 min-h-0 flex items-center justify-center px-6 pb-6'
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          if (e.target !== e.currentTarget) e.stopPropagation()
+        }}
       >
         {renderBody()}
       </div>

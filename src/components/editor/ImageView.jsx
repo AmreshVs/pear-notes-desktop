@@ -157,7 +157,7 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
               alt={alt}
               title={title}
               onLoad={onImageLoad}
-              onDoubleClick={openPreview}
+              onClick={openPreview}
               draggable={false}
               className={`rounded-lg w-full h-full block object-contain pointer-events-auto cursor-zoom-in ${selected ? 'border-2 border-accent-primary brightness-110' : 'border border-border-primary'}`}
             />
