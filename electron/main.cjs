@@ -18,7 +18,7 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 const PearRuntime = require('pear-runtime')
-const secretStore = require('./secretStore.cjs')
+const { createVaultKeys } = require('./vaultKeys.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 const deviceStorage = require('./deviceStorage.cjs')
@@ -324,8 +324,9 @@ function createWindow() {
       : { autoHideMenuBar: true }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       webSecurity: !isDev,
       devTools: isDev,
       plugins: true,
@@ -335,8 +336,8 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
 
-  // The renderer has full Node access, so a navigation away from the bundled
-  // app would hand a remote page those privileges. Never let one happen:
+  // The window holds the backend bridge and the vault key, so a navigation away
+  // from the bundled app would hand a remote page those. Never let one happen:
   // window.open goes to the OS browser (allowed schemes only) and in-place
   // navigation is refused outright.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -502,20 +503,23 @@ function setupIPC() {
     return 'quit'
   })
 
-  ipcMain.on('secret:available', (event) => {
-    event.returnValue = secretStore.isAvailable()
+  const vaultKeys = createVaultKeys({ getStoragePath, getAppDir })
+
+  ipcMain.on('vault-key:get', (event) => {
+    event.returnValue = vaultKeys.getDbEncryptionKey()
   })
 
-  ipcMain.on('secret:get', (event, name) => {
-    event.returnValue = secretStore.getSecret(name)
+  ipcMain.on('vault-key:set', (event, key) => {
+    event.returnValue = vaultKeys.setDbEncryptionKey(key)
   })
 
-  ipcMain.on('secret:set', (event, { name, value } = {}) => {
-    event.returnValue = secretStore.setSecret(name, value)
+  ipcMain.on('vault-key:entropy', (event) => {
+    event.returnValue = vaultKeys.getVaultEntropy()
   })
 
-  ipcMain.on('secret:delete', (event, name) => {
-    event.returnValue = secretStore.deleteSecret(name)
+  ipcMain.on('vault-key:delete', (event) => {
+    vaultKeys.deleteDbEncryptionKey()
+    event.returnValue = true
   })
 
   ipcMain.on('get-device-name', (event) => {

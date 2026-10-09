@@ -12,7 +12,6 @@ const nodeExternals = [
   'electron',
   'assert',
   'async_hooks',
-  'buffer',
   'child_process',
   'cluster',
   'console',
@@ -23,7 +22,6 @@ const nodeExternals = [
   'diagnostics_channel',
   'dns',
   'domain',
-  'events',
   'fs',
   'fs/promises',
   'http',
@@ -59,43 +57,8 @@ const nodeExternals = [
   'zlib'
 ]
 
-const IMPORT_BINDING = '[\\w$]+'
-
 function escapeExternal(ext) {
   return ext.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\//g, '\\/')
-}
-
-function rewriteExternalImports(code, ext) {
-  const e = escapeExternal(ext)
-  return code
-    .replace(
-      new RegExp(
-        `import\\s+(${IMPORT_BINDING})\\s*,\\s*\\{([^}]*?)\\}\\s*from\\s*["']${e}["']\\s*;?`,
-        'g'
-      ),
-      (_, name, names) =>
-        `const ${name} = require("${ext}");const {${names.replace(/\bas\b/g, ':')}} = ${name};`
-    )
-    .replace(
-      new RegExp(
-        `import\\s+(${IMPORT_BINDING})\\s*,\\s*\\*\\s*as\\s+(${IMPORT_BINDING})\\s*from\\s*["']${e}["']\\s*;?`,
-        'g'
-      ),
-      (_, name, ns) => `const ${name} = require("${ext}");const ${ns} = ${name};`
-    )
-    .replace(
-      new RegExp(`import\\s*\\{([^}]*?)\\}\\s*from\\s*["']${e}["']\\s*;?`, 'g'),
-      (_, names) => `const {${names.replace(/\bas\b/g, ':')}} = require("${ext}");`
-    )
-    .replace(
-      new RegExp(`import\\s*\\*\\s*as\\s+(${IMPORT_BINDING})\\s*from\\s*["']${e}["']\\s*;?`, 'g'),
-      (_, name) => `const ${name} = require("${ext}");`
-    )
-    .replace(
-      new RegExp(`import\\s+(${IMPORT_BINDING})\\s*from\\s*["']${e}["']\\s*;?`, 'g'),
-      (_, name) => `const ${name} = require("${ext}");`
-    )
-    .replace(new RegExp(`import\\s*["']${e}["']\\s*;?`, 'g'), `require("${ext}");`)
 }
 
 function findSurvivingExternalImport(code, ext) {
@@ -108,18 +71,15 @@ function findSurvivingExternalImport(code, ext) {
   return match ? match[0].trim() : null
 }
 
-function electronExternalsPlugin() {
+function noNodeInRendererPlugin() {
   return {
-    name: 'electron-externals',
+    name: 'no-node-in-renderer',
     enforce: 'post',
     generateBundle(options, bundle) {
       const survivors = []
 
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk') continue
-        for (const ext of nodeExternals) {
-          chunk.code = rewriteExternalImports(chunk.code, ext)
-        }
         for (const ext of nodeExternals) {
           const surviving = findSurvivingExternalImport(chunk.code, ext)
           if (surviving) survivors.push(`${chunk.fileName}: ${surviving}`)
@@ -128,7 +88,7 @@ function electronExternalsPlugin() {
 
       if (survivors.length > 0) {
         this.error(
-          `electron-externals left ${survivors.length} unrewritten node import(s); the renderer would fail to load:\n` +
+          `the renderer has no Node.js; ${survivors.length} node import(s) would fail to load:\n` +
             survivors.join('\n')
         )
       }
@@ -147,7 +107,7 @@ function devBuildStampPlugin(mode) {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), electronExternalsPlugin(), devBuildStampPlugin(mode)],
+  plugins: [react(), tailwindcss(), noNodeInRendererPlugin(), devBuildStampPlugin(mode)],
   build: {
     outDir: 'dist',
     // Must stay true: `npm run make` does not clean, so a stale bundle from

@@ -1,3 +1,4 @@
+import './nodeGlobals.js'
 import './devFlag.js'
 import './locales/i18n.js'
 import './styles.css'
@@ -6,7 +7,7 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { Buffer } from 'buffer'
 import FramedStream from 'framed-stream'
-import { Duplex } from 'stream'
+import { Duplex } from 'streamx'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { setRPC } from '@pear-notes/core/rpc.js'
@@ -23,8 +24,6 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 import { electronAdapter } from './lib/localAi/electronAdapter.js'
 import App from './App.jsx'
 
-const { ipcRenderer } = window.require('electron')
-
 class WorkerIPCStream extends Duplex {
   constructor() {
     super()
@@ -33,16 +32,14 @@ class WorkerIPCStream extends Duplex {
     })
   }
 
-  _read() {}
-
-  _write(chunk, encoding, callback) {
-    ipcRenderer.send('worker-data', Buffer.from(chunk))
-    callback()
+  _write(chunk, callback) {
+    window.electronBridge.sendWorkerData(chunk)
+    callback(null)
   }
 
-  _destroy(err, callback) {
+  _destroy(callback) {
     if (this._cleanup) this._cleanup()
-    callback(err)
+    callback(null)
   }
 }
 

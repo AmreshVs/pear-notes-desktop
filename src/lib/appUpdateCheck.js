@@ -4,10 +4,24 @@ import { getUpdateStatus } from '@pear-notes/core/utils.js'
 
 import { version as appVersion } from '../../package.json'
 
+const DOWNLOAD_HOST = 'amreshvs.github.io'
+
+function trustedDownloadUrl(url) {
+  if (typeof url !== 'string') return null
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' && parsed.hostname === DOWNLOAD_HOST ? url : null
+  } catch {
+    return null
+  }
+}
+
 export async function checkAppUpdate() {
   const manifest = await window.electronBridge.checkAppUpdate()
   const desktop = manifest?.desktop
   if (!desktop) return null
+  const downloadUrl = trustedDownloadUrl(desktop.downloadUrl)
+  if (!downloadUrl) return null
 
   const { mandatory, updateAvailable } = getUpdateStatus({
     currentVersion: appVersion,
@@ -19,7 +33,7 @@ export async function checkAppUpdate() {
     mandatory,
     updateAvailable,
     latestVersion: desktop.latestVersion,
-    downloadUrl: desktop.downloadUrl
+    downloadUrl
   }
 }
 

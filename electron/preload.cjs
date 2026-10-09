@@ -1,6 +1,6 @@
-const { ipcRenderer, webUtils } = require('electron')
+const { contextBridge, ipcRenderer, webUtils } = require('electron')
 
-window.electronBridge = {
+contextBridge.exposeInMainWorld('electronBridge', {
   getPathForFile: (file) => {
     try {
       return webUtils.getPathForFile(file) || ''
@@ -15,10 +15,10 @@ window.electronBridge = {
   // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
   askLegacyVault: (texts) => ipcRenderer.invoke('app:legacy-vault', texts),
 
-  isSecretStoreAvailable: () => ipcRenderer.sendSync('secret:available'),
-  getSecret: (name) => ipcRenderer.sendSync('secret:get', name),
-  setSecret: (name, value) => ipcRenderer.sendSync('secret:set', { name, value }),
-  deleteSecret: (name) => ipcRenderer.sendSync('secret:delete', name),
+  getVaultKey: () => ipcRenderer.sendSync('vault-key:get'),
+  setVaultKey: (key) => ipcRenderer.sendSync('vault-key:set', key),
+  getVaultEntropy: () => ipcRenderer.sendSync('vault-key:entropy'),
+  deleteVaultKeys: () => ipcRenderer.sendSync('vault-key:delete'),
   getDeviceName: () => ipcRenderer.sendSync('get-device-name'),
   getAppDir: () => ipcRenderer.sendSync('get-app-dir'),
   getAppFlags: () => ipcRenderer.sendSync('get-app-flags'),
@@ -108,4 +108,4 @@ window.electronBridge = {
     ipcRenderer.on('local-ai:live-text', handler)
     return () => ipcRenderer.removeListener('local-ai:live-text', handler)
   }
-}
+})
