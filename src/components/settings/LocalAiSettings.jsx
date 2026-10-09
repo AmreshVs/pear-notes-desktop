@@ -48,6 +48,7 @@ import {
   enableLocalAiFeature,
   getLocalAiState,
   initLocalAi,
+  loadDuplicateNotes,
   pauseLocalAiDownload,
   resumeLocalAiDownload,
   selectLocalAiBytesOnDisk,
@@ -55,6 +56,7 @@ import {
   setLocalAiFeatureTier,
   setLocalAiWifiOnly
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getDuplicatePairRows } from '@pear-notes/core/store/slices/notesSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import {
@@ -151,7 +153,7 @@ function ConfirmModal({ icon: Icon, danger, title, message, onDismiss, children 
   )
 }
 
-export default function LocalAiSettings() {
+export default function LocalAiSettings({ onOpenDuplicates }) {
   const { t } = useTranslation()
   // The footer names the model library mid-sentence, so the label is split out
   // of the translated string rather than the sentence being cut into pieces.
@@ -160,6 +162,7 @@ export default function LocalAiSettings() {
   const dispatch = useDispatch()
   const state = useSelector(getLocalAiState)
   const bytesOnDisk = useSelector(selectLocalAiBytesOnDisk)
+  const duplicatePairs = useSelector(getDuplicatePairRows)
   const [confirm, setConfirm] = useState(null)
   const [expandedFeature, setExpandedFeature] = useState(null)
 
@@ -169,6 +172,12 @@ export default function LocalAiSettings() {
   useEffect(() => {
     if (LOCAL_AI_ENABLED) dispatch(initLocalAi())
   }, [dispatch])
+
+  const indexEnabled = state.index.enabled
+  const indexChangedAt = state.index.changedAt
+  useEffect(() => {
+    if (indexEnabled) dispatch(loadDuplicateNotes())
+  }, [dispatch, indexEnabled, indexChangedAt])
 
   const { loaded, device, config } = state
   const isUnsupported = device.status === LOCAL_AI_DEVICE_STATUS.UNSUPPORTED
@@ -417,6 +426,23 @@ export default function LocalAiSettings() {
           </div>
         </div>
       </div>
+
+      {state.index.enabled && onOpenDuplicates && (
+        <div className='space-y-1'>
+          <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.yourNotes')}</h3>
+          <div className={CARD_CLASS}>
+            <button onClick={onOpenDuplicates} className={`${ROW_CLASS} w-full text-left`}>
+              <span className={LABEL_CLASS}>{t('settings.onDeviceAi.possibleDuplicates')}</span>
+              <span className='flex items-center gap-3'>
+                {state.duplicates.status === 'done' && (
+                  <span className='text-base text-text-secondary'>{duplicatePairs.length}</span>
+                )}
+                <ChevronRight className='w-4 h-4 text-text-tertiary flex-shrink-0' />
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className='space-y-1'>
         <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.downloads')}</h3>

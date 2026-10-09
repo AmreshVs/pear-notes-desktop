@@ -124,7 +124,8 @@
       "vaultStorage": "Space used by the open vault's notes, media and files, with a per-note breakdown.",
       "activity": "See what each linked device has created, changed and removed.",
       "onDeviceAi": "AI processes your notes, recordings and photos on this computer. Nothing ever leaves your computer. Each feature downloads its model once, then works offline.",
-      "vaults": "Each vault has its own notes, devices and settings. Only the open vault syncs."
+      "vaults": "Each vault has its own notes, devices and settings. Only the open vault syncs.",
+      "duplicates": "Notes that say nearly the same thing. Nothing is changed for you."
     },
     "syncStatus": {
       "title": "Sync status",
@@ -504,7 +505,9 @@
       "showAiToolsDesc": "Show AI actions in the note editor. Turning this off only hides them — downloaded models stay on this device.",
       "showAiToolsInLocked": "Show in locked notes",
       "showAiToolsInLockedDesc": "Also show AI actions in locked notes. AI runs on this device either way.",
-      "noteEditor": "Note editor"
+      "noteEditor": "Note editor",
+      "yourNotes": "Your notes",
+      "possibleDuplicates": "Possible duplicates"
     }
   },
   "sync": {
@@ -879,7 +882,8 @@
       "removeLock": "Remove lock",
       "lockNote": "Lock note",
       "delete": "Delete",
-      "noteHistory": "Note history"
+      "noteHistory": "Note history",
+      "relatedNotes": "Related notes"
     },
     "lock": {
       "passwordProtected": "This note is protected. Enter your note lock password to view it.",
@@ -972,6 +976,7 @@
     "meaning": {
       "title": "Related by meaning",
       "indexing": "Search by meaning: indexing {{done}} of {{total}} notes",
+      "charging": "Search by meaning: {{total}} notes will be indexed while charging",
       "preparing": "Search by meaning is getting ready"
     }
   },
@@ -990,7 +995,8 @@
     "sync": "Sync",
     "debug": "Diagnostics",
     "errorLog": "Logs",
-    "vaults": "Vaults"
+    "vaults": "Vaults",
+    "duplicates": "Possible duplicates"
   },
   "noteLockPassword": {
     "createTitle": "Set note lock password",
@@ -2122,5 +2128,26 @@
       "explain": "Every device linked to \"{{name}}\" will be able to read them. Attachments are copied. The originals go to Trash in this vault.",
       "moving": "Moving notes…"
     }
+  },
+  "relatedNotes": {
+    "title": "Related notes",
+    "loading": "Finding related notes…",
+    "emptyTitle": "No related notes yet",
+    "emptyDescription": "Notes about the same things show up here once they're indexed.",
+    "indexing": "Still indexing your notes: {{done}} of {{total}}",
+    "failedTitle": "Related notes aren't available",
+    "failedDescription": "Try again in a moment."
+  },
+  "duplicates": {
+    "and": "and",
+    "alike": "{{percent}}% alike",
+    "notDuplicates": "Not duplicates",
+    "checking": "Checking your notes…",
+    "checked_one": "Checked {{count}} note",
+    "checked_other": "Checked {{count}} notes",
+    "emptyTitle": "No duplicates found",
+    "emptyDescription": "Notes that say nearly the same thing show up here.",
+    "failedTitle": "Couldn't check for duplicates",
+    "failedDescription": "Try again in a moment."
   }
 }

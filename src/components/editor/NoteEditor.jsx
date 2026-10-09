@@ -31,6 +31,12 @@ import {
   setEditorTitle
 } from '@pear-notes/core/store/slices/editorSlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import {
+  closeRelatedNotes,
+  getLocalAiIndexEnabled,
+  getRelatedNotesKey,
+  openRelatedNotes
+} from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
@@ -68,6 +74,7 @@ import FormattingToolbar from './FormattingToolbar'
 import NoteBodyPlaceholder from './NoteBodyPlaceholder'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
+import RelatedNotesPanel from './RelatedNotesPanel'
 import RichTextEditor from './RichTextEditor'
 
 const AUDIO_EXTENSION_BY_TYPE = [
@@ -111,6 +118,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const activityEnabled = useSelector(getActivityLogEnabled)
   const historyNoteKey = useSelector(getHistoryNoteKey)
   const showHistory = !!historyNoteKey && historyNoteKey === selectedNoteKey
+  const relatedEnabled = useSelector(getLocalAiIndexEnabled) && LOCAL_AI_ENABLED
+  const relatedNoteKey = useSelector(getRelatedNotesKey)
 
   useNoteLockVersion()
   const [unlocking, setUnlocking] = useState(false)
@@ -121,6 +130,13 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const isPinned = noteData?.pinned === true
   const noteUnlocked = isNoteUnlocked(selectedNoteKey)
   const showLockScreen = isLocked && !noteUnlocked
+  const showRelated = relatedEnabled && !!relatedNoteKey && !isLocked && !showHistory
+
+  useEffect(() => {
+    if (relatedNoteKey && selectedNoteKey && relatedNoteKey !== selectedNoteKey) {
+      dispatch(openRelatedNotes(selectedNoteKey))
+    }
+  }, [dispatch, relatedNoteKey, selectedNoteKey])
 
   useLockedNoteProtection(isLocked && noteUnlocked)
   const find = useFindInNote({
@@ -579,6 +595,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       ...(activityEnabled
         ? [{ id: 'history', label: t('noteEditor.contextMenu.noteHistory') }]
         : []),
+      ...(relatedEnabled && !isLocked
+        ? [{ id: 'related', label: t('noteEditor.contextMenu.relatedNotes') }]
+        : []),
       {
         id: 'togglePin',
         label: isPinned
@@ -600,7 +619,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     } else if (result === 'copyNote') {
       copyNoteToClipboard()
     } else if (result === 'history') {
+      dispatch(closeRelatedNotes())
       dispatch(openNoteHistory(selectedNoteKey))
+    } else if (result === 'related') {
+      dispatch(closeNoteHistory())
+      dispatch(openRelatedNotes(selectedNoteKey))
     } else if (result === 'togglePin') {
       handleTogglePin()
     } else if (result === 'toggleLock') {
@@ -796,6 +819,14 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           noteKey={selectedNoteKey}
           noteTitle={title}
           onClose={() => dispatch(closeNoteHistory())}
+        />
+      )}
+
+      {showRelated && (
+        <RelatedNotesPanel
+          noteKey={selectedNoteKey}
+          noteTitle={title}
+          onClose={() => dispatch(closeRelatedNotes())}
         />
       )}
     </div>

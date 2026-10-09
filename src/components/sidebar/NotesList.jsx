@@ -520,9 +520,11 @@ export default function NotesList({
       ? null
       : meaningNotice?.kind === 'indexing'
         ? t('search.meaning.indexing', { done: meaningNotice.done, total: meaningNotice.total })
-        : meaningNotice
-          ? t('search.meaning.preparing')
-          : null
+        : meaningNotice?.kind === 'charging'
+          ? t('search.meaning.charging', { total: meaningNotice.total })
+          : meaningNotice
+            ? t('search.meaning.preparing')
+            : null
 
   useEffect(() => {
     dispatch(setSearchIncludeLocked(hasUnlockedNotes))
