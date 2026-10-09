@@ -968,7 +968,12 @@
       "typeToFind": "Type above to find notes across your library"
     },
     "scopeLabel": "Search in",
-    "scopeAll": "All notes"
+    "scopeAll": "All notes",
+    "meaning": {
+      "title": "Related by meaning",
+      "indexing": "Search by meaning: indexing {{done}} of {{total}} notes",
+      "preparing": "Search by meaning is getting ready"
+    }
   },
   "layouts": {
     "settings": "Settings",

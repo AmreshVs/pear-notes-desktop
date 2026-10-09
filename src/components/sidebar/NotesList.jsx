@@ -9,7 +9,7 @@ import {
   useState
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector, useStore } from 'react-redux'
+import { shallowEqual, useDispatch, useSelector, useStore } from 'react-redux'
 import {
   Check,
   Film,
@@ -38,10 +38,12 @@ import {
 } from '@pear-notes/core/constant.js'
 import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { getMeaningSearchNotice } from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNote,
   deleteNotes,
   getFilteredNotes,
+  getMeaningNotes,
   getNoteData,
   getSelectedNote,
   moveNotes,
@@ -168,7 +170,8 @@ const NotesItem = memo(
     isLast,
     isSelecting,
     isChecked,
-    onToggleSelect
+    onToggleSelect,
+    meaningSnippet
   }) => {
     const { t } = useTranslation()
     const dispatch = useDispatch()
@@ -226,11 +229,12 @@ const NotesItem = memo(
 
     const rawPreviewText = summary.preview
     const attachmentInfo = summary.attachment
-    const searchSnippet = !isMasked && searchHit?.snippet ? searchHit : null
-    const showAttachmentPreview = !isMasked && !searchSnippet && !rawPreviewText && !!attachmentInfo
+    const searchSnippet = !isMasked && !meaningSnippet && searchHit?.snippet ? searchHit : null
+    const showAttachmentPreview =
+      !isMasked && !meaningSnippet && !searchSnippet && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
       ? t('noteCard.lockedSummary')
-      : rawPreviewText || t('noteCard.noAdditionalText')
+      : meaningSnippet || rawPreviewText || t('noteCard.noAdditionalText')
 
     const availableMoveFolders = allFolders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
@@ -487,6 +491,8 @@ export default function NotesList({
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
+  const meaningNotes = useSelector(getMeaningNotes)
+  const meaningNotice = useSelector(getMeaningSearchNotice, shallowEqual)
   const folders = useSelector(getFolders)
   const vaults = useSelector(getVaults)
   const lockMethod = useSelector(getLockMethod)
@@ -509,6 +515,14 @@ export default function NotesList({
     selectedFolder === ALL_NOTES_KEY ||
     (hasSearchQuery && canScopeSearch && searchScope === SEARCH_SCOPE.ALL)
   const hasUnlockedNotes = useHasUnlockedNotes()
+  const meaningNoticeText =
+    selectedFolder === RECENTLY_DELETED_KEY
+      ? null
+      : meaningNotice?.kind === 'indexing'
+        ? t('search.meaning.indexing', { done: meaningNotice.done, total: meaningNotice.total })
+        : meaningNotice
+          ? t('search.meaning.preparing')
+          : null
 
   useEffect(() => {
     dispatch(setSearchIncludeLocked(hasUnlockedNotes))
@@ -576,8 +590,11 @@ export default function NotesList({
   }, [groupedNotes, groupOrder])
 
   const orderedKeys = useMemo(
-    () => sortedGroups.flatMap((group) => groupedNotes[group].map((note) => note.key)),
-    [sortedGroups, groupedNotes]
+    () => [
+      ...sortedGroups.flatMap((group) => groupedNotes[group].map((note) => note.key)),
+      ...meaningNotes.map((note) => note.key)
+    ],
+    [sortedGroups, groupedNotes, meaningNotes]
   )
 
   const checkedKeys = useMemo(
@@ -803,6 +820,7 @@ export default function NotesList({
         <NotesItem
           key={note.key}
           noteKey={note.key}
+          meaningSnippet={note.snippet || null}
           onMenuAction={handleMenuAction}
           allFolders={folders}
           selectedFolder={selectedFolder}
@@ -968,11 +986,11 @@ export default function NotesList({
       <div
         ref={notesScrollRef}
         className='flex-1 overflow-y-auto pb-2 scrollbar-hide'
-        role={filteredNotes.length === 0 ? undefined : 'listbox'}
+        role={filteredNotes.length + meaningNotes.length === 0 ? undefined : 'listbox'}
         aria-multiselectable={isSelecting || undefined}
         aria-label={t('folders.systemIcons.all')}
       >
-        {filteredNotes.length === 0 ? (
+        {filteredNotes.length + meaningNotes.length === 0 ? (
           <div className='flex-1 flex flex-col items-center justify-center py-10'>
             {syncing ? (
               <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
@@ -997,6 +1015,11 @@ export default function NotesList({
                       <p className='text-sm text-text-tertiary/80 font-medium'>
                         {t('folderView.empty.noMatchesSubtitle')}
                       </p>
+                      {meaningNoticeText && (
+                        <p className='pt-2 text-xs text-text-tertiary leading-relaxed'>
+                          {meaningNoticeText}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1080,6 +1103,19 @@ export default function NotesList({
                 </div>
               </div>
             ))}
+            {hasSearchQuery && meaningNotes.length > 0 && (
+              <div className='mb-6'>
+                <h3 className='px-6 py-2 text-sm font-bold text-text-primary tracking-[0.1em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
+                  {t('search.meaning.title')}
+                </h3>
+                <div>{meaningNotes.map(renderNotesList)}</div>
+              </div>
+            )}
+            {hasSearchQuery && meaningNotes.length === 0 && meaningNoticeText && (
+              <p className='px-6 pb-3 text-xs text-text-tertiary leading-relaxed'>
+                {meaningNoticeText}
+              </p>
+            )}
           </div>
         )}
       </div>
