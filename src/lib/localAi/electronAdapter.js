@@ -170,5 +170,6 @@ export const electronAdapter = {
   download,
   cancel,
   deleteModel,
-  closeAndWipe
+  closeAndWipe,
+  embedTexts
 }

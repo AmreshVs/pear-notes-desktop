@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux'
 
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
+  enableLocalAiIndex,
   localAiConditionsChanged,
   localAiUserActivity,
   runLocalAiSchedulerProbe
@@ -53,6 +54,7 @@ export function useAiJobConditions() {
     if (import.meta.env.DEV && import.meta.env.VITE_AI_SCHEDULER_PROBE === '1') {
       dispatch(runLocalAiSchedulerProbe())
     }
+    dispatch(enableLocalAiIndex())
 
     return () => {
       active = false

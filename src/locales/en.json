@@ -414,7 +414,8 @@
         "BERGAMOT_TE_EN": "Telugu to English",
         "BERGAMOT_EN_TH": "English to Thai",
         "BERGAMOT_TH_EN": "Thai to English",
-        "QWEN3_1_7B_INST_Q4": "Qwen3 1.7B"
+        "QWEN3_1_7B_INST_Q4": "Qwen3 1.7B",
+        "EMBEDDINGGEMMA_300M_Q4_0": "EmbeddingGemma 300M"
       },
       "language": "Language",
       "languages": {
