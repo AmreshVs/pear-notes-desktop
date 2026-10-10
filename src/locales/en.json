@@ -150,8 +150,8 @@
       "rowTitle": "Link devices"
     },
     "onDeviceAi": {
-      "storageRow": "On-device AI models",
-      "storageRowDesc": "Not included in backups or sync.",
+      "storageRow": "On-device AI",
+      "storageRowDesc": "Models and the search index. Not included in backups or sync.",
       "loading": "Loading AI settings",
       "thisDevice": "This device",
       "status": "Status",
