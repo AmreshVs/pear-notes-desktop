@@ -408,13 +408,9 @@ export default function FoldersSidebar({
           {topFolders.slice(1).map(renderFolderItem)}
         </div>
         <div className='mt-auto pt-6 flex flex-col transition-none'>
-          <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none'>
-            {t('folders.archiveHeader')}
-          </div>
-          <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
           {onSelectTool && (
             <>
-              <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mt-6 mb-3 px-4 transition-none'>
+              <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none'>
                 {t('tools.header')}
               </div>
               {renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
@@ -423,6 +419,12 @@ export default function FoldersSidebar({
               {renderToolItem('recap', History, t('tools.recap'), 0)}
             </>
           )}
+          <div
+            className={`text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none ${onSelectTool ? 'mt-6' : ''}`}
+          >
+            {t('folders.archiveHeader')}
+          </div>
+          <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
         </div>
       </div>
 
