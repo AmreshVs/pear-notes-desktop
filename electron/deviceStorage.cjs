@@ -49,7 +49,13 @@ function appBundlePath() {
 }
 
 async function measureDeviceStorage({ storagePath, aiRoot, userData }) {
-  const { DEVICE_STORAGE, classifyVaultStorageEntry, summarizeDeviceStorage } = await loadHelpers()
+  const {
+    DEVICE_STORAGE,
+    VAULT_DERIVED_DIR,
+    classifyVaultStorageEntry,
+    countDerivedAsAi,
+    summarizeDeviceStorage
+  } = await loadHelpers()
   const items = [{ category: DEVICE_STORAGE.APP, bytes: await entryBytes(appBundlePath()) }]
   const seen = new Set()
 
@@ -68,15 +74,21 @@ async function measureDeviceStorage({ storagePath, aiRoot, userData }) {
     items.push({ category: DEVICE_STORAGE.AI_MODELS, bytes: await entryBytes(aiRoot) })
   }
   await addDir(userData, (name) => CHROMIUM_CATEGORY[name])
-  return { ...summarizeDeviceStorage(items), vaults: await measureVaults(storagePath) }
+  const { vaults, derived } = await measureVaults(storagePath, VAULT_DERIVED_DIR)
+  return { ...countDerivedAsAi(summarizeDeviceStorage(items), derived), vaults }
 }
 
-async function measureVaults(storagePath) {
+async function measureVaults(storagePath, derivedDir) {
   const vaults = {}
-  if (!storagePath) return vaults
+  let derived = 0
+  if (!storagePath) return { vaults, derived }
   const dir = path.join(storagePath, VAULTS_DIR)
-  for (const name of await children(dir)) vaults[name] = await entryBytes(path.join(dir, name))
-  return vaults
+  for (const name of await children(dir)) {
+    const index = await entryBytes(path.join(dir, name, derivedDir))
+    vaults[name] = Math.max(0, (await entryBytes(path.join(dir, name))) - index)
+    derived += index
+  }
+  return { vaults, derived }
 }
 
 async function deleteOldVaults(storagePath) {

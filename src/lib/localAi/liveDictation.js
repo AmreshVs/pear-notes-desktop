@@ -1,4 +1,5 @@
 import { LOCAL_AI_ERROR } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { holdAiJobs } from '@pear-notes/core/store/services/localAiJobs.js'
 
 import { LocalAiError } from './electronAdapter'
 
@@ -19,7 +20,8 @@ async function invoke(method, payload) {
   const bridge = getBridge()
   if (typeof bridge?.[method] !== 'function') throw new LocalAiError(LOCAL_AI_ERROR.MODEL_MISSING)
   const result = await bridge[method](payload)
-  if (!result?.ok) throw new LocalAiError(result?.code ?? LOCAL_AI_ERROR.TASK_FAILED, result?.message)
+  if (!result?.ok)
+    throw new LocalAiError(result?.code ?? LOCAL_AI_ERROR.TASK_FAILED, result?.message)
   return result
 }
 
@@ -110,9 +112,11 @@ export async function startLiveTranscription(feature, featureConfig, { onText, o
   })
   const stopTracks = () => stream.getTracks().forEach((track) => track.stop())
 
+  const releaseJobs = holdAiJobs()
   try {
     await invoke('localAiLiveStart', { sessionId, feature, featureConfig: featureConfig ?? {} })
   } catch (error) {
+    releaseJobs()
     unsubscribe?.()
     stopTracks()
     throw error
@@ -157,11 +161,13 @@ export async function startLiveTranscription(feature, featureConfig, { onText, o
         return String(text ?? '').trim()
       } finally {
         unsubscribe?.()
+        releaseJobs()
       }
     },
     cancel: () => {
       release()
       unsubscribe?.()
+      releaseJobs()
       invoke('localAiLiveCancel', { sessionId }).catch(() => {})
     },
     capturedChunks: () => captured

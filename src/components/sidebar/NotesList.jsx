@@ -9,9 +9,10 @@ import {
   useState
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector, useStore } from 'react-redux'
+import { shallowEqual, useDispatch, useSelector, useStore } from 'react-redux'
 import {
   Check,
+  Combine,
   Film,
   FolderInput,
   Image as ImageIcon,
@@ -24,9 +25,11 @@ import {
   Pin,
   RotateCcw,
   Search,
+  Sparkles,
   SquarePen,
   Trash2,
   Undo2,
+  Wand2,
   X
 } from 'lucide-react'
 
@@ -36,14 +39,26 @@ import {
   SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
 } from '@pear-notes/core/constant.js'
+import {
+  LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
+import { GENERATE_TASKS } from '@pear-notes/core/store/services/localAiPrompts.js'
 import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
+import {
+  getMeaningSearchNotice,
+  getMeaningSearchReady,
+  selectIsLocalAiFeatureReady
+} from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNote,
   deleteNotes,
   getFilteredNotes,
+  getMeaningNotes,
   getNoteData,
   getSelectedNote,
+  mergeNotes,
   moveNotes,
   purgeExpiredTrash,
   restoreNote,
@@ -66,7 +81,11 @@ import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getActivityLogEnabled } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
-import { getHyperdriveAddress, setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
+import {
+  getHyperdriveAddress,
+  openAskVault,
+  setShowSettings
+} from '@pear-notes/core/store/slices/uiSlice.js'
 import {
   getOtherVaults,
   getVaults,
@@ -79,6 +98,7 @@ import {
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
+import { useTidyMoves } from '../../hooks/useTidyMoves'
 import { useVisibleNotes } from '../../hooks/useVisibleNotes'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
@@ -92,9 +112,13 @@ import {
 } from '../../lib/pdfThumbCache'
 import { confirmVaultMove, getVaultMenuItems, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
 import HighlightedText from '../common/HighlightedText'
+import GenerateNoteModal from '../modals/GenerateNoteModal'
+import TidyUpModal from '../modals/TidyUpModal'
 
 import { LockNowButton } from './LockNowButton'
 import SearchScopeBar from './SearchScopeBar'
+
+const ASK_SHORTCUT = /Mac/i.test(navigator.platform) ? '⌘K' : 'Ctrl+K'
 
 const MIN_NOTES_FOR_MULTI_SELECT = 2
 const NO_KEYS = []
@@ -168,7 +192,8 @@ const NotesItem = memo(
     isLast,
     isSelecting,
     isChecked,
-    onToggleSelect
+    onToggleSelect,
+    meaningSnippet
   }) => {
     const { t } = useTranslation()
     const dispatch = useDispatch()
@@ -226,11 +251,12 @@ const NotesItem = memo(
 
     const rawPreviewText = summary.preview
     const attachmentInfo = summary.attachment
-    const searchSnippet = !isMasked && searchHit?.snippet ? searchHit : null
-    const showAttachmentPreview = !isMasked && !searchSnippet && !rawPreviewText && !!attachmentInfo
+    const searchSnippet = !isMasked && !meaningSnippet && searchHit?.snippet ? searchHit : null
+    const showAttachmentPreview =
+      !isMasked && !meaningSnippet && !searchSnippet && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
       ? t('noteCard.lockedSummary')
-      : rawPreviewText || t('noteCard.noAdditionalText')
+      : meaningSnippet || rawPreviewText || t('noteCard.noAdditionalText')
 
     const availableMoveFolders = allFolders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
@@ -278,6 +304,7 @@ const NotesItem = memo(
               : [
                   { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
                   ...vaultItems,
+                  { id: 'bulkMerge', label: t('notesList.merge.action') },
                   { type: 'separator' },
                   { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
                 ]
@@ -484,9 +511,19 @@ export default function NotesList({
   onToggleSidebar,
   isSidebarCollapsed
 }) {
+  const [showTidyUp, setShowTidyUp] = useState(false)
+  const [generate, setGenerate] = useState(null)
+  const textAiReady = useSelector(
+    (state) =>
+      LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
+  )
+  const meaningReady = useSelector(getMeaningSearchReady)
+  const tidyMoves = useTidyMoves(selectedFolder === ALL_NOTES_KEY && meaningReady)
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
+  const meaningNotes = useSelector(getMeaningNotes)
+  const meaningNotice = useSelector(getMeaningSearchNotice, shallowEqual)
   const folders = useSelector(getFolders)
   const vaults = useSelector(getVaults)
   const lockMethod = useSelector(getLockMethod)
@@ -509,6 +546,16 @@ export default function NotesList({
     selectedFolder === ALL_NOTES_KEY ||
     (hasSearchQuery && canScopeSearch && searchScope === SEARCH_SCOPE.ALL)
   const hasUnlockedNotes = useHasUnlockedNotes()
+  const meaningNoticeText =
+    selectedFolder === RECENTLY_DELETED_KEY
+      ? null
+      : meaningNotice?.kind === 'indexing'
+        ? t('search.meaning.indexing', { done: meaningNotice.done, total: meaningNotice.total })
+        : meaningNotice?.kind === 'charging'
+          ? t('search.meaning.charging', { total: meaningNotice.total })
+          : meaningNotice
+            ? t('search.meaning.preparing')
+            : null
 
   useEffect(() => {
     dispatch(setSearchIncludeLocked(hasUnlockedNotes))
@@ -576,8 +623,11 @@ export default function NotesList({
   }, [groupedNotes, groupOrder])
 
   const orderedKeys = useMemo(
-    () => sortedGroups.flatMap((group) => groupedNotes[group].map((note) => note.key)),
-    [sortedGroups, groupedNotes]
+    () => [
+      ...sortedGroups.flatMap((group) => groupedNotes[group].map((note) => note.key)),
+      ...meaningNotes.map((note) => note.key)
+    ],
+    [sortedGroups, groupedNotes, meaningNotes]
   )
 
   const checkedKeys = useMemo(
@@ -647,6 +697,24 @@ export default function NotesList({
     dispatch(deleteNotes(checkedKeys))
     exitSelection()
   }, [checkedKeys, dispatch, exitSelection, isTrash, t])
+
+  const handleBulkGenerate = useCallback(async () => {
+    if (checkedKeys.length === 0 || !textAiReady) return
+    const result = await showContextMenu(
+      GENERATE_TASKS.map((task) => ({ id: task, label: t(`generate.actions.${task}`) }))
+    )
+    if (!result) return
+    setGenerate({ task: result, keys: orderedKeys.filter((key) => checkedKeys.includes(key)) })
+    exitSelection()
+  }, [checkedKeys, exitSelection, orderedKeys, t, textAiReady])
+
+  const handleBulkMerge = useCallback(() => {
+    if (checkedKeys.length < 2) return
+    if (!window.confirm(t('notesList.merge.confirm', { count: checkedKeys.length }))) return
+    const keys = orderedKeys.filter((key) => checkedKeys.includes(key))
+    dispatch(mergeNotes({ keys, untitled: t('noteCard.untitled') }))
+    exitSelection()
+  }, [checkedKeys, dispatch, exitSelection, orderedKeys, t])
 
   const handleBulkRestore = useCallback(() => {
     if (checkedKeys.length === 0) return
@@ -730,6 +798,9 @@ export default function NotesList({
         case 'bulkDelete':
           handleBulkDelete()
           break
+        case 'bulkMerge':
+          handleBulkMerge()
+          break
         case 'move':
           dispatch(
             updateNote({
@@ -788,6 +859,7 @@ export default function NotesList({
       showLockUnavailable,
       handleBulkMove,
       handleBulkDelete,
+      handleBulkMerge,
       handleBulkRestore,
       handleMoveToVault,
       checkedKeys,
@@ -803,6 +875,7 @@ export default function NotesList({
         <NotesItem
           key={note.key}
           noteKey={note.key}
+          meaningSnippet={note.snippet || null}
           onMenuAction={handleMenuAction}
           allFolders={folders}
           selectedFolder={selectedFolder}
@@ -924,6 +997,19 @@ export default function NotesList({
               </>
             ) : (
               <>
+                {selectedFolder === ALL_NOTES_KEY && meaningReady && tidyMoves.length > 0 && (
+                  <button
+                    onClick={() => setShowTidyUp(true)}
+                    className='relative p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
+                    title={t('tidyUp.button', { count: tidyMoves.length })}
+                    aria-label={t('tidyUp.button', { count: tidyMoves.length })}
+                  >
+                    <Wand2 className='w-5 h-5' />
+                    <span className='absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent-primary text-accent-on-primary text-[10px] font-bold flex items-center justify-center'>
+                      {tidyMoves.length}
+                    </span>
+                  </button>
+                )}
                 <button
                   onClick={handleStartSelecting}
                   disabled={filteredNotes.length < MIN_NOTES_FOR_MULTI_SELECT}
@@ -958,8 +1044,18 @@ export default function NotesList({
               onChange={(e) => onSearchChange(e.target.value)}
               onFocus={() => dispatch(prewarmSearch())}
               onKeyDown={handleSearchKeyDown}
-              className='w-full pl-9 pr-4 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
+              className='w-full pl-9 pr-11 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
             />
+            {LOCAL_AI_ENABLED && (
+              <button
+                onClick={() => dispatch(openAskVault({ question: searchQuery }))}
+                title={t('localAi.askVault.entry', { shortcut: ASK_SHORTCUT })}
+                aria-label={t('localAi.askVault.entry', { shortcut: ASK_SHORTCUT })}
+                className='absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-text-tertiary hover:text-accent-primary hover:bg-accent-primary/10 transition-colors'
+              >
+                <Sparkles className='w-4 h-4' />
+              </button>
+            )}
           </div>
           {hasSearchQuery && canScopeSearch && <SearchScopeBar folderName={currentFolderName} />}
         </div>
@@ -968,11 +1064,11 @@ export default function NotesList({
       <div
         ref={notesScrollRef}
         className='flex-1 overflow-y-auto pb-2 scrollbar-hide'
-        role={filteredNotes.length === 0 ? undefined : 'listbox'}
+        role={filteredNotes.length + meaningNotes.length === 0 ? undefined : 'listbox'}
         aria-multiselectable={isSelecting || undefined}
         aria-label={t('folders.systemIcons.all')}
       >
-        {filteredNotes.length === 0 ? (
+        {filteredNotes.length + meaningNotes.length === 0 ? (
           <div className='flex-1 flex flex-col items-center justify-center py-10'>
             {syncing ? (
               <div className='flex flex-col items-center gap-4 animate-in fade-in duration-700'>
@@ -997,6 +1093,11 @@ export default function NotesList({
                       <p className='text-sm text-text-tertiary/80 font-medium'>
                         {t('folderView.empty.noMatchesSubtitle')}
                       </p>
+                      {meaningNoticeText && (
+                        <p className='pt-2 text-xs text-text-tertiary leading-relaxed'>
+                          {meaningNoticeText}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1080,10 +1181,33 @@ export default function NotesList({
                 </div>
               </div>
             ))}
+            {hasSearchQuery && meaningNotes.length > 0 && (
+              <div className='mb-6'>
+                <h3 className='px-6 py-2 text-sm font-bold text-text-primary tracking-[0.1em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
+                  {t('search.meaning.title')}
+                </h3>
+                <div>{meaningNotes.map(renderNotesList)}</div>
+              </div>
+            )}
+            {hasSearchQuery && meaningNotes.length === 0 && meaningNoticeText && (
+              <p className='px-6 pb-3 text-xs text-text-tertiary leading-relaxed'>
+                {meaningNoticeText}
+              </p>
+            )}
           </div>
         )}
       </div>
 
+      {showTidyUp && tidyMoves.length > 0 && (
+        <TidyUpModal moves={tidyMoves} onClose={() => setShowTidyUp(false)} />
+      )}
+      {generate && (
+        <GenerateNoteModal
+          task={generate.task}
+          noteKeys={generate.keys}
+          onClose={() => setGenerate(null)}
+        />
+      )}
       {isSelecting && (
         <div className='px-4 py-3 border-t border-border-primary/40 bg-bg-secondary/95 backdrop-blur-xl flex items-center gap-2'>
           <button
@@ -1094,6 +1218,26 @@ export default function NotesList({
             {isTrash ? <Undo2 className='w-4 h-4' /> : <FolderInput className='w-4 h-4' />}
             {isTrash ? t('notesList.selection.restore') : t('notesList.selection.move')}
           </button>
+          {!isTrash && textAiReady && (
+            <button
+              onClick={handleBulkGenerate}
+              disabled={checkedKeys.length === 0}
+              className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+            >
+              <Sparkles className='w-4 h-4' />
+              {t('generate.create')}
+            </button>
+          )}
+          {!isTrash && (
+            <button
+              onClick={handleBulkMerge}
+              disabled={checkedKeys.length < 2}
+              className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+            >
+              <Combine className='w-4 h-4' />
+              {t('notesList.merge.action')}
+            </button>
+          )}
           <button
             onClick={handleBulkDelete}
             disabled={checkedKeys.length === 0}

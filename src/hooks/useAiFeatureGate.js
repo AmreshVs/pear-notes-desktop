@@ -58,7 +58,10 @@ export function useAiFeatureGate() {
       }
 
       showToast(
-        t(`localAi.gate.${IN_PROGRESS_KEYS[status] ?? 'setup'}`, { feature: name, featureInline: inline })
+        t(`localAi.gate.${IN_PROGRESS_KEYS[status] ?? 'setup'}`, {
+          feature: name,
+          featureInline: inline
+        })
       )
       return false
     },

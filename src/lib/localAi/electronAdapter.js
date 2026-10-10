@@ -5,7 +5,10 @@ import {
   LOCAL_AI_NETWORK,
   LOCAL_AI_UNSUPPORTED_REASON
 } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { holdAiJobs } from '@pear-notes/core/store/services/localAiJobs.js'
 import { getMediaSyncFlag } from '@pear-notes/core/utils.js'
+
+import { attachmentText } from './attachmentText'
 
 export class LocalAiError extends Error {
   constructor(code, message) {
@@ -29,7 +32,9 @@ async function invoke(method, payload, fallbackCode = LOCAL_AI_ERROR.TASK_FAILED
   return result
 }
 
-async function invokeWithProgress(method, payload, onProgress) {
+async function invokeWithProgress(method, payload, onProgress, signal) {
+  if (signal?.aborted) throw new LocalAiError(LOCAL_AI_ERROR.TASK_FAILED, 'cancelled')
+  const releaseJobs = holdAiJobs()
   taskCounter += 1
   const taskId = `local-ai-task-${Date.now()}-${taskCounter}`
   const unsubscribe = onProgress
@@ -37,10 +42,17 @@ async function invokeWithProgress(method, payload, onProgress) {
         if (progress?.taskId === taskId) onProgress(progress)
       })
     : null
+  const abort = () =>
+    getBridge()
+      ?.localAiCancelTaskRun?.({ taskId })
+      ?.catch?.(() => {})
+  signal?.addEventListener('abort', abort, { once: true })
   try {
     return await invoke(method, { ...payload, taskId })
   } finally {
+    signal?.removeEventListener('abort', abort)
     unsubscribe?.()
+    releaseJobs()
   }
 }
 
@@ -58,7 +70,8 @@ async function getDeviceSupport() {
 }
 
 export async function getLocalAiNetworkKind() {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return LOCAL_AI_NETWORK.OFFLINE
+  if (typeof navigator !== 'undefined' && navigator.onLine === false)
+    return LOCAL_AI_NETWORK.OFFLINE
   try {
     if (await getMediaSyncFlag(METERED_CONNECTION_KEY)) return LOCAL_AI_NETWORK.METERED
   } catch {
@@ -112,16 +125,31 @@ export async function extractTextFromImage(image, { onProgress } = {}) {
 }
 
 export async function describeImage(image, extension, { onProgress } = {}) {
-  const { text } = await invokeWithProgress('localAiDescribeImage', { image, extension }, onProgress)
+  const { text } = await invokeWithProgress(
+    'localAiDescribeImage',
+    { image, extension },
+    onProgress
+  )
   return text
 }
 
-export async function runNoteTask(task, input, featureConfig = {}, { onProgress } = {}) {
+export async function runNoteTask(
+  task,
+  input,
+  featureConfig = {},
+  { onProgress, styleSamples, signal } = {}
+) {
   const { text } = await invokeWithProgress(
     'localAiSummarize',
-    { text: input, task, featureConfig },
-    onProgress
+    { text: input, task, featureConfig, styleSamples },
+    onProgress,
+    signal
   )
+  return text
+}
+
+export async function runNoteTaskInBackground(task, input, featureConfig = {}) {
+  const { text } = await invoke('localAiSummarize', { text: input, task, featureConfig })
   return text
 }
 
@@ -137,17 +165,50 @@ export async function translateParagraphs(paragraphs, from, to, { onProgress } =
   return Array.isArray(translations) ? translations : []
 }
 
-export async function askAboutNote(note, turns, question, featureConfig = {}, { onProgress } = {}) {
+export async function askAboutNote(
+  note,
+  turns,
+  question,
+  featureConfig = {},
+  { onProgress, signal } = {}
+) {
   const { text } = await invokeWithProgress(
     'localAiAsk',
     { note, turns, question, featureConfig },
-    onProgress
+    onProgress,
+    signal
   )
   return text
 }
 
+export async function askVault(
+  question,
+  sources,
+  turns,
+  featureConfig = {},
+  { onProgress, signal } = {}
+) {
+  const { text } = await invokeWithProgress(
+    'localAiAskVault',
+    { question, sources, turns, featureConfig },
+    onProgress,
+    signal
+  )
+  return text
+}
+
+export async function embedTexts(texts) {
+  const { vectors } = await invoke('localAiEmbed', { texts })
+  return vectors
+}
+
 export async function cancelLocalAiTask() {
   await invoke('localAiCancelTask')
+}
+
+export async function isOnBatteryPower() {
+  const { onBattery } = await invoke('localAiPower')
+  return onBattery === true
 }
 
 export const electronAdapter = {
@@ -157,5 +218,9 @@ export const electronAdapter = {
   download,
   cancel,
   deleteModel,
-  closeAndWipe
+  closeAndWipe,
+  embedTexts,
+  runNoteTaskInBackground,
+  cancelTask: cancelLocalAiTask,
+  attachmentText
 }

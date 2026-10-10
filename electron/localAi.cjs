@@ -1,3 +1,4 @@
+const { AsyncLocalStorage } = require('async_hooks')
 const { ipcMain, powerMonitor } = require('electron')
 const fs = require('fs')
 const os = require('os')
@@ -14,8 +15,6 @@ const PCM_FILE_PREFIX = 'pear-notes-local-ai-'
 const PCM_FILE_EXTENSION = '.raw'
 const MIN_DARWIN_MAJOR = 23
 const INTERRUPT_WINDOW_MS = 60 * 1000
-const OCR_MAG_RATIO = 1
-const OCR_CANVAS_SIZE = 1600
 const WHISPER_AUDIO_FORMAT = 's16le'
 const PARAKEET_ENGINE = 'parakeet'
 const IMAGE_FILE_PREFIX = 'pear-notes-local-ai-image-'
@@ -29,11 +28,13 @@ const LIVE_TEXT_CHANNEL = 'local-ai:live-text'
 
 let options = null
 let catalogPromise = null
-let textPromise = null
 let promptsPromise = null
 let workPromise = null
+let tiersPromise = null
 let sdkPromise = null
 let loadedModel = null
+let loadedEmbedding = null
+let embedInFlight = null
 let systemSuspended = false
 let lastResumeAt = 0
 let pcmCounter = 0
@@ -48,13 +49,13 @@ class LocalAiError extends Error {
 }
 
 function loadCatalog() {
-  if (!catalogPromise) catalogPromise = import('@pear-notes/core/store/services/localAiCatalog.js')
+  if (!catalogPromise) {
+    catalogPromise = import('@pear-notes/core/store/services/localAiCatalog.js').then((catalog) => {
+      catalog.configureLocalAiDevice({ platform: process.platform, totalMemoryBytes: os.totalmem() })
+      return catalog
+    })
+  }
   return catalogPromise
-}
-
-function loadText() {
-  if (!textPromise) textPromise = import('@pear-notes/core/store/services/localAiText.js')
-  return textPromise
 }
 
 function loadWork() {
@@ -75,14 +76,37 @@ function joinTranscript(current, next) {
   return current ? `${current} ${piece}` : piece
 }
 
-async function streamCompletion(sdk, params, onText) {
-  const run = sdk.completion({ ...params, stream: true })
-  let streamed = ''
-  for await (const token of run.tokenStream) {
-    streamed += token
-    onText(streamed)
-  }
-  return run.text
+const completionsInFlight = new Set()
+
+const taskContext = new AsyncLocalStorage()
+const taskRequests = new Map()
+const cancelledTasks = new Set()
+const modelUsers = new Map()
+const MODEL_RELEASE_WAIT_MS = 60 * 1000
+let anonymousTask = 0
+
+function streamCompletion(sdk, params, onText) {
+  const taskId = taskContext.getStore()?.taskId
+  if (taskId && cancelledTasks.has(taskId)) return Promise.reject(new Error('cancelled'))
+  const work = (async () => {
+    const run = sdk.completion({ ...params, stream: true })
+    if (taskId && run.requestId) {
+      if (!taskRequests.has(taskId)) taskRequests.set(taskId, new Set())
+      taskRequests.get(taskId).add(run.requestId)
+    }
+    let streamed = ''
+    for await (const token of run.tokenStream) {
+      streamed += token
+      onText(streamed)
+    }
+    return run.text
+  })()
+  completionsInFlight.add(work)
+  work.then(
+    () => completionsInFlight.delete(work),
+    () => completionsInFlight.delete(work)
+  )
+  return work
 }
 
 function loadPrompts() {
@@ -141,7 +165,13 @@ async function getDeviceSupport() {
     : totalMemoryBytes < catalog.LOCAL_AI_LIMITED_MEMORY_BYTES
       ? statuses.LIMITED
       : statuses.SUPPORTED
-  return { status, reason, totalMemoryBytes, freeDiskBytes: disk.freeBytes }
+  return {
+    status,
+    reason,
+    totalMemoryBytes,
+    freeDiskBytes: disk.freeBytes,
+    platform: process.platform
+  }
 }
 
 function loadSdk() {
@@ -182,6 +212,26 @@ async function unloadCurrentModel(sdk) {
   } catch {}
 }
 
+async function unloadEmbedding(sdk) {
+  await embedInFlight?.catch(() => {})
+  const current = loadedEmbedding
+  loadedEmbedding = null
+  if (!current) return
+  try {
+    await sdk.unloadModel({ modelId: current.modelId })
+  } catch {}
+}
+
+async function unloadAllModels(sdk) {
+  await unloadCurrentModel(sdk)
+  await unloadEmbedding(sdk)
+}
+
+async function canKeepBoth(modelKey, embeddingName) {
+  const catalog = await loadCatalog()
+  return catalog.canRunModels([...modelKey.split('|'), embeddingName], os.totalmem())
+}
+
 const MODEL_IDLE_UNLOAD_MS = 2 * 60 * 1000
 let activeModelWork = 0
 let idleUnloadTimer = null
@@ -201,26 +251,68 @@ function endModelWork() {
   if (activeModelWork > 0) return
   idleUnloadTimer = setTimeout(() => {
     idleUnloadTimer = null
-    if (activeModelWork === 0 && sdkPromise) sdkPromise.then(unloadCurrentModel).catch(() => {})
+    if (activeModelWork === 0 && sdkPromise) sdkPromise.then(unloadAllModels).catch(() => {})
   }, MODEL_IDLE_UNLOAD_MS)
 }
 
 function withModelWork(handler) {
-  return async (...args) => {
+  return async (event, payload) => {
     beginModelWork()
+    const taskId = payload?.taskId || `anonymous-${++anonymousTask}`
     try {
-      return await handler(...args)
+      return await taskContext.run({ taskId }, () => handler(event, payload))
     } finally {
+      modelUsers.delete(taskId)
+      taskRequests.delete(taskId)
+      cancelledTasks.delete(taskId)
       endModelWork()
     }
+  }
+}
+
+async function cancelTaskRun(event, { taskId } = {}) {
+  if (typeof taskId !== 'string' || !taskId || !sdkPromise) return {}
+  cancelledTasks.add(taskId)
+  const sdk = await sdkPromise
+  for (const requestId of taskRequests.get(taskId) ?? []) {
+    await sdk.cancel({ requestId }).catch(() => {})
+  }
+  return {}
+}
+
+async function waitForModelRelease(key) {
+  const self = taskContext.getStore()?.taskId
+  const started = Date.now()
+  const inUse = () => [...modelUsers].some(([taskId, used]) => used === key && taskId !== self)
+  while (inUse() && Date.now() - started < MODEL_RELEASE_WAIT_MS) {
+    await new Promise((resolve) => setTimeout(resolve, 100))
   }
 }
 
 async function ensureModelLoaded(sdk, key, load) {
   // No pre-emptive memory refusal: quality is the user's choice even on a
   // machine under the bar for it, and the settings row warns them.
+  const taskId = taskContext.getStore()?.taskId
+  const modelId =
+    loadedModel?.key === key ? loadedModel.modelId : await withModelLock(() => switchModel(sdk, key, load))
+  if (taskId) modelUsers.set(taskId, key)
+  return modelId
+}
+
+let modelLock = Promise.resolve()
+
+function withModelLock(work) {
+  const run = modelLock.then(work)
+  modelLock = run.catch(() => {})
+  return run
+}
+
+async function switchModel(sdk, key, load) {
   if (loadedModel?.key === key) return loadedModel.modelId
+  if (loadedModel) await waitForModelRelease(loadedModel.key)
+  await Promise.allSettled([...completionsInFlight])
   await unloadCurrentModel(sdk)
+  if (loadedEmbedding && !(await canKeepBoth(key, loadedEmbedding.key))) await unloadEmbedding(sdk)
   const modelId = await load()
   loadedModel = { key, modelId }
   return modelId
@@ -277,7 +369,7 @@ async function cancel(event, { requestId, discard = false }) {
 
 async function deleteModel(event, { name }) {
   const sdk = await loadSdk()
-  await unloadCurrentModel(sdk)
+  await unloadAllModels(sdk)
   const info = await sdk.getModelInfo({ name })
   for (const cacheFile of info?.cacheFiles ?? []) {
     if (cacheFile?.path) await fs.promises.rm(cacheFile.path, { force: true })
@@ -292,11 +384,12 @@ async function closeAndWipe() {
   if (pendingSdk) {
     try {
       const sdk = await pendingSdk
-      await unloadCurrentModel(sdk)
+      await unloadAllModels(sdk)
       await sdk.close()
     } catch {}
   }
   loadedModel = null
+  loadedEmbedding = null
   pendingDownloads.clear()
   if (options) await fs.promises.rm(getRuntimeRoot(), { recursive: true, force: true })
   return {}
@@ -441,54 +534,79 @@ async function liveCancel(event, { sessionId }) {
   return {}
 }
 
-async function extractText(event, { image, taskId }) {
-  const [sdk, catalog, text, work] = await Promise.all([
+async function extractText(event, { image, extension, taskId }) {
+  const [sdk, catalog, prompts, work] = await Promise.all([
     loadSdk(),
     loadCatalog(),
-    loadText(),
+    loadPrompts(),
     loadWork()
   ])
   const send = progressSender(event, taskId)
-  const [recognizerName, detectorName] = catalog.getFeatureRegistryNames(
-    catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT,
-    {}
-  )
-  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: recognizerName })
-  const modelId = await ensureModelLoaded(sdk, `${recognizerName}|${detectorName}|desktop`, () =>
-    sdk.loadModel({
-      modelSrc: registryAsset(sdk, catalog, recognizerName),
-      modelType: 'ocr',
-      modelConfig: {
-        detectorModelSrc: registryAsset(sdk, catalog, detectorName),
-        langList: catalog.LOCAL_AI_OCR_LANGUAGES,
-        magRatio: OCR_MAG_RATIO,
-        canvasSize: OCR_CANVAS_SIZE,
-        defaultRotationAngles: [],
-        backendDevice: process.platform === 'darwin' ? 'metal' : 'cpu'
-      }
-    })
-  )
+  const [modelName] = catalog.getFeatureRegistryNames(catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT, {})
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
+  const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT)
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
-  const { blockStream } = sdk.ocr({ modelId, image: Buffer.from(image), stream: true })
-  const found = []
-  let extracted = ''
-  for await (const chunk of blockStream) {
-    found.push(...chunk)
-    extracted = text.formatOcrBlocks(found)
-    send({ type: work.WORK_EVENT.TEXT, text: extracted })
+  const imagePath = await writeTempImage(image, extension)
+  try {
+    const output = await streamCompletion(
+      sdk,
+      {
+        modelId,
+        history: [
+          { role: 'user', content: prompts.EXTRACT_TEXT_PROMPT, attachments: [{ path: imagePath }] }
+        ],
+        generationParams: {
+          temp: 0,
+          predict: prompts.EXTRACT_TEXT_MAX_TOKENS,
+          ...prompts.VISION_GENERATION_PARAMS
+        }
+      },
+      (partial) => send({ type: work.WORK_EVENT.TEXT, text: prompts.cleanModelOutput(partial) })
+    )
+    return { text: prompts.cleanModelOutput(output) }
+  } finally {
+    await fs.promises.rm(imagePath, { force: true })
   }
-  return { text: extracted }
 }
 
-function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}) {
-  const [modelName, projectionName] = catalog.getFeatureRegistryNames(feature, featureConfig)
+async function writeTempImage(image, extension) {
+  pcmCounter += 1
+  const safeExtension = IMAGE_EXTENSION_PATTERN.test(extension ?? '') ? extension : DEFAULT_IMAGE_EXTENSION
+  const imagePath = path.join(
+    os.tmpdir(),
+    `${IMAGE_FILE_PREFIX}${process.pid}-${pcmCounter}.${safeExtension}`
+  )
+  await fs.promises.writeFile(imagePath, Buffer.from(image))
+  return imagePath
+}
+
+async function resolveTextModelName(sdk, catalog, featureConfig, textTask, modelName) {
+  if (textTask !== catalog.LOCAL_AI_TEXT_TASK.ASK) return modelName
+  const fallback = catalog.getTextAskFallback(featureConfig)
+  if (!fallback) return modelName
+  const info = await sdk.getModelInfo({ name: modelName }).catch(() => null)
+  return info?.isCached ? modelName : fallback
+}
+
+async function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}, textTask) {
+  const [preferredName, projectionName] = catalog.getFeatureRegistryNames(
+    feature,
+    featureConfig,
+    textTask
+  )
+  const modelName = await resolveTextModelName(sdk, catalog, featureConfig, textTask, preferredName)
   return ensureModelLoaded(sdk, [modelName, projectionName].filter(Boolean).join('|'), () =>
     sdk.loadModel({
       modelSrc: registryAsset(sdk, catalog, modelName),
       modelType: 'llm',
       modelConfig: {
         ctx_size: prompts.LLM_CONTEXT_SIZE,
-        ...(projectionName ? { projectionModelSrc: registryAsset(sdk, catalog, projectionName) } : {})
+        ...(projectionName
+          ? {
+              projectionModelSrc: registryAsset(sdk, catalog, projectionName),
+              ...prompts.VISION_GENERATION_PARAMS
+            }
+          : {})
       }
     })
   )
@@ -506,14 +624,8 @@ async function describeImage(event, { image, extension, taskId }) {
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOOK })
-  pcmCounter += 1
-  const safeExtension = IMAGE_EXTENSION_PATTERN.test(extension ?? '') ? extension : DEFAULT_IMAGE_EXTENSION
-  const imagePath = path.join(
-    os.tmpdir(),
-    `${IMAGE_FILE_PREFIX}${process.pid}-${pcmCounter}.${safeExtension}`
-  )
+  const imagePath = await writeTempImage(image, extension)
   try {
-    await fs.promises.writeFile(imagePath, Buffer.from(image))
     const output = await streamCompletion(
       sdk,
       {
@@ -521,7 +633,11 @@ async function describeImage(event, { image, extension, taskId }) {
         history: [
           { role: 'user', content: prompts.DESCRIBE_IMAGE_PROMPT, attachments: [{ path: imagePath }] }
         ],
-        generationParams: { temp: prompts.LLM_TEMPERATURE, predict: prompts.DESCRIBE_MAX_TOKENS }
+        generationParams: {
+          temp: prompts.LLM_TEMPERATURE,
+          predict: prompts.DESCRIBE_MAX_TOKENS,
+          ...prompts.VISION_GENERATION_PARAMS
+        }
       },
       (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
     )
@@ -531,7 +647,7 @@ async function describeImage(event, { image, extension, taskId }) {
   }
 }
 
-async function summarize(event, { text, task, featureConfig, taskId }) {
+async function summarize(event, { text, task, featureConfig, taskId, styleSamples }) {
   const [sdk, catalog, prompts, work] = await Promise.all([
     loadSdk(),
     loadCatalog(),
@@ -541,9 +657,13 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
   const send = progressSender(event, taskId)
   const noteTask = prompts.isNoteTask(task) ? task : prompts.NOTE_TASK.TRANSCRIPT_SUMMARY
   const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+  const textTask = prompts.isWritingNoteTask(noteTask)
+    ? catalog.LOCAL_AI_TEXT_TASK.WRITE
+    : catalog.LOCAL_AI_TEXT_TASK.ASK
   const [modelName] = catalog.getFeatureRegistryNames(
     catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-    config
+    config,
+    textTask
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(
@@ -551,7 +671,8 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
     catalog,
     prompts,
     catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-    config
+    config,
+    textTask
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
   if (prompts.isRewriteTask(noteTask)) {
@@ -560,7 +681,10 @@ async function summarize(event, { text, task, featureConfig, taskId }) {
       task: noteTask,
       text: String(text ?? ''),
       complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
-      onText: (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
+      onText: (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial }),
+      styleSamples: Array.isArray(styleSamples)
+        ? styleSamples.filter((sample) => typeof sample === 'string').slice(0, 6)
+        : []
     })
     return { text: rewritten }
   }
@@ -588,7 +712,8 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
   const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
   const [modelName] = catalog.getFeatureRegistryNames(
     catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-    config
+    config,
+    catalog.LOCAL_AI_TEXT_TASK.ASK
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(
@@ -596,7 +721,8 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
     catalog,
     prompts,
     catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-    config
+    config,
+    catalog.LOCAL_AI_TEXT_TASK.ASK
   )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
   const text = await ask.runAsk({
@@ -607,6 +733,93 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
     onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
   })
   return { text }
+}
+
+const toVaultSource = (source) => ({
+  n: Number(source?.n) || 0,
+  noteKey: String(source?.noteKey ?? ''),
+  title: String(source?.title ?? ''),
+  heading: String(source?.heading ?? ''),
+  text: String(source?.text ?? ''),
+  score: typeof source?.score === 'number' ? source.score : null
+})
+
+async function askVault(event, { question, sources, turns, featureConfig, taskId }) {
+  const [sdk, catalog, prompts, work, vaultAsk] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadWork(),
+    import('@pear-notes/core/store/services/localAiVaultAsk.js')
+  ])
+  const send = progressSender(event, taskId)
+  const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+  const [modelName] = catalog.getFeatureRegistryNames(
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config,
+    catalog.LOCAL_AI_TEXT_TASK.ASK
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
+  const modelId = await loadLlmFeature(
+    sdk,
+    catalog,
+    prompts,
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config,
+    catalog.LOCAL_AI_TEXT_TASK.ASK
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
+  const text = await vaultAsk.runVaultAnswer({
+    question: String(question ?? ''),
+    sources: Array.isArray(sources) ? sources.map(toVaultSource) : [],
+    turns: Array.isArray(turns) ? turns : [],
+    complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
+    onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
+  })
+  return { text }
+}
+
+function loadTiers() {
+  if (!tiersPromise) tiersPromise = import('@pear-notes/core/store/services/localAiTiers.js')
+  return tiersPromise
+}
+
+async function embedTexts(event, { texts }) {
+  const [sdk, catalog, tiers] = await Promise.all([loadSdk(), loadCatalog(), loadTiers()])
+  const input = Array.isArray(texts) ? texts.map((text) => String(text ?? '')) : []
+  if (input.length === 0) return { vectors: [] }
+  const { model, modelConfig } = tiers.LOCAL_AI_EMBEDDING_MODEL
+  return withModelLock(async () => {
+    if (loadedEmbedding?.key !== model) {
+      const info = await sdk.getModelInfo({ name: model }).catch(() => null)
+      if (!info?.isCached) throw new LocalAiError(catalog.LOCAL_AI_ERROR.MODEL_MISSING)
+      if (loadedModel && !(await canKeepBoth(loadedModel.key, model))) {
+        if (activeModelWork > 1)
+          throw new LocalAiError(catalog.LOCAL_AI_ERROR.TASK_FAILED, 'model busy')
+        await unloadCurrentModel(sdk)
+      }
+      const embeddingId = await sdk.loadModel({
+        modelSrc: registryAsset(sdk, catalog, model),
+        modelType: 'embeddings',
+        modelConfig
+      })
+      loadedEmbedding = { key: model, modelId: embeddingId }
+    }
+    const { modelId } = loadedEmbedding
+    const run = sdk.embed({ modelId, text: input })
+    embedInFlight = run
+    try {
+      const { embedding } = await run
+      return { vectors: embedding.map((vector) => Float32Array.from(vector)) }
+    } catch (error) {
+      if (/(batch|context) overflow/i.test(String(error?.message ?? ''))) {
+        throw new LocalAiError(catalog.LOCAL_AI_ERROR.INPUT_TOO_LONG, error.message)
+      }
+      throw error
+    } finally {
+      if (embedInFlight === run) embedInFlight = null
+    }
+  })
 }
 
 async function translateParagraphs(event, { paragraphs, from, to, taskId }) {
@@ -695,7 +908,7 @@ function handle(channel, fallbackCode, handler) {
 function watchPower() {
   powerMonitor.on('suspend', () => {
     systemSuspended = true
-    if (sdkPromise) sdkPromise.then(unloadCurrentModel).catch(() => {})
+    if (sdkPromise) sdkPromise.then(unloadAllModels).catch(() => {})
   })
   powerMonitor.on('resume', () => {
     systemSuspended = false
@@ -717,7 +930,13 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:summarize', 'TASK_FAILED', withModelWork(summarize))
   handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
   handle('local-ai:ask', 'TASK_FAILED', withModelWork(askAboutNote))
+  handle('local-ai:ask-vault', 'TASK_FAILED', withModelWork(askVault))
+  handle('local-ai:embed', 'TASK_FAILED', withModelWork(embedTexts))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
+  handle('local-ai:cancel-task-run', 'TASK_FAILED', cancelTaskRun)
+  handle('local-ai:power', 'TASK_FAILED', async () => ({
+    onBattery: powerMonitor.isOnBatteryPower()
+  }))
   handle('local-ai:live-start', 'TASK_FAILED', liveStart)
   handle('local-ai:live-stop', 'TASK_FAILED', liveStop)
   handle('local-ai:live-cancel', 'TASK_FAILED', liveCancel)

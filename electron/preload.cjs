@@ -61,6 +61,19 @@ contextBridge.exposeInMainWorld('electronBridge', {
   setPowerSaveBlocker: (enabled) => ipcRenderer.send('power-save-blocker:set', enabled),
 
   showContextMenu: (items) => ipcRenderer.invoke('ui:context-menu', items),
+  onSpellingContext: (callback) => {
+    const listener = (_event, info) => callback(info)
+    ipcRenderer.on('ui:spelling-context', listener)
+    return () => ipcRenderer.removeListener('ui:spelling-context', listener)
+  },
+  replaceMisspelling: (word) => ipcRenderer.invoke('ui:spelling-replace', word),
+  showNotification: (payload) => ipcRenderer.invoke('ui:notify', payload),
+  onOpenNote: (callback) => {
+    const listener = (_event, noteKey) => callback(noteKey)
+    ipcRenderer.on('ui:open-note', listener)
+    return () => ipcRenderer.removeListener('ui:open-note', listener)
+  },
+  addToDictionary: (word) => ipcRenderer.invoke('ui:spelling-add', word),
 
   showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
   showOpenDialog: (options) => ipcRenderer.invoke('dialog:showOpenDialog', options),
@@ -98,7 +111,11 @@ contextBridge.exposeInMainWorld('electronBridge', {
   localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
   localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
   localAiAsk: (payload) => ipcRenderer.invoke('local-ai:ask', payload),
+  localAiAskVault: (payload) => ipcRenderer.invoke('local-ai:ask-vault', payload),
+  localAiEmbed: (payload) => ipcRenderer.invoke('local-ai:embed', payload),
   localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task'),
+  localAiCancelTaskRun: (payload) => ipcRenderer.invoke('local-ai:cancel-task-run', payload),
+  localAiPower: () => ipcRenderer.invoke('local-ai:power'),
   localAiLiveStart: (payload) => ipcRenderer.invoke('local-ai:live-start', payload),
   localAiLiveChunk: (payload) => ipcRenderer.send('local-ai:live-chunk', payload),
   localAiLiveStop: (payload) => ipcRenderer.invoke('local-ai:live-stop', payload),

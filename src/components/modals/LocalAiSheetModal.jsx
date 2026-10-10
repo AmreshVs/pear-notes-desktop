@@ -5,11 +5,14 @@ import {
   Briefcase,
   Check,
   Copy,
+  Eraser,
   Languages,
   List,
   Mic,
   Minimize2,
   Paperclip,
+  PenLine,
+  ReceiptText,
   RotateCcw,
   ScanText,
   ShieldCheck,
@@ -40,6 +43,7 @@ const SELECTION_ERRORS = { empty: 'emptySelection', tooLong: 'selectionTooLong' 
 
 const ERROR_KEY_OVERRIDES = {
   extract: { empty: 'emptyImage', failed: 'failedExtract' },
+  details: { empty: 'emptyImage', failed: 'failedExtract' },
   describe: { empty: 'emptyDescribe', failed: 'failedDescribe' },
   translate: {
     empty: 'emptyTranslate',
@@ -54,7 +58,9 @@ const ERROR_KEY_OVERRIDES = {
   rewrite: NOTE_TASK_ERRORS,
   makeShorter: NOTE_TASK_ERRORS,
   makeProfessional: NOTE_TASK_ERRORS,
-  makeFriendly: NOTE_TASK_ERRORS
+  makeFriendly: NOTE_TASK_ERRORS,
+  cleanUp: NOTE_TASK_ERRORS,
+  myStyle: NOTE_TASK_ERRORS
 }
 
 const SELECTION_HERO_BASE = {
@@ -65,6 +71,7 @@ const SELECTION_HERO_BASE = {
 
 const HEADER_ICONS = {
   extract: ScanText,
+  details: ReceiptText,
   describe: Sparkles,
   translate: Languages,
   summarizeNote: AlignLeft,
@@ -74,7 +81,9 @@ const HEADER_ICONS = {
   rewrite: Wand2,
   makeShorter: Minimize2,
   makeProfessional: Briefcase,
-  makeFriendly: Smile
+  makeFriendly: Smile,
+  cleanUp: Eraser,
+  myStyle: PenLine
 }
 
 const REPORTABLE_MODES = ['describe', 'translate', 'suggestTitle', 'keyPoints']
@@ -365,19 +374,25 @@ export default function LocalAiSheetModal({
                       <p className='text-sm leading-relaxed text-text-primary'>{summary.summary}</p>
                     </>
                   )}
-                  {summary.actionItems.length > 0 && (
-                    <>
-                      <p className='text-sm font-bold text-text-primary pt-1'>
-                        {t('localAi.summary.actionItems')}
-                      </p>
-                      <ul className='list-disc pl-5 space-y-1'>
-                        {summary.actionItems.map((item, index) => (
-                          <li key={index} className='text-sm leading-relaxed text-text-primary'>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+                  {[
+                    ['decisions', summary.decisions],
+                    ['actionItems', summary.actionItems],
+                    ['openQuestions', summary.openQuestions]
+                  ].map(([section, items]) =>
+                    items?.length > 0 ? (
+                      <div key={section}>
+                        <p className='text-sm font-bold text-text-primary pt-1'>
+                          {t(`localAi.summary.${section}`)}
+                        </p>
+                        <ul className='list-disc pl-5 space-y-1'>
+                          {items.map((item, index) => (
+                            <li key={index} className='text-sm leading-relaxed text-text-primary'>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null
                   )}
                 </div>
               )}

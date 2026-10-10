@@ -11,12 +11,40 @@ import {
   updateSetting
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 
+import { useLocalToggle } from '../../hooks/useLocalToggle'
+import { useSpellcheck } from '../../hooks/useSpellcheck'
+
+function ToggleRow({ label, desc, on, onToggle }) {
+  return (
+    <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
+      <div className='space-y-1'>
+        <label className='block text-text-primary text-base font-bold'>{label}</label>
+        <p className='text-sm text-text-tertiary font-medium opacity-60'>{desc}</p>
+      </div>
+      <button
+        type='button'
+        role='switch'
+        aria-checked={on}
+        aria-label={label}
+        onClick={onToggle}
+        className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${on ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
+      >
+        <span
+          className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${on ? 'translate-x-5' : ''}`}
+        />
+      </button>
+    </div>
+  )
+}
+
 export default function GeneralSettings() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const theme = useSelector(getTheme)
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
+  const [spellcheck, toggleSpellcheck] = useSpellcheck()
+  const [reminders, toggleReminders] = useLocalToggle('reminders', false)
   const sortBy = useSelector(getSortBy)
 
   const handleUpdateSetting = (key, value) => {
@@ -165,6 +193,18 @@ export default function GeneralSettings() {
               </div>
             </div>
           </div>
+          <ToggleRow
+            label={t('settings.general.spellcheck')}
+            desc={t('settings.general.spellcheckDesc')}
+            on={spellcheck}
+            onToggle={toggleSpellcheck}
+          />
+          <ToggleRow
+            label={t('settings.general.reminders')}
+            desc={t('settings.general.remindersDesc')}
+            on={reminders}
+            onToggle={toggleReminders}
+          />
         </div>
       </div>
     </div>

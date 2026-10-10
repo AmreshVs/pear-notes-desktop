@@ -12,7 +12,8 @@ const {
   screen,
   shell,
   clipboard,
-  nativeTheme
+  nativeTheme,
+  Notification
 } = require('electron')
 const os = require('os')
 const path = require('path')
@@ -111,6 +112,7 @@ function setXdgAutostart(enabled) {
 }
 
 let mainWindow = null
+const shownNotifications = new Set()
 let worker = null
 let tray = null
 let closeToTray = true
@@ -345,6 +347,13 @@ function createWindow() {
     return { action: 'deny' }
   })
 
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    if (!params.isEditable || !params.misspelledWord) return
+    mainWindow?.webContents.send('ui:spelling-context', {
+      word: params.misspelledWord,
+      suggestions: params.dictionarySuggestions.slice(0, 5)
+    })
+  })
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (url !== mainWindow.webContents.getURL()) {
       event.preventDefault()
@@ -612,6 +621,34 @@ function setupIPC() {
 
   ipcMain.handle('login-item:open-system-settings', () => {
     if (process.platform === 'win32') shell.openExternal('ms-settings:startupapps')
+  })
+
+  ipcMain.handle('ui:notify', (_event, payload) => {
+    const { title, body, noteKey } = payload ?? {}
+    if (!Notification.isSupported() || typeof title !== 'string') return
+    const notification = new Notification({
+      title: title.slice(0, 120),
+      body: String(body ?? '').slice(0, 200)
+    })
+    shownNotifications.add(notification)
+    notification.on('close', () => shownNotifications.delete(notification))
+    notification.on('click', () => {
+      shownNotifications.delete(notification)
+      if (!mainWindow) return
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.show()
+      mainWindow.focus()
+      if (typeof noteKey === 'string') mainWindow.webContents.send('ui:open-note', noteKey)
+    })
+    notification.show()
+  })
+
+  ipcMain.handle('ui:spelling-replace', (event, word) => {
+    if (typeof word === 'string' && word) event.sender.replaceMisspelling(word)
+  })
+
+  ipcMain.handle('ui:spelling-add', (event, word) => {
+    if (typeof word === 'string' && word) event.sender.session.addWordToSpellCheckerDictionary(word)
   })
 
   ipcMain.handle('ui:context-menu', (event, items) => {

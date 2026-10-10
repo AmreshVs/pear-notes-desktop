@@ -49,5 +49,15 @@ export function useInviteLink(format) {
     setTimeout(() => setCopied(false), COPIED_RESET_MS)
   }
 
-  return { link, isLoading, remainingMs, expired, expiringSoon, isGenerated, copied, generate, copy }
+  return {
+    link,
+    isLoading,
+    remainingMs,
+    expired,
+    expiringSoon,
+    isGenerated,
+    copied,
+    generate,
+    copy
+  }
 }

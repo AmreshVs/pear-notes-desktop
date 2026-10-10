@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector, useStore } from 'react-redux'
 
+import { backendApi } from '@pear-notes/core/backend/api.js'
+import {
+  formatImageDetails,
+  imageDetailsFromText
+} from '@pear-notes/core/store/services/imageDetails.js'
 import {
   LOCAL_AI_ERROR,
   LOCAL_AI_FEATURE,
   LOCAL_AI_MODEL_STATUS,
   LOCAL_AI_NOTICE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { isIndexable } from '@pear-notes/core/store/services/localAiIndex.js'
 import {
   detectTextLanguage,
   getTranslationModelNames,
@@ -15,6 +22,7 @@ import {
   TRANSLATION_ALL_LANGUAGES
 } from '@pear-notes/core/store/services/localAiLanguage.js'
 import {
+  htmlToNoteText,
   isRewriteTask,
   NOTE_TASK,
   NOTE_TASK_MIN_CHARS,
@@ -32,6 +40,7 @@ import {
   WORK_SHORTER_TARGET_RATIO,
   WORK_STEP
 } from '@pear-notes/core/store/services/localAiWorkProgress.js'
+import { collectStyleSamples } from '@pear-notes/core/store/services/localAiWritingTools.js'
 import {
   clearLocalAiNotice,
   downloadLocalAiModelNow,
@@ -42,6 +51,7 @@ import {
   selectLocalAiModelsStatus,
   setLocalAiTranslationTarget
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getNotesData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { downloadAsBlob } from '../lib/fileManager'
 import { decodeAudioToPcm } from '../lib/localAi/audioPcm'
@@ -125,13 +135,16 @@ const NOTE_TASK_BY_MODE = {
   rewrite: NOTE_TASK.REWRITE,
   makeShorter: NOTE_TASK.MAKE_SHORTER,
   makeProfessional: NOTE_TASK.MAKE_PROFESSIONAL,
-  makeFriendly: NOTE_TASK.MAKE_FRIENDLY
+  makeFriendly: NOTE_TASK.MAKE_FRIENDLY,
+  cleanUp: NOTE_TASK.CLEAN_UP,
+  myStyle: NOTE_TASK.MY_STYLE
 }
 
 const FEATURE_BY_MODE = {
   dictate: LOCAL_AI_FEATURE.VOICE_TYPING,
   transcribe: LOCAL_AI_FEATURE.TRANSCRIBE_RECORDINGS,
   extract: LOCAL_AI_FEATURE.EXTRACT_TEXT,
+  details: LOCAL_AI_FEATURE.EXTRACT_TEXT,
   describe: LOCAL_AI_FEATURE.DESCRIBE_IMAGES,
   translate: LOCAL_AI_FEATURE.TRANSLATE_NOTES,
   summarizeNote: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
@@ -141,13 +154,34 @@ const FEATURE_BY_MODE = {
   rewrite: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
   makeShorter: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
   makeProfessional: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
-  makeFriendly: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+  makeFriendly: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  cleanUp: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+  myStyle: LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+}
+
+const STYLE_NOTE_LIMIT = 8
+
+async function loadStyleSamples(store) {
+  const currentKey = getSelectedNote(store.getState())
+  const notes = Object.entries(getNotesData(store.getState()) ?? {})
+    .filter(([key, note]) => key !== currentKey && isIndexable(note))
+    .sort(([, a], [, b]) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
+    .slice(0, STYLE_NOTE_LIMIT)
+  const texts = []
+  for (const [key, note] of notes) {
+    const body = note.bodyOmitted
+      ? (await backendApi.getSingleNote({ key }).catch(() => null))?.data?.note
+      : note.note
+    texts.push(htmlToNoteText(String(body ?? '')))
+  }
+  return collectStyleSamples(texts)
 }
 
 const getDeviceLanguage = () =>
   normalizeLanguageCode(typeof navigator !== 'undefined' ? navigator.language : null)
 
 export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
+  const { t } = useTranslation()
   const mode = request?.mode ?? 'dictate'
   const feature = FEATURE_BY_MODE[mode]
   const paragraphs = request?.paragraphs ?? EMPTY_PARAGRAPHS
@@ -262,7 +296,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
     const workKind =
       mode === 'describe'
         ? WORK_KIND.DESCRIBE
-        : mode !== 'extract'
+        : mode !== 'extract' && mode !== 'details'
           ? WORK_KIND.TRANSCRIBE
           : isPdf
             ? WORK_KIND.EXTRACT_PDF
@@ -286,6 +320,13 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         }
         const buffer = await blob.arrayBuffer()
         if (mode === 'extract') return extractTextFromImage(new Uint8Array(buffer), { onProgress })
+        if (mode === 'details') {
+          const text = await extractTextFromImage(new Uint8Array(buffer), { onProgress })
+          return formatImageDetails(imageDetailsFromText(text), {
+            types: t('localAi.details.types', { returnObjects: true }),
+            ...t('localAi.details.fields', { returnObjects: true })
+          })
+        }
         return transcribePcm(await decodeAudioToPcm(buffer), feature, featureConfig ?? {}, {
           onProgress
         })
@@ -293,7 +334,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       'failed',
       workKind
     )
-  }, [feature, featureConfig, mode, request, run])
+  }, [feature, featureConfig, mode, request, run, t])
 
   const runTranslation = useCallback(() => {
     const pending = translateRequestRef.current
@@ -406,7 +447,9 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       targetRatio: mode === 'makeShorter' ? WORK_SHORTER_TARGET_RATIO : 1
     }
     run(async (signal, runId, onProgress) => {
-      const output = await runNoteTask(task, input, summaryConfig ?? {}, { onProgress })
+      const styleSamples =
+        task === NOTE_TASK.MY_STYLE ? await loadStyleSamples(store) : undefined
+      const output = await runNoteTask(task, input, summaryConfig ?? {}, { onProgress, styleSamples })
       if (mode === 'summarizeNote') {
         const parsed = parseSummaryOutput(output)
         if (!parsed.summary && parsed.actionItems.length === 0) return ''
@@ -422,7 +465,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       }
       return isRewriteTask(task) ? output : parseTitleOutput(output)
     }, 'failed', isRewriteTask(task) ? WORK_KIND.REWRITE : WORK_KIND.NOTE_TASK, workOptions)
-  }, [mode, paragraphs, run, scope, summaryConfig, updatePhase])
+  }, [mode, paragraphs, run, scope, store, summaryConfig, updatePhase])
 
   const handleRecord = useCallback(async () => {
     if (recorderRef.current || streamRef.current) return
