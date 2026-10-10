@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { backendApi, setLocalDeviceName } from '@pear-notes/core/backend/api.js'
 import { appBoot } from '@pear-notes/core/bootTimeline.js'
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   createFolder,
   deleteFolder,
@@ -23,8 +24,11 @@ import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevices
 import { getReceiverStatus } from '@pear-notes/core/store/slices/syncSlice.js'
 import {
   appReady,
+  closeAskVault,
+  getAskVault,
   getSearchQuery,
   getShowSettings,
+  openAskVault,
   setEditor,
   setSearchQuery,
   setShowSettings
@@ -41,6 +45,7 @@ import TitleBar from './components/common/TitleBar'
 import { ToastStackProvider } from './components/common/ToastStack'
 import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
 import NoteEditor from './components/editor/NoteEditor'
+import AskVaultModal from './components/modals/AskVaultModal'
 import DeviceRemovedModal from './components/modals/DeviceRemovedModal'
 import UpdateRequiredModal from './components/modals/UpdateRequiredModal'
 import ForceVaultRemovalModal from './components/settings/ForceVaultRemovalModal'
@@ -93,6 +98,19 @@ function App() {
   const selectedFolder = useSelector(getSelectedFolder)
   const searchQuery = useSelector(getSearchQuery)
   const showSettings = useSelector(getShowSettings)
+  const askVault = useSelector(getAskVault)
+
+  useEffect(() => {
+    if (!LOCAL_AI_ENABLED) return
+    const handleKeyDown = (event) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return
+      if (event.shiftKey || event.altKey || showSettings) return
+      event.preventDefault()
+      dispatch(openAskVault())
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dispatch, showSettings])
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const vaultPending = useSelector(getVaultPending)
   const showVaultRail = isMultiVaultEnabled() && hasMultipleVaults
@@ -285,6 +303,13 @@ function App() {
             <SettingsScreen
               initialSection={typeof showSettings === 'string' ? showSettings : 'general'}
               onClose={() => dispatch(setShowSettings(false))}
+            />
+          )}
+          {askVault && !showSettings && (
+            <AskVaultModal
+              initialQuestion={askVault.question}
+              onOpenSettings={() => dispatch(setShowSettings('onDeviceAi'))}
+              onClose={() => dispatch(closeAskVault())}
             />
           )}
           <ForceVaultRemovalModal />

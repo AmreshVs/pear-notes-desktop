@@ -625,6 +625,48 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
   return { text }
 }
 
+const toVaultSource = (source) => ({
+  n: Number(source?.n) || 0,
+  noteKey: String(source?.noteKey ?? ''),
+  title: String(source?.title ?? ''),
+  heading: String(source?.heading ?? ''),
+  text: String(source?.text ?? ''),
+  score: typeof source?.score === 'number' ? source.score : null
+})
+
+async function askVault(event, { question, sources, turns, featureConfig, taskId }) {
+  const [sdk, catalog, prompts, work, vaultAsk] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadWork(),
+    import('@pear-notes/core/store/services/localAiVaultAsk.js')
+  ])
+  const send = progressSender(event, taskId)
+  const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
+  const [modelName] = catalog.getFeatureRegistryNames(
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
+  const modelId = await loadLlmFeature(
+    sdk,
+    catalog,
+    prompts,
+    catalog.LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS,
+    config
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
+  const text = await vaultAsk.runVaultAnswer({
+    question: String(question ?? ''),
+    sources: Array.isArray(sources) ? sources.map(toVaultSource) : [],
+    turns: Array.isArray(turns) ? turns : [],
+    complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
+    onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
+  })
+  return { text }
+}
+
 function loadTiers() {
   if (!tiersPromise) tiersPromise = import('@pear-notes/core/store/services/localAiTiers.js')
   return tiersPromise
@@ -774,6 +816,7 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:summarize', 'TASK_FAILED', withModelWork(summarize))
   handle('local-ai:translate', 'TASK_FAILED', withModelWork(translateParagraphs))
   handle('local-ai:ask', 'TASK_FAILED', withModelWork(askAboutNote))
+  handle('local-ai:ask-vault', 'TASK_FAILED', withModelWork(askVault))
   handle('local-ai:embed', 'TASK_FAILED', withModelWork(embedTexts))
   handle('local-ai:cancel-task', 'TASK_FAILED', cancelTask)
   handle('local-ai:live-start', 'TASK_FAILED', liveStart)

@@ -24,6 +24,7 @@ import {
   Pin,
   RotateCcw,
   Search,
+  Sparkles,
   SquarePen,
   Trash2,
   Undo2,
@@ -36,6 +37,7 @@ import {
   SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
 } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { getMeaningSearchNotice } from '@pear-notes/core/store/slices/localAiSlice.js'
@@ -68,7 +70,11 @@ import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getActivityLogEnabled } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
-import { getHyperdriveAddress, setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
+import {
+  getHyperdriveAddress,
+  openAskVault,
+  setShowSettings
+} from '@pear-notes/core/store/slices/uiSlice.js'
 import {
   getOtherVaults,
   getVaults,
@@ -97,6 +103,8 @@ import HighlightedText from '../common/HighlightedText'
 
 import { LockNowButton } from './LockNowButton'
 import SearchScopeBar from './SearchScopeBar'
+
+const ASK_SHORTCUT = /Mac/i.test(navigator.platform) ? '⌘K' : 'Ctrl+K'
 
 const MIN_NOTES_FOR_MULTI_SELECT = 2
 const NO_KEYS = []
@@ -978,8 +986,18 @@ export default function NotesList({
               onChange={(e) => onSearchChange(e.target.value)}
               onFocus={() => dispatch(prewarmSearch())}
               onKeyDown={handleSearchKeyDown}
-              className='w-full pl-9 pr-4 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
+              className='w-full pl-9 pr-11 py-2.5 rounded-xl text-base bg-bg-tertiary/30 text-text-primary placeholder-text-tertiary/40 border border-border-primary/50 focus:border-accent-primary/40 focus:bg-bg-tertiary/60 transition-all shadow-inner'
             />
+            {LOCAL_AI_ENABLED && (
+              <button
+                onClick={() => dispatch(openAskVault({ question: searchQuery }))}
+                title={t('localAi.askVault.entry', { shortcut: ASK_SHORTCUT })}
+                aria-label={t('localAi.askVault.entry', { shortcut: ASK_SHORTCUT })}
+                className='absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-text-tertiary hover:text-accent-primary hover:bg-accent-primary/10 transition-colors'
+              >
+                <Sparkles className='w-4 h-4' />
+              </button>
+            )}
           </div>
           {hasSearchQuery && canScopeSearch && <SearchScopeBar folderName={currentFolderName} />}
         </div>

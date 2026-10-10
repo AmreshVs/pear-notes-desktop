@@ -1846,6 +1846,32 @@
         "elapsed": "{{seconds}} s"
       }
     },
+    "askVault": {
+      "entry": "Ask your notes ({{shortcut}})",
+      "title": "Ask your notes",
+      "subtitle": "Answers come from your notes, on this device",
+      "placeholder": "Ask anything about your notes…",
+      "followUpPlaceholder": "Ask a follow-up…",
+      "inputLabel": "Question about your notes",
+      "send": "Ask",
+      "sources": "Sources",
+      "relatedNotes": "Closest notes",
+      "notFound": "I couldn't find that in your notes.",
+      "unverified": "This answer couldn't be matched to one of your notes. Check the sources before relying on it.",
+      "saveAsNote": "Save as note",
+      "saved": "Saved as a note",
+      "notReady": "To ask about all your notes, turn on Search by meaning in On-device AI settings.",
+      "askNotReady": "To get answers, turn on Ask, write and summarize in On-device AI settings.",
+      "openSettings": "Open On-device AI settings",
+      "searchAllNotes": "Search all notes",
+      "errors": {
+        "failed": "Couldn't answer that. Try again or rephrase it.",
+        "notEnoughMemory": "Not enough free memory right now. Close other apps and try again.",
+        "unstable": "This model stopped the app before, so it's paused. Try a lighter quality in On-device AI settings.",
+        "notReady": "Search by meaning isn't ready yet. Try again in a moment.",
+        "busy": "On-device AI is busy with another task. Try again in a moment."
+      }
+    },
     "ask": {
       "group": "Ask",
       "menuLabelSelection": "Ask about selection",

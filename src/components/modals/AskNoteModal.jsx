@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   AlertTriangle,
   ArrowLeftRight,
@@ -9,6 +10,7 @@ import {
   Copy,
   FileText,
   MessageCircleQuestion,
+  Search,
   ShieldCheck,
   TextCursor,
   X
@@ -16,6 +18,8 @@ import {
 
 import { ASK_KIND, ASK_QUESTION_MAX_CHARS } from '@pear-notes/core/store/services/localAiAsk.js'
 import { SUMMARY_MAX_TRANSCRIPT_CHARS } from '@pear-notes/core/store/services/localAiPrompts.js'
+import { getMeaningSearchReady } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { openAskVault } from '@pear-notes/core/store/slices/uiSlice.js'
 
 import { canApplyAskTurn, useAskNote } from '../../hooks/useAskNote'
 
@@ -37,6 +41,8 @@ export default function AskNoteModal({
   onClose
 }) {
   const { t } = useTranslation()
+  const dispatch = useDispatch()
+  const meaningReady = useSelector(getMeaningSearchReady)
   const threadRef = useRef(null)
   const inputRef = useRef(null)
   const {
@@ -144,6 +150,18 @@ export default function AskNoteModal({
         >
           {answer}
         </p>
+        {notFound && meaningReady && (
+          <button
+            onClick={() => {
+              handleClose()
+              dispatch(openAskVault({ question: turn.question }))
+            }}
+            className='self-start flex items-center gap-1.5 text-xs font-bold text-accent-primary hover:underline'
+          >
+            <Search className='w-3.5 h-3.5' />
+            {t('localAi.askVault.searchAllNotes')}
+          </button>
+        )}
         {!notFound && turn.answer && (
           <button
             onClick={() => handleCopy(turn.id)}

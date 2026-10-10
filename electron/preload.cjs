@@ -98,6 +98,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   localAiSummarize: (payload) => ipcRenderer.invoke('local-ai:summarize', payload),
   localAiTranslate: (payload) => ipcRenderer.invoke('local-ai:translate', payload),
   localAiAsk: (payload) => ipcRenderer.invoke('local-ai:ask', payload),
+  localAiAskVault: (payload) => ipcRenderer.invoke('local-ai:ask-vault', payload),
   localAiEmbed: (payload) => ipcRenderer.invoke('local-ai:embed', payload),
   localAiCancelTask: () => ipcRenderer.invoke('local-ai:cancel-task'),
   localAiLiveStart: (payload) => ipcRenderer.invoke('local-ai:live-start', payload),

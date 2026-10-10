@@ -154,6 +154,15 @@ export async function askAboutNote(note, turns, question, featureConfig = {}, { 
   return text
 }
 
+export async function askVault(question, sources, turns, featureConfig = {}, { onProgress } = {}) {
+  const { text } = await invokeWithProgress(
+    'localAiAskVault',
+    { question, sources, turns, featureConfig },
+    onProgress
+  )
+  return text
+}
+
 export async function embedTexts(texts) {
   const { vectors } = await invoke('localAiEmbed', { texts })
   return vectors
