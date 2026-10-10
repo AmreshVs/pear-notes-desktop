@@ -254,6 +254,16 @@
             "Formatting such as bold, links and lists isn't kept in the translation.",
             "Translates up to 400 paragraphs at a time. Each language needs a 13–44 MB download the first time you use it."
           ]
+        },
+        "searchByMeaning": {
+          "title": "Search by meaning",
+          "inline": "search by meaning",
+          "desc": "Find notes by what they're about, not only the words in them. Also shows related notes and possible duplicates.",
+          "limitations": [
+            "Searches the text in your notes. Text in photos, PDFs and recordings isn't included yet.",
+            "Locked notes and notes in Recently deleted are never indexed.",
+            "On a phone, a large first index waits until the phone is charging."
+          ]
         }
       },
       "featureStatus": {
