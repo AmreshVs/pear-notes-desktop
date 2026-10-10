@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
-import {
-  LOCAL_AI_ERROR,
-  LOCAL_AI_FEATURE
-} from '@pear-notes/core/store/services/localAiCatalog.js'
+import { LOCAL_AI_ERROR, LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { getLocalAiFeatureConfig } from '@pear-notes/core/store/slices/localAiSlice.js'
 
-import { endDictation, placeDictationCaret, startDictation, updateDictation } from '../lib/dictationRange'
+import {
+  endDictation,
+  placeDictationCaret,
+  startDictation,
+  updateDictation
+} from '../lib/dictationRange'
 import { transcribePcm } from '../lib/localAi/electronAdapter'
 import {
   joinPcmChunks,

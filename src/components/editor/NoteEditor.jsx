@@ -13,7 +13,13 @@ import {
   buildLineRewriteTransaction,
   buildNoteEditsTransaction
 } from '@pear-notes/core/store/services/localAiNoteEdits.js'
-import { htmlToNoteText, isRewriteTask } from '@pear-notes/core/store/services/localAiPrompts.js'
+import {
+  htmlToNoteText,
+  isRewriteTask,
+  NOTE_TASK,
+  TEMPLATE_TASKS
+} from '@pear-notes/core/store/services/localAiPrompts.js'
+import { splitNoteByHeadings } from '@pear-notes/core/store/services/noteSplit.js'
 import {
   closeNoteHistory,
   getHistoryNoteKey,
@@ -38,7 +44,7 @@ import {
   openRelatedNotes
 } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
-import { updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { splitNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getActivityLogEnabled,
   getEditorFontSize,
@@ -50,6 +56,7 @@ import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { useFindInNote } from '../../hooks/useFindInNote'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
+import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
@@ -62,9 +69,11 @@ import {
 } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import { canReadAloud, isReadingAloud, readAloud, stopReadingAloud } from '../../lib/readAloud'
 import { getFontFamilyValue } from '../../utils/fonts'
 import UploadProgressToast from '../common/UploadProgressToast'
 import AskNoteModal from '../modals/AskNoteModal'
+import GenerateNoteModal from '../modals/GenerateNoteModal'
 import LocalAiSheetModal from '../modals/LocalAiSheetModal'
 
 import AiToolsButton from './AiToolsButton'
@@ -74,6 +83,7 @@ import FormattingToolbar from './FormattingToolbar'
 import NoteBodyPlaceholder from './NoteBodyPlaceholder'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
+import NoteSuggestionChips from './NoteSuggestionChips'
 import RelatedNotesPanel from './RelatedNotesPanel'
 import RichTextEditor from './RichTextEditor'
 
@@ -95,10 +105,29 @@ const toLines = (text) =>
     .map((line) => line.trim())
     .filter(Boolean)
 
+const SPELLING_WAIT_MS = 150
+let spellingWaiter = null
+window.electronBridge?.onSpellingContext?.((info) => {
+  spellingWaiter?.(info)
+  spellingWaiter = null
+})
+
+const nextSpellingContext = () =>
+  new Promise((resolve) => {
+    spellingWaiter = resolve
+    setTimeout(() => {
+      if (spellingWaiter === resolve) spellingWaiter = null
+      resolve(null)
+    }, SPELLING_WAIT_MS)
+  })
+
 export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const { t } = useTranslation()
+  const [spellcheck] = useSpellcheck()
+  const [generateTask, setGenerateTask] = useState(null)
   const dispatch = useDispatch()
   const selectedNoteKey = useSelector(getSelectedNote)
+  useEffect(() => () => stopReadingAloud(), [selectedNoteKey])
   const rawNoteData = useSelector(getNoteData(selectedNoteKey))
   const noteData = useMemo(() => rawNoteData || {}, [rawNoteData])
   const fontFamily = useSelector(getFontFamily)
@@ -190,18 +219,24 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
             { type: 'paragraph', content: [{ type: 'text', text: summary.summary }] }
           ]
         : []),
-      ...(summary.actionItems.length > 0
-        ? [
-            heading(t('localAi.summary.actionItems')),
-            {
-              type: 'bulletList',
-              content: summary.actionItems.map((item) => ({
-                type: 'listItem',
-                content: [{ type: 'paragraph', content: [{ type: 'text', text: item }] }]
-              }))
-            }
-          ]
-        : [])
+      ...[
+        ['decisions', summary.decisions],
+        ['actionItems', summary.actionItems],
+        ['openQuestions', summary.openQuestions]
+      ].flatMap(([section, items]) =>
+        items?.length > 0
+          ? [
+              heading(t(`localAi.summary.${section}`)),
+              {
+                type: 'bulletList',
+                content: items.map((item) => ({
+                  type: 'listItem',
+                  content: [{ type: 'paragraph', content: [{ type: 'text', text: item }] }]
+                }))
+              }
+            ]
+          : []
+      )
     ]
   }
 
@@ -256,7 +291,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       insertTranscriptQuote(
         summary.summary ? [paragraphNode(summary.summary)] : [],
         null,
-        { summary: '', actionItems: summary.actionItems },
+        { ...summary, summary: '' },
         t('localAi.summarizeNote.insertTitle'),
         below
       )
@@ -404,7 +439,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           ? [{ type: 'paragraph', content: [{ type: 'text', text: summary.summary }] }]
           : [],
         null,
-        { summary: '', actionItems: summary.actionItems },
+        { ...summary, summary: '' },
         t('localAi.summarizeNote.insertTitle')
       )
       return
@@ -576,7 +611,18 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   }
 
   const handleEditorContextMenu = async (e) => {
-    e.preventDefault()
+    if (!spellcheck) e.preventDefault()
+    const spelling = spellcheck ? await nextSpellingContext() : null
+    const spellingItems = spelling
+      ? [
+          ...(spelling.suggestions.length > 0
+            ? spelling.suggestions.map((word) => ({ id: `spell:${word}`, label: word }))
+            : [{ label: t('noteEditor.contextMenu.noSuggestions'), enabled: false }]),
+          { id: 'spellAdd', label: t('noteEditor.contextMenu.addToDictionary') },
+          { type: 'separator' }
+        ]
+      : []
+    const splitParts = splitNoteByHeadings(content, title)
     const moveTargets = folders.filter(
       (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
     )
@@ -585,6 +631,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
         : [{ label: t('noteEditor.contextMenu.noOtherLists'), enabled: false }]
     const result = await showContextMenu([
+      ...spellingItems,
       { role: 'cut', label: t('noteEditor.contextMenu.cut') },
       { role: 'copy', label: t('noteEditor.contextMenu.copy') },
       { role: 'paste', label: t('noteEditor.contextMenu.paste') },
@@ -592,6 +639,34 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { type: 'separator' },
       { label: t('noteEditor.contextMenu.moveTo'), submenu: moveSubmenu },
       { id: 'copyNote', label: t('noteEditor.contextMenu.copyNote') },
+      ...(canReadAloud() && !isLocked
+        ? [
+            isReadingAloud()
+              ? { id: 'stopReading', label: t('noteEditor.contextMenu.stopReading') }
+              : { id: 'readAloud', label: t('noteEditor.contextMenu.readAloud') }
+          ]
+        : []),
+      ...(splitParts.length >= 2 && !isLocked
+        ? [{ id: 'splitNote', label: t('noteEditor.contextMenu.splitNote') }]
+        : []),
+      ...(summarizeReady && !isLocked
+        ? [
+            {
+              label: t('noteEditor.contextMenu.restructureAs'),
+              submenu: TEMPLATE_TASKS.map((task) => ({
+                id: `generate:${task}`,
+                label: t(`generate.actions.${task}`)
+              }))
+            },
+            {
+              label: t('noteEditor.contextMenu.createFromNote'),
+              submenu: [NOTE_TASK.FLASHCARDS, NOTE_TASK.ACTION_LIST].map((task) => ({
+                id: `generate:${task}`,
+                label: t(`generate.actions.${task}`)
+              }))
+            }
+          ]
+        : []),
       ...(activityEnabled
         ? [{ id: 'history', label: t('noteEditor.contextMenu.noteHistory') }]
         : []),
@@ -614,8 +689,24 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { id: 'delete', label: t('noteEditor.contextMenu.delete') }
     ])
     if (!result) return
-    if (result.startsWith('move:')) {
+    if (result.startsWith('spell:')) {
+      window.electronBridge?.replaceMisspelling?.(result.slice(6))
+    } else if (result === 'spellAdd') {
+      window.electronBridge?.addToDictionary?.(spelling.word)
+    } else if (result.startsWith('move:')) {
       handleMoveTo(result.slice(5))
+    } else if (result === 'readAloud') {
+      const selected = window.getSelection()?.toString().trim()
+      readAloud(selected || [title, editorInstance?.getText() ?? ''].filter(Boolean).join('. '))
+    } else if (result === 'stopReading') {
+      stopReadingAloud()
+    } else if (result.startsWith('generate:')) {
+      setGenerateTask(result.slice(9))
+    } else if (result === 'splitNote') {
+      const titles = splitParts.map((part) => part.title || t('noteCard.untitled')).join(', ')
+      if (window.confirm(t('noteEditor.split.confirm', { count: splitParts.length, titles }))) {
+        dispatch(splitNote({ key: selectedNoteKey }))
+      }
     } else if (result === 'copyNote') {
       copyNoteToClipboard()
     } else if (result === 'history') {
@@ -770,6 +861,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
                 fontFamily: editorFontFamily
               }}
             />
+            {LOCAL_AI_ENABLED && (
+              <NoteSuggestionChips
+                noteKey={selectedNoteKey}
+                onAcceptTitle={(value) => handleTitleChange({ target: { value } })}
+              />
+            )}
             <div className='flex-1'>
               <RichTextEditor
                 key={selectedNoteKey}
@@ -783,6 +880,13 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           </div>
         </div>
         <UploadProgressToast />
+        {generateTask && (
+          <GenerateNoteModal
+            task={generateTask}
+            noteKeys={[selectedNoteKey]}
+            onClose={() => setGenerateTask(null)}
+          />
+        )}
 
         {LOCAL_AI_ENABLED && isAskRequest && (
           <AskNoteModal

@@ -7,7 +7,15 @@ export const AI_TOOL_GROUPS = [
   { id: 'note', labelKey: 'localAi.writingTools.noteGroup' }
 ]
 
-const REWRITE_TOOL_MODES = ['fixGrammar', 'rewrite', 'makeShorter', 'makeProfessional', 'makeFriendly']
+const REWRITE_TOOL_MODES = [
+  'fixGrammar',
+  'cleanUp',
+  'rewrite',
+  'makeShorter',
+  'makeProfessional',
+  'makeFriendly',
+  'myStyle'
+]
 
 const WRITING = LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
 const TRANSLATE = LOCAL_AI_FEATURE.TRANSLATE_NOTES
@@ -28,9 +36,21 @@ export function buildAiTools({ hasSelection }) {
       ...REWRITE_TOOL_MODES.map((mode) =>
         tool(mode, 'selection', 'edit', `localAi.${mode}.menuLabel`, WRITING)
       ),
-      tool('summarizeNote', 'selection', 'understand', 'localAi.summarizeSelection.menuLabel', WRITING),
+      tool(
+        'summarizeNote',
+        'selection',
+        'understand',
+        'localAi.summarizeSelection.menuLabel',
+        WRITING
+      ),
       tool('keyPoints', 'selection', 'understand', 'localAi.keyPointsSelection.menuLabel', WRITING),
-      tool('translate', 'selection', 'understand', 'localAi.translateSelection.menuLabel', TRANSLATE)
+      tool(
+        'translate',
+        'selection',
+        'understand',
+        'localAi.translateSelection.menuLabel',
+        TRANSLATE
+      )
     ]
   }
   return [

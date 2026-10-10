@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch } from 'react-redux'
 import {
   Database,
   HardDrive,
@@ -17,7 +16,6 @@ import {
 
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { version as appVersion } from '../../../package.json'
 import { useDialog } from '../../hooks/useDialog'
@@ -28,7 +26,6 @@ import BackupSettings from './BackupSettings'
 import DebugSettings from './DebugSettings'
 import DevicesSettings from './DevicesSettings'
 import DeviceStorageSettings from './DeviceStorageSettings'
-import DuplicatesSettings from './DuplicatesSettings'
 import ErrorLogSettings from './ErrorLogSettings'
 import GeneralSettings from './GeneralSettings'
 import LocalAiSettings from './LocalAiSettings'
@@ -41,7 +38,6 @@ const SETTINGS_GROUPS = ['vault', 'device']
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const [selectedSection, setSelectedSection] = useState(initialSection)
   const [isExiting, setIsExiting] = useState(false)
   const contentScrollRef = useRef(null)
@@ -58,14 +54,6 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   }, [onClose])
 
   const dialogRef = useDialog(handleAnimatedClose)
-
-  const handleOpenNote = useCallback(
-    (key) => {
-      dispatch(selectNote(key))
-      handleAnimatedClose()
-    },
-    [dispatch, handleAnimatedClose]
-  )
 
   const sections = [
     { id: 'general', group: 'vault', name: t('layouts.general'), icon: SettingsIcon },
@@ -92,8 +80,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const allSections = [
     ...sections,
     { id: 'debug', name: t('layouts.debug') },
-    { id: 'errorLog', name: t('layouts.errorLog') },
-    { id: 'duplicates', name: t('layouts.duplicates') }
+    { id: 'errorLog', name: t('layouts.errorLog') }
   ]
 
   return (
@@ -179,7 +166,6 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
                 {activeSection === 'backup' && t('settings.descriptions.backup')}
                 {activeSection === 'storage' && t('settings.descriptions.storage')}
                 {activeSection === 'vaultStorage' && t('settings.descriptions.vaultStorage')}
-                {activeSection === 'duplicates' && t('settings.descriptions.duplicates')}
               </p>
             </div>
             <button
@@ -193,9 +179,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           <div ref={contentScrollRef} className='flex-1 overflow-y-auto px-10 pb-10'>
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
-            {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && (
-              <LocalAiSettings onOpenDuplicates={() => setSelectedSection('duplicates')} />
-            )}
+            {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
             {isMultiVaultEnabled() && activeSection === 'vaults' && <VaultsSettings />}
             {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
             {activeSection === 'sync' && (
@@ -214,9 +198,6 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
               <DebugSettings onOpenErrorLog={() => setSelectedSection('errorLog')} />
             )}
             {activeSection === 'errorLog' && <ErrorLogSettings />}
-            {LOCAL_AI_ENABLED && activeSection === 'duplicates' && (
-              <DuplicatesSettings onOpenNote={handleOpenNote} />
-            )}
           </div>
         </div>
       </div>

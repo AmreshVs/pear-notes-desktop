@@ -47,6 +47,7 @@ import { getEditorBaseKey, setEditorFocused } from '@pear-notes/core/store/slice
 import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getEditorFontSize, getFontFamily } from '@pear-notes/core/store/slices/settingsSlice.js'
 
+import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { clearEditorHistory } from '../../lib/editorHistory'
 import { EmptyFirstLine } from '../../lib/emptyFirstLine'
 import { FindInNote } from '../../lib/findInNote'
@@ -291,6 +292,11 @@ const RichTextEditor = forwardRef(
       },
       [fontFamily, editorFontSize]
     )
+
+    const [spellcheck] = useSpellcheck()
+    useEffect(() => {
+      editor?.view?.dom?.setAttribute('spellcheck', spellcheck ? 'true' : 'false')
+    }, [editor, spellcheck])
 
     useImperativeHandle(
       ref,

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { shallowEqual, useDispatch, useSelector, useStore } from 'react-redux'
 import {
   Check,
+  Combine,
   Film,
   FolderInput,
   Image as ImageIcon,
@@ -28,6 +29,7 @@ import {
   SquarePen,
   Trash2,
   Undo2,
+  Wand2,
   X
 } from 'lucide-react'
 
@@ -37,10 +39,18 @@ import {
   SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
 } from '@pear-notes/core/constant.js'
-import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
+import {
+  LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE
+} from '@pear-notes/core/store/services/localAiCatalog.js'
+import { GENERATE_TASKS } from '@pear-notes/core/store/services/localAiPrompts.js'
 import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
-import { getMeaningSearchNotice } from '@pear-notes/core/store/slices/localAiSlice.js'
+import {
+  getMeaningSearchNotice,
+  getMeaningSearchReady,
+  selectIsLocalAiFeatureReady
+} from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNote,
   deleteNotes,
@@ -48,6 +58,7 @@ import {
   getMeaningNotes,
   getNoteData,
   getSelectedNote,
+  mergeNotes,
   moveNotes,
   purgeExpiredTrash,
   restoreNote,
@@ -87,6 +98,7 @@ import {
   NOTES_LIST_GROUP
 } from '@pear-notes/core/utils.js'
 
+import { useTidyMoves } from '../../hooks/useTidyMoves'
 import { useVisibleNotes } from '../../hooks/useVisibleNotes'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
@@ -100,6 +112,8 @@ import {
 } from '../../lib/pdfThumbCache'
 import { confirmVaultMove, getVaultMenuItems, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
 import HighlightedText from '../common/HighlightedText'
+import GenerateNoteModal from '../modals/GenerateNoteModal'
+import TidyUpModal from '../modals/TidyUpModal'
 
 import { LockNowButton } from './LockNowButton'
 import SearchScopeBar from './SearchScopeBar'
@@ -290,6 +304,7 @@ const NotesItem = memo(
               : [
                   { label: t('notesList.selection.moveSelected'), submenu: moveSubmenu },
                   ...vaultItems,
+                  { id: 'bulkMerge', label: t('notesList.merge.action') },
                   { type: 'separator' },
                   { id: 'bulkDelete', label: t('notesList.selection.deleteSelected') }
                 ]
@@ -496,6 +511,14 @@ export default function NotesList({
   onToggleSidebar,
   isSidebarCollapsed
 }) {
+  const [showTidyUp, setShowTidyUp] = useState(false)
+  const [generate, setGenerate] = useState(null)
+  const textAiReady = useSelector(
+    (state) =>
+      LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
+  )
+  const meaningReady = useSelector(getMeaningSearchReady)
+  const tidyMoves = useTidyMoves(selectedFolder === ALL_NOTES_KEY && meaningReady)
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)
@@ -675,6 +698,24 @@ export default function NotesList({
     exitSelection()
   }, [checkedKeys, dispatch, exitSelection, isTrash, t])
 
+  const handleBulkGenerate = useCallback(async () => {
+    if (checkedKeys.length === 0 || !textAiReady) return
+    const result = await showContextMenu(
+      GENERATE_TASKS.map((task) => ({ id: task, label: t(`generate.actions.${task}`) }))
+    )
+    if (!result) return
+    setGenerate({ task: result, keys: orderedKeys.filter((key) => checkedKeys.includes(key)) })
+    exitSelection()
+  }, [checkedKeys, exitSelection, orderedKeys, t, textAiReady])
+
+  const handleBulkMerge = useCallback(() => {
+    if (checkedKeys.length < 2) return
+    if (!window.confirm(t('notesList.merge.confirm', { count: checkedKeys.length }))) return
+    const keys = orderedKeys.filter((key) => checkedKeys.includes(key))
+    dispatch(mergeNotes({ keys, untitled: t('noteCard.untitled') }))
+    exitSelection()
+  }, [checkedKeys, dispatch, exitSelection, orderedKeys, t])
+
   const handleBulkRestore = useCallback(() => {
     if (checkedKeys.length === 0) return
     dispatch(restoreNotes(checkedKeys))
@@ -757,6 +798,9 @@ export default function NotesList({
         case 'bulkDelete':
           handleBulkDelete()
           break
+        case 'bulkMerge':
+          handleBulkMerge()
+          break
         case 'move':
           dispatch(
             updateNote({
@@ -815,6 +859,7 @@ export default function NotesList({
       showLockUnavailable,
       handleBulkMove,
       handleBulkDelete,
+      handleBulkMerge,
       handleBulkRestore,
       handleMoveToVault,
       checkedKeys,
@@ -952,6 +997,19 @@ export default function NotesList({
               </>
             ) : (
               <>
+                {selectedFolder === ALL_NOTES_KEY && meaningReady && tidyMoves.length > 0 && (
+                  <button
+                    onClick={() => setShowTidyUp(true)}
+                    className='relative p-2 rounded-lg bg-bg-tertiary/50 hover:bg-bg-tertiary border border-border-secondary text-text-primary active:scale-95 transition-all duration-200'
+                    title={t('tidyUp.button', { count: tidyMoves.length })}
+                    aria-label={t('tidyUp.button', { count: tidyMoves.length })}
+                  >
+                    <Wand2 className='w-5 h-5' />
+                    <span className='absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent-primary text-accent-on-primary text-[10px] font-bold flex items-center justify-center'>
+                      {tidyMoves.length}
+                    </span>
+                  </button>
+                )}
                 <button
                   onClick={handleStartSelecting}
                   disabled={filteredNotes.length < MIN_NOTES_FOR_MULTI_SELECT}
@@ -1140,6 +1198,16 @@ export default function NotesList({
         )}
       </div>
 
+      {showTidyUp && tidyMoves.length > 0 && (
+        <TidyUpModal moves={tidyMoves} onClose={() => setShowTidyUp(false)} />
+      )}
+      {generate && (
+        <GenerateNoteModal
+          task={generate.task}
+          noteKeys={generate.keys}
+          onClose={() => setGenerate(null)}
+        />
+      )}
       {isSelecting && (
         <div className='px-4 py-3 border-t border-border-primary/40 bg-bg-secondary/95 backdrop-blur-xl flex items-center gap-2'>
           <button
@@ -1150,6 +1218,26 @@ export default function NotesList({
             {isTrash ? <Undo2 className='w-4 h-4' /> : <FolderInput className='w-4 h-4' />}
             {isTrash ? t('notesList.selection.restore') : t('notesList.selection.move')}
           </button>
+          {!isTrash && textAiReady && (
+            <button
+              onClick={handleBulkGenerate}
+              disabled={checkedKeys.length === 0}
+              className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+            >
+              <Sparkles className='w-4 h-4' />
+              {t('generate.create')}
+            </button>
+          )}
+          {!isTrash && (
+            <button
+              onClick={handleBulkMerge}
+              disabled={checkedKeys.length < 2}
+              className='flex-1 py-2.5 rounded-xl font-bold text-sm bg-bg-tertiary/60 text-text-primary border border-border-primary hover:bg-bg-tertiary transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+            >
+              <Combine className='w-4 h-4' />
+              {t('notesList.merge.action')}
+            </button>
+          )}
           <button
             onClick={handleBulkDelete}
             disabled={checkedKeys.length === 0}

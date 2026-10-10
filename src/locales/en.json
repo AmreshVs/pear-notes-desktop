@@ -49,7 +49,11 @@
       "startAtLoginBlockedByPolicy": "Managed by your organization.",
       "meteredConnection": "Metered connection",
       "meteredConnectionDesc": "Also holds media transfers. Desktop cannot detect metered networks automatically, so set this yourself.",
-      "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background."
+      "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background.",
+      "spellcheck": "Check spelling",
+      "spellcheckDesc": "Underlines misspelled words using this computer's dictionary. Right-click a word for suggestions.",
+      "reminders": "Remind me about dated to-dos",
+      "remindersDesc": "Shows a notification at the time written in a to-do, or at 9:00 for a date alone, while Pear Notes is open or in the menu bar. The same to-dos are listed in Upcoming."
     },
     "sync": {
       "header": "Sync",
@@ -180,6 +184,9 @@
       "downloads": "Downloads",
       "wifiOnly": "Hold AI downloads on metered connections",
       "wifiOnlyDesc": "Uses the metered connection setting in Sync.",
+      "otherDevices": "Other devices",
+      "answerForOtherDevices": "Answer for my other devices",
+      "answerForOtherDevicesDesc": "Phones and tablets in this vault can ask questions, summarize and use writing tools on this computer while it is on and not low on battery. They send only the question or the text they are working on, and this computer answers from its own copy of your notes. Uses the model chosen for Ask, write and summarize.",
       "groups": {
         "voiceAndAudio": "Voice and audio",
         "imagesAndScans": "Images and scans",
@@ -202,8 +209,12 @@
           "desc": "Ask questions about a note and have it make changes you approve. Fix, rewrite or shorten selected text. Summarize notes and recordings, list key points and suggest titles.",
           "tierDescriptions": {
             "standard": "Standard · Qwen3 0.6B · {{size}}",
-            "best": "Best · Qwen3 1.7B · {{size}} · better with other languages"
+            "best": "Best for this device · {{model}} · {{size}}"
           },
+          "bestRouting": "Ask and summaries use {{ask}}. Writing tools stay on {{write}}.",
+          "advanced": "Advanced: choose a model",
+          "advancedAuto": "Automatic · {{model}}",
+          "advancedModel": "{{model}} · {{size}}",
           "limitations": [
             "Results can miss or get details wrong, so check them before you rely on them.",
             "Standard is fastest and works best in English. Best handles other languages better, but is slower and needs more memory.",
@@ -217,7 +228,7 @@
           "inline": "image descriptions",
           "desc": "Get a short description of an image to add as a caption.",
           "limitations": [
-            "Descriptions are short and usually in English, even for photos of text in other languages.",
+            "Descriptions are short and in English.",
             "Descriptions can be wrong or miss details, so check them before you use them.",
             "To copy text from an image, use Extract text instead."
           ]
@@ -238,10 +249,10 @@
           "inline": "text extraction",
           "desc": "Copy text from photos, scans and PDFs.",
           "limitations": [
-            "Reads text in Latin-script languages only, such as English, French, German, Spanish, Polish and Vietnamese.",
-            "Text in other scripts, such as Russian, Arabic, Hindi, Chinese, Japanese or Korean, isn't recognised.",
-            "Handwriting, low light, blur and tilted photos reduce accuracy.",
-            "Reads up to 20 pages of a PDF. Layout, tables and formatting aren't kept."
+            "Reads most languages and scripts, including Russian, Arabic, Hindi, Chinese, Japanese and Korean.",
+            "It can misread or, rarely, make up words, especially in handwriting, low light, blur or tilted photos. Check the text before you rely on it.",
+            "Reads up to 20 pages of a PDF. Layout, tables and formatting aren't kept.",
+            "Uses the same model as Describe images, so turning on both downloads it once."
           ]
         },
         "translateNotes": {
@@ -426,7 +437,11 @@
         "BERGAMOT_EN_TH": "English to Thai",
         "BERGAMOT_TH_EN": "Thai to English",
         "QWEN3_1_7B_INST_Q4": "Qwen3 1.7B",
-        "EMBEDDINGGEMMA_300M_Q4_0": "EmbeddingGemma 300M"
+        "QWEN3_4B_INST_Q4_K_M": "Qwen3 4B",
+        "QWEN3_8B_INST_Q4_K_M": "Qwen3 8B",
+        "EMBEDDINGGEMMA_300M_Q4_0": "EmbeddingGemma 300M",
+        "QWEN3_5_0_8B_MULTIMODAL_Q4_K_M": "Qwen3.5 0.8B vision",
+        "MMPROJ_QWEN3_5_0_8B_MULTIMODAL_Q8_0": "Qwen3.5 image encoder"
       },
       "language": "Language",
       "languages": {
@@ -517,7 +532,22 @@
       "showAiToolsInLockedDesc": "Also show AI actions in locked notes. AI runs on this device either way.",
       "noteEditor": "Note editor",
       "yourNotes": "Your notes",
-      "possibleDuplicates": "Possible duplicates"
+      "index": {
+        "title": "Search index",
+        "running": "Indexing · {{done}} of {{total}} notes",
+        "waiting": "Waiting to index",
+        "failed": "Indexing stopped. Rebuild the index to try again.",
+        "partial": "{{indexed}} of {{total}} notes indexed · the rest wait for charging",
+        "done": "{{indexed}} of {{total}} notes indexed",
+        "notYet": "Not indexed yet",
+        "rebuild": "Rebuild index"
+      },
+      "offload": {
+        "answeringFor": "Answering for {{device}}",
+        "answeringForDevice": "Answering for another device",
+        "lastUsed": "Last used by {{device}} · {{time}}",
+        "anotherDevice": "another device"
+      }
     }
   },
   "sync": {
@@ -893,7 +923,14 @@
       "lockNote": "Lock note",
       "delete": "Delete",
       "noteHistory": "Note history",
-      "relatedNotes": "Related notes"
+      "relatedNotes": "Related notes",
+      "noSuggestions": "No spelling suggestions",
+      "addToDictionary": "Add to dictionary",
+      "splitNote": "Split into notes",
+      "restructureAs": "Restructure as",
+      "createFromNote": "Create from this note",
+      "readAloud": "Read aloud",
+      "stopReading": "Stop reading"
     },
     "lock": {
       "passwordProtected": "This note is protected. Enter your note lock password to view it.",
@@ -914,6 +951,10 @@
       "previous": "Previous match",
       "next": "Next match",
       "close": "Close find"
+    },
+    "split": {
+      "confirm_one": "Split this note?",
+      "confirm_other": "Split this note into {{count}} notes at its headings: {{titles}}? The original moves to Recently Deleted, and right after you can tap Undo split."
     }
   },
   "pairing": {
@@ -1005,8 +1046,7 @@
     "sync": "Sync",
     "debug": "Diagnostics",
     "errorLog": "Logs",
-    "vaults": "Vaults",
-    "duplicates": "Possible duplicates"
+    "vaults": "Vaults"
   },
   "noteLockPassword": {
     "createTitle": "Set note lock password",
@@ -1428,6 +1468,41 @@
       "confirmPermanentDelete_one": "Permanently delete 1 note? This cannot be undone.",
       "confirmPermanentDelete_other": "Permanently delete {{count}} notes? This cannot be undone.",
       "restoreSelected": "Restore selected"
+    },
+    "merge": {
+      "action": "Merge",
+      "confirm_one": "Merge {{count}} note into one?",
+      "confirm_other": "Merge {{count}} notes into one new note? Each note becomes a section under its title, and the originals move to Recently Deleted. Right after merging you can tap Undo merge to put everything back.",
+      "done_one": "Merged {{count}} note. The original is in Recently Deleted.",
+      "done_other": "Merged {{count}} notes. The originals are in Recently Deleted.",
+      "undo": "Undo merge",
+      "refused": {
+        "too-few": "Select at least two notes to merge.",
+        "locked": "Locked notes can’t be merged. Unlock them first.",
+        "attachments": "Notes with photos, files or recordings can’t be merged yet.",
+        "missing": "One of the notes couldn’t be read, so nothing was merged.",
+        "failed": "Couldn’t merge these notes. Nothing was changed."
+      }
+    },
+    "split": {
+      "done_one": "Split into {{count}} note. The original is in Recently Deleted.",
+      "done_other": "Split into {{count}} notes. The original is in Recently Deleted.",
+      "undo": "Undo split",
+      "refused": {
+        "no-sections": "This note needs at least two headings of the same level to split.",
+        "locked": "Locked notes can’t be split. Unlock it first.",
+        "attachments": "Notes with photos, files or recordings can’t be split yet.",
+        "missing": "The note couldn’t be read, so nothing was split.",
+        "failed": "Couldn’t split this note. Nothing was changed."
+      }
+    },
+    "move": {
+      "done_one": "Moved {{count}} note to its suggested folder.",
+      "done_other": "Moved {{count}} notes to their suggested folders.",
+      "undo": "Undo moves",
+      "refused": {
+        "failed": "Couldn’t move these notes. Some may have moved; check the folders."
+      }
     }
   },
   "editor": {
@@ -1603,6 +1678,8 @@
       "working": "Summarizing…",
       "title": "Summary",
       "actionItems": "Action items",
+      "decisions": "Decisions",
+      "openQuestions": "Open questions",
       "failed": "Couldn't summarize this transcript. Try again.",
       "disclaimer": "Summaries can be wrong. Check them before relying on them."
     },
@@ -2029,6 +2106,56 @@
       "waitingNetwork": "{{feature}} is waiting for a network connection to finish downloading.",
       "paused": "The download for {{featureInline}} is paused. Resume it in Settings > On-device AI.",
       "needsMemory": "{{feature}} needs more memory than this device has."
+    },
+    "cleanUp": {
+      "menuLabel": "Clean up dictation",
+      "working": {
+        "title": "Cleaning up the text",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Cleaned-up version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
+    },
+    "details": {
+      "actionLabel": "Extract details",
+      "working": {
+        "title": "Reading the details",
+        "subtitle": "Everything happens on this computer. PDFs are read up to 20 pages."
+      },
+      "preview": {
+        "title": "Details found",
+        "subtitle": "Receipts give the shop, date, total and items; business cards give the contact details. Check them, then insert them into your note."
+      },
+      "types": {
+        "receipt": "Receipt",
+        "card": "Contact",
+        "notes": "Notes from the image"
+      },
+      "fields": {
+        "merchant": "Shop",
+        "date": "Date",
+        "total": "Total",
+        "items": "Items",
+        "name": "Name",
+        "jobTitle": "Job title",
+        "company": "Company",
+        "phone": "Phone",
+        "email": "Email",
+        "website": "Website"
+      }
+    },
+    "myStyle": {
+      "menuLabel": "Rewrite in my style",
+      "working": {
+        "title": "Matching your style",
+        "subtitle": "Everything happens on this computer. Nothing is uploaded."
+      },
+      "preview": {
+        "title": "Your-style version ready",
+        "subtitle": "AI results can be wrong. Replace swaps it into your note, Insert below keeps both."
+      }
     }
   },
   "debug": {
@@ -2175,7 +2302,6 @@
     "failedDescription": "Try again in a moment."
   },
   "duplicates": {
-    "and": "and",
     "alike": "{{percent}}% alike",
     "notDuplicates": "Not duplicates",
     "checking": "Checking your notes…",
@@ -2185,5 +2311,78 @@
     "emptyDescription": "Notes that say nearly the same thing show up here.",
     "failedTitle": "Couldn't check for duplicates",
     "failedDescription": "Try again in a moment."
+  },
+  "upcoming": {
+    "title": "Upcoming",
+    "count_one": "{{count}} task",
+    "count_other": "{{count}} tasks",
+    "hint": "Dated to-dos from all your notes, found on this device. Locked notes are left out.",
+    "emptyTitle": "Nothing coming up",
+    "emptyBody": "Write things like “Call Sam Friday 5pm”, or add a date to a checklist item.",
+    "groups": {
+      "overdue": "Overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "Next 7 days",
+      "later": "Later"
+    }
+  },
+  "suggestions": {
+    "title": "Suggested title: {{title}}",
+    "useTitleHint": "Use as the title",
+    "dismiss": "Don't suggest a title for this note again"
+  },
+  "recap": {
+    "hint": "What's due this week, what you edited in the last 7 days and what you wrote a year ago. Made on this device; nothing is added to your notes.",
+    "comingUp": "Coming up",
+    "edited_one": "Edited in the last 7 days · {{count}} note",
+    "edited_other": "Edited in the last 7 days · {{count}} notes",
+    "yearAgo": "A year ago",
+    "emptyTitle": "Nothing to recap yet",
+    "emptyBody": "Dated to-dos and notes you edit this week show up here."
+  },
+  "tidyUp": {
+    "title": "Suggest folders for unfiled notes",
+    "desc": "Each unfiled note is matched to the folder its most similar notes are in. Nothing moves until you choose.",
+    "moveTo": "Move to {{folder}}",
+    "apply_one": "Move {{count}} note",
+    "apply_other": "Move {{count}} notes",
+    "button_one": "Suggested folder for {{count}} unfiled note",
+    "button_other": "Suggested folders for {{count}} unfiled notes"
+  },
+  "generate": {
+    "create": "Create…",
+    "actions": {
+      "report": "Report",
+      "itinerary": "Trip itinerary",
+      "flashcards": "Study flashcards",
+      "actionList": "Action list",
+      "templateMeeting": "Meeting note",
+      "templateTrip": "Trip plan",
+      "templateProject": "Project page"
+    },
+    "titles": {
+      "report": "Report",
+      "itinerary": "Itinerary",
+      "flashcards": "Flashcards",
+      "actionList": "Action list",
+      "templateMeeting": "{{title}} · meeting",
+      "templateTrip": "{{title}} · trip plan",
+      "templateProject": "{{title}} · project"
+    },
+    "fromCount_one": "From {{count}} note",
+    "fromCount_other": "From {{count}} notes",
+    "working": "Writing a draft from your notes…",
+    "failed": "Couldn’t write a draft. Try again, or pick fewer notes.",
+    "disclaimer": "A draft from your notes. Check it before you rely on it. Your notes are not changed; saving makes a new note.",
+    "copy": "Copy",
+    "save": "Save as note",
+    "sources": "From these notes"
+  },
+  "tools": {
+    "header": "Tools",
+    "upcoming": "Upcoming",
+    "duplicates": "Duplicates",
+    "recap": "Recap"
   }
 }

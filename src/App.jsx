@@ -39,6 +39,7 @@ import appIcon from '../build/icon.png'
 
 import AppToast from './components/common/AppToast'
 import BackupProgressBanner from './components/common/BackupProgressBanner'
+import MergeNotesToast from './components/common/MergeNotesToast'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
 import TitleBar from './components/common/TitleBar'
@@ -54,9 +55,13 @@ import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
 import ResizablePanel from './components/sidebar/ResizablePanel'
 import VaultRail from './components/sidebar/VaultRail'
+import DuplicatesList from './components/tools/DuplicatesList'
+import RecapList from './components/tools/RecapList'
+import UpcomingList from './components/tools/UpcomingList'
 import { useAppReload } from './hooks/useAppReload'
 import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
+import { useReminders } from './hooks/useReminders'
 import { useVaultErrors } from './hooks/useVaultErrors'
 import { useWindowSize } from './hooks/useWindowSize'
 import {
@@ -68,14 +73,19 @@ import {
 } from './lib/appBehavior'
 import { useAppUpdateStatus } from './lib/appUpdateCheck'
 import { useAiJobConditions } from './lib/localAi/useAiJobConditions'
+import { useAiOffloadServer } from './lib/localAi/useAiOffloadServer'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
 import { getDbEncryptionKey, getVaultEntropy, setDbEncryptionKey } from './utils.js'
+
+const TOOL_LISTS = { upcoming: UpcomingList, duplicates: DuplicatesList, recap: RecapList }
 
 function App() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const { width } = useWindowSize()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(width < 1000)
+  const [toolView, setToolView] = useState(null)
+  const ToolList = TOOL_LISTS[toolView] ?? null
   const prevWidth = useRef(width)
 
   useEffect(() => {
@@ -92,6 +102,8 @@ function App() {
   usePowerState()
   useLocalAiBridge()
   useAiJobConditions()
+  useAiOffloadServer()
+  useReminders()
 
   const selectedNote = useSelector(getSelectedNote)
   const isLoading = useSelector(getNotesLoading)
@@ -257,8 +269,13 @@ function App() {
         collapsedWidth={0}
       >
         <FoldersSidebar
-          selectedFolder={selectedFolder}
-          onSelectFolder={(folder) => dispatch(setSelectedFolder(folder))}
+          selectedFolder={toolView ? null : selectedFolder}
+          onSelectFolder={(folder) => {
+            setToolView(null)
+            dispatch(setSelectedFolder(folder))
+          }}
+          toolView={toolView}
+          onSelectTool={setToolView}
           folders={folders}
           onCreateNote={handleCreateNote}
           onCreateFolder={handleCreateFolder}
@@ -269,14 +286,21 @@ function App() {
       </ResizablePanel>
 
       <ResizablePanel storageKey='notesList' defaultWidth={380} minWidth={320} maxWidth={560}>
-        <NotesList
-          selectedFolder={selectedFolder}
-          searchQuery={searchQuery}
-          onSearchChange={(value) => dispatch(setSearchQuery(value))}
-          onCreateNote={handleCreateNote}
-          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          isSidebarCollapsed={isSidebarCollapsed}
-        />
+        {ToolList ? (
+          <ToolList
+            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
+        ) : (
+          <NotesList
+            selectedFolder={selectedFolder}
+            searchQuery={searchQuery}
+            onSearchChange={(value) => dispatch(setSearchQuery(value))}
+            onCreateNote={handleCreateNote}
+            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isSidebarCollapsed={isSidebarCollapsed}
+          />
+        )}
       </ResizablePanel>
 
       <NoteEditor
@@ -313,6 +337,7 @@ function App() {
             />
           )}
           <ForceVaultRemovalModal />
+          <MergeNotesToast />
           {isVaultOpening && (
             <div
               role='status'

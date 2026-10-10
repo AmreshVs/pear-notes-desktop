@@ -17,14 +17,19 @@ import {
 
 import {
   canRunFeature,
+  canRunModels,
+  getAskModelChoices,
   getFeatureLanguages,
   getFeatureRegistryNames,
   getFeatureTiers,
   getModelDocsUrl,
   getOnDemandModelNames,
   getRegistryNamesBytes,
+  getTextModelLabel,
+  getTextTaskModel,
   LOCAL_AI_DEVICE_STATUS,
   LOCAL_AI_ENABLED,
+  LOCAL_AI_FEATURE,
   LOCAL_AI_FEATURE_STATUS,
   LOCAL_AI_GROUPS,
   LOCAL_AI_LICENSE,
@@ -32,6 +37,8 @@ import {
   LOCAL_AI_NETWORK,
   LOCAL_AI_NOTICE,
   LOCAL_AI_REGISTRY_MODELS,
+  LOCAL_AI_TEXT_TASK,
+  LOCAL_AI_TIER,
   QVAC_MODEL_LIBRARY_URL
 } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
@@ -46,17 +53,20 @@ import {
   disableLocalAiFeature,
   downloadLocalAiModelNow,
   enableLocalAiFeature,
+  getLocalAiOffloadServing,
   getLocalAiState,
   initLocalAi,
-  loadDuplicateNotes,
   pauseLocalAiDownload,
+  rebuildLocalAiIndex,
   resumeLocalAiDownload,
+  selectIndexCoverage,
   selectLocalAiBytesOnDisk,
   setLocalAiFeatureLanguage,
+  setLocalAiFeatureModel,
   setLocalAiFeatureTier,
+  setLocalAiOffload,
   setLocalAiWifiOnly
 } from '@pear-notes/core/store/slices/localAiSlice.js'
-import { getDuplicatePairRows } from '@pear-notes/core/store/slices/notesSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import {
@@ -99,6 +109,72 @@ const DOWNLOAD_BLOCKING_NETWORKS = [
 
 function optionClass(selected) {
   return `${OPTION_CLASS} ${selected ? 'bg-[var(--accent-selected-bg)] text-accent-primary border-[var(--accent-selected-border)]' : 'text-text-secondary border-border-primary hover:bg-overlay-light'}`
+}
+
+function AskModelPicker({ featureConfig, device }) {
+  const { t } = useTranslation()
+  const dispatch = useDispatch()
+  const [open, setOpen] = useState(Boolean(featureConfig?.model))
+  const feature = LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS
+  const best = { ...featureConfig, tier: LOCAL_AI_TIER.BEST }
+  const autoModel = getTextTaskModel({ ...best, model: null }, LOCAL_AI_TEXT_TASK.ASK, device)
+  const choose = (model) => {
+    dispatch(setLocalAiFeatureModel({ feature, model }))
+    if (featureConfig?.tier !== LOCAL_AI_TIER.BEST)
+      dispatch(setLocalAiFeatureTier({ feature, tier: LOCAL_AI_TIER.BEST }))
+  }
+  const Chevron = open ? ChevronDown : ChevronRight
+  const choices = [
+    {
+      model: null,
+      label: t('settings.onDeviceAi.features.summarizeRecordings.advancedAuto', {
+        model: getTextModelLabel(autoModel)
+      }),
+      fits: true
+    },
+    ...getAskModelChoices(device).map((model) => ({
+      model,
+      label: t('settings.onDeviceAi.features.summarizeRecordings.advancedModel', {
+        model: getTextModelLabel(model),
+        size: formatBytes(LOCAL_AI_REGISTRY_MODELS[model]?.bytes ?? 0)
+      }),
+      fits: canRunModels([model], device.totalMemoryBytes)
+    }))
+  ]
+  return (
+    <div className='space-y-2'>
+      <button
+        type='button'
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        className='flex items-center gap-1.5 text-sm font-bold text-text-primary'
+      >
+        <Chevron className='w-4 h-4 text-text-tertiary' />
+        {t('settings.onDeviceAi.features.summarizeRecordings.advanced')}
+      </button>
+      {open && (
+        <div className='flex flex-wrap gap-2'>
+          {choices.map((choice) => {
+            const selected =
+              featureConfig?.tier === LOCAL_AI_TIER.BEST &&
+              (featureConfig?.model ?? null) === choice.model
+            return (
+              <button
+                key={choice.model ?? 'auto'}
+                onClick={() => choose(choice.model)}
+                title={choice.fits ? undefined : t('settings.onDeviceAi.tierNeedsMemory')}
+                aria-pressed={selected}
+                className={optionClass(selected)}
+              >
+                {selected && <Check className='w-3.5 h-3.5' />}
+                {choice.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function buildModelRow(state, name) {
@@ -153,8 +229,8 @@ function ConfirmModal({ icon: Icon, danger, title, message, onDismiss, children 
   )
 }
 
-export default function LocalAiSettings({ onOpenDuplicates }) {
-  const { t } = useTranslation()
+export default function LocalAiSettings() {
+  const { t, i18n } = useTranslation()
   // The footer names the model library mid-sentence, so the label is split out
   // of the translated string rather than the sentence being cut into pieces.
   const footerLibrary = t('settings.onDeviceAi.footerLibrary')
@@ -162,7 +238,6 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
   const dispatch = useDispatch()
   const state = useSelector(getLocalAiState)
   const bytesOnDisk = useSelector(selectLocalAiBytesOnDisk)
-  const duplicatePairs = useSelector(getDuplicatePairRows)
   const [confirm, setConfirm] = useState(null)
   const [expandedFeature, setExpandedFeature] = useState(null)
 
@@ -173,11 +248,27 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
     if (LOCAL_AI_ENABLED) dispatch(initLocalAi())
   }, [dispatch])
 
-  const indexEnabled = state.index.enabled
-  const indexChangedAt = state.index.changedAt
-  useEffect(() => {
-    if (indexEnabled) dispatch(loadDuplicateNotes())
-  }, [dispatch, indexEnabled, indexChangedAt])
+  const coverage = useSelector(selectIndexCoverage)
+  const serving = useSelector(getLocalAiOffloadServing)
+  const indexBusy = state.index.status === 'running' || state.index.status === 'waiting'
+  const indexStatusText =
+    state.index.status === 'running'
+      ? t('settings.onDeviceAi.index.running', {
+          done: state.index.done ?? 0,
+          total: state.index.total ?? 0
+        })
+      : state.index.status === 'waiting'
+        ? t('settings.onDeviceAi.index.waiting')
+        : state.index.status === 'failed' || state.index.status === 'model-missing'
+          ? t('settings.onDeviceAi.index.failed')
+          : coverage
+            ? t(
+                coverage.indexed < coverage.total
+                  ? 'settings.onDeviceAi.index.partial'
+                  : 'settings.onDeviceAi.index.done',
+                coverage
+              )
+            : t('settings.onDeviceAi.index.notYet')
 
   const { loaded, device, config } = state
   const isUnsupported = device.status === LOCAL_AI_DEVICE_STATUS.UNSUPPORTED
@@ -427,19 +518,25 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
         </div>
       </div>
 
-      {state.index.enabled && onOpenDuplicates && (
+      {state.index.enabled && (
         <div className='space-y-1'>
           <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.yourNotes')}</h3>
           <div className={CARD_CLASS}>
-            <button onClick={onOpenDuplicates} className={`${ROW_CLASS} w-full text-left`}>
-              <span className={LABEL_CLASS}>{t('settings.onDeviceAi.possibleDuplicates')}</span>
-              <span className='flex items-center gap-3'>
-                {state.duplicates.status === 'done' && (
-                  <span className='text-base text-text-secondary'>{duplicatePairs.length}</span>
-                )}
-                <ChevronRight className='w-4 h-4 text-text-tertiary flex-shrink-0' />
-              </span>
-            </button>
+            <div className={ROW_CLASS}>
+              <div className='space-y-1 min-w-0'>
+                <label className={LABEL_CLASS}>{t('settings.onDeviceAi.index.title')}</label>
+                <p className={DESC_CLASS} role='status'>
+                  {indexStatusText}
+                </p>
+              </div>
+              <button
+                onClick={() => dispatch(rebuildLocalAiIndex())}
+                disabled={indexBusy}
+                className='px-4 py-2 rounded-xl bg-bg-tertiary text-text-primary text-sm font-semibold hover:bg-bg-tertiary/70 disabled:opacity-40 whitespace-nowrap'
+              >
+                {t('settings.onDeviceAi.index.rebuild')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -453,6 +550,36 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
               <p className={DESC_CLASS}>{t('settings.onDeviceAi.wifiOnlyDesc')}</p>
             </div>
             <Toggle on={config.wifiOnly} onClick={handleToggleWifiOnly} disabled={isUnsupported} />
+          </div>
+        </div>
+      </div>
+
+      <div className='space-y-1'>
+        <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.otherDevices')}</h3>
+        <div className={CARD_CLASS}>
+          <div className={ROW_CLASS}>
+            <div className='space-y-1 min-w-0'>
+              <label className={LABEL_CLASS}>
+                {t('settings.onDeviceAi.answerForOtherDevices')}
+              </label>
+              <p className={DESC_CLASS}>{t('settings.onDeviceAi.answerForOtherDevicesDesc')}</p>
+              {config.offload?.serve === true && serving.lastAt > 0 && (
+                <p className={DESC_CLASS}>
+                  {t('settings.onDeviceAi.offload.lastUsed', {
+                    device: serving.lastDevice || t('settings.onDeviceAi.offload.anotherDevice'),
+                    time: new Date(serving.lastAt).toLocaleString(i18n.language, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short'
+                    })
+                  })}
+                </p>
+              )}
+            </div>
+            <Toggle
+              on={config.offload?.serve === true}
+              onClick={() => dispatch(setLocalAiOffload({ serve: !config.offload?.serve }))}
+              disabled={isUnsupported}
+            />
           </div>
         </div>
       </div>
@@ -622,8 +749,8 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
                               const selected = config.features[row.feature]?.tier === tier
                               const bytes = getRegistryNamesBytes(
                                 getFeatureRegistryNames(row.feature, {
-                                  tier,
-                                  language: config.features[row.feature]?.language
+                                  ...config.features[row.feature],
+                                  tier
                                 })
                               )
                               const fits = canRunFeature(
@@ -653,7 +780,14 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
                                       `settings.onDeviceAi.tierDescriptions.${tier}`
                                     ],
                                     {
-                                      size: formatBytes(bytes)
+                                      size: formatBytes(bytes),
+                                      model: getTextModelLabel(
+                                        getTextTaskModel(
+                                          { ...config.features[row.feature], tier },
+                                          LOCAL_AI_TEXT_TASK.ASK,
+                                          device
+                                        )
+                                      )
                                     }
                                   )}
                                 </button>
@@ -679,6 +813,33 @@ export default function LocalAiSettings({ onOpenDuplicates }) {
                                 {t('settings.onDeviceAi.tierNeedsMemory')}
                               </p>
                             ))}
+                          {row.feature === LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS &&
+                            config.features[row.feature]?.tier === LOCAL_AI_TIER.BEST && (
+                              <p className={DESC_CLASS}>
+                                {t('settings.onDeviceAi.features.summarizeRecordings.bestRouting', {
+                                  ask: getTextModelLabel(
+                                    getTextTaskModel(
+                                      config.features[row.feature],
+                                      LOCAL_AI_TEXT_TASK.ASK,
+                                      device
+                                    )
+                                  ),
+                                  write: getTextModelLabel(
+                                    getTextTaskModel(
+                                      config.features[row.feature],
+                                      LOCAL_AI_TEXT_TASK.WRITE,
+                                      device
+                                    )
+                                  )
+                                })}
+                              </p>
+                            )}
+                          {row.feature === LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS && (
+                            <AskModelPicker
+                              featureConfig={config.features[row.feature]}
+                              device={device}
+                            />
+                          )}
                           <p className={DESC_CLASS}>{t('settings.onDeviceAi.tierSwitchNote')}</p>
                         </div>
                       )}

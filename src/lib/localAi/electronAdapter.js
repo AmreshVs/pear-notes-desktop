@@ -8,6 +8,8 @@ import {
 import { holdAiJobs } from '@pear-notes/core/store/services/localAiJobs.js'
 import { getMediaSyncFlag } from '@pear-notes/core/utils.js'
 
+import { attachmentText } from './attachmentText'
+
 export class LocalAiError extends Error {
   constructor(code, message) {
     super(message ?? code)
@@ -30,7 +32,8 @@ async function invoke(method, payload, fallbackCode = LOCAL_AI_ERROR.TASK_FAILED
   return result
 }
 
-async function invokeWithProgress(method, payload, onProgress) {
+async function invokeWithProgress(method, payload, onProgress, signal) {
+  if (signal?.aborted) throw new LocalAiError(LOCAL_AI_ERROR.TASK_FAILED, 'cancelled')
   const releaseJobs = holdAiJobs()
   taskCounter += 1
   const taskId = `local-ai-task-${Date.now()}-${taskCounter}`
@@ -39,9 +42,15 @@ async function invokeWithProgress(method, payload, onProgress) {
         if (progress?.taskId === taskId) onProgress(progress)
       })
     : null
+  const abort = () =>
+    getBridge()
+      ?.localAiCancelTaskRun?.({ taskId })
+      ?.catch?.(() => {})
+  signal?.addEventListener('abort', abort, { once: true })
   try {
     return await invoke(method, { ...payload, taskId })
   } finally {
+    signal?.removeEventListener('abort', abort)
     unsubscribe?.()
     releaseJobs()
   }
@@ -124,12 +133,23 @@ export async function describeImage(image, extension, { onProgress } = {}) {
   return text
 }
 
-export async function runNoteTask(task, input, featureConfig = {}, { onProgress } = {}) {
+export async function runNoteTask(
+  task,
+  input,
+  featureConfig = {},
+  { onProgress, styleSamples, signal } = {}
+) {
   const { text } = await invokeWithProgress(
     'localAiSummarize',
-    { text: input, task, featureConfig },
-    onProgress
+    { text: input, task, featureConfig, styleSamples },
+    onProgress,
+    signal
   )
+  return text
+}
+
+export async function runNoteTaskInBackground(task, input, featureConfig = {}) {
+  const { text } = await invoke('localAiSummarize', { text: input, task, featureConfig })
   return text
 }
 
@@ -145,20 +165,34 @@ export async function translateParagraphs(paragraphs, from, to, { onProgress } =
   return Array.isArray(translations) ? translations : []
 }
 
-export async function askAboutNote(note, turns, question, featureConfig = {}, { onProgress } = {}) {
+export async function askAboutNote(
+  note,
+  turns,
+  question,
+  featureConfig = {},
+  { onProgress, signal } = {}
+) {
   const { text } = await invokeWithProgress(
     'localAiAsk',
     { note, turns, question, featureConfig },
-    onProgress
+    onProgress,
+    signal
   )
   return text
 }
 
-export async function askVault(question, sources, turns, featureConfig = {}, { onProgress } = {}) {
+export async function askVault(
+  question,
+  sources,
+  turns,
+  featureConfig = {},
+  { onProgress, signal } = {}
+) {
   const { text } = await invokeWithProgress(
     'localAiAskVault',
     { question, sources, turns, featureConfig },
-    onProgress
+    onProgress,
+    signal
   )
   return text
 }
@@ -172,6 +206,11 @@ export async function cancelLocalAiTask() {
   await invoke('localAiCancelTask')
 }
 
+export async function isOnBatteryPower() {
+  const { onBattery } = await invoke('localAiPower')
+  return onBattery === true
+}
+
 export const electronAdapter = {
   getDeviceSupport,
   getNetworkKind: getLocalAiNetworkKind,
@@ -180,5 +219,8 @@ export const electronAdapter = {
   cancel,
   deleteModel,
   closeAndWipe,
-  embedTexts
+  embedTexts,
+  runNoteTaskInBackground,
+  cancelTask: cancelLocalAiTask,
+  attachmentText
 }

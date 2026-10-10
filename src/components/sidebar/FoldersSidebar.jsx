@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { FolderPlus, Settings } from 'lucide-react'
+import { CalendarClock, Copy, FolderPlus, History, Settings, Sparkles } from 'lucide-react'
 
 import {
   DEFAULT_FOLDER_ICON,
@@ -11,8 +11,17 @@ import {
   FOLDER_ICONS,
   FOLDER_NAME_MAX_LENGTH
 } from '@pear-notes/core/constant.js'
+import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
-import { getNoteCountsPerFolder } from '@pear-notes/core/store/slices/notesSlice.js'
+import {
+  getLocalAiIndex,
+  getLocalAiOffloadServing,
+  loadDuplicateNotes
+} from '@pear-notes/core/store/slices/localAiSlice.js'
+import {
+  getDuplicatePairRows,
+  getNoteCountsPerFolder
+} from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   getShouldAutoRenameNextFolder,
   setShouldAutoRenameNextFolder
@@ -25,6 +34,7 @@ import {
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
+import { useUpcomingCount } from '../../hooks/useUpcomingCount'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
 import {
@@ -45,10 +55,21 @@ export default function FoldersSidebar({
   onCreateNote,
   onCreateFolder,
   onSettingsClick,
-  onDeleteFolder
+  onDeleteFolder,
+  toolView = null,
+  onSelectTool
 }) {
   const { t } = useTranslation()
+  const upcomingCount = useUpcomingCount(Boolean(onSelectTool))
   const dispatch = useDispatch()
+  const index = useSelector(getLocalAiIndex)
+  const duplicateCount = useSelector(getDuplicatePairRows).length
+  const serving = useSelector(getLocalAiOffloadServing)
+  const showDuplicates = LOCAL_AI_ENABLED && index.enabled
+
+  useEffect(() => {
+    if (showDuplicates) dispatch(loadDuplicateNotes())
+  }, [dispatch, index.changedAt, showDuplicates])
   const [editingFolderId, setEditingFolderId] = useState(null)
   const [newFolderId, setNewFolderId] = useState(null)
   const [deletingFolderId, setDeletingFolderId] = useState(null)
@@ -324,6 +345,39 @@ export default function FoldersSidebar({
     )
   }
 
+  const renderToolItem = (view, Icon, label, count) => {
+    const isSelected = toolView === view
+    return (
+      <button
+        key={view}
+        onClick={() => onSelectTool(view)}
+        aria-pressed={isSelected}
+        className={`flex items-center relative mb-2 w-full px-4 py-3 gap-4 rounded-xl transition-colors duration-0
+          ${
+            isSelected
+              ? 'bg-[var(--accent-selected-bg)] text-accent-primary border border-[var(--accent-selected-border)] shadow-[0_4px_12px_rgba(var(--accent-primary),0.1)]'
+              : 'bg-transparent text-text-secondary hover:bg-bg-tertiary border border-transparent'
+          }`}
+      >
+        <Icon
+          className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'opacity-100 scale-110' : 'opacity-70 scale-100'}`}
+        />
+        <span
+          className={`flex-1 text-left block text-base tracking-tight whitespace-nowrap truncate leading-[20px] h-5 ${isSelected ? 'font-bold' : 'font-medium'}`}
+        >
+          {label}
+        </span>
+        {count > 0 && (
+          <span
+            className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${isSelected ? 'text-accent-primary bg-accent-primary/20' : 'text-text-secondary bg-bg-tertiary/50'}`}
+          >
+            {count}
+          </span>
+        )}
+      </button>
+    )
+  }
+
   return (
     <div className='flex flex-col h-full w-full bg-bg-primary/80 backdrop-blur-xl border-r border-border-primary relative transition-none'>
       <div className='px-6 pt-10 pb-4 border-b border-border-primary/50 min-h-[110px] flex flex-col transition-none'>
@@ -358,10 +412,34 @@ export default function FoldersSidebar({
             {t('folders.archiveHeader')}
           </div>
           <div className='transition-none'>{bottomFolders.map(renderFolderItem)}</div>
+          {onSelectTool && (
+            <>
+              <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mt-6 mb-3 px-4 transition-none'>
+                {t('tools.header')}
+              </div>
+              {renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
+              {showDuplicates &&
+                renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
+              {renderToolItem('recap', History, t('tools.recap'), 0)}
+            </>
+          )}
         </div>
       </div>
 
       <div className='py-6 border-t border-border-primary bg-bg-primary/30 flex flex-col items-center px-3 space-y-3 transition-none'>
+        {serving.active && (
+          <div
+            role='status'
+            className='w-full flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary/10 text-accent-primary text-xs font-semibold'
+          >
+            <Sparkles className='w-3.5 h-3.5 flex-shrink-0 animate-pulse' />
+            <span className='truncate'>
+              {serving.activeDevice
+                ? t('settings.onDeviceAi.offload.answeringFor', { device: serving.activeDevice })
+                : t('settings.onDeviceAi.offload.answeringForDevice')}
+            </span>
+          </div>
+        )}
         <div className='w-full transition-none'>
           <button
             onClick={onSettingsClick}

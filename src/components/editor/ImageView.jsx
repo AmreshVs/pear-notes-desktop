@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { Resizable } from 'react-resizable'
 import { NodeViewWrapper } from '@tiptap/react'
-import { ScanText, Sparkles, Trash2 } from 'lucide-react'
+import { ReceiptText, ScanText, Sparkles, Trash2 } from 'lucide-react'
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
@@ -108,6 +108,21 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
             aria-label={t('localAi.extract.actionLabel')}
           >
             <ScanText className='w-4 h-4' />
+          </button>
+        )}
+        {selected && aiToolsVisible && resolvedUrl && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!gateAiFeature(LOCAL_AI_FEATURE.EXTRACT_TEXT)) return
+              requestLocalAiSheet({ mode: 'details', url: resolvedUrl, fileName: title || alt })
+            }}
+            className='absolute -top-3 right-[6.75rem] w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto'
+            title={t('localAi.details.actionLabel')}
+            aria-label={t('localAi.details.actionLabel')}
+          >
+            <ReceiptText className='w-4 h-4' />
           </button>
         )}
         {selected && aiToolsVisible && resolvedUrl && (
