@@ -30,7 +30,7 @@ export default function DuplicatesList({ onToggleSidebar, isSidebarCollapsed }) 
   const index = useSelector(getLocalAiIndex)
 
   useEffect(() => {
-    dispatch(loadDuplicateNotes())
+    dispatch(loadDuplicateNotes({ force: true }))
   }, [dispatch, index.changedAt])
 
   const titleOf = (key) => notesData[key]?.title || t('activity.untitledNote')

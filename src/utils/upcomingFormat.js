@@ -24,17 +24,18 @@ export function yearlyLabel(task, t) {
   return age > 0 ? t('upcoming.turns', { age }) : t('upcoming.everyYear')
 }
 
-/** "in 25 min", "in 3 hours", "tomorrow", "on Fri 16 Oct". */
-export function formatWhenFromNow(task, language, now = Date.now()) {
-  const at = dateOf(task).getTime()
-  const relative = new Intl.RelativeTimeFormat(language, { numeric: 'auto' })
+/** "in 25 min", "in 3 hours", "tomorrow", "Fri 16 Oct". */
+export function formatWhenFromNow(task, t, language, now = Date.now()) {
   const startOfToday = new Date(now).setHours(0, 0, 0, 0)
   const days = Math.round((dateOf({ ...task, time: null }).getTime() - startOfToday) / DAY_MS)
   if (task.time && days === 0) {
-    const diff = at - now
-    if (diff < HOUR_MS) return relative.format(Math.max(1, Math.round(diff / MINUTE_MS)), 'minute')
-    return relative.format(Math.round(diff / HOUR_MS), 'hour')
+    const diff = dateOf(task).getTime() - now
+    if (diff < HOUR_MS) {
+      return t('upcoming.when.inMinutes', { count: Math.max(1, Math.round(diff / MINUTE_MS)) })
+    }
+    return t('upcoming.when.inHours', { count: Math.round(diff / HOUR_MS) })
   }
-  if (days <= 1) return relative.format(days, 'day')
+  if (days <= 0) return t('upcoming.when.today')
+  if (days === 1) return t('upcoming.when.tomorrow')
   return formatDue({ ...task, time: null }, language)
 }

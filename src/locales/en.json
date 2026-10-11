@@ -2348,6 +2348,14 @@
     "countWithOverdue_one": "{{count}} open · {{overdue}} overdue",
     "countWithOverdue_other": "{{count}} open · {{overdue}} overdue",
     "next": "Next · {{when}}",
+    "when": {
+      "inMinutes_one": "in {{count}} min",
+      "inMinutes_other": "in {{count}} min",
+      "inHours_one": "in {{count}} hour",
+      "inHours_other": "in {{count}} hours",
+      "today": "today",
+      "tomorrow": "tomorrow"
+    },
     "markDone": "Mark as done",
     "markNotDone": "Mark as not done",
     "turns": "Turns {{age}}",
@@ -2382,7 +2390,11 @@
   "suggestions": {
     "title": "Suggested title: {{title}}",
     "useTitleHint": "Use as the title",
-    "dismiss": "Don't suggest a title for this note again"
+    "dismiss": "Don't suggest a title for this note again",
+    "moveTo": "Move to {{folder}}?",
+    "newFolder": "New folder: {{name}}?",
+    "useFolderHint": "Moves this note out of Untitled",
+    "dismissFolder": "Don't suggest a folder for this note again"
   },
   "recap": {
     "hint": "What's due this week, what you edited in the last 7 days and what you wrote a year ago. Made on this device; nothing is added to your notes.",

@@ -34,7 +34,7 @@ function NextCard({ task, onOpen }) {
       className='mx-6 mt-4 mb-2 text-left rounded-2xl bg-accent-primary/10 hover:bg-accent-primary/15 border border-accent-primary/20 px-4 py-3 flex flex-col gap-1 transition-colors'
     >
       <span className='text-[11px] font-bold tracking-[0.1em] text-text-tertiary'>
-        {t('upcoming.next', { when: formatWhenFromNow(task, i18n.language) })}
+        {t('upcoming.next', { when: formatWhenFromNow(task, t, i18n.language) })}
       </span>
       <span className='text-base font-bold text-text-primary line-clamp-2'>{task.text}</span>
       <span className='text-xs text-text-tertiary truncate'>
