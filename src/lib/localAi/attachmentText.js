@@ -1,11 +1,9 @@
-import { isPdfAttachment } from '../pdfPreview'
+import { noteAttachmentText } from '@pear-notes/core/store/services/attachmentText.js'
 
 const PDF_PAGE_LIMIT = 20
 const TEXT_LIMIT = 20000
 const CACHE_LIMIT = 64
 const PDF_BYTE_LIMIT = 25 * 1024 * 1024
-const ATTACHMENT_TAG = /<div\b[^>]*\bdata-file-attachment\b[^>]*>/gi
-const attr = (tag, name) => tag.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`, 'i'))?.[1] ?? ''
 
 const cache = new Map()
 let enginePromise = null
@@ -49,15 +47,5 @@ async function pdfText(url) {
   return text
 }
 
-export async function attachmentText(value, { resolveUrl }) {
-  const html = String(value?.note ?? '')
-  const parts = []
-  for (const [tag] of html.matchAll(ATTACHMENT_TAG)) {
-    const fileName = attr(tag, 'filename')
-    const url = resolveUrl(attr(tag, 'url').replace(/&amp;/g, '&'))
-    if (!url || !isPdfAttachment(fileName, attr(tag, 'filetype'))) continue
-    const text = await pdfText(url).catch(() => '')
-    if (text) parts.push(`${fileName}\n${text}`)
-  }
-  return parts.join('\n\n')
-}
+export const attachmentText = (value, { resolveUrl }) =>
+  noteAttachmentText(value, { resolveUrl, readPdf: pdfText })

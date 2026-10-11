@@ -540,13 +540,30 @@
         "partial": "{{indexed}} of {{total}} notes indexed · the rest wait for charging",
         "done": "{{indexed}} of {{total}} notes indexed",
         "notYet": "Not indexed yet",
-        "rebuild": "Rebuild index"
+        "rebuild": "Rebuild index",
+        "percent": "{{percent}}%",
+        "lessThanMinute": "less than a minute left",
+        "minutesLeft_one": "about {{count}} minute left",
+        "minutesLeft_other": "about {{count}} minutes left",
+        "size": "Index size {{size}}"
       },
       "offload": {
         "answeringFor": "Answering for {{device}}",
         "answeringForDevice": "Answering for another device",
         "lastUsed": "Last used by {{device}} · {{time}}",
         "anotherDevice": "another device"
+      },
+      "suggestions": {
+        "title": "Suggestions",
+        "tasks": "Tasks and dates",
+        "tasksDesc": "Find dates and to-dos in your notes for Upcoming and reminders",
+        "titles": "Titles for untitled notes",
+        "titlesDesc": "Suggest a title once an untitled note has some text",
+        "folders": "Folders",
+        "foldersDesc": "Suggest a folder for notes in Untitled, and Tidy up",
+        "related": "Related notes and duplicates",
+        "relatedDesc": "Show notes like this one and notes that repeat each other",
+        "synced": "These choices apply on all your devices."
       }
     }
   },
@@ -1985,7 +2002,15 @@
         "unstable": "This model stopped the app before, so it's paused. Try a lighter quality in On-device AI settings.",
         "notReady": "Search by meaning isn't ready yet. Try again in a moment.",
         "busy": "On-device AI is busy with another task. Try again in a moment."
-      }
+      },
+      "draft": {
+        "saveNew": "Save as new note",
+        "addTo": "Add to “{{title}}”",
+        "saved": "Saved as a new note",
+        "added": "Added to “{{title}}”"
+      },
+      "recent": "Recent",
+      "deleteThread": "Remove from recent"
     },
     "ask": {
       "group": "Ask",

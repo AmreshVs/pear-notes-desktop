@@ -5,6 +5,7 @@ import { Lock } from 'lucide-react'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
+import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import {
   LOCAL_AI_ENABLED,
   LOCAL_AI_FEATURE
@@ -43,6 +44,7 @@ import {
   getRelatedNotesKey,
   openRelatedNotes
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { selectAiSuggestionOn } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { splitNote, updateNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
@@ -149,7 +151,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const activityEnabled = useSelector(getActivityLogEnabled)
   const historyNoteKey = useSelector(getHistoryNoteKey)
   const showHistory = !!historyNoteKey && historyNoteKey === selectedNoteKey
-  const relatedEnabled = useSelector(getLocalAiIndexEnabled) && LOCAL_AI_ENABLED
+  const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
+  const relatedEnabled = useSelector(getLocalAiIndexEnabled) && LOCAL_AI_ENABLED && relatedOn
   const relatedNoteKey = useSelector(getRelatedNotesKey)
 
   useNoteLockVersion()

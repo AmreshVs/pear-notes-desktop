@@ -57,9 +57,7 @@ import {
   getLocalAiState,
   initLocalAi,
   pauseLocalAiDownload,
-  rebuildLocalAiIndex,
   resumeLocalAiDownload,
-  selectIndexCoverage,
   selectLocalAiBytesOnDisk,
   setLocalAiFeatureLanguage,
   setLocalAiFeatureModel,
@@ -76,13 +74,16 @@ import {
   useShowAiToolsInLocked
 } from '../../lib/localAi/aiToolsPreference'
 
-const SECTION_TITLE_CLASS = 'text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'
-const CARD_CLASS =
-  'bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden divide-y divide-border-primary'
-const ROW_CLASS =
-  'p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'
-const LABEL_CLASS = 'block text-text-primary text-base font-bold'
-const DESC_CLASS = 'text-sm text-text-tertiary font-medium opacity-60'
+import LocalAiNotesSection from './LocalAiNotesSection'
+import {
+  CARD_CLASS,
+  DESC_CLASS,
+  LABEL_CLASS,
+  ROW_CLASS,
+  SECTION_TITLE_CLASS
+} from './localAiSettingsStyles'
+import Toggle from './SettingsToggle'
+
 const ACTION_BUTTON_CLASS =
   'px-3 py-1.5 rounded-xl bg-accent-primary/10 text-accent-primary text-sm font-semibold hover:bg-accent-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
 const ICON_BUTTON_CLASS =
@@ -193,20 +194,6 @@ function buildModelRow(state, name) {
   }
 }
 
-function Toggle({ on, onClick, disabled }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`relative w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${on ? 'bg-accent-primary' : 'bg-bg-tertiary border border-border-primary'}`}
-    >
-      <span
-        className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-text-primary transition-transform ${on ? 'translate-x-5' : ''}`}
-      />
-    </button>
-  )
-}
-
 function ConfirmModal({ icon: Icon, danger, title, message, onDismiss, children }) {
   return (
     <div className='fixed inset-0 z-[300] flex items-center justify-center p-6'>
@@ -248,28 +235,7 @@ export default function LocalAiSettings() {
     if (LOCAL_AI_ENABLED) dispatch(initLocalAi())
   }, [dispatch])
 
-  const coverage = useSelector(selectIndexCoverage)
   const serving = useSelector(getLocalAiOffloadServing)
-  const indexBusy = state.index.status === 'running' || state.index.status === 'waiting'
-  const indexStatusText =
-    state.index.status === 'running'
-      ? t('settings.onDeviceAi.index.running', {
-          done: state.index.done ?? 0,
-          total: state.index.total ?? 0
-        })
-      : state.index.status === 'waiting'
-        ? t('settings.onDeviceAi.index.waiting')
-        : state.index.status === 'failed' || state.index.status === 'model-missing'
-          ? t('settings.onDeviceAi.index.failed')
-          : coverage
-            ? t(
-                coverage.indexed < coverage.total
-                  ? 'settings.onDeviceAi.index.partial'
-                  : 'settings.onDeviceAi.index.done',
-                coverage
-              )
-            : t('settings.onDeviceAi.index.notYet')
-
   const { loaded, device, config } = state
   const isUnsupported = device.status === LOCAL_AI_DEVICE_STATUS.UNSUPPORTED
   const notice = state.notice?.type === LOCAL_AI_NOTICE.INSUFFICIENT_SPACE ? state.notice : null
@@ -518,28 +484,7 @@ export default function LocalAiSettings() {
         </div>
       </div>
 
-      {state.index.enabled && (
-        <div className='space-y-1'>
-          <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.yourNotes')}</h3>
-          <div className={CARD_CLASS}>
-            <div className={ROW_CLASS}>
-              <div className='space-y-1 min-w-0'>
-                <label className={LABEL_CLASS}>{t('settings.onDeviceAi.index.title')}</label>
-                <p className={DESC_CLASS} role='status'>
-                  {indexStatusText}
-                </p>
-              </div>
-              <button
-                onClick={() => dispatch(rebuildLocalAiIndex())}
-                disabled={indexBusy}
-                className='px-4 py-2 rounded-xl bg-bg-tertiary text-text-primary text-sm font-semibold hover:bg-bg-tertiary/70 disabled:opacity-40 whitespace-nowrap'
-              >
-                {t('settings.onDeviceAi.index.rebuild')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LocalAiNotesSection indexEnabled={state.index.enabled} />
 
       <div className='space-y-1'>
         <h3 className={SECTION_TITLE_CLASS}>{t('settings.onDeviceAi.downloads')}</h3>

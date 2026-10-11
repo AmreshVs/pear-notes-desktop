@@ -52,8 +52,8 @@ const writeLastUse = (lastDevice, lastAt) => {
   }
 }
 
-async function substringKeys(query) {
-  const response = await backendApi.searchNotes({ query, folderKey: ALL_NOTES_KEY })
+async function substringKeys(query, folderKey = ALL_NOTES_KEY) {
+  const response = await backendApi.searchNotes({ query, folderKey })
   return (response?.results ?? []).map((result) => result.key)
 }
 
@@ -73,14 +73,16 @@ export function useAiOffloadServer() {
       askVault,
       askAboutNote,
       runNoteTask,
-      retrieveVaultSources: (question, turns) =>
+      retrieveVaultSources: (question, turns, folderKey) =>
         retrieveVaultSources({
           api: backendApi,
           embed: embedTexts,
           question,
           turns,
-          searchSubstring: substringKeys,
-          isAllowed: (key) => isIndexable(noteOf(key)),
+          searchSubstring: (keyword) => substringKeys(keyword, folderKey || ALL_NOTES_KEY),
+          isAllowed: (key) =>
+            isIndexable(noteOf(key)) && (!folderKey || noteOf(key)?.folderKey === folderKey),
+          scoped: !!folderKey,
           titleOf: (key) => noteOf(key)?.title ?? '',
           updatedAtOf: (key) => noteOf(key)?.updatedAt ?? 0
         }),

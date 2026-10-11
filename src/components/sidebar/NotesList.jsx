@@ -39,6 +39,7 @@ import {
   SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
 } from '@pear-notes/core/constant.js'
+import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import {
   LOCAL_AI_ENABLED,
   LOCAL_AI_FEATURE
@@ -51,6 +52,7 @@ import {
   getMeaningSearchReady,
   selectIsLocalAiFeatureReady
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { selectAiSuggestionOn } from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   deleteNote,
   deleteNotes,
@@ -518,7 +520,8 @@ export default function NotesList({
       LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
   )
   const meaningReady = useSelector(getMeaningSearchReady)
-  const tidyMoves = useTidyMoves(selectedFolder === ALL_NOTES_KEY && meaningReady)
+  const foldersOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.FOLDERS))
+  const tidyMoves = useTidyMoves(selectedFolder === ALL_NOTES_KEY && meaningReady && foldersOn)
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const filteredNotes = useSelector(getFilteredNotes)

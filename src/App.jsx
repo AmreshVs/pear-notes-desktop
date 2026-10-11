@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { backendApi, setLocalDeviceName } from '@pear-notes/core/backend/api.js'
 import { appBoot } from '@pear-notes/core/bootTimeline.js'
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
+import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
   createFolder,
@@ -13,6 +14,7 @@ import {
   getSelectedFolder,
   setSelectedFolder
 } from '@pear-notes/core/store/slices/foldersSlice.js'
+import { selectAiSuggestionOn } from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   createNote,
   deleteNote,
@@ -87,7 +89,12 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(width < 1000)
   const [toolView, setToolView] = useState(null)
   const [updateDismissedVersion, setUpdateDismissedVersion] = useState(null)
-  const ToolList = TOOL_LISTS[toolView] ?? null
+  const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
+  const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
+  const toolHidden =
+    (toolView === 'upcoming' && !tasksOn) || (toolView === 'duplicates' && !relatedOn)
+  const activeTool = toolHidden ? null : toolView
+  const ToolList = TOOL_LISTS[activeTool] ?? null
   const prevWidth = useRef(width)
 
   useEffect(() => {
@@ -276,12 +283,12 @@ function App() {
         collapsedWidth={0}
       >
         <FoldersSidebar
-          selectedFolder={toolView ? null : selectedFolder}
+          selectedFolder={activeTool ? null : selectedFolder}
           onSelectFolder={(folder) => {
             setToolView(null)
             dispatch(setSelectedFolder(folder))
           }}
-          toolView={toolView}
+          toolView={activeTool}
           onSelectTool={setToolView}
           folders={folders}
           onCreateNote={handleCreateNote}

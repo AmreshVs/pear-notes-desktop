@@ -11,6 +11,7 @@ import {
   FOLDER_ICONS,
   FOLDER_NAME_MAX_LENGTH
 } from '@pear-notes/core/constant.js'
+import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { updateFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
@@ -18,6 +19,7 @@ import {
   getLocalAiOffloadServing,
   loadDuplicateNotes
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { selectAiSuggestionOn } from '@pear-notes/core/store/slices/localAiSlice.js'
 import {
   getDuplicatePairRows,
   getNoteCountsPerFolder
@@ -60,12 +62,14 @@ export default function FoldersSidebar({
   onSelectTool
 }) {
   const { t } = useTranslation()
-  const upcomingCount = useUpcomingCount(Boolean(onSelectTool))
+  const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
+  const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
+  const upcomingCount = useUpcomingCount(Boolean(onSelectTool) && tasksOn)
   const dispatch = useDispatch()
   const index = useSelector(getLocalAiIndex)
   const duplicateCount = useSelector(getDuplicatePairRows).length
   const serving = useSelector(getLocalAiOffloadServing)
-  const showDuplicates = LOCAL_AI_ENABLED && index.enabled
+  const showDuplicates = LOCAL_AI_ENABLED && index.enabled && relatedOn
 
   useEffect(() => {
     if (showDuplicates) dispatch(loadDuplicateNotes())
@@ -413,7 +417,8 @@ export default function FoldersSidebar({
               <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none'>
                 {t('tools.header')}
               </div>
-              {renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
+              {tasksOn &&
+                renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
               {showDuplicates &&
                 renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
               {renderToolItem('recap', History, t('tools.recap'), 0)}

@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import { dueReminders } from '@pear-notes/core/store/services/noteTasks.js'
 import { loadDoneIds, loadReminderPrefs } from '@pear-notes/core/store/services/upcomingTasks.js'
+import { selectAiSuggestionOn } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { useLocalToggle } from './useLocalToggle'
@@ -33,7 +35,9 @@ const writeSent = (keys) => {
 export function useReminders() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const [enabled] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
+  const [remindersOn] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
+  const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
+  const enabled = remindersOn && tasksOn
 
   useEffect(() => {
     const bridge = window.electronBridge

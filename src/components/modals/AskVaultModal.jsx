@@ -19,10 +19,13 @@ import {
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { ALL_NOTES_KEY } from '@pear-notes/core/constant.js'
 import { ASK_QUESTION_MAX_CHARS } from '@pear-notes/core/store/services/localAiAsk.js'
-import { isIndexable } from '@pear-notes/core/store/services/localAiIndex.js'
 import { toMeaningSnippet } from '@pear-notes/core/store/services/localAiSearch.js'
+import {
+  getVaultAskSuggestions,
+  getVaultReminderTask,
+  getVaultScopeNotes
+} from '@pear-notes/core/store/services/localAiVaultActions.js'
 import { VAULT_ASK_KIND } from '@pear-notes/core/store/services/localAiVaultAsk.js'
-import { taskDoneId } from '@pear-notes/core/store/services/noteTasks.js'
 import { loadDoneIds } from '@pear-notes/core/store/services/upcomingTasks.js'
 import { getFolders, getSelectedFolder } from '@pear-notes/core/store/slices/foldersSlice.js'
 import { selectAskIndexNotice } from '@pear-notes/core/store/slices/localAiSlice.js'
@@ -32,21 +35,20 @@ import { useAskVault } from '../../hooks/useAskVault'
 import { useLocalToggle } from '../../hooks/useLocalToggle'
 import { REMINDERS_TOGGLE_KEY } from '../../hooks/useReminders'
 
+import { AskVaultDraftActions, AskVaultDraftCard } from './AskVaultDraft'
+import AskVaultRecent from './AskVaultRecent'
 import AskVaultSearchResults from './AskVaultSearchResults'
+import { ACTION, SECONDARY_ACTION } from './askVaultStyles'
 import LocalAiWorkProgress from './LocalAiWorkProgress'
 
 const CITATION = /\[(\d{1,2})\]/g
 const IS_MAC = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform)
 const SHORTCUT = IS_MAC ? '⌘ K' : 'Ctrl K'
-const SUGGESTION_TITLE_MAX = 40
 const DAY_MS = 24 * 60 * 60 * 1000
 const passLanguage = (code) => code ?? ''
 
 const KBD =
   'shrink-0 text-[11px] font-semibold text-text-tertiary border border-overlay-medium rounded-md px-1.5 py-px'
-const ACTION =
-  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold border transition-colors'
-const SECONDARY_ACTION = `${ACTION} bg-overlay-subtle border-overlay-soft text-text-primary hover:bg-overlay-medium`
 
 function indexNoticeText(t, notice) {
   if (notice.kind === 'indexing') {
@@ -59,15 +61,6 @@ function indexNoticeText(t, notice) {
   }
   return t(`localAi.askVault.indexNotice.${notice.kind}`)
 }
-
-const isoToday = () => {
-  const now = new Date()
-  const pad = (value) => String(value).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
-
-const shortTitle = (title) =>
-  title.length > SUGGESTION_TITLE_MAX ? `${title.slice(0, SUGGESTION_TITLE_MAX - 1)}…` : title
 
 export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose }) {
   const { t, i18n } = useTranslation()
@@ -83,7 +76,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
   const [mode, setMode] = useState('ask')
   const [scope, setScope] = useState(ALL_NOTES_KEY)
   const [searchQuery, setSearchQuery] = useState('')
-  const [upcoming, setUpcoming] = useState([])
+  const [upcoming, setUpcoming] = useState({ tasks: [], doneIds: new Set() })
   const folderById = useMemo(
     () =>
       new Map(folders.filter((folder) => !folder.isSystem).map((folder) => [folder.id, folder])),
@@ -102,9 +95,17 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
     canSend,
     copiedId,
     savedId,
+    draftDone,
+    threads,
+    openThread,
+    deleteThread,
+    draftOf,
+    draftTargetOf,
     handleSend,
     handleCopy,
     handleSave,
+    handleSaveDraft,
+    handleAddDraft,
     handleClose
   } = useAskVault({
     initialQuestion,
@@ -113,37 +114,15 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
     onClose
   })
 
-  const scopedNotes = useMemo(
-    () =>
-      Object.entries(notesData ?? {}).filter(
-        ([, note]) =>
-          isIndexable(note) && (scopeKey === ALL_NOTES_KEY || note.folderKey === scopeKey)
-      ),
-    [notesData, scopeKey]
-  )
+  const scopedNotes = useMemo(() => getVaultScopeNotes(notesData, scopeKey), [notesData, scopeKey])
 
-  const suggestions = useMemo(() => {
-    const recent = scopedNotes
-      .filter(([, note]) => note.title?.trim())
-      .sort(([, a], [, b]) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
-      .map(([, note]) => shortTitle(note.title.trim()))
-    const titles = [...new Set(recent)]
-    const counts = new Map()
-    for (const [, note] of scopedNotes) {
-      if (folderById.has(note.folderKey)) {
-        counts.set(note.folderKey, (counts.get(note.folderKey) ?? 0) + 1)
-      }
-    }
-    const [topFolder] = [...counts.entries()].sort((a, b) => b[1] - a[1])
-    const folderName = folderById.get(scopeKey)?.name ?? folderById.get(topFolder?.[0])?.name
-    return [
-      titles[0] && t('localAi.askVault.suggest.note', { title: titles[0] }),
-      titles[1] && t('localAi.askVault.suggest.keyPoints', { title: titles[1] }),
-      folderName
-        ? t('localAi.askVault.suggest.folder', { folder: folderName })
-        : titles[2] && t('localAi.askVault.suggest.note', { title: titles[2] })
-    ].filter(Boolean)
-  }, [folderById, scopeKey, scopedNotes, t])
+  const suggestions = useMemo(
+    () =>
+      getVaultAskSuggestions({ notes: notesData, folders, scope: scopeKey }).map((suggestion) =>
+        t(`localAi.askVault.suggest.${suggestion.kind}`, suggestion)
+      ),
+    [folders, notesData, scopeKey, t]
+  )
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -153,13 +132,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
     let live = true
     Promise.all([backendApi.getUpcomingTasks(), loadDoneIds().catch(() => new Set())])
       .then(([tasks, doneIds]) => {
-        if (!live) return
-        const today = isoToday()
-        setUpcoming(
-          (tasks ?? []).filter(
-            (task) => !task.done && task.date >= today && !doneIds.has(taskDoneId(task))
-          )
-        )
+        if (live) setUpcoming({ tasks: tasks ?? [], doneIds })
       })
       .catch(() => {})
     return () => {
@@ -228,16 +201,26 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
   }
 
   const reminderFor = (turn) => {
-    const keys = new Set(citedSources(turn).map((source) => source.noteKey))
-    if (!keys.size) return null
-    const [first] = upcoming
-      .filter((task) => keys.has(task.noteKey))
-      .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? '').localeCompare(b.time ?? ''))
+    const first = getVaultReminderTask({
+      citedKeys: citedSources(turn).map((source) => source.noteKey),
+      ...upcoming
+    })
     if (!first) return null
     const [year, month, day] = first.date.split('-').map(Number)
     const date = new Date(year, month - 1, day)
     return formatDay(date, year !== new Date().getFullYear())
   }
+
+  const citationChip = (source, key) => (
+    <button
+      key={key}
+      onClick={() => openNote(source.noteKey)}
+      title={source.title || t('activity.untitledNote')}
+      className='inline-flex items-center justify-center min-w-[17px] h-[17px] px-1 ml-0.5 rounded-[5px] bg-accent-primary/15 text-accent-primary text-[10.5px] font-bold align-[2px] hover:bg-accent-primary/25'
+    >
+      {source.n}
+    </button>
+  )
 
   const renderAnswerText = (turn) => {
     const byNumber = new Map(turn.sources.map((source) => [source.n, source]))
@@ -246,20 +229,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
     for (const match of turn.result.answer.matchAll(CITATION)) {
       const source = byNumber.get(Number(match[1]))
       if (match.index > last) parts.push(turn.result.answer.slice(last, match.index))
-      parts.push(
-        source ? (
-          <button
-            key={`${turn.id}-${match.index}`}
-            onClick={() => openNote(source.noteKey)}
-            title={source.title || t('activity.untitledNote')}
-            className='inline-flex items-center justify-center min-w-[17px] h-[17px] px-1 ml-0.5 rounded-[5px] bg-accent-primary/15 text-accent-primary text-[10.5px] font-bold align-[2px] hover:bg-accent-primary/25'
-          >
-            {match[1]}
-          </button>
-        ) : (
-          match[0]
-        )
-      )
+      parts.push(source ? citationChip(source, `${turn.id}-${match.index}`) : match[0])
       last = match.index + match[0].length
     }
     if (last < turn.result.answer.length) parts.push(turn.result.answer.slice(last))
@@ -373,6 +343,33 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
             </p>
           )}
           {renderSources(turn)}
+        </div>
+      )
+    }
+    const draft = draftOf(turn)
+    if (draft) {
+      return (
+        <div className='flex flex-col gap-3.5'>
+          <AskVaultDraftCard
+            turn={turn}
+            draft={draft}
+            renderChip={(source, key) => citationChip(source, key)}
+          />
+          {!turn.result.verified && (
+            <p className='text-xs text-text-tertiary'>{t('localAi.askVault.unverified')}</p>
+          )}
+          {renderSources(turn)}
+          <AskVaultDraftActions
+            turn={turn}
+            done={draftDone[turn.id]}
+            target={draftTargetOf(draft)}
+            copied={copiedId === turn.id}
+            noteTitle={(key) => notesData?.[key]?.title?.trim() || t('activity.untitledNote')}
+            onSave={handleSaveDraft}
+            onAdd={handleAddDraft}
+            onFollowUp={focusFollowUp}
+            onCopy={handleCopy}
+          />
         </div>
       )
     }
@@ -554,6 +551,10 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
               </button>
             ))}
           </div>
+        )}
+
+        {isAsk && ready && turns.length === 0 && (
+          <AskVaultRecent threads={threads} onOpen={openThread} onDelete={deleteThread} />
         )}
 
         <div className='flex items-center gap-2 px-[18px] py-2.5 mt-2 bg-overlay-faint border-t border-overlay-soft text-[11.5px] text-text-tertiary shrink-0'>
