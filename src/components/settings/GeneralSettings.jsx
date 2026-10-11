@@ -1,6 +1,7 @@
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 
 import {
   getEditorFontSize,
@@ -12,7 +13,10 @@ import {
 } from '@pear-notes/core/store/slices/settingsSlice.js'
 
 import { useLocalToggle } from '../../hooks/useLocalToggle'
+import { REMINDERS_TOGGLE_KEY } from '../../hooks/useReminders'
 import { useSpellcheck } from '../../hooks/useSpellcheck'
+import { useTipsEnabled } from '../../hooks/useTips'
+import ReminderSettingsModal from '../tools/ReminderSettingsModal'
 
 function ToggleRow({ label, desc, on, onToggle }) {
   return (
@@ -44,7 +48,10 @@ export default function GeneralSettings() {
   const fontFamily = useSelector(getFontFamily)
   const editorFontSize = useSelector(getEditorFontSize)
   const [spellcheck, toggleSpellcheck] = useSpellcheck()
-  const [reminders, toggleReminders] = useLocalToggle('reminders', false)
+  const [reminders, toggleReminders] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
+  const [tipsEnabled, toggleTips] = useTipsEnabled()
+  const [reminderTimesOpen, setReminderTimesOpen] = useState(false)
+  const closeReminderTimes = useCallback(() => setReminderTimesOpen(false), [])
   const sortBy = useSelector(getSortBy)
 
   const handleUpdateSetting = (key, value) => {
@@ -205,6 +212,23 @@ export default function GeneralSettings() {
             on={reminders}
             onToggle={toggleReminders}
           />
+          <button
+            type='button'
+            onClick={() => setReminderTimesOpen(true)}
+            className='w-full p-6 flex items-center justify-between gap-6 text-left hover:bg-overlay-faint transition-colors'
+          >
+            <span className='text-text-primary text-base font-bold'>
+              {t('upcoming.reminders.open')}
+            </span>
+            <ChevronRight className='w-5 h-5 text-text-tertiary' />
+          </button>
+          <ToggleRow
+            label={t('tips.showTips')}
+            desc={t('tips.showTipsDesc')}
+            on={tipsEnabled}
+            onToggle={toggleTips}
+          />
+          <ReminderSettingsModal open={reminderTimesOpen} onClose={closeReminderTimes} />
         </div>
       </div>
     </div>

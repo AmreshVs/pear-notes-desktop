@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { countOpenUpcoming } from '@pear-notes/core/store/services/noteTasks.js'
 import { loadUpcomingGroups } from '@pear-notes/core/store/services/upcomingTasks.js'
 
 const REFRESH_MS = 60 * 1000
@@ -13,7 +14,7 @@ export function useUpcomingCount(enabled) {
     const refresh = () =>
       loadUpcomingGroups()
         .then((groups) => {
-          if (active) setCount(groups.reduce((sum, group) => sum + group.items.length, 0))
+          if (active) setCount(countOpenUpcoming(groups))
         })
         .catch(() => {})
     refresh()

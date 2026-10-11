@@ -9,6 +9,7 @@ export default function ToolPanel({
   hint,
   onToggleSidebar,
   isSidebarCollapsed,
+  actions,
   children
 }) {
   const { t } = useTranslation()
@@ -39,7 +40,7 @@ export default function ToolPanel({
               )}
             </svg>
           </button>
-          <div className='flex flex-col min-w-0'>
+          <div className='flex flex-col min-w-0 flex-1'>
             <h2 className='font-bold text-title text-text-primary tracking-tight truncate leading-tight'>
               {title}
             </h2>
@@ -53,6 +54,7 @@ export default function ToolPanel({
               </span>
             )}
           </div>
+          {actions}
         </div>
         {hint && <p className='text-xs text-text-tertiary leading-relaxed'>{hint}</p>}
       </div>

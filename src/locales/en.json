@@ -872,6 +872,8 @@
     "description": "The app hit an unexpected error. Reloading will recover your notes without data loss."
   },
   "noteEditor": {
+    "scrollToTop": "Scroll to top",
+    "scrollToBottom": "Scroll to bottom",
     "placeholder": "Start writing...",
     "upload": {
       "preparing": "Preparing...",
@@ -1941,6 +1943,15 @@
       "askNotReady": "To get answers, turn on Ask, write and summarize in On-device AI settings.",
       "openSettings": "Open On-device AI settings",
       "searchAllNotes": "Search all notes",
+      "indexNotice": {
+        "indexing": "Indexing your notes · {{done}} of {{total}}. Answers may miss notes until it finishes.",
+        "indexingStart": "Indexing your notes. Answers may miss notes until it finishes.",
+        "charging_one": "{{count}} note isn't indexed yet. It will be indexed while this device is charging, so answers may miss it.",
+        "charging_other": "{{count}} notes aren't indexed yet. They'll be indexed while this device is charging, so answers may miss them.",
+        "waiting": "Getting your notes ready for Ask. Answers may miss notes until that's done.",
+        "failed": "Indexing stopped, so answers may miss notes. Rebuild the index in On-device AI settings.",
+        "notFoundHint": "Some notes aren't indexed yet. The answer may be in one of them."
+      },
       "errors": {
         "failed": "Couldn't answer that. Try again or rephrase it.",
         "notEnoughMemory": "Not enough free memory right now. Close other apps and try again.",
@@ -2324,7 +2335,48 @@
       "today": "Today",
       "tomorrow": "Tomorrow",
       "thisWeek": "Next 7 days",
-      "later": "Later"
+      "later": "Later",
+      "past": "Past",
+      "completed": "Completed"
+    },
+    "folds": {
+      "past_one": "Past · {{count}}",
+      "past_other": "Past · {{count}}",
+      "completed_one": "Completed · {{count}}",
+      "completed_other": "Completed · {{count}}"
+    },
+    "countWithOverdue_one": "{{count}} open · {{overdue}} overdue",
+    "countWithOverdue_other": "{{count}} open · {{overdue}} overdue",
+    "next": "Next · {{when}}",
+    "markDone": "Mark as done",
+    "markNotDone": "Mark as not done",
+    "turns": "Turns {{age}}",
+    "everyYear": "Every year",
+    "reminderBody": "{{lead}} · {{title}}",
+    "reminderLead": {
+      "5": "In 5 minutes",
+      "10": "In 10 minutes",
+      "30": "In 30 minutes",
+      "60": "In 1 hour",
+      "1440": "Tomorrow"
+    },
+    "reminders": {
+      "title": "Reminders",
+      "notifications": "Notifications on this device",
+      "notificationsDesc": "Each device asks for its own permission.",
+      "remindMe": "Remind me",
+      "offsets": {
+        "0": "At the time",
+        "5": "5 minutes before",
+        "10": "10 minutes before",
+        "30": "30 minutes before",
+        "60": "1 hour before",
+        "1440": "1 day before"
+      },
+      "untimed": "Items with no time",
+      "untimedDesc": "Birthdays and dates without a time remind at this hour.",
+      "syncNote": "These choices sync to your linked devices.",
+      "open": "Reminder times"
     }
   },
   "suggestions": {
@@ -2384,5 +2436,36 @@
     "upcoming": "Upcoming",
     "duplicates": "Duplicates",
     "recap": "Recap"
+  },
+  "tips": {
+    "notNow": "Not now",
+    "dismiss": "Don't show this tip again",
+    "showTips": "Show tips",
+    "showTipsDesc": "Short suggestions based on how you use Pear Notes, like using your Mac for AI. At most one a day.",
+    "indexCharging": {
+      "title": "Index your notes now",
+      "body": "{{count}} notes are waiting until this phone charges. Until then, Ask and Search by meaning can miss them.",
+      "action": "Index now"
+    },
+    "useMac": {
+      "title": "Let your Mac do the AI work",
+      "body": "{{device}} is linked and online. Ask and summaries run faster there and save this phone's battery.",
+      "action": "Use my Mac"
+    },
+    "servePhone": {
+      "title": "Your phone can use this Mac for AI",
+      "body": "A phone is linked to this vault. Turn on Use my Mac on the phone, and keep Pear Notes open here, to run its AI work on this Mac.",
+      "action": "Got it"
+    },
+    "remindersOff": {
+      "title": "Turn on reminders",
+      "body": "You have to-dos with a time coming up. Reminders are off on this device.",
+      "action": "Turn on"
+    },
+    "yearlyDates": {
+      "title": "Birthdays come round every year",
+      "body": "Dates in birthday and anniversary notes now repeat yearly in Upcoming, even when written with the year they started.",
+      "action": "Open Upcoming"
+    }
   }
 }

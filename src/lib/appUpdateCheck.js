@@ -58,3 +58,13 @@ export function useAppUpdateStatus() {
 
   return status
 }
+
+export const DISMISSED_VERSION_KEY = 'pear-notes:update-banner-dismissed-version'
+
+export const isUpdateBannerDismissed = (version) => {
+  try {
+    return localStorage.getItem(DISMISSED_VERSION_KEY) === version
+  } catch {
+    return false
+  }
+}

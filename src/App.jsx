@@ -42,6 +42,7 @@ import BackupProgressBanner from './components/common/BackupProgressBanner'
 import MergeNotesToast from './components/common/MergeNotesToast'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
+import TipBanner from './components/common/TipBanner'
 import TitleBar from './components/common/TitleBar'
 import { ToastStackProvider } from './components/common/ToastStack'
 import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
@@ -71,7 +72,7 @@ import {
   getAppBehaviorPreference,
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
-import { useAppUpdateStatus } from './lib/appUpdateCheck'
+import { isUpdateBannerDismissed, useAppUpdateStatus } from './lib/appUpdateCheck'
 import { useAiJobConditions } from './lib/localAi/useAiJobConditions'
 import { useAiOffloadServer } from './lib/localAi/useAiOffloadServer'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
@@ -85,6 +86,7 @@ function App() {
   const { width } = useWindowSize()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(width < 1000)
   const [toolView, setToolView] = useState(null)
+  const [updateDismissedVersion, setUpdateDismissedVersion] = useState(null)
   const ToolList = TOOL_LISTS[toolView] ?? null
   const prevWidth = useRef(width)
 
@@ -129,6 +131,11 @@ function App() {
   const isVaultOpening = ['create', 'switch', 'remove', 'move'].includes(vaultPending)
   const folders = useSelector(getFolders)
   const updateStatus = useAppUpdateStatus()
+  const updateBannerVisible =
+    !!updateStatus?.mandatory ||
+    (!!updateStatus?.updateAvailable &&
+      updateDismissedVersion !== updateStatus.latestVersion &&
+      !isUpdateBannerDismissed(updateStatus.latestVersion))
 
   useEffect(() => {
     const load = async () => {
@@ -361,10 +368,12 @@ function App() {
               downloadUrl={updateStatus.downloadUrl}
             />
           )}
+          {!updateBannerVisible && <TipBanner onOpenUpcoming={() => setToolView('upcoming')} />}
           {!updateStatus?.mandatory && updateStatus?.updateAvailable && (
             <UpdateAvailableBanner
               latestVersion={updateStatus.latestVersion}
               downloadUrl={updateStatus.downloadUrl}
+              onDismiss={() => setUpdateDismissedVersion(updateStatus.latestVersion)}
             />
           )}
         </main>

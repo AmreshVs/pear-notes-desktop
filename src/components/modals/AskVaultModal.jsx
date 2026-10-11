@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   AlertTriangle,
   ArrowUp,
@@ -16,6 +16,7 @@ import {
 import { ASK_QUESTION_MAX_CHARS } from '@pear-notes/core/store/services/localAiAsk.js'
 import { toMeaningSnippet } from '@pear-notes/core/store/services/localAiSearch.js'
 import { VAULT_ASK_KIND } from '@pear-notes/core/store/services/localAiVaultAsk.js'
+import { selectAskIndexNotice } from '@pear-notes/core/store/slices/localAiSlice.js'
 import { selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { useAskVault } from '../../hooks/useAskVault'
@@ -25,10 +26,23 @@ import LocalAiWorkProgress from './LocalAiWorkProgress'
 const CITATION = /\[(\d{1,2})\]/g
 const passLanguage = (code) => code ?? ''
 
+function indexNoticeText(t, notice) {
+  if (notice.kind === 'indexing') {
+    return notice.total
+      ? t('localAi.askVault.indexNotice.indexing', { done: notice.done, total: notice.total })
+      : t('localAi.askVault.indexNotice.indexingStart')
+  }
+  if (notice.kind === 'charging') {
+    return t('localAi.askVault.indexNotice.charging', { count: notice.total })
+  }
+  return t(`localAi.askVault.indexNotice.${notice.kind}`)
+}
+
 export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const threadRef = useRef(null)
+  const indexNotice = useSelector(selectAskIndexNotice)
   const inputRef = useRef(null)
   const {
     question,
@@ -156,6 +170,11 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
       return (
         <div className='flex flex-col gap-2 rounded-xl border border-overlay-soft px-4 py-3 bg-overlay-subtle'>
           <p className='text-sm text-text-secondary'>{t('localAi.askVault.notFound')}</p>
+          {indexNotice && (
+            <p className='text-xs text-text-tertiary'>
+              {t('localAi.askVault.indexNotice.notFoundHint')}
+            </p>
+          )}
           {renderSources(turn)}
         </div>
       )
@@ -261,6 +280,12 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
                 {t('localAi.askVault.openSettings')}
               </button>
             </div>
+          )}
+
+          {ready && indexNotice && (
+            <p className='text-xs text-text-tertiary' role='status'>
+              {indexNoticeText(t, indexNotice)}
+            </p>
           )}
 
           {turns.length > 0 && (

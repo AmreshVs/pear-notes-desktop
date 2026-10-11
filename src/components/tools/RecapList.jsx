@@ -7,7 +7,7 @@ import { loadUpcomingGroups } from '@pear-notes/core/store/services/upcomingTask
 import { getNotesData, selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import ToolPanel, { TOOL_GROUP_HEADER_CLASS, ToolEmpty } from './ToolPanel'
-import { TaskRow } from './UpcomingList'
+import TaskRow from './UpcomingTaskRow'
 
 function NoteRow({ note, last, onOpen, language, untitled }) {
   return (

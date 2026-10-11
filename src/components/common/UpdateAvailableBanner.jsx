@@ -2,21 +2,20 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Download, X } from 'lucide-react'
 
+import { DISMISSED_VERSION_KEY, isUpdateBannerDismissed } from '../../lib/appUpdateCheck'
+
 import { Toast } from './ToastStack'
 
-const DISMISSED_VERSION_KEY = 'pear-notes:update-banner-dismissed-version'
-
-export default function UpdateAvailableBanner({ latestVersion, downloadUrl }) {
+export default function UpdateAvailableBanner({ latestVersion, downloadUrl, onDismiss }) {
   const { t } = useTranslation()
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(DISMISSED_VERSION_KEY) === latestVersion
-  )
+  const [dismissed, setDismissed] = useState(() => isUpdateBannerDismissed(latestVersion))
 
   if (dismissed) return null
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_VERSION_KEY, latestVersion)
     setDismissed(true)
+    onDismiss?.()
   }
 
   const handleUpdate = () => {

@@ -86,6 +86,7 @@ import NoteHistoryPanel from './NoteHistoryPanel'
 import NoteSuggestionChips from './NoteSuggestionChips'
 import RelatedNotesPanel from './RelatedNotesPanel'
 import RichTextEditor from './RichTextEditor'
+import ScrollJumpButton from './ScrollJumpButton'
 
 const AUDIO_EXTENSION_BY_TYPE = [
   ['wav', 'wav'],
@@ -142,6 +143,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
 
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
+  const [editorScrollEl, setEditorScrollEl] = useState(null)
   const folders = useSelector(getFolders)
 
   const activityEnabled = useSelector(getActivityLogEnabled)
@@ -827,6 +829,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         </div>
 
         <div
+          ref={setEditorScrollEl}
           className='flex-1 overflow-y-auto custom-scrollbar pt-16'
           onContextMenu={handleEditorContextMenu}
         >
@@ -914,6 +917,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         )}
 
         <div className='absolute bottom-6 right-8 z-30 flex items-center gap-4'>
+          <ScrollJumpButton scrollEl={editorScrollEl} resetKey={selectedNoteKey} />
           {aiToolsVisible && <AiToolsButton content={content} />}
         </div>
       </div>

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import { dueReminders, reminderKey } from '@pear-notes/core/store/services/noteTasks.js'
+import { dueReminders } from '@pear-notes/core/store/services/noteTasks.js'
+import { loadDoneIds, loadReminderPrefs } from '@pear-notes/core/store/services/upcomingTasks.js'
 import { selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { useLocalToggle } from './useLocalToggle'
@@ -11,6 +12,7 @@ import { useLocalToggle } from './useLocalToggle'
 const CHECK_MS = 60 * 1000
 const SENT_KEY = 'pear-notes:reminders-sent'
 const SENT_LIMIT = 300
+export const REMINDERS_TOGGLE_KEY = 'reminders'
 
 const readSent = () => {
   try {
@@ -31,7 +33,7 @@ const writeSent = (keys) => {
 export function useReminders() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const [enabled] = useLocalToggle('reminders', false)
+  const [enabled] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
 
   useEffect(() => {
     const bridge = window.electronBridge
@@ -45,19 +47,29 @@ export function useReminders() {
     let since = Date.now()
     const check = async () => {
       const now = Date.now()
-      const tasks = await backendApi.getUpcomingTasks().catch(() => [])
+      const [tasks, prefs, doneIds] = await Promise.all([
+        backendApi.getUpcomingTasks().catch(() => []),
+        loadReminderPrefs().catch(() => undefined),
+        loadDoneIds().catch(() => null)
+      ])
       const sent = readSent()
-      const due = dueReminders(tasks, { since, now }).filter(
-        (task) => !sent.includes(reminderKey(task))
+      const due = dueReminders(tasks, { since, now, prefs, doneIds }).filter(
+        (reminder) => !sent.includes(reminder.key)
       )
       since = now
-      for (const task of due) {
+      for (const reminder of due) {
+        const title = reminder.title || t('noteCard.untitled')
         bridge.showNotification({
-          title: task.text,
-          body: task.title || t('noteCard.untitled'),
-          noteKey: task.noteKey
+          title: reminder.text,
+          body: reminder.offset
+            ? t('upcoming.reminderBody', {
+                lead: t(`upcoming.reminderLead.${reminder.offset}`),
+                title
+              })
+            : title,
+          noteKey: reminder.noteKey
         })
-        sent.push(reminderKey(task))
+        sent.push(reminder.key)
       }
       if (due.length) writeSent(sent)
     }
