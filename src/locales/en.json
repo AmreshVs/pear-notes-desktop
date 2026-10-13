@@ -942,7 +942,7 @@
       "lockNote": "Lock note",
       "delete": "Delete",
       "noteHistory": "Note history",
-      "relatedNotes": "Related notes",
+      "relatedNotes": "In this note",
       "noSuggestions": "No spelling suggestions",
       "addToDictionary": "Add to dictionary",
       "splitNote": "Split into notes",
@@ -1044,11 +1044,21 @@
     "scopeLabel": "Search in",
     "scopeAll": "All notes",
     "meaning": {
-      "title": "Related by meaning",
       "indexing": "Search by meaning: indexing {{done}} of {{total}} notes",
       "charging": "Search by meaning: {{total}} notes will be indexed while charging",
       "preparing": "Search by meaning is getting ready"
-    }
+    },
+    "sections": {
+      "words_one": "Matching words · {{count}} note",
+      "words_other": "Matching words · {{count}} notes",
+      "meaning_one": "Related by meaning · {{count}} note",
+      "meaning_other": "Related by meaning · {{count}} notes"
+    },
+    "reason": {
+      "exact": "Exact match",
+      "meaning": "Similar meaning"
+    },
+    "footer": "Searched on this computer. The index never leaves it."
   },
   "layouts": {
     "settings": "Settings",
@@ -1490,8 +1500,6 @@
     },
     "merge": {
       "action": "Merge",
-      "confirm_one": "Merge {{count}} note into one?",
-      "confirm_other": "Merge {{count}} notes into one new note? Each note becomes a section under its title, and the originals move to Recently Deleted. Right after merging you can tap Undo merge to put everything back.",
       "done_one": "Merged {{count}} note. The original is in Recently Deleted.",
       "done_other": "Merged {{count}} notes. The originals are in Recently Deleted.",
       "undo": "Undo merge",
@@ -2014,6 +2022,10 @@
     },
     "ask": {
       "group": "Ask",
+      "earlier": "Earlier",
+      "earlierChange": "Suggested a change to the note",
+      "earlierChangeApplied": "Changed the note",
+      "clear": "Clear",
       "menuLabelSelection": "Ask about selection",
       "menuLabelNote": "Ask about this note",
       "titleSelection": "Ask about selection",
@@ -2172,6 +2184,7 @@
     },
     "cleanUp": {
       "menuLabel": "Clean up dictation",
+      "original": "Original",
       "working": {
         "title": "Cleaning up the text",
         "subtitle": "Everything happens on this computer. Nothing is uploaded."
@@ -2189,18 +2202,39 @@
       },
       "preview": {
         "title": "Details found",
-        "subtitle": "Receipts give the shop, date, total and items; business cards give the contact details. Check them, then insert them into your note."
+        "subtitle": "Check the details, then insert them into your note.",
+        "receipt": {
+          "title": "Looks like a receipt",
+          "subtitle": "Read on this computer. Check the numbers before saving."
+        },
+        "card": {
+          "title": "Looks like a contact card",
+          "subtitle": "Read on this computer. Check the details before saving."
+        },
+        "notes": {
+          "title": "Text from the image",
+          "subtitle": "Read on this computer. Check it before saving."
+        }
       },
+      "check": {
+        "addsUp": "Items add up to the total",
+        "mismatch": "Items add up to {{amount}}, not the total"
+      },
+      "keepPhoto": "Keep the photo in the note",
+      "photoAlt": "Photo the details were read from",
+      "insertText": "Insert as text",
+      "insertTable": "Insert as table",
       "types": {
         "receipt": "Receipt",
         "card": "Contact",
         "notes": "Notes from the image"
       },
       "fields": {
-        "merchant": "Shop",
+        "merchant": "Merchant",
         "date": "Date",
         "total": "Total",
         "items": "Items",
+        "price": "Price",
         "name": "Name",
         "jobTitle": "Job title",
         "company": "Company",
@@ -2355,6 +2389,17 @@
       "moving": "Moving notes…"
     }
   },
+  "inThisNote": {
+    "title": "In this note",
+    "datesAndTasks": "Dates and tasks found",
+    "notTaskYet": "Not a task in the note yet",
+    "addToUpcoming": "Add to Upcoming",
+    "setReminders": "Set reminders",
+    "remindersOn": "Reminders are on",
+    "nothingFound": "No dates or tasks found in this note.",
+    "footerMac": "Found on this Mac. Nothing changes until you choose.",
+    "footerComputer": "Found on this computer. Nothing changes until you choose."
+  },
   "relatedNotes": {
     "title": "Related notes",
     "loading": "Finding related notes…",
@@ -2377,8 +2422,8 @@
   },
   "upcoming": {
     "title": "Upcoming",
-    "count_one": "{{count}} task",
-    "count_other": "{{count}} tasks",
+    "subtitle_one": "{{date}} · from {{count}} note",
+    "subtitle_other": "{{date}} · from {{count}} notes",
     "hint": "Dated to-dos from all your notes, found on this device. Locked notes are left out.",
     "emptyTitle": "Nothing coming up",
     "emptyBody": "Write things like “Call Sam Friday 5pm”, or add a date to a checklist item.",
@@ -2397,8 +2442,6 @@
       "completed_one": "Completed · {{count}}",
       "completed_other": "Completed · {{count}}"
     },
-    "countWithOverdue_one": "{{count}} open · {{overdue}} overdue",
-    "countWithOverdue_other": "{{count}} open · {{overdue}} overdue",
     "next": "Next · {{when}}",
     "when": {
       "inMinutes_one": "in {{count}} min",
@@ -2437,14 +2480,28 @@
       "untimedDesc": "Birthdays and dates without a time remind at this hour.",
       "syncNote": "These choices sync to your linked devices.",
       "open": "Reminder times"
+    },
+    "suggestions": {
+      "title": "Suggestions",
+      "duplicate": "“{{a}}” and “{{b}}” look like the same note",
+      "reviewMerge": "Review merge",
+      "notNow": "Not now",
+      "name": "Name the untitled note from {{date}} “{{title}}”?",
+      "useTitle": "Use title",
+      "dismiss": "Dismiss",
+      "footer": "Found on your devices. Nothing changes until you choose."
     }
   },
   "suggestions": {
-    "title": "Suggested title: {{title}}",
+    "label": "Suggestions",
+    "title": "Title: {{title}}",
+    "use": "Use",
+    "move": "Move",
+    "create": "Create",
     "useTitleHint": "Use as the title",
     "dismiss": "Don't suggest a title for this note again",
-    "moveTo": "Move to {{folder}}?",
-    "newFolder": "New folder: {{name}}?",
+    "moveTo": "Move to {{folder}}",
+    "newFolder": "New folder: {{name}}",
     "useFolderHint": "Moves this note out of Untitled",
     "dismissFolder": "Don't suggest a folder for this note again"
   },
@@ -2531,5 +2588,17 @@
       "body": "Dates in birthday and anniversary notes now repeat yearly in Upcoming, even when written with the year they started.",
       "action": "Open Upcoming"
     }
+  },
+  "mergePreview": {
+    "title_one": "Merge {{count}} note",
+    "title_other": "Merge {{count}} notes",
+    "desc": "Nothing is lost: repeated lines are kept once, and the originals go to Recently Deleted for {{days}} days.",
+    "loading": "Reading the notes…",
+    "source": "Note {{number}} · {{folder}} · {{date}}",
+    "result": "Result · goes in {{folder}}",
+    "dropped_one": "{{count}} repeated line kept once:",
+    "dropped_other": "{{count}} repeated lines kept once:",
+    "attachment": "Attachment",
+    "undoHint": "You can undo this right after merging"
   }
 }

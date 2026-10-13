@@ -1,13 +1,10 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Bell, ChevronRight } from 'lucide-react'
 
-import {
-  countOpenUpcoming,
-  isFoldedGroup,
-  UPCOMING_GROUP} from '@pear-notes/core/store/services/noteTasks.js'
-import { selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { isFoldedGroup, UPCOMING_GROUP } from '@pear-notes/core/store/services/noteTasks.js'
+import { getListedNoteCount, selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { useLocalToggle } from '../../hooks/useLocalToggle'
 import { REMINDERS_TOGGLE_KEY } from '../../hooks/useReminders'
@@ -16,6 +13,7 @@ import { formatWhenFromNow, yearlyLabel } from '../../utils/upcomingFormat'
 
 import ReminderSettingsModal from './ReminderSettingsModal'
 import ToolPanel, { TOOL_GROUP_HEADER_CLASS, ToolEmpty } from './ToolPanel'
+import UpcomingSuggestions from './UpcomingSuggestions'
 import UpcomingTaskRow from './UpcomingTaskRow'
 
 const NEXT_GROUPS = [
@@ -46,16 +44,20 @@ function NextCard({ task, onOpen }) {
 }
 
 export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const dispatch = useDispatch()
   const { groups, toggleDone, isPending } = useUpcoming()
+  const noteCount = useSelector(getListedNoteCount)
   const [remindersOn] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [openFolds, setOpenFolds] = useState(() => new Set())
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
 
-  const count = groups ? countOpenUpcoming(groups) : 0
-  const overdue = groups?.find(({ group }) => group === UPCOMING_GROUP.OVERDUE)?.items.length ?? 0
+  const today = new Date().toLocaleDateString(i18n.language, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  })
   const next = groups?.find(({ group }) => NEXT_GROUPS.includes(group))?.items[0]
   const open = (task) => dispatch(selectNote(task.noteKey))
   const toggleFold = (group) =>
@@ -111,11 +113,7 @@ export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
   return (
     <ToolPanel
       title={t('upcoming.title')}
-      status={
-        overdue
-          ? t('upcoming.countWithOverdue', { count, overdue })
-          : t('upcoming.count', { count })
-      }
+      status={t('upcoming.subtitle', { date: today, count: noteCount })}
       hint={t('upcoming.hint')}
       onToggleSidebar={onToggleSidebar}
       isSidebarCollapsed={isSidebarCollapsed}
@@ -136,6 +134,7 @@ export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
       )}
       {next && <NextCard task={next} onOpen={() => open(next)} />}
       {groups?.map(renderGroup)}
+      <UpcomingSuggestions />
       <ReminderSettingsModal open={settingsOpen} onClose={closeSettings} />
     </ToolPanel>
   )

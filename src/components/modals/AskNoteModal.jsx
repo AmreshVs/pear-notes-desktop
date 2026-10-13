@@ -34,6 +34,7 @@ const APPLY_LABELS = {
 const passLanguage = (code) => code ?? ''
 
 export default function AskNoteModal({
+  noteKey,
   selectionText,
   noteText,
   insertBlocked,
@@ -52,6 +53,7 @@ export default function AskNoteModal({
     question,
     setQuestion,
     turns,
+    earlier,
     workView,
     busy,
     canSend,
@@ -62,8 +64,9 @@ export default function AskNoteModal({
     handleToggleScope,
     handleApply,
     handleCopy,
+    handleClear,
     handleClose
-  } = useAskNote({ selectionText, noteText, onApplyEdits, onClose })
+  } = useAskNote({ noteKey, selectionText, noteText, onApplyEdits, onClose })
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -80,7 +83,7 @@ export default function AskNoteModal({
   useEffect(() => {
     const thread = threadRef.current
     if (thread) thread.scrollTop = thread.scrollHeight
-  }, [turns, workView])
+  }, [earlier, turns, workView])
 
   useEffect(() => {
     if (!busy) inputRef.current?.focus()
@@ -176,6 +179,13 @@ export default function AskNoteModal({
   }
 
   const renderResult = (turn) => {
+    if (turn.readOnly && (turn.kind === ASK_KIND.EDITS || turn.kind === ASK_KIND.REWRITE)) {
+      return (
+        <p className='text-xs text-text-tertiary'>
+          {t(turn.applied ? 'localAi.ask.earlierChangeApplied' : 'localAi.ask.earlierChange')}
+        </p>
+      )
+    }
     if (turn.status === 'working') {
       return workView ? <LocalAiWorkProgress view={workView} languageName={passLanguage} /> : null
     }
@@ -238,14 +248,25 @@ export default function AskNoteModal({
               </span>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className='w-8 h-8 shrink-0 flex items-center justify-center bg-overlay-subtle hover:bg-overlay-medium text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-overlay-soft'
-            title={t('common.close')}
-            aria-label={t('common.close')}
-          >
-            <X className='w-4 h-4' />
-          </button>
+          <div className='flex items-center gap-2 shrink-0'>
+            {(earlier.length > 0 || turns.length > 0) && (
+              <button
+                onClick={handleClear}
+                disabled={busy}
+                className='px-3 h-8 rounded-full text-xs font-bold text-text-tertiary enabled:hover:text-text-primary enabled:hover:bg-overlay-subtle transition-colors disabled:opacity-40'
+              >
+                {t('localAi.ask.clear')}
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className='w-8 h-8 shrink-0 flex items-center justify-center bg-overlay-subtle hover:bg-overlay-medium text-text-tertiary hover:text-text-primary rounded-full transition-all active:scale-90 border border-overlay-soft'
+              title={t('common.close')}
+              aria-label={t('common.close')}
+            >
+              <X className='w-4 h-4' />
+            </button>
+          </div>
         </div>
 
         <div className='flex flex-col gap-4 px-6 py-5 min-h-0'>
@@ -260,12 +281,19 @@ export default function AskNoteModal({
             {hasSelection && <ArrowLeftRight className='w-3.5 h-3.5' />}
           </button>
 
-          {turns.length > 0 && (
+          {(earlier.length > 0 || turns.length > 0) && (
             <div
               ref={threadRef}
               className='flex flex-col gap-5 overflow-y-auto custom-scrollbar min-h-0 max-h-[50vh] pr-1'
               aria-live='polite'
             >
+              {earlier.length > 0 && (
+                <p className='text-xs font-bold text-text-tertiary'>{t('localAi.ask.earlier')}</p>
+              )}
+              {earlier.map(renderTurn)}
+              {earlier.length > 0 && turns.length > 0 && (
+                <div className='border-t border-overlay-soft' />
+              )}
               {turns.map(renderTurn)}
             </div>
           )}

@@ -200,6 +200,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   const [elapsed, setElapsed] = useState(0)
   const { workView, beginWork, endWork } = useLocalAiWorkProgress()
   const [summary, setSummary] = useState(null)
+  const [details, setDetails] = useState(null)
   const [summaryPhase, setSummaryPhase] = useState('idle')
   const [keyPoints, setKeyPoints] = useState([])
   const [sourceLanguage, setSourceLanguage] = useState(null)
@@ -264,6 +265,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
       abortRef.current = controller
       setError(null)
       setSummary(null)
+      setDetails(null)
       const onProgress = workKind ? beginWork(workKind, workOptions) : () => {}
       updateSummaryPhase('idle')
       updatePhase('working')
@@ -322,7 +324,9 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         if (mode === 'extract') return extractTextFromImage(new Uint8Array(buffer), { onProgress })
         if (mode === 'details') {
           const text = await extractTextFromImage(new Uint8Array(buffer), { onProgress })
-          return formatImageDetails(imageDetailsFromText(text), {
+          const found = imageDetailsFromText(text)
+          if (runId === runIdRef.current) setDetails(found)
+          return formatImageDetails(found, {
             types: t('localAi.details.types', { returnObjects: true }),
             ...t('localAi.details.fields', { returnObjects: true })
           })
@@ -678,16 +682,19 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
   )
 
   const handleInsert = useCallback(
-    (action = 'insert') => {
+    (action = 'insert', { table = false, keepPhoto = true } = {}) => {
       if (phaseRef.current !== 'preview' || !text || summaryPhaseRef.current === 'working') return
       updatePhase('idle')
       onInsert(text, mode, summary, {
         language: mode === 'translate' ? targetLanguage : null,
         bullets: mode === 'keyPoints' ? keyPoints : [],
-        action
+        action,
+        details: mode === 'details' ? details : null,
+        table,
+        keepPhoto
       })
     },
-    [keyPoints, mode, onInsert, summary, targetLanguage, text, updatePhase]
+    [details, keyPoints, mode, onInsert, summary, targetLanguage, text, updatePhase]
   )
 
   return {
@@ -695,6 +702,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
     phase,
     error,
     text,
+    details,
     elapsed,
     workView,
     summary,

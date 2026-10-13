@@ -188,13 +188,13 @@ export async function askVault(
   featureConfig = {},
   { onProgress, signal } = {}
 ) {
-  const { text } = await invokeWithProgress(
+  const { text, toolNumbers } = await invokeWithProgress(
     'localAiAskVault',
     { question, sources, turns, featureConfig },
     onProgress,
     signal
   )
-  return text
+  return { text, toolNumbers: Array.isArray(toolNumbers) ? toolNumbers : [] }
 }
 
 export async function embedTexts(texts) {

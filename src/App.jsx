@@ -51,6 +51,7 @@ import UpdateAvailableBanner from './components/common/UpdateAvailableBanner'
 import NoteEditor from './components/editor/NoteEditor'
 import AskVaultModal from './components/modals/AskVaultModal'
 import DeviceRemovedModal from './components/modals/DeviceRemovedModal'
+import MergePreviewModal from './components/modals/MergePreviewModal'
 import UpdateRequiredModal from './components/modals/UpdateRequiredModal'
 import ForceVaultRemovalModal from './components/settings/ForceVaultRemovalModal'
 import SettingsScreen from './components/settings/SettingsScreen'
@@ -352,6 +353,7 @@ function App() {
           )}
           <ForceVaultRemovalModal />
           <MergeNotesToast />
+          <MergePreviewModal />
           {isVaultOpening && (
             <div
               role='status'

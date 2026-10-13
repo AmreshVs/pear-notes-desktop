@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Bell, Cake, Check, CheckSquare } from 'lucide-react'
+import { Bell, Cake, CalendarDays, Check, CheckSquare } from 'lucide-react'
 
-import { formatDue, yearlyLabel } from '../../utils/upcomingFormat'
+import { isAppointment } from '@pear-notes/core/store/services/noteTasks.js'
+
+import { formatWhenShort, yearlyLabel } from '../../utils/upcomingFormat'
 
 function DoneButton({ task, pending, onToggle }) {
   const { t } = useTranslation()
@@ -32,6 +34,7 @@ function DoneButton({ task, pending, onToggle }) {
 export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pending, remind }) {
   const { t, i18n } = useTranslation()
   const yearly = task.yearly ? yearlyLabel(task, t) : ''
+  const when = formatWhenShort(task, i18n.language)
   return (
     <div
       role='button'
@@ -41,7 +44,9 @@ export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pend
       className={`w-full text-left pl-6 pr-4 py-3 cursor-pointer hover:bg-overlay-faint group focus-visible:outline-2 focus-visible:outline-accent-primary ${last ? '' : 'border-b border-overlay-subtle'}`}
     >
       <div className='flex items-start gap-3'>
-        {onToggleDone ? (
+        {isAppointment(task) ? (
+          <CalendarDays className='w-[18px] h-[18px] mt-[3px] flex-shrink-0 text-accent-primary' />
+        ) : onToggleDone ? (
           <DoneButton task={task} pending={pending} onToggle={onToggleDone} />
         ) : (
           <CheckSquare
@@ -54,19 +59,18 @@ export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pend
           >
             {task.text}
           </p>
-          <div className='flex items-center gap-1.5 mt-1 opacity-60 text-xs font-bold tracking-wider min-w-0'>
-            <span className='flex-shrink-0 whitespace-nowrap tabular-nums'>
-              {formatDue(task, i18n.language)}
-            </span>
-            {remind && <Bell className='w-3 h-3 flex-shrink-0 text-accent-primary' />}
-            <span className='flex-shrink-0'>•</span>
-            <span className='truncate'>
-              {yearly ? `${yearly} · ` : ''}
-              {task.title || t('noteCard.untitled')}
-            </span>
-          </div>
+          <p className='mt-1 text-xs text-text-tertiary truncate'>
+            {yearly ? `${yearly} · ` : ''}
+            {task.title || t('noteCard.untitled')}
+          </p>
         </div>
-        {task.yearly && <Cake className='w-4 h-4 mt-1 flex-shrink-0 text-accent-primary' />}
+        <div className='flex items-center gap-1.5 mt-1 flex-shrink-0'>
+          {remind && <Bell className='w-3 h-3 text-accent-primary' />}
+          {task.yearly && <Cake className='w-4 h-4 text-accent-primary' />}
+          <span className='text-xs font-bold text-accent-primary whitespace-nowrap tabular-nums'>
+            {when}
+          </span>
+        </div>
       </div>
     </div>
   )

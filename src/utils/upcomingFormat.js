@@ -39,3 +39,19 @@ export function formatWhenFromNow(task, t, language, now = Date.now()) {
   if (days === 1) return t('upcoming.when.tomorrow')
   return formatDue({ ...task, time: null }, language)
 }
+
+/** The right-hand label of an Upcoming row: the time today, a weekday this week, else the date. */
+export function formatWhenShort(task, language, now = Date.now()) {
+  const date = dateOf(task)
+  const startOfToday = new Date(now).setHours(0, 0, 0, 0)
+  const days = Math.round((dateOf({ ...task, time: null }).getTime() - startOfToday) / DAY_MS)
+  const time = task.time
+    ? date.toLocaleTimeString(language, { hour: 'numeric', minute: '2-digit' })
+    : ''
+  if (days === 0) return time
+  const day =
+    days > 0 && days < 7
+      ? date.toLocaleDateString(language, { weekday: 'short' })
+      : date.toLocaleDateString(language, { month: 'short', day: 'numeric' })
+  return time ? `${day} ${time}` : day
+}

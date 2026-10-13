@@ -6,17 +6,21 @@ import { Lock } from 'lucide-react'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
+import { imageDetailsContent } from '@pear-notes/core/store/services/imageDetails.js'
 import {
   LOCAL_AI_ENABLED,
   LOCAL_AI_FEATURE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
 import {
+  buildImageDetailsTransaction,
   buildLineRewriteTransaction,
+  buildMakeTasksTransaction,
   buildNoteEditsTransaction
 } from '@pear-notes/core/store/services/localAiNoteEdits.js'
 import {
   htmlToNoteText,
   isRewriteTask,
+  keepsOriginalText,
   NOTE_TASK,
   TEMPLATE_TASKS
 } from '@pear-notes/core/store/services/localAiPrompts.js'
@@ -82,11 +86,11 @@ import AiToolsButton from './AiToolsButton'
 import DictationBar from './DictationBar'
 import FindBar from './FindBar'
 import FormattingToolbar from './FormattingToolbar'
+import InThisNotePanel from './InThisNotePanel'
 import NoteBodyPlaceholder from './NoteBodyPlaceholder'
 import NoteConflictBanner from './NoteConflictBanner'
 import NoteHistoryPanel from './NoteHistoryPanel'
 import NoteSuggestionChips from './NoteSuggestionChips'
-import RelatedNotesPanel from './RelatedNotesPanel'
 import RichTextEditor from './RichTextEditor'
 import ScrollJumpButton from './ScrollJumpButton'
 
@@ -153,6 +157,8 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const showHistory = !!historyNoteKey && historyNoteKey === selectedNoteKey
   const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
   const relatedEnabled = useSelector(getLocalAiIndexEnabled) && LOCAL_AI_ENABLED && relatedOn
+  const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
+  const inThisNoteEnabled = relatedEnabled || (LOCAL_AI_ENABLED && tasksOn)
   const relatedNoteKey = useSelector(getRelatedNotesKey)
 
   useNoteLockVersion()
@@ -164,7 +170,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const isPinned = noteData?.pinned === true
   const noteUnlocked = isNoteUnlocked(selectedNoteKey)
   const showLockScreen = isLocked && !noteUnlocked
-  const showRelated = relatedEnabled && !!relatedNoteKey && !isLocked && !showHistory
+  const showInThisNote = inThisNoteEnabled && !!relatedNoteKey && !isLocked && !showHistory
 
   useEffect(() => {
     if (relatedNoteKey && selectedNoteKey && relatedNoteKey !== selectedNoteKey) {
@@ -284,6 +290,48 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       .run()
   }
 
+  const insertImageDetails = (details, imageSrc, { table, keepPhoto }) => {
+    const made = buildImageDetailsTransaction(editorInstance.state, {
+      src: imageSrc,
+      blocks: imageDetailsContent(
+        details,
+        {
+          types: t('localAi.details.types', { returnObjects: true }),
+          ...t('localAi.details.fields', { returnObjects: true })
+        },
+        { table }
+      ),
+      keepImage: keepPhoto
+    })
+    if (made) editorInstance.view.dispatch(made.tr)
+  }
+
+  const handleMakeTasks = (texts) => {
+    if (!editorInstance || editorInstance.isDestroyed || hasNoteConflict) return
+    const made = buildMakeTasksTransaction(editorInstance.state, texts)
+    if (made) editorInstance.view.dispatch(made.tr)
+  }
+
+  const appendOriginalQuote = (tr, to, original) => {
+    const lines = toLines(original)
+    if (lines.length === 0) return
+    const $end = tr.doc.resolve(Math.min(tr.mapping.map(to), tr.doc.content.size))
+    const below = $end.depth > 0 ? $end.after(1) : tr.doc.content.size
+    const quote = {
+      type: 'blockquote',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: t('localAi.cleanUp.original'), marks: [{ type: 'bold' }] }
+          ]
+        },
+        ...lines.map(paragraphNode)
+      ]
+    }
+    tr.insert(below, editorInstance.schema.nodeFromJSON(quote))
+  }
+
   const insertForSelection = (text, mode, summary, meta, selection) => {
     const { doc } = editorInstance.state
     const size = doc.content.size
@@ -325,7 +373,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         text
       )
       if (rewrite) {
-        if (rewrite.applied > 0) editorInstance.view.dispatch(rewrite.tr)
+        if (rewrite.applied > 0) {
+          if (keepsOriginalText(mode)) appendOriginalQuote(rewrite.tr, to, selection.text)
+          editorInstance.view.dispatch(rewrite.tr)
+        }
         editorInstance.commands.focus()
         return
       }
@@ -423,6 +474,10 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
     if (mode === 'describe') {
       insertImageCaption(text.trim(), attachmentUrl)
+      return
+    }
+    if (mode === 'details' && meta?.details) {
+      insertImageDetails(meta.details, attachmentUrl, meta)
       return
     }
     if (mode === 'suggestTitle') {
@@ -675,7 +730,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       ...(activityEnabled
         ? [{ id: 'history', label: t('noteEditor.contextMenu.noteHistory') }]
         : []),
-      ...(relatedEnabled && !isLocked
+      ...(inThisNoteEnabled && !isLocked
         ? [{ id: 'related', label: t('noteEditor.contextMenu.relatedNotes') }]
         : []),
       {
@@ -897,6 +952,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         {LOCAL_AI_ENABLED && isAskRequest && (
           <AskNoteModal
             key={localAiRequest.id}
+            noteKey={selectedNoteKey}
             selectionText={
               localAiRequest.scope === 'selection' ? (localAiRequest.selection?.text ?? '') : ''
             }
@@ -933,10 +989,16 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         />
       )}
 
-      {showRelated && (
-        <RelatedNotesPanel
+      {showInThisNote && (
+        <InThisNotePanel
           noteKey={selectedNoteKey}
-          noteTitle={title}
+          html={content}
+          title={title}
+          anchor={noteData?.updatedAt}
+          showFindings={LOCAL_AI_ENABLED && tasksOn}
+          showRelated={relatedEnabled}
+          insertBlocked={hasNoteConflict}
+          onMakeTasks={handleMakeTasks}
           onClose={() => dispatch(closeRelatedNotes())}
         />
       )}

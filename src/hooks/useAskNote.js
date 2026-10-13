@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 
+import { backendApi } from '@pear-notes/core/backend/api.js'
+import {
+  askNoteThreadFromTurns,
+  clearAskNoteThread,
+  loadAskNoteThread,
+  saveAskNoteThread,
+  savedAskNoteTurns
+} from '@pear-notes/core/store/services/askThreads.js'
 import {
   applyTextEdits,
   ASK_KIND,
@@ -13,6 +21,7 @@ import {
 import { LOCAL_AI_ERROR, LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { WORK_KIND } from '@pear-notes/core/store/services/localAiWorkProgress.js'
 import { getLocalAiFeatureConfig } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getNotesData } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { copyToClipboard } from '../lib/clipboard'
 import { askAboutNote, cancelLocalAiTask } from '../lib/localAi/electronAdapter'
@@ -38,16 +47,24 @@ function replaceOnce(text, find, replace) {
   return index === -1 ? text : `${text.slice(0, index)}${replace}${text.slice(index + find.length)}`
 }
 
-export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
+const asEarlier = (saved) => saved.map((turn, index) => ({ ...turn, id: index - saved.length }))
+
+export function useAskNote({ noteKey, selectionText, noteText, onApplyEdits, onClose }) {
   const summaryConfig = useSelector((state) =>
     getLocalAiFeatureConfig(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
   )
+  const notesData = useSelector(getNotesData)
+  const notesRef = useRef(notesData)
+  notesRef.current = notesData
   const { workView, beginWork, endWork } = useLocalAiWorkProgress()
   const initialSelection = String(selectionText ?? '').trim()
   const [scope, setScope] = useState(initialSelection ? 'selection' : 'note')
   const [texts, setTexts] = useState({ selection: initialSelection, note: noteText ?? '' })
   const [question, setQuestion] = useState('')
   const [turns, setTurns] = useState([])
+  const [earlier, setEarlier] = useState([])
+  const [loaded, setLoaded] = useState(false)
+  const [threadKey] = useState(noteKey ?? null)
   const [copiedId, setCopiedId] = useState(null)
   const turnIdRef = useRef(0)
   const runIdRef = useRef(0)
@@ -60,6 +77,8 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
   const droppedTurns = useMemo(() => hasDroppedAskTurns(turns, sourceText), [turns, sourceText])
   const emptySource = sourceText.trim().length === 0
   const canSend = question.trim().length > 0 && !busy && !emptySource
+  const allTurns = useMemo(() => [...earlier, ...turns], [earlier, turns])
+  const isLocked = useCallback((key) => notesRef.current?.[key]?.locked === true, [])
 
   useEffect(
     () => () => {
@@ -68,6 +87,25 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     },
     []
   )
+
+  useEffect(() => {
+    let live = true
+    loadAskNoteThread(backendApi, threadKey, isLocked)
+      .then((saved) => live && setEarlier(asEarlier(saved)))
+      .catch(() => {})
+      .finally(() => live && setLoaded(true))
+    return () => {
+      live = false
+    }
+  }, [isLocked, threadKey])
+
+  useEffect(() => {
+    if (!loaded || !threadKey || !turns.length || turns.some((turn) => turn.status === 'working')) {
+      return
+    }
+    const thread = askNoteThreadFromTurns({ noteKey: threadKey, turns: [...earlier, ...turns] })
+    if (thread) saveAskNoteThread(backendApi, thread, isLocked).catch(() => {})
+  }, [earlier, isLocked, loaded, threadKey, turns])
 
   const updateTurn = useCallback((id, update) => {
     setTurns((current) => current.map((turn) => (turn.id === id ? update(turn) : turn)))
@@ -82,7 +120,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     const history = getAskHistory(turns)
     const text = sourceText
     setQuestion('')
-    setTurns((current) => [...current, createAskTurn(id, asked)])
+    setTurns((current) => [...current, { ...createAskTurn(id, asked), scope }])
     const onProgress = beginWork(WORK_KIND.NOTE_TASK, { input: text })
     try {
       const raw = await askAboutNote(text, history, asked, summaryConfig ?? {}, { onProgress })
@@ -94,14 +132,23 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     } finally {
       if (runId === runIdRef.current) endWork()
     }
-  }, [beginWork, busy, endWork, question, sourceText, summaryConfig, turns, updateTurn])
+  }, [beginWork, busy, endWork, question, scope, sourceText, summaryConfig, turns, updateTurn])
 
   const handleToggleScope = useCallback(() => {
     if (busy || !hasSelection) return
     runIdRef.current += 1
     setScope((current) => (current === 'selection' ? 'note' : 'selection'))
+    setEarlier((current) => asEarlier(savedAskNoteTurns([...current, ...turns])))
     setTurns([])
-  }, [busy, hasSelection])
+  }, [busy, hasSelection, turns])
+
+  const handleClear = useCallback(() => {
+    if (busy) return
+    runIdRef.current += 1
+    setEarlier([])
+    setTurns([])
+    if (threadKey) clearAskNoteThread(backendApi, threadKey).catch(() => {})
+  }, [busy, threadKey])
 
   const handleApply = useCallback(
     (id) => {
@@ -131,7 +178,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
 
   const handleCopy = useCallback(
     async (id) => {
-      const turn = turns.find((item) => item.id === id)
+      const turn = allTurns.find((item) => item.id === id)
       if (!turn?.answer) return
       const ok = await copyToClipboard(turn.answer)
       if (!ok) return
@@ -139,7 +186,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
       copiedTimerRef.current = setTimeout(() => setCopiedId(null), COPIED_RESET_MS)
     },
-    [turns]
+    [allTurns]
   )
 
   const handleClose = useCallback(() => {
@@ -156,6 +203,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     question,
     setQuestion,
     turns,
+    earlier,
     workView,
     busy,
     canSend,
@@ -166,6 +214,7 @@ export function useAskNote({ selectionText, noteText, onApplyEdits, onClose }) {
     handleToggleScope,
     handleApply,
     handleCopy,
+    handleClear,
     handleClose
   }
 }

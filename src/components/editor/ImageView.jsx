@@ -116,7 +116,12 @@ export default function ImageView({ node, updateAttributes, selected, deleteNode
               e.preventDefault()
               e.stopPropagation()
               if (!gateAiFeature(LOCAL_AI_FEATURE.EXTRACT_TEXT)) return
-              requestLocalAiSheet({ mode: 'details', url: resolvedUrl, fileName: title || alt })
+              requestLocalAiSheet({
+                mode: 'details',
+                url: resolvedUrl,
+                fileName: title || alt,
+                attachmentUrl: src
+              })
             }}
             className='absolute -top-3 right-[6.75rem] w-8 h-8 bg-white border border-border-primary rounded-full shadow-lg flex items-center justify-center text-text-secondary hover:bg-accent-primary hover:text-white transition-colors z-30 pointer-events-auto'
             title={t('localAi.details.actionLabel')}

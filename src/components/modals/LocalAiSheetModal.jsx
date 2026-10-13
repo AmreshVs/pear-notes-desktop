@@ -25,12 +25,14 @@ import {
   X
 } from 'lucide-react'
 
+import { canInsertImageDetailsTable } from '@pear-notes/core/store/services/imageDetails.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import { useLocalAiSheet } from '../../hooks/useLocalAiSheet'
 import { copyToClipboard } from '../../lib/clipboard'
 import { formatTime } from '../../utils/formatters'
 
+import ImageDetailsPreview from './ImageDetailsPreview'
 import LocalAiShimmer from './LocalAiShimmer'
 import LocalAiWorkProgress from './LocalAiWorkProgress'
 import RewriteChanges from './RewriteChanges'
@@ -125,6 +127,7 @@ export default function LocalAiSheetModal({
     phase,
     error,
     text,
+    details,
     elapsed,
     workView,
     summary,
@@ -152,6 +155,7 @@ export default function LocalAiSheetModal({
     handleAttachAudio
   } = useLocalAiSheet(request, { onInsert, onAttachAudio, onClose })
   const [copiedText, setCopiedText] = useState(null)
+  const [keepPhoto, setKeepPhoto] = useState(true)
   const copiedTimerRef = useRef(null)
   const copied = copiedText !== null && copiedText === text
 
@@ -180,7 +184,14 @@ export default function LocalAiSheetModal({
     percent: downloadProgress.percent,
     size: formatBytes(phase === 'error' ? noSpaceBytes : downloadProgress.missingBytes)
   }
-  const keys = heroKeys(mode, phase, error, scope)
+  const showDetails = mode === 'details' && phase === 'preview' && !!details
+  const detailsTable = showDetails && canInsertImageDetailsTable(details)
+  const keys = showDetails
+    ? {
+        title: `localAi.details.preview.${details.type}.title`,
+        subtitle: `localAi.details.preview.${details.type}.subtitle`
+      }
+    : heroKeys(mode, phase, error, scope)
   const isRecording = phase === 'recording'
   const isBusy = phase === 'working'
   const canInsert = phase === 'preview' && !insertBlocked && summaryPhase !== 'working'
@@ -351,7 +362,16 @@ export default function LocalAiSheetModal({
             />
           )}
 
-          {phase === 'preview' && !rewriteDiff && (
+          {showDetails && (
+            <ImageDetailsPreview
+              details={details}
+              imageUrl={request?.url}
+              keepPhoto={keepPhoto}
+              onKeepPhotoChange={setKeepPhoto}
+            />
+          )}
+
+          {phase === 'preview' && !rewriteDiff && !showDetails && (
             <div className='max-h-72 overflow-y-auto custom-scrollbar rounded-xl bg-bg-tertiary/40 border border-overlay-soft px-4 py-3'>
               {mode !== 'summarizeNote' && (
                 <p
@@ -472,6 +492,23 @@ export default function LocalAiSheetModal({
               <button onClick={handleClose} className={PRIMARY_BUTTON_CLASS}>
                 {t('common.close')}
               </button>
+            ) : detailsTable ? (
+              <>
+                <button
+                  onClick={() => handleInsert('insert', { keepPhoto })}
+                  disabled={!canInsert}
+                  className={SECONDARY_BUTTON_CLASS}
+                >
+                  {t('localAi.details.insertText')}
+                </button>
+                <button
+                  onClick={() => handleInsert('insert', { table: true, keepPhoto })}
+                  disabled={!canInsert}
+                  className={PRIMARY_BUTTON_CLASS}
+                >
+                  {t('localAi.details.insertTable')}
+                </button>
+              </>
             ) : phase === 'preview' && canReplace ? (
               <>
                 {copyButton}
@@ -500,10 +537,10 @@ export default function LocalAiSheetModal({
                       : 'localAi.actions.again'
                   )}
                 </button>
-                {phase === 'preview' && copyButton}
+                {phase === 'preview' && !showDetails && copyButton}
                 {phase === 'preview' && (
                   <button
-                    onClick={() => handleInsert('insert')}
+                    onClick={() => handleInsert('insert', { keepPhoto })}
                     disabled={!canInsert}
                     className={PRIMARY_BUTTON_CLASS}
                   >

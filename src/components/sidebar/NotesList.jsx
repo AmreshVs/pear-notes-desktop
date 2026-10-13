@@ -60,8 +60,8 @@ import {
   getMeaningNotes,
   getNoteData,
   getSelectedNote,
-  mergeNotes,
   moveNotes,
+  previewMergeNotes,
   purgeExpiredTrash,
   restoreNote,
   restoreNotes,
@@ -184,6 +184,8 @@ function NoteFolderIcon({ folder }) {
   })
 }
 
+const SEARCH_GROUP = 'search'
+
 const NotesItem = memo(
   ({
     noteKey: key,
@@ -195,7 +197,8 @@ const NotesItem = memo(
     isSelecting,
     isChecked,
     onToggleSelect,
-    meaningSnippet
+    meaningSnippet,
+    matchReason
   }) => {
     const { t } = useTranslation()
     const dispatch = useDispatch()
@@ -459,6 +462,11 @@ const NotesItem = memo(
                   )}
                 </p>
               )}
+              {matchReason && (
+                <span className='self-start mt-1.5 rounded-[5px] px-1.5 py-px text-[11.5px] font-semibold bg-accent-primary/15 text-accent-primary'>
+                  {t(`search.reason.${matchReason}`)}
+                </span>
+              )}
               <div className='flex items-center gap-1.5 mt-2 opacity-50 text-xs font-bold tracking-wider'>
                 {showFolder && noteData?.folderKey && (
                   <>
@@ -606,13 +614,16 @@ export default function NotesList({
 
   const groupedNotes = useMemo(() => {
     return filteredNotes.reduce((acc, note) => {
-      const title =
-        !isTrash && note.value?.pinned === true ? NOTES_LIST_GROUP.PINNED : getGroupTitle(note)
+      const title = hasSearchQuery
+        ? SEARCH_GROUP
+        : !isTrash && note.value?.pinned === true
+          ? NOTES_LIST_GROUP.PINNED
+          : getGroupTitle(note)
       if (!acc[title]) acc[title] = []
       acc[title].push(note)
       return acc
     }, {})
-  }, [filteredNotes, isTrash])
+  }, [filteredNotes, isTrash, hasSearchQuery])
 
   const sortedGroups = useMemo(() => {
     return Object.keys(groupedNotes).sort((a, b) => {
@@ -713,11 +724,10 @@ export default function NotesList({
 
   const handleBulkMerge = useCallback(() => {
     if (checkedKeys.length < 2) return
-    if (!window.confirm(t('notesList.merge.confirm', { count: checkedKeys.length }))) return
     const keys = orderedKeys.filter((key) => checkedKeys.includes(key))
-    dispatch(mergeNotes({ keys, untitled: t('noteCard.untitled') }))
+    dispatch(previewMergeNotes({ keys }))
     exitSelection()
-  }, [checkedKeys, dispatch, exitSelection, orderedKeys, t])
+  }, [checkedKeys, dispatch, exitSelection, orderedKeys])
 
   const handleBulkRestore = useCallback(() => {
     if (checkedKeys.length === 0) return
@@ -879,6 +889,7 @@ export default function NotesList({
           key={note.key}
           noteKey={note.key}
           meaningSnippet={note.snippet || null}
+          matchReason={hasSearchQuery ? (note.value ? 'exact' : 'meaning') : null}
           onMenuAction={handleMenuAction}
           allFolders={folders}
           selectedFolder={selectedFolder}
@@ -897,7 +908,8 @@ export default function NotesList({
       showFolders,
       isSelecting,
       checkedKeys,
-      handleToggleSelect
+      handleToggleSelect,
+      hasSearchQuery
     ]
   )
 
@@ -913,6 +925,8 @@ export default function NotesList({
         return t('folderView.sections.last7Days')
       case NOTES_LIST_GROUP.L30DAYS:
         return t('folderView.sections.older')
+      case SEARCH_GROUP:
+        return t('search.sections.words', { count: filteredNotes.length })
       default:
         return group
     }
@@ -1186,8 +1200,9 @@ export default function NotesList({
             ))}
             {hasSearchQuery && meaningNotes.length > 0 && (
               <div className='mb-6'>
-                <h3 className='px-6 py-2 text-sm font-bold text-text-primary tracking-[0.1em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated'>
-                  {t('search.meaning.title')}
+                <h3 className='px-6 py-2 text-sm font-bold text-text-primary tracking-[0.1em] sticky top-0 bg-bg-secondary/95 backdrop-blur-md z-10 border-b border-overlay-subtle transform-cpu hardware-accelerated flex items-center gap-1.5'>
+                  <Sparkles className='w-3.5 h-3.5 text-accent-primary' aria-hidden='true' />
+                  {t('search.sections.meaning', { count: meaningNotes.length })}
                 </h3>
                 <div>{meaningNotes.map(renderNotesList)}</div>
               </div>
@@ -1195,6 +1210,11 @@ export default function NotesList({
             {hasSearchQuery && meaningNotes.length === 0 && meaningNoticeText && (
               <p className='px-6 pb-3 text-xs text-text-tertiary leading-relaxed'>
                 {meaningNoticeText}
+              </p>
+            )}
+            {hasSearchQuery && (
+              <p className='px-6 pb-3 text-xs text-text-tertiary leading-relaxed'>
+                {t('search.footer')}
               </p>
             )}
           </div>

@@ -85,7 +85,7 @@ const modelUsers = new Map()
 const MODEL_RELEASE_WAIT_MS = 60 * 1000
 let anonymousTask = 0
 
-function streamCompletion(sdk, params, onText) {
+function trackCompletion(sdk, params, onText, finish) {
   const taskId = taskContext.getStore()?.taskId
   if (taskId && cancelledTasks.has(taskId)) return Promise.reject(new Error('cancelled'))
   const work = (async () => {
@@ -99,7 +99,7 @@ function streamCompletion(sdk, params, onText) {
       streamed += token
       onText(streamed)
     }
-    return run.text
+    return finish(run)
   })()
   completionsInFlight.add(work)
   work.then(
@@ -107,6 +107,26 @@ function streamCompletion(sdk, params, onText) {
     () => completionsInFlight.delete(work)
   )
   return work
+}
+
+function streamCompletion(sdk, params, onText) {
+  return trackCompletion(sdk, params, onText, (run) => run.text)
+}
+
+function toolStep(sdk, params) {
+  return trackCompletion(
+    sdk,
+    params,
+    () => {},
+    async (run) => {
+      const text = String((await run.text) ?? '')
+      const toolCalls = params.tools ? ((await run.toolCalls) ?? []) : []
+      return {
+        text,
+        toolCalls: toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args }))
+      }
+    }
+  )
 }
 
 function loadPrompts() {
@@ -601,6 +621,7 @@ async function loadLlmFeature(sdk, catalog, prompts, feature, featureConfig = {}
       modelType: 'llm',
       modelConfig: {
         ctx_size: prompts.LLM_CONTEXT_SIZE,
+        ...(catalog.isToolCallingModel(modelName) ? { tools: true } : {}),
         ...(projectionName
           ? {
               projectionModelSrc: registryAsset(sdk, catalog, projectionName),
@@ -745,12 +766,12 @@ const toVaultSource = (source) => ({
 })
 
 async function askVault(event, { question, sources, turns, featureConfig, taskId }) {
-  const [sdk, catalog, prompts, work, vaultAsk] = await Promise.all([
+  const [sdk, catalog, prompts, work, vaultAgent] = await Promise.all([
     loadSdk(),
     loadCatalog(),
     loadPrompts(),
     loadWork(),
-    import('@pear-notes/core/store/services/localAiVaultAsk.js')
+    import('@pear-notes/core/store/services/localAiVaultAgent.js')
   ])
   const send = progressSender(event, taskId)
   const config = featureConfig && typeof featureConfig === 'object' ? featureConfig : {}
@@ -768,15 +789,24 @@ async function askVault(event, { question, sources, turns, featureConfig, taskId
     config,
     catalog.LOCAL_AI_TEXT_TASK.ASK
   )
+  const loadedName = await resolveTextModelName(
+    sdk,
+    catalog,
+    config,
+    catalog.LOCAL_AI_TEXT_TASK.ASK,
+    modelName
+  )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_NOTE })
-  const text = await vaultAsk.runVaultAnswer({
+  return vaultAgent.runVaultAnswerOnHost({
     question: String(question ?? ''),
     sources: Array.isArray(sources) ? sources.map(toVaultSource) : [],
     turns: Array.isArray(turns) ? turns : [],
+    modelName: loadedName,
     complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
+    step: ({ messages, tools, generationParams }) =>
+      toolStep(sdk, { modelId, history: messages, tools, generationParams }),
     onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
   })
-  return { text }
 }
 
 function loadTiers() {
