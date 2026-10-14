@@ -1,18 +1,29 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Bell, ChevronRight } from 'lucide-react'
 
-import { isFoldedGroup, UPCOMING_GROUP } from '@pear-notes/core/store/services/noteTasks.js'
+import {
+  BIRTHDAYS_GROUP,
+  isFoldedGroup,
+  splitYearly,
+  UPCOMING_GROUP
+} from '@pear-notes/core/store/services/noteTasks.js'
 import { getListedNoteCount, selectNote } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { useLocalToggle } from '../../hooks/useLocalToggle'
 import { REMINDERS_TOGGLE_KEY } from '../../hooks/useReminders'
 import { useUpcoming } from '../../hooks/useUpcoming'
-import { formatWhenFromNow, yearlyLabel } from '../../utils/upcomingFormat'
+import {
+  birthdaysByMonth,
+  formatWhenFromNow,
+  upcomingText,
+  yearlyLabel
+} from '../../utils/upcomingFormat'
 
 import ReminderSettingsModal from './ReminderSettingsModal'
 import ToolPanel, { TOOL_GROUP_HEADER_CLASS, ToolEmpty } from './ToolPanel'
+import UpcomingBirthdayRow from './UpcomingBirthdayRow'
 import UpcomingSuggestions from './UpcomingSuggestions'
 import UpcomingTaskRow from './UpcomingTaskRow'
 
@@ -34,7 +45,9 @@ function NextCard({ task, onOpen }) {
       <span className='text-[11px] font-bold tracking-[0.1em] text-text-tertiary'>
         {t('upcoming.next', { when: formatWhenFromNow(task, t, i18n.language) })}
       </span>
-      <span className='text-base font-bold text-text-primary line-clamp-2'>{task.text}</span>
+      <span className='text-base font-bold text-text-primary line-clamp-2'>
+        {upcomingText(task)}
+      </span>
       <span className='text-xs text-text-tertiary truncate'>
         {task.yearly ? `${yearlyLabel(task, t)} · ` : ''}
         {task.title || t('noteCard.untitled')}
@@ -51,7 +64,13 @@ export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
   const [remindersOn] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [openFolds, setOpenFolds] = useState(() => new Set())
+  const [allBirthdaysOpen, setAllBirthdaysOpen] = useState(false)
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
+  const split = useMemo(() => splitYearly(groups ?? []), [groups])
+  const yearlyMonths = useMemo(
+    () => (allBirthdaysOpen ? birthdaysByMonth(split.yearly, i18n.language) : []),
+    [allBirthdaysOpen, split.yearly, i18n.language]
+  )
 
   const today = new Date().toLocaleDateString(i18n.language, {
     weekday: 'long',
@@ -80,7 +99,53 @@ export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
       />
     ))
 
+  const renderBirthdayRows = (items, keyPrefix) =>
+    items.map((task, index) => (
+      <UpcomingBirthdayRow
+        key={`${keyPrefix}-${task.noteKey}-${task.date}-${index}-${task.text}`}
+        task={task}
+        last={index === items.length - 1}
+        onOpen={() => open(task)}
+      />
+    ))
+
+  const renderBirthdays = (items) => (
+    <div key={BIRTHDAYS_GROUP} className='mb-6'>
+      <h3 className={`${TOOL_GROUP_HEADER_CLASS} flex items-baseline justify-between`}>
+        <span>{t('upcoming.groups.birthdays')}</span>
+        <span className='text-xs font-medium tracking-normal text-text-tertiary'>
+          {t('upcoming.next30Days')}
+        </span>
+      </h3>
+      {renderBirthdayRows(items, 'soon')}
+      <button
+        type='button'
+        onClick={() => setAllBirthdaysOpen((value) => !value)}
+        aria-expanded={allBirthdaysOpen}
+        className={`w-full pl-6 pr-4 py-2.5 flex items-center justify-between text-sm font-semibold text-accent-primary hover:bg-overlay-faint ${items.length ? 'border-t border-overlay-subtle' : ''}`}
+      >
+        <span>{t('upcoming.allBirthdays')}</span>
+        <span className='flex items-center gap-1.5 text-text-tertiary tabular-nums'>
+          {split.yearly.length}
+          <ChevronRight
+            className={`w-4 h-4 transition-transform ${allBirthdaysOpen ? 'rotate-90' : ''}`}
+          />
+        </span>
+      </button>
+      {yearlyMonths.map((month) => (
+        <div key={month.key} className='mt-3'>
+          <div className='pl-6 pr-4 py-1 flex items-baseline justify-between text-xs font-bold text-text-tertiary'>
+            <span>{month.title}</span>
+            <span className='tabular-nums'>{month.items.length}</span>
+          </div>
+          {renderBirthdayRows(month.items, month.key)}
+        </div>
+      ))}
+    </div>
+  )
+
   const renderGroup = ({ group, items }) => {
+    if (group === BIRTHDAYS_GROUP) return renderBirthdays(items)
     if (!isFoldedGroup(group)) {
       return (
         <div key={group} className='mb-6'>
@@ -133,7 +198,7 @@ export default function UpcomingList({ onToggleSidebar, isSidebarCollapsed }) {
         <ToolEmpty title={t('upcoming.emptyTitle')} body={t('upcoming.emptyBody')} />
       )}
       {next && <NextCard task={next} onOpen={() => open(next)} />}
-      {groups?.map(renderGroup)}
+      {groups && split.groups.map(renderGroup)}
       <UpcomingSuggestions />
       <ReminderSettingsModal open={settingsOpen} onClose={closeSettings} />
     </ToolPanel>

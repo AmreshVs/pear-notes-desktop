@@ -55,3 +55,39 @@ export function formatWhenShort(task, language, now = Date.now()) {
       : date.toLocaleDateString(language, { month: 'short', day: 'numeric' })
   return time ? `${day} ${time}` : day
 }
+
+export const upcomingText = (task) => task.name || task.text
+
+/** "Turns 64 · in 4 days" */
+export function birthdayMeta(task, t, now = Date.now()) {
+  const startOfToday = new Date(now).setHours(0, 0, 0, 0)
+  const days = Math.round((dateOf({ ...task, time: null }).getTime() - startOfToday) / DAY_MS)
+  const when =
+    days <= 0
+      ? t('upcoming.when.today')
+      : days === 1
+        ? t('upcoming.when.tomorrow')
+        : t('upcoming.when.inDays', { count: days })
+  return `${yearlyLabel(task, t)} · ${when}`
+}
+
+/** Yearly dates grouped by month, in order; a month in another year names the year. */
+export function birthdaysByMonth(tasks, language) {
+  const thisYear = new Date().getFullYear()
+  const months = []
+  for (const task of tasks) {
+    const key = task.date.slice(0, 7)
+    let month = months[months.length - 1]
+    if (month?.key !== key) {
+      const [year, index] = key.split('-').map(Number)
+      const title = new Date(year, index - 1, 1).toLocaleDateString(language, {
+        month: 'long',
+        ...(year !== thisYear ? { year: 'numeric' } : {})
+      })
+      month = { key, title, items: [] }
+      months.push(month)
+    }
+    month.items.push(task)
+  }
+  return months
+}

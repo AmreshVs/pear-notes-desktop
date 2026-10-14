@@ -2434,7 +2434,8 @@
       "thisWeek": "Next 7 days",
       "later": "Later",
       "past": "Past",
-      "completed": "Completed"
+      "completed": "Completed",
+      "birthdays": "Birthdays"
     },
     "folds": {
       "past_one": "Past · {{count}}",
@@ -2449,7 +2450,9 @@
       "inHours_one": "in {{count}} hour",
       "inHours_other": "in {{count}} hours",
       "today": "today",
-      "tomorrow": "tomorrow"
+      "tomorrow": "tomorrow",
+      "inDays_one": "in {{count}} day",
+      "inDays_other": "in {{count}} days"
     },
     "markDone": "Mark as done",
     "markNotDone": "Mark as not done",
@@ -2490,6 +2493,15 @@
       "useTitle": "Use title",
       "dismiss": "Dismiss",
       "footer": "Found on your devices. Nothing changes until you choose."
+    },
+    "next30Days": "Next 30 days",
+    "allBirthdays": "All birthdays",
+    "birthdayList": {
+      "title": "Birthdays",
+      "subtitle_one": "{{count}} birthday or anniversary",
+      "subtitle_other": "{{count}} birthdays and anniversaries",
+      "emptyTitle": "No birthdays yet",
+      "emptyBody": "Add names and dates to a note called Birthdays, like “Sam 2 Nov 1990”."
     }
   },
   "suggestions": {

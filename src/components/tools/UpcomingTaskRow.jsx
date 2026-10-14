@@ -3,7 +3,7 @@ import { Bell, Cake, CalendarDays, Check, CheckSquare } from 'lucide-react'
 
 import { isAppointment } from '@pear-notes/core/store/services/noteTasks.js'
 
-import { formatWhenShort, yearlyLabel } from '../../utils/upcomingFormat'
+import { formatWhenShort, upcomingText, yearlyLabel } from '../../utils/upcomingFormat'
 
 function DoneButton({ task, pending, onToggle }) {
   const { t } = useTranslation()
@@ -57,7 +57,7 @@ export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pend
           <p
             className={`text-base font-bold tracking-tight line-clamp-2 group-hover:text-accent-primary ${task.done ? 'line-through text-text-tertiary' : 'text-text-primary'}`}
           >
-            {task.text}
+            {upcomingText(task)}
           </p>
           <p className='mt-1 text-xs text-text-tertiary truncate'>
             {yearly ? `${yearly} · ` : ''}
