@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@qvac/sdk": "^0.19.1"
+    "@qvac/sdk": "0.21.0"
   }
 }

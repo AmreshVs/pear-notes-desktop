@@ -95,11 +95,12 @@ function trackCompletion(sdk, params, onText, finish) {
       taskRequests.get(taskId).add(run.requestId)
     }
     let streamed = ''
-    for await (const token of run.tokenStream) {
-      streamed += token
+    for await (const event of run.events) {
+      if (event.type !== 'contentDelta') continue
+      streamed += event.text
       onText(streamed)
     }
-    return finish(run)
+    return finish(await run.final)
   })()
   completionsInFlight.add(work)
   work.then(
@@ -110,7 +111,7 @@ function trackCompletion(sdk, params, onText, finish) {
 }
 
 function streamCompletion(sdk, params, onText) {
-  return trackCompletion(sdk, params, onText, (run) => run.text)
+  return trackCompletion(sdk, params, onText, (final) => final.contentText)
 }
 
 function toolStep(sdk, params) {
@@ -118,9 +119,9 @@ function toolStep(sdk, params) {
     sdk,
     params,
     () => {},
-    async (run) => {
-      const text = String((await run.text) ?? '')
-      const toolCalls = params.tools ? ((await run.toolCalls) ?? []) : []
+    (final) => {
+      const text = String(final.contentText ?? '')
+      const toolCalls = params.tools ? (final.toolCalls ?? []) : []
       return {
         text,
         toolCalls: toolCalls.map(({ name, arguments: args }) => ({ name, arguments: args }))
@@ -203,6 +204,7 @@ function loadSdk() {
       }
       const modelsDir = getModelsDir()
       await fs.promises.mkdir(modelsDir, { recursive: true })
+      await removeRetiredModelFiles(modelsDir)
       const configPath = path.join(getRuntimeRoot(), RUNTIME_CONFIG_NAME)
       await fs.promises.writeFile(configPath, JSON.stringify({ cacheDirectory: modelsDir }))
       process.env.QVAC_CONFIG_PATH = configPath
@@ -215,6 +217,15 @@ function loadSdk() {
     })
   }
   return sdkPromise
+}
+
+async function removeRetiredModelFiles(modelsDir) {
+  const { LOCAL_AI_RETIRED_MODEL_FILES } = await loadCatalog()
+  await Promise.all(
+    LOCAL_AI_RETIRED_MODEL_FILES.map(({ file }) =>
+      fs.promises.rm(path.join(modelsDir, file), { force: true }).catch(() => {})
+    )
+  )
 }
 
 function registryAsset(sdk, catalog, name) {

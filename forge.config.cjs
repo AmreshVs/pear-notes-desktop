@@ -427,9 +427,9 @@ async function pruneUnusedLocalAiAddons(buildPath) {
   const modulesDir = path.join(runtimeDir, 'node_modules')
   for (const dir of await listPackageDirs(modulesDir)) {
     const name = path.relative(modulesDir, dir).split(path.sep).join('/')
-    const prebuildsDir = path.join(dir, 'prebuilds')
     const unusedQvacAddon = name.startsWith('@qvac/') && !used.has(name)
-    if ((unusedQvacAddon || LOCAL_AI_DEFERRED_ADDONS.has(name)) && fs.existsSync(prebuildsDir)) {
+    if (!unusedQvacAddon && !LOCAL_AI_DEFERRED_ADDONS.has(name)) continue
+    for (const prebuildsDir of [path.join(dir, 'prebuilds'), path.join(dir, 'addon', 'prebuilds')]) {
       await fs.promises.rm(prebuildsDir, { recursive: true, force: true })
     }
   }
