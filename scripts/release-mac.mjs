@@ -434,10 +434,17 @@ function verifyBundle(config, appDir) {
     appDir,
     'Contents/Resources/app/local-ai/node_modules/@qvac/sdk/dist/src/client/rpc/node-rpc-client.js'
   )
-  if (!fs.readFileSync(packagedRpcClient, 'utf8').includes('const socketName = `q${process.pid}')) {
+  const packagedRpcSource = fs.readFileSync(packagedRpcClient, 'utf8')
+  if (!packagedRpcSource.includes('const socketName = `q${process.pid}')) {
     throw new ReleaseError(
       'The QVAC IPC socket name is not shortened in the packaged app',
-      'A sandboxed app has a long container path, so the default socket name exceeds the 104 character limit and every AI call fails with listen EINVAL. Run node scripts/patch-qvac-socket-path.mjs'
+      'A sandboxed app has a long container path, so the default socket name exceeds the 104 character limit and every AI call fails with listen EINVAL. Run node scripts/patch-qvac-client.mjs'
+    )
+  }
+  if (!packagedRpcSource.includes("process.env['QVAC_HOME_DIR']")) {
+    throw new ReleaseError(
+      'The QVAC worker home directory is not patched in the packaged app',
+      'Without it Ask KV caches (note text) land in the container home instead of the AI folder that wipes clear. Run node scripts/patch-qvac-client.mjs'
     )
   }
   ok('on-device AI runtime packaged, worker binary in Contents/MacOS')

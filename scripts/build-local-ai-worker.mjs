@@ -12,10 +12,10 @@ const manifestPath = path.join(runtimeRoot, 'qvac', 'addons.manifest.json')
 const DESKTOP_HOSTS = ['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-x64', 'win32-x64']
 const DEFERRED_MODULES = ['expo-file-system', 'react-native-bare-kit', '@qvac/decoder-audio', 'bare-ffmpeg']
 
-const socketPatch = spawnSync(process.execPath, [path.join(projectRoot, 'scripts', 'patch-qvac-socket-path.mjs')], {
+const clientPatch = spawnSync(process.execPath, [path.join(projectRoot, 'scripts', 'patch-qvac-client.mjs')], {
   stdio: 'inherit'
 })
-if (socketPatch.status !== 0) process.exit(socketPatch.status ?? 1)
+if (clientPatch.status !== 0) process.exit(clientPatch.status ?? 1)
 
 if (!fs.existsSync(path.join(sdkDir, 'package.json'))) {
   console.error('local-ai dependencies are missing. Run npm install in local-ai first.')

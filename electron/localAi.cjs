@@ -205,6 +205,8 @@ function loadSdk() {
       const modelsDir = getModelsDir()
       await fs.promises.mkdir(modelsDir, { recursive: true })
       await removeRetiredModelFiles(modelsDir)
+      process.env.QVAC_HOME_DIR = getRuntimeRoot()
+      await removeAskCacheFiles()
       const configPath = path.join(getRuntimeRoot(), RUNTIME_CONFIG_NAME)
       await fs.promises.writeFile(configPath, JSON.stringify({ cacheDirectory: modelsDir }))
       process.env.QVAC_CONFIG_PATH = configPath
@@ -217,6 +219,22 @@ function loadSdk() {
     })
   }
   return sdkPromise
+}
+
+const getAskCacheDir = () => path.join(getRuntimeRoot(), '.qvac', 'kv-cache')
+
+function removeAskCacheFiles() {
+  return fs.promises.rm(getAskCacheDir(), { recursive: true, force: true }).catch(() => {})
+}
+
+async function clearAskCache() {
+  await Promise.allSettled([...completionsInFlight])
+  if (loadedModel && sdkPromise) {
+    const sdk = await sdkPromise.catch(() => null)
+    await sdk?.deleteCache({ all: true }).catch(() => {})
+  }
+  await removeAskCacheFiles()
+  return {}
 }
 
 async function removeRetiredModelFiles(modelsDir) {
@@ -241,6 +259,7 @@ async function unloadCurrentModel(sdk) {
   try {
     await sdk.unloadModel({ modelId: current.modelId })
   } catch {}
+  await removeAskCacheFiles()
 }
 
 async function unloadEmbedding(sdk) {
@@ -732,7 +751,7 @@ async function summarize(event, { text, task, featureConfig, taskId, styleSample
   return { text: prompts.cleanModelOutput(output) }
 }
 
-async function askAboutNote(event, { note, turns, question, featureConfig, taskId }) {
+async function askAboutNote(event, { note, turns, question, featureConfig, taskId, cache }) {
   const [sdk, catalog, prompts, work, ask] = await Promise.all([
     loadSdk(),
     loadCatalog(),
@@ -762,7 +781,8 @@ async function askAboutNote(event, { note, turns, question, featureConfig, taskI
     turns: Array.isArray(turns) ? turns : [],
     question: String(question ?? ''),
     complete: (params, onText = () => {}) => streamCompletion(sdk, { modelId, ...params }, onText),
-    onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer })
+    onText: (answer) => send({ type: work.WORK_EVENT.TEXT, text: answer }),
+    cache: cache === true
   })
   return { text }
 }
@@ -965,6 +985,7 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:cancel', 'TASK_FAILED', cancel)
   handle('local-ai:delete-model', 'TASK_FAILED', deleteModel)
   handle('local-ai:close-and-wipe', 'TASK_FAILED', closeAndWipe)
+  handle('local-ai:clear-ask-cache', 'TASK_FAILED', clearAskCache)
   handle('local-ai:transcribe', 'TASK_FAILED', withModelWork(transcribe))
   handle('local-ai:extract-text', 'TASK_FAILED', withModelWork(extractText))
   handle('local-ai:describe-image', 'TASK_FAILED', withModelWork(describeImage))

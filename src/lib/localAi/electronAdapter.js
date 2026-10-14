@@ -110,6 +110,10 @@ async function closeAndWipe() {
   await invoke('localAiCloseAndWipe')
 }
 
+export async function clearAskCache() {
+  await invoke('localAiClearAskCache')
+}
+
 export async function transcribePcm(pcm, feature, featureConfig, { onProgress } = {}) {
   const { text } = await invokeWithProgress(
     'localAiTranscribe',
@@ -170,11 +174,11 @@ export async function askAboutNote(
   turns,
   question,
   featureConfig = {},
-  { onProgress, signal } = {}
+  { onProgress, signal, cache = false } = {}
 ) {
   const { text } = await invokeWithProgress(
     'localAiAsk',
-    { note, turns, question, featureConfig },
+    { note, turns, question, featureConfig, cache },
     onProgress,
     signal
   )
@@ -219,6 +223,7 @@ export const electronAdapter = {
   cancel,
   deleteModel,
   closeAndWipe,
+  clearAskCache,
   embedTexts,
   runNoteTaskInBackground,
   cancelTask: cancelLocalAiTask,

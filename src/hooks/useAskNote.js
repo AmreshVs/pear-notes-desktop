@@ -12,6 +12,7 @@ import {
 import {
   applyTextEdits,
   ASK_KIND,
+  ASK_KV_CACHE_ENABLED,
   createAskTurn,
   getAskHistory,
   getAskScopeInfo,
@@ -24,7 +25,7 @@ import { getLocalAiFeatureConfig } from '@pear-notes/core/store/slices/localAiSl
 import { getNotesData } from '@pear-notes/core/store/slices/notesSlice.js'
 
 import { copyToClipboard } from '../lib/clipboard'
-import { askAboutNote, cancelLocalAiTask } from '../lib/localAi/electronAdapter'
+import { askAboutNote, cancelLocalAiTask, clearAskCache } from '../lib/localAi/electronAdapter'
 
 import { useLocalAiWorkProgress } from './useLocalAiWorkProgress'
 
@@ -123,7 +124,11 @@ export function useAskNote({ noteKey, selectionText, noteText, onApplyEdits, onC
     setTurns((current) => [...current, { ...createAskTurn(id, asked), scope }])
     const onProgress = beginWork(WORK_KIND.NOTE_TASK, { input: text })
     try {
-      const raw = await askAboutNote(text, history, asked, summaryConfig ?? {}, { onProgress })
+      const cache = ASK_KV_CACHE_ENABLED && threadKey !== null && !isLocked(threadKey)
+      const raw = await askAboutNote(text, history, asked, summaryConfig ?? {}, {
+        onProgress,
+        cache
+      })
       if (runId !== runIdRef.current) return
       updateTurn(id, (turn) => resolveAskTurn(turn, text, raw))
     } catch (cause) {
@@ -132,7 +137,19 @@ export function useAskNote({ noteKey, selectionText, noteText, onApplyEdits, onC
     } finally {
       if (runId === runIdRef.current) endWork()
     }
-  }, [beginWork, busy, endWork, question, scope, sourceText, summaryConfig, turns, updateTurn])
+  }, [
+    beginWork,
+    busy,
+    endWork,
+    isLocked,
+    question,
+    scope,
+    sourceText,
+    summaryConfig,
+    threadKey,
+    turns,
+    updateTurn
+  ])
 
   const handleToggleScope = useCallback(() => {
     if (busy || !hasSelection) return
@@ -147,6 +164,7 @@ export function useAskNote({ noteKey, selectionText, noteText, onApplyEdits, onC
     runIdRef.current += 1
     setEarlier([])
     setTurns([])
+    clearAskCache().catch(() => {})
     if (threadKey) clearAskNoteThread(backendApi, threadKey).catch(() => {})
   }, [busy, threadKey])
 

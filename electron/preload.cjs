@@ -105,6 +105,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   localAiCancel: (payload) => ipcRenderer.invoke('local-ai:cancel', payload),
   localAiDeleteModel: (payload) => ipcRenderer.invoke('local-ai:delete-model', payload),
   localAiCloseAndWipe: () => ipcRenderer.invoke('local-ai:close-and-wipe'),
+  localAiClearAskCache: () => ipcRenderer.invoke('local-ai:clear-ask-cache'),
   localAiTranscribe: (payload) => ipcRenderer.invoke('local-ai:transcribe', payload),
   localAiExtractText: (payload) => ipcRenderer.invoke('local-ai:extract-text', payload),
   localAiDescribeImage: (payload) => ipcRenderer.invoke('local-ai:describe-image', payload),
