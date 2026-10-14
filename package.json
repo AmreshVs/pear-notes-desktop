@@ -34,7 +34,7 @@
     "test": "brittle test/*.test.js"
   },
   "dependencies": {
-    "@pear-notes/core": "github:AmreshVs/pear-notes-core#36666d97b9051e02941bb89a40c77be256b65986",
+    "@pear-notes/core": "github:AmreshVs/pear-notes-core#91869132e37f234020b03f2865520f2ecdedbcac",
     "pear-device-auth": "file:./native/pear-device-auth",
     "pear-runtime": "^1.1.4",
     "which-runtime": "^1.3.2"
