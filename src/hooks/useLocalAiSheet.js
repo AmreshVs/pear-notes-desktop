@@ -467,7 +467,7 @@ export function useLocalAiSheet(request, { onInsert, onAttachAudio, onClose }) {
         if (runId === runIdRef.current) setKeyPoints(points)
         return points.map((point) => `• ${point}`).join('\n')
       }
-      return isRewriteTask(task) ? output : parseTitleOutput(output)
+      return isRewriteTask(task) ? output : parseTitleOutput(output, input)
     }, 'failed', isRewriteTask(task) ? WORK_KIND.REWRITE : WORK_KIND.NOTE_TASK, workOptions)
   }, [mode, paragraphs, run, scope, store, summaryConfig, updatePhase])
 
