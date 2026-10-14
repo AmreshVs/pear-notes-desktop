@@ -2518,13 +2518,19 @@
     "dismissFolder": "Don't suggest a folder for this note again"
   },
   "recap": {
-    "hint": "What's due this week, what you edited in the last 7 days and what you wrote a year ago. Made on this device; nothing is added to your notes.",
-    "comingUp": "Coming up",
-    "edited_one": "Edited in the last 7 days · {{count}} note",
-    "edited_other": "Edited in the last 7 days · {{count}} notes",
-    "yearAgo": "A year ago",
+    "thisWeek": "This week · {{range}}",
+    "privacy": "Made on this device. Nothing is added to your notes.",
+    "notesEdited_one": "note edited",
+    "notesEdited_other": "notes edited",
+    "dayBar_one": "{{day}}: {{count}} note edited",
+    "dayBar_other": "{{day}}: {{count}} notes edited",
+    "editedTitle": "Edited this week",
+    "noteCount_one": "{{count}} note",
+    "noteCount_other": "{{count}} notes",
+    "today": "Today",
+    "yesterday": "Yesterday",
     "emptyTitle": "Nothing to recap yet",
-    "emptyBody": "Dated to-dos and notes you edit this week show up here."
+    "emptyBody": "Notes you edit this week show up here."
   },
   "tidyUp": {
     "title": "Suggest folders for unfiled notes",
