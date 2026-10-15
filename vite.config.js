@@ -127,7 +127,8 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     browser: false,
-    conditions: ['node']
+    conditions: ['node'],
+    dedupe: ['events']
   },
   // Strip diagnostic logging from production builds. console.error survives so
   // genuine failures are still reportable; core's log.js already gates

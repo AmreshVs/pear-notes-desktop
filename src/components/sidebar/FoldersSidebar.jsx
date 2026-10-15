@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { CalendarClock, Copy, FolderPlus, History, Settings, Sparkles } from 'lucide-react'
+import {
+  CalendarClock,
+  Copy,
+  FolderPlus,
+  History,
+  Paperclip,
+  Settings,
+  Sparkles
+} from 'lucide-react'
 
 import {
   DEFAULT_FOLDER_ICON,
@@ -36,6 +44,7 @@ import {
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
+import { useAttachments } from '../../hooks/useAttachments'
 import { useUpcomingCount } from '../../hooks/useUpcomingCount'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
@@ -65,6 +74,7 @@ export default function FoldersSidebar({
   const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
   const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
   const upcomingCount = useUpcomingCount(Boolean(onSelectTool) && tasksOn)
+  const attachmentCount = useAttachments(Boolean(onSelectTool)).items?.length ?? 0
   const dispatch = useDispatch()
   const index = useSelector(getLocalAiIndex)
   const duplicateCount = useSelector(getDuplicatePairRows).length
@@ -419,6 +429,8 @@ export default function FoldersSidebar({
               </div>
               {tasksOn &&
                 renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
+              {attachmentCount > 0 &&
+                renderToolItem('attachments', Paperclip, t('tools.attachments'), attachmentCount)}
               {showDuplicates &&
                 renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
               {renderToolItem('recap', History, t('tools.recap'), 0)}

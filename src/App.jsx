@@ -59,6 +59,7 @@ import FoldersSidebar from './components/sidebar/FoldersSidebar'
 import NotesList from './components/sidebar/NotesList'
 import ResizablePanel from './components/sidebar/ResizablePanel'
 import VaultRail from './components/sidebar/VaultRail'
+import AttachmentsList from './components/tools/AttachmentsList'
 import DuplicatesList from './components/tools/DuplicatesList'
 import RecapList from './components/tools/RecapList'
 import UpcomingList from './components/tools/UpcomingList'
@@ -81,7 +82,12 @@ import { useAiOffloadServer } from './lib/localAi/useAiOffloadServer'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
 import { getDbEncryptionKey, getVaultEntropy, setDbEncryptionKey } from './utils.js'
 
-const TOOL_LISTS = { upcoming: UpcomingList, duplicates: DuplicatesList, recap: RecapList }
+const TOOL_LISTS = {
+  upcoming: UpcomingList,
+  attachments: AttachmentsList,
+  duplicates: DuplicatesList,
+  recap: RecapList
+}
 
 function App() {
   const { t } = useTranslation()

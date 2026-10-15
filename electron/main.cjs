@@ -767,6 +767,10 @@ function buildContextMenuTemplate(items, onSelect) {
       enabled: item.enabled !== false
     }
     if (item.role) entry.role = item.role
+    if (typeof item.checked === 'boolean') {
+      entry.type = 'checkbox'
+      entry.checked = item.checked
+    }
     if (Array.isArray(item.submenu)) {
       entry.submenu = buildContextMenuTemplate(item.submenu, onSelect)
     } else if (item.id) {

@@ -32,7 +32,8 @@ export default function MediaPreviewModal({
   onClose,
   onDownload,
   isDownloading,
-  downloadProgress
+  downloadProgress,
+  extraAction
 }) {
   const { t } = useTranslation()
   const kind = resolveKind(fileType, fileName)
@@ -144,6 +145,7 @@ export default function MediaPreviewModal({
           {fileName || t('mediaPreview.preview')}
         </p>
         <div className='flex items-center gap-3'>
+          {extraAction}
           {onDownload && (
             <button
               onClick={(e) => {

@@ -2573,8 +2573,48 @@
   "tools": {
     "header": "Smart views",
     "upcoming": "Upcoming",
+    "attachments": "Attachments",
     "duplicates": "Duplicates",
     "recap": "Recap"
+  },
+  "attachmentsView": {
+    "summary_one": "{{count}} item · {{size}}",
+    "summary_other": "{{count}} items · {{size}}",
+    "searchPlaceholder": "Search file names and notes",
+    "groupBy": "Group by",
+    "byGroup": {
+      "folder": "By folder",
+      "type": "By type",
+      "month": "By month"
+    },
+    "group": {
+      "folder": "Folder",
+      "type": "Type",
+      "month": "Month"
+    },
+    "filter": {
+      "all": "All",
+      "photo": "Photos",
+      "pdf": "PDFs",
+      "audio": "Audio",
+      "file": "Files"
+    },
+    "sectionTitle": "{{name}} · {{count}}",
+    "noFolder": "No folder",
+    "notOnDevice": "Not on this device",
+    "missing_one": "{{count}} not on this device",
+    "missing_other": "{{count}} not on this device",
+    "seeAll": "See all",
+    "showLess": "Show less",
+    "photo": "Photo",
+    "recording": "Recording",
+    "file": "File",
+    "openNote": "Open note",
+    "save": "Save",
+    "copyName": "Copy name",
+    "emptyTitle": "No attachments yet",
+    "emptyBody": "Photos, PDFs, recordings and files you add to notes show up here.",
+    "noResults": "Nothing matches"
   },
   "tips": {
     "notNow": "Not now",

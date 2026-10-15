@@ -10,6 +10,7 @@ export default function ToolPanel({
   onToggleSidebar,
   isSidebarCollapsed,
   actions,
+  controls,
   children
 }) {
   const { t } = useTranslation()
@@ -57,6 +58,7 @@ export default function ToolPanel({
           {actions}
         </div>
         {hint && <p className='text-xs text-text-tertiary leading-relaxed'>{hint}</p>}
+        {controls}
       </div>
 
       <div className='flex-1 overflow-y-auto scrollbar-hide pb-4'>{children}</div>
