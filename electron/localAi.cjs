@@ -1,5 +1,5 @@
 const { AsyncLocalStorage } = require('async_hooks')
-const { ipcMain, powerMonitor } = require('electron')
+const { ipcMain, nativeImage, powerMonitor } = require('electron')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
@@ -20,6 +20,7 @@ const PARAKEET_ENGINE = 'parakeet'
 const IMAGE_FILE_PREFIX = 'pear-notes-local-ai-image-'
 const IMAGE_EXTENSION_PATTERN = /^[a-z0-9]{2,5}$/i
 const DEFAULT_IMAGE_EXTENSION = 'png'
+const RESIZED_IMAGE_QUALITY = 90
 const PCM_SAMPLE_RATE = 16000
 const PCM_BYTES_PER_SAMPLE = 2
 const TRANSLATE_BATCH_PARAGRAPHS = 8
@@ -85,7 +86,7 @@ const modelUsers = new Map()
 const MODEL_RELEASE_WAIT_MS = 60 * 1000
 let anonymousTask = 0
 
-function trackCompletion(sdk, params, onText, finish) {
+function trackCompletion(sdk, params, onText, finish, stopWhen) {
   const taskId = taskContext.getStore()?.taskId
   if (taskId && cancelledTasks.has(taskId)) return Promise.reject(new Error('cancelled'))
   const work = (async () => {
@@ -99,6 +100,12 @@ function trackCompletion(sdk, params, onText, finish) {
       if (event.type !== 'contentDelta') continue
       streamed += event.text
       onText(streamed)
+      if (stopWhen?.(streamed)) {
+        await sdk.cancel({ requestId: run.requestId }).catch(() => {})
+        await run.final.catch(() => {})
+        if (taskId && cancelledTasks.has(taskId)) throw new Error('cancelled')
+        return finish({ contentText: streamed })
+      }
     }
     return finish(await run.final)
   })()
@@ -110,8 +117,8 @@ function trackCompletion(sdk, params, onText, finish) {
   return work
 }
 
-function streamCompletion(sdk, params, onText) {
-  return trackCompletion(sdk, params, onText, (final) => final.contentText)
+function streamCompletion(sdk, params, onText, stopWhen) {
+  return trackCompletion(sdk, params, onText, (final) => final.contentText, stopWhen)
 }
 
 function toolStep(sdk, params) {
@@ -596,36 +603,93 @@ async function extractText(event, { image, extension, taskId }) {
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT)
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
-  const imagePath = await writeTempImage(image, extension)
+  const images = await writeTempImages(image, extension, {
+    maxSide: prompts.EXTRACT_IMAGE_MAX_SIDE,
+    planSlices: (size) => prompts.planTextSlices(size.width, size.height),
+    sliceSide: prompts.EXTRACT_SLICE_MAX_SIDE
+  })
   try {
-    const output = await streamCompletion(
-      sdk,
-      {
-        modelId,
-        history: [
-          { role: 'user', content: prompts.EXTRACT_TEXT_PROMPT, attachments: [{ path: imagePath }] }
-        ],
-        generationParams: {
-          temp: 0,
-          predict: prompts.EXTRACT_TEXT_MAX_TOKENS,
-          ...prompts.VISION_GENERATION_PARAMS
-        }
-      },
-      (partial) => send({ type: work.WORK_EVENT.TEXT, text: prompts.cleanModelOutput(partial) })
+    const text = await prompts.readImageTextSlices(
+      images.inputs,
+      (imagePath, params, onStreamed) =>
+        streamCompletion(
+          sdk,
+          {
+            modelId,
+            history: [
+              {
+                role: 'user',
+                content: prompts.EXTRACT_TEXT_PROMPT,
+                attachments: [{ path: imagePath }]
+              }
+            ],
+            generationParams: {
+              temp: 0,
+              predict: prompts.EXTRACT_TEXT_MAX_TOKENS,
+              ...prompts.VISION_GENERATION_PARAMS,
+              ...params
+            }
+          },
+          () => {},
+          onStreamed
+        ),
+      (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
     )
-    return { text: prompts.cleanModelOutput(output) }
+    return { text }
   } finally {
-    await fs.promises.rm(imagePath, { force: true })
+    await removeTempImages(images.files)
   }
 }
 
-async function writeTempImage(image, extension) {
+function nextTempImagePath(extension) {
   pcmCounter += 1
+  return path.join(os.tmpdir(), `${IMAGE_FILE_PREFIX}${process.pid}-${pcmCounter}.${extension}`)
+}
+
+const wholeImage = (size) => [{ originX: 0, originY: 0, ...size }]
+
+async function writeTempImages(image, extension, { maxSide, planSlices = wholeImage, sliceSide }) {
+  const original = await writeTempImage(image, extension)
+  const files = [original]
+  try {
+    const picture = nativeImage.createFromPath(original)
+    if (picture.isEmpty()) return { inputs: [original], files }
+    const size = picture.getSize()
+    const slices = planSlices(size)
+    if (slices.length === 1 && Math.max(size.width, size.height) <= maxSide) {
+      return { inputs: [original], files }
+    }
+    for (const { originX, originY, width, height } of slices) {
+      const cropped =
+        slices.length === 1 ? picture : picture.crop({ x: originX, y: originY, width, height })
+      const side = slices.length === 1 ? maxSide : sliceSide
+      const scale = Math.min(1, side / Math.max(width, height))
+      const scaled =
+        scale < 1
+          ? cropped.resize({
+              width: Math.round(width * scale),
+              height: Math.round(height * scale),
+              quality: 'best'
+            })
+          : cropped
+      const target = nextTempImagePath('jpg')
+      files.push(target)
+      await fs.promises.writeFile(target, scaled.toJPEG(RESIZED_IMAGE_QUALITY))
+    }
+    return { inputs: files.slice(1), files }
+  } catch {
+    await removeTempImages(files.slice(1))
+    return { inputs: [original], files: [original] }
+  }
+}
+
+async function removeTempImages(paths) {
+  await Promise.all([...new Set(paths)].map((file) => fs.promises.rm(file, { force: true })))
+}
+
+async function writeTempImage(image, extension) {
   const safeExtension = IMAGE_EXTENSION_PATTERN.test(extension ?? '') ? extension : DEFAULT_IMAGE_EXTENSION
-  const imagePath = path.join(
-    os.tmpdir(),
-    `${IMAGE_FILE_PREFIX}${process.pid}-${pcmCounter}.${safeExtension}`
-  )
+  const imagePath = nextTempImagePath(safeExtension)
   await fs.promises.writeFile(imagePath, Buffer.from(image))
   return imagePath
 }
@@ -675,7 +739,10 @@ async function describeImage(event, { image, extension, taskId }) {
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
   const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.DESCRIBE_IMAGES)
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOOK })
-  const imagePath = await writeTempImage(image, extension)
+  const images = await writeTempImages(image, extension, {
+    maxSide: prompts.DESCRIBE_IMAGE_MAX_SIDE
+  })
+  const [imagePath] = images.inputs
   try {
     const output = await streamCompletion(
       sdk,
@@ -690,11 +757,12 @@ async function describeImage(event, { image, extension, taskId }) {
           ...prompts.VISION_GENERATION_PARAMS
         }
       },
-      (partial) => send({ type: work.WORK_EVENT.TEXT, text: partial })
+      (partial) =>
+        send({ type: work.WORK_EVENT.TEXT, text: prompts.cleanImageDescription(partial) })
     )
-    return { text: prompts.cleanModelOutput(output) }
+    return { text: prompts.cleanImageDescription(output) }
   } finally {
-    await fs.promises.rm(imagePath, { force: true })
+    await removeTempImages(images.files)
   }
 }
 
