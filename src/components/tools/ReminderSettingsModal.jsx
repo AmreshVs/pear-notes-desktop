@@ -66,7 +66,7 @@ export default function ReminderSettingsModal({ open, onClose }) {
         role='dialog'
         aria-modal='true'
         aria-labelledby='reminder-settings-title'
-        className='relative bg-bg-panel/95 backdrop-blur-2xl border border-border-primary rounded-[2rem] p-8 max-w-sm w-full animate-in zoom-in-95 duration-200 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col gap-5'
+        className='relative bg-bg-panel/95 backdrop-blur-2xl border border-border-primary rounded-[2rem] p-8 max-w-md w-full animate-in zoom-in-95 duration-200 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col gap-5'
       >
         <div className='flex items-center gap-3'>
           <div className='w-10 h-10 rounded-full bg-accent-primary/10 text-accent-primary flex items-center justify-center'>
@@ -138,7 +138,7 @@ export default function ReminderSettingsModal({ open, onClose }) {
             value={prefs?.untimed ?? ''}
             disabled={!prefs}
             onChange={(event) => update({ ...prefs, untimed: event.target.value })}
-            className='bg-overlay-subtle border border-overlay-soft rounded-lg px-2 py-1.5 text-sm text-text-primary'
+            className='shrink-0 min-w-[7.5rem] bg-overlay-subtle border border-overlay-soft rounded-lg pl-3 pr-8 py-1.5 text-sm text-text-primary tabular-nums'
           >
             {UNTIMED_TIME_OPTIONS.map((value) => (
               <option key={value} value={value}>
