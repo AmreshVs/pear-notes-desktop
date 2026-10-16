@@ -52,8 +52,8 @@
       "keepRunningUnlinked": "Link another device to keep Pear Notes syncing in the background.",
       "spellcheck": "Check spelling",
       "spellcheckDesc": "Underlines misspelled words using this computer's dictionary. Right-click a word for suggestions.",
-      "reminders": "Remind me about dated to-dos",
-      "remindersDesc": "Shows a notification at the time written in a to-do, or at 9:00 for a date alone, while Pear Notes is open or in the menu bar. The same to-dos are listed in Upcoming."
+      "reminders": "Reminders",
+      "remindersDesc": "Get notified about dated to-dos and birthdays while Pear Notes is open or in the menu bar."
     },
     "sync": {
       "header": "Sync",
@@ -638,7 +638,6 @@
       "offline": "Offline",
       "presenceUnknown": "Status unavailable",
       "indexerBadge": "Sync leader",
-      "indexerExplain": "Sync leaders confirm changes so every device ends up with the same notes. A change is confirmed once most leaders have seen it, so each extra leader is one more device that has to be online. One leader that stays on — a computer, or an Android device with Always-on sync — is recommended. iPhones and iPads pause in the background, so they make slower leaders.",
       "makeIndexer": "Make sync leader",
       "makeIndexerTitle": "Make {{name}} a sync leader?",
       "makeIndexerBody": "{{name}} will help confirm changes. Every current sync leader must stay online until the change finishes.",
@@ -654,8 +653,11 @@
       "transferSubmitting": "Submitting the change…",
       "transferConfirming": "Waiting for the sync leaders to agree…",
       "errorTransferTimeout": "The change has not finished yet. Keep the sync leaders online and open — it will finish on its own.",
-      "leadersSummary": "Sync leaders: {{count}} of {{max}}",
-      "leadersRecommended": "Recommended: {{count}}",
+      "leaderLine": "{{name}} keeps your devices in sync. Changes sync while it's online.",
+      "leaderLineLocal": "This device keeps your devices in sync. Changes sync while it's online.",
+      "leaderLinePaused": "{{name}} keeps your devices in sync, but only while Pear Notes is open on it.",
+      "leaderLinePausedLocal": "This device keeps your devices in sync, but only while Pear Notes is open.",
+      "leadersMajority": "Changes sync once {{needed}} of your {{count}} sync leaders have seen them.",
       "leadersSuggest": "Make {{name}} a sync leader",
       "leadersSuggestHint": "Recommended — it can stay on in the background to keep confirming changes.",
       "leadersTwoWarning": "With two sync leaders, both must be online for changes to sync. Remove one, or add a third that stays on.",

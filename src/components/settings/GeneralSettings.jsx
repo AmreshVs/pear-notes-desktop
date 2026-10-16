@@ -18,13 +18,30 @@ import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { useTipsEnabled } from '../../hooks/useTips'
 import ReminderSettingsModal from '../tools/ReminderSettingsModal'
 
-function ToggleRow({ label, desc, on, onToggle }) {
+function ToggleRow({ label, desc, on, onToggle, onOpen, openLabel }) {
+  const info = (
+    <>
+      <span className='flex items-center gap-1 text-text-primary text-base font-bold'>
+        {label}
+        {onOpen && <ChevronRight className='w-4 h-4 text-text-tertiary' />}
+      </span>
+      <span className='block text-sm text-text-tertiary font-medium opacity-60'>{desc}</span>
+    </>
+  )
   return (
     <div className='p-6 flex items-center justify-between gap-6 group hover:bg-overlay-faint transition-colors'>
-      <div className='space-y-1'>
-        <label className='block text-text-primary text-base font-bold'>{label}</label>
-        <p className='text-sm text-text-tertiary font-medium opacity-60'>{desc}</p>
-      </div>
+      {onOpen ? (
+        <button
+          type='button'
+          onClick={onOpen}
+          aria-label={openLabel}
+          className='space-y-1 text-left min-w-0'
+        >
+          {info}
+        </button>
+      ) : (
+        <div className='space-y-1'>{info}</div>
+      )}
       <button
         type='button'
         role='switch'
@@ -52,6 +69,7 @@ export default function GeneralSettings() {
   const [tipsEnabled, toggleTips] = useTipsEnabled()
   const [reminderTimesOpen, setReminderTimesOpen] = useState(false)
   const closeReminderTimes = useCallback(() => setReminderTimesOpen(false), [])
+  const openReminderTimes = useCallback(() => setReminderTimesOpen(true), [])
   const sortBy = useSelector(getSortBy)
 
   const handleUpdateSetting = (key, value) => {
@@ -211,17 +229,9 @@ export default function GeneralSettings() {
             desc={t('settings.general.remindersDesc')}
             on={reminders}
             onToggle={toggleReminders}
+            onOpen={openReminderTimes}
+            openLabel={t('upcoming.reminders.open')}
           />
-          <button
-            type='button'
-            onClick={() => setReminderTimesOpen(true)}
-            className='w-full p-6 flex items-center justify-between gap-6 text-left hover:bg-overlay-faint transition-colors'
-          >
-            <span className='text-text-primary text-base font-bold'>
-              {t('upcoming.reminders.open')}
-            </span>
-            <ChevronRight className='w-5 h-5 text-text-tertiary' />
-          </button>
           <ToggleRow
             label={t('tips.showTips')}
             desc={t('tips.showTipsDesc')}

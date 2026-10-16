@@ -35,6 +35,7 @@ import { getVaults } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
 import { getIndexerErrorKey, getIndexerStepKey } from '../../lib/indexerUtils'
+import { syncLeaderLine } from '../../lib/syncLeaderLine'
 import { getVaultLabel } from '../../lib/vaultNames'
 
 import AddDevicePanel from './AddDevicePanel'
@@ -409,22 +410,16 @@ function DeviceItem({ device, isOther, vaultName, leaderPlan, onLeaderAction }) 
 function SyncLeadersPanel({ plan, onSuggest }) {
   const { t } = useTranslation()
   const offlineNames = plan.offlineLeaders.map(getDeviceDisplayName).join(', ')
+  const leaderLine = syncLeaderLine(plan, t)
 
   return (
     <div className='mt-6 ml-1 space-y-3'>
-      <div className='flex items-center gap-2'>
-        <Crown className='w-3.5 h-3.5 text-accent-primary shrink-0' />
-        <p className='text-xs font-bold text-text-primary'>
-          {t('sync.devices.leadersSummary', { count: plan.leaderCount, max: plan.max })}
-        </p>
-        <p className='text-xs text-text-tertiary'>
-          {t('sync.devices.leadersRecommended', { count: plan.recommended })}
-        </p>
-      </div>
-
-      <p className='text-xs text-text-tertiary leading-relaxed'>
-        {t('sync.devices.indexerExplain')}
-      </p>
+      {!!leaderLine && (
+        <div className='flex items-start gap-2'>
+          <Crown className='w-3.5 h-3.5 text-accent-primary shrink-0 mt-0.5' />
+          <p className='text-xs text-text-tertiary leading-relaxed'>{leaderLine}</p>
+        </div>
+      )}
 
       {plan.needsBothOnline && (
         <div className='flex items-start gap-2'>
