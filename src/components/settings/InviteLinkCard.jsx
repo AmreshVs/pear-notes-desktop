@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Check, Info, Link2, Loader2, ShieldCheck, Timer } from 'lucide-react'
+import { Check, Info, Link2, Loader2, RefreshCw, ShieldCheck, Timer } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 
 import { INVITE_EXPIRY_MINUTES } from '@pear-notes/core/constant.js'
@@ -48,7 +48,7 @@ export default function InviteLinkCard({ invite, copy, IdleIcon }) {
             <div className='w-10 h-10 bg-accent-primary/10 rounded-full flex items-center justify-center border border-accent-primary/20'>
               <ShieldCheck className='w-5 h-5 text-accent-primary' />
             </div>
-            <div>
+            <div className='flex-1'>
               <h4 className='text-text-primary font-semibold'>{copy.readyTitle}</h4>
               <p
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1.5 mt-1 ${
@@ -63,6 +63,15 @@ export default function InviteLinkCard({ invite, copy, IdleIcon }) {
                 })}
               </p>
             </div>
+            <button
+              onClick={invite.regenerate}
+              disabled={invite.isLoading}
+              title={t('sync.invite.regenerateBtn')}
+              aria-label={t('sync.invite.regenerateBtn')}
+              className='relative w-9 h-9 rounded-full flex items-center justify-center text-text-tertiary hover:text-accent-primary hover:bg-accent-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              <RefreshCw className={`w-4 h-4 ${invite.isLoading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
 
           <div className='flex flex-col items-center mb-6 space-y-4'>

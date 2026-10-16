@@ -5,7 +5,8 @@ import {
   createInvite,
   getInvite,
   getInviteExpiresAt,
-  getSyncIsLoading
+  getSyncIsLoading,
+  regenerateInvite
 } from '@pear-notes/core/store/slices/syncSlice.js'
 import { getInviteRemainingMs } from '@pear-notes/core/utils.js'
 
@@ -40,6 +41,7 @@ export function useInviteLink(format) {
   const link = inviteCode ? format(inviteCode) : ''
 
   const generate = () => dispatch(createInvite())
+  const regenerate = () => dispatch(regenerateInvite())
 
   const copy = async () => {
     if (!isGenerated) return
@@ -58,6 +60,7 @@ export function useInviteLink(format) {
     isGenerated,
     copied,
     generate,
+    regenerate,
     copy
   }
 }
