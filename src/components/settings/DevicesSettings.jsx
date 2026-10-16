@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Check,
   CircleMinus,
   Crown,
-  Globe,
   Loader2,
   Monitor,
   Pencil,
@@ -17,7 +16,7 @@ import {
   TriangleAlert
 } from 'lucide-react'
 
-import { DEVICE_NAME_MAX_LENGTH, INVITE_KIND } from '@pear-notes/core/constant.js'
+import { DEVICE_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import {
   canAddSyncLeader,
   canRemoveSyncLeader,
@@ -27,31 +26,18 @@ import {
   getIndexerErrorDeviceKey,
   getIndexerPendingKey,
   getIndexerPendingStep,
-  getLocalPreferences,
   getSyncedDevices,
   getSyncLeaderPlan,
   setDeviceIndexer,
   updateSyncedDevice
 } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
-import {
-  getInviterStatus,
-  getSyncIsLoading,
-  subscribePairUser
-} from '@pear-notes/core/store/slices/syncSlice.js'
-import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
-import {
-  extractInvite,
-  formatDeviceInvite,
-  isInviteForOtherKind,
-  isValidInvite
-} from '@pear-notes/core/utils.js'
+import { getVaults } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { getDeviceDisplayName, isRawDeviceKey } from '@pear-notes/core/utils.js'
 
-import { useInviteLink } from '../../hooks/useInviteLink'
 import { getIndexerErrorKey, getIndexerStepKey } from '../../lib/indexerUtils'
-import MergeConfirmModal from '../modals/MergeConfirmModal'
+import { getVaultLabel } from '../../lib/vaultNames'
 
-import InviteLinkCard from './InviteLinkCard'
+import AddDevicePanel from './AddDevicePanel'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
 
@@ -67,18 +53,18 @@ function getPlatformName(platform) {
   return PLATFORM_NAMES[platform] || platform
 }
 
-export default function DevicesSettings({ onClose }) {
+export default function DevicesSettings() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const invite = useInviteLink(formatDeviceInvite)
-  const isLoading = useSelector(getSyncIsLoading)
-  const { step } = useSelector(getInviterStatus)
   const syncedDevices = useSelector(getSyncedDevices)
-  const localPreferences = useSelector(getLocalPreferences)
-  const isSynced = localPreferences['isSynced'] === 'true'
-  const showJoinSection = !isSynced
+  const vaults = useSelector(getVaults)
   const leaderPlan = useSelector(getSyncLeaderPlan)
   const [leaderAction, setLeaderAction] = useState(null)
+  const [isAdding, setIsAdding] = useState(false)
+  const vaultName = getVaultLabel(
+    vaults.find((vault) => vault.current),
+    t
+  )
 
   const openLeaderAction = (device, isIndexer) => {
     dispatch(clearIndexerError())
@@ -91,168 +77,78 @@ export default function DevicesSettings({ onClose }) {
     dispatch(setDeviceIndexer({ key: device.key, localKey: device.localKey, isIndexer }))
   }
 
-  const [syncTab, setSyncTab] = useState('manage')
-  const [pasteCode, setPasteCode] = useState('')
-  const [pendingInvite, setPendingInvite] = useState(null)
-
-  const pasteIsDeviceInvite = isValidInvite(pasteCode, INVITE_KIND.DEVICE)
-  const pasteIsVaultLink = isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE)
-  const deviceInviteCopy = useMemo(
-    () => ({
-      idleTitle: t('sync.hero.title'),
-      idleDesc: t('sync.hero.description'),
-      generateBtn: t('sync.hero.generateBtn'),
-      readyTitle: t('sync.invite.header'),
-      qrTitle: t('sync.invite.qrTitle'),
-      qrDescription: t('sync.invite.qrDescription'),
-      codeLabel: t('sync.invite.codeLabel'),
-      copyBtn: t('sync.invite.copyBtn'),
-      warning: t('sync.invite.warning')
-    }),
-    [t]
-  )
-
-  const handleConnect = () => {
-    if (pasteIsDeviceInvite) {
-      setPendingInvite(extractInvite(pasteCode))
-    }
-  }
-
-  const handleConfirmMerge = () => {
-    if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite }))
-    setPendingInvite(null)
-    setPasteCode('')
-    if (onClose) {
-      onClose()
-    } else {
-      dispatch(setShowSettings(false))
-    }
-  }
-
-  const handleCancelMerge = () => {
-    setPendingInvite(null)
-  }
-
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-overlay-soft w-fit mx-auto'>
+      <div className='flex items-center justify-between gap-4'>
+        <p className='text-sm text-text-tertiary leading-relaxed'>
+          {t('sync.devices.screenDesc', { name: vaultName })}
+        </p>
         <button
-          onClick={() => setSyncTab('manage')}
-          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            syncTab === 'manage'
-              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-          }`}
+          type='button'
+          onClick={() => setIsAdding((open) => !open)}
+          aria-expanded={isAdding}
+          className='shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover transition-colors active:scale-95'
         >
-          {t('sync.tabs.devices')}
-        </button>
-        <button
-          onClick={() => setSyncTab('invite')}
-          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-            syncTab === 'invite'
-              ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-              : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-          }`}
-        >
-          {t('sync.tabs.link')}
+          <Plus className='w-4 h-4' />
+          {t('sync.add.button')}
         </button>
       </div>
 
+      {isAdding && <AddDevicePanel name={vaultName} />}
+
       <div className='space-y-6'>
-        {syncTab === 'invite' ? (
-          <div className='space-y-6'>
-            <InviteLinkCard invite={invite} copy={deviceInviteCopy} IdleIcon={Globe} />
+        <div className='space-y-1'>
+          <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
+            {t('sync.devices.thisDevice')}
+          </h4>
+          <div className='grid gap-4'>
+            {syncedDevices
+              .filter((d) => d.isLocal)
+              .map((device) => (
+                <DeviceItem
+                  key={device.key}
+                  device={device}
+                  vaultName={vaultName}
+                  leaderPlan={leaderPlan}
+                  onLeaderAction={openLeaderAction}
+                />
+              ))}
+          </div>
+        </div>
 
-            {showJoinSection && (
-              <div className='pt-6 border-t border-border-primary space-y-4'>
-                <div className='flex items-center gap-2 ml-1'>
-                  <Plus className='w-4 h-4 text-accent-primary' />
-                  <h4 className='font-bold text-sm text-text-primary'>{t('sync.paste.header')}</h4>
-                </div>
-
-                <div className='relative flex gap-2'>
-                  <input
-                    type='text'
-                    value={pasteCode}
-                    onChange={(e) => setPasteCode(e.target.value)}
-                    placeholder={t('sync.paste.placeholder')}
-                    className='flex-1 px-4 py-3 rounded-xl bg-bg-panel-secondary/50 border border-border-primary text-text-primary text-sm focus:outline-none focus:border-accent-primary transition-colors placeholder:text-text-tertiary/50'
+        <div className='space-y-1'>
+          <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
+            {t('sync.devices.otherDevices')}
+          </h4>
+          <div className='grid gap-4'>
+            {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
+              syncedDevices
+                .filter((d) => !d.isLocal)
+                .map((device) => (
+                  <DeviceItem
+                    key={device.key}
+                    device={device}
+                    isOther
+                    vaultName={vaultName}
+                    leaderPlan={leaderPlan}
+                    onLeaderAction={openLeaderAction}
                   />
-                  <button
-                    onClick={handleConnect}
-                    disabled={!pasteIsDeviceInvite || isLoading || step !== 'idle'}
-                    className='px-6 py-4 bg-accent-primary text-accent-on-primary rounded-xl hover:bg-accent-primary-hover disabled:bg-bg-panel-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors text-base font-bold border border-accent-primary active:scale-95 flex items-center gap-2 shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)]'
-                  >
-                    {isLoading && <Loader2 className='w-4 h-4 animate-spin' />}
-                    {t('sync.paste.linkBtn')}
-                  </button>
+                ))
+            ) : (
+              <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
+                <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
+                  <Smartphone className='w-5 h-5 opacity-50' />
                 </div>
-                {pasteIsVaultLink && (
-                  <p className='text-xs font-medium text-accent-danger ml-1'>
-                    {t('sync.paste.vaultLinkError')}
-                  </p>
-                )}
-                {pasteCode.trim() && !pasteIsVaultLink && !isValidInvite(pasteCode) && (
-                  <p className='text-xs text-text-tertiary ml-1'>{t('sync.paste.hintInvalid')}</p>
-                )}
+                <p className='text-xs text-text-tertiary italic'>{t('sync.devices.empty')}</p>
               </div>
             )}
           </div>
-        ) : (
-          <div className='space-y-6'>
-            <div className='space-y-1'>
-              <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
-                {t('sync.devices.thisDevice')}
-              </h4>
-              <div className='grid gap-4'>
-                {syncedDevices
-                  .filter((d) => d.isLocal)
-                  .map((device) => (
-                    <DeviceItem
-                      key={device.key}
-                      device={device}
-                      leaderPlan={leaderPlan}
-                      onLeaderAction={openLeaderAction}
-                    />
-                  ))}
-              </div>
-            </div>
 
-            <div className='space-y-1'>
-              <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3'>
-                {t('sync.devices.otherDevices')}
-              </h4>
-              <div className='grid gap-4'>
-                {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
-                  syncedDevices
-                    .filter((d) => !d.isLocal)
-                    .map((device) => (
-                      <DeviceItem
-                        key={device.key}
-                        device={device}
-                        isOther
-                        leaderPlan={leaderPlan}
-                        onLeaderAction={openLeaderAction}
-                      />
-                    ))
-                ) : (
-                  <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
-                    <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
-                      <Smartphone className='w-5 h-5 opacity-50' />
-                    </div>
-                    <p className='text-xs text-text-tertiary italic'>{t('sync.devices.empty')}</p>
-                  </div>
-                )}
-              </div>
-
-              <SyncLeadersPanel
-                plan={leaderPlan}
-                onSuggest={(device) => openLeaderAction(device, true)}
-              />
-            </div>
-          </div>
-        )}
+          <SyncLeadersPanel
+            plan={leaderPlan}
+            onSuggest={(device) => openLeaderAction(device, true)}
+          />
+        </div>
 
         <div className='pt-2'>
           <p className='text-center text-xs text-text-tertiary px-4'>
@@ -270,17 +166,11 @@ export default function DevicesSettings({ onClose }) {
           onConfirm={confirmLeaderAction}
         />
       )}
-
-      <MergeConfirmModal
-        open={!!pendingInvite}
-        onConfirm={handleConfirmMerge}
-        onCancel={handleCancelMerge}
-      />
     </div>
   )
 }
 
-function DeviceItem({ device, isOther, leaderPlan, onLeaderAction }) {
+function DeviceItem({ device, isOther, vaultName, leaderPlan, onLeaderAction }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const Icon = device.deviceType === 'desktop' ? Monitor : Smartphone
@@ -456,6 +346,7 @@ function DeviceItem({ device, isOther, leaderPlan, onLeaderAction }) {
           <button
             onClick={() => setIsConfirmingDelete(true)}
             aria-label={t('sync.devices.removeDevice', { name: getDeviceDisplayName(device) })}
+            title={t('sync.delete.menu', { name: vaultName })}
             className='opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-2 hover:bg-accent-danger/10 rounded-lg text-accent-danger transition-all flex items-center gap-2'
           >
             <Trash2 className='w-4 h-4' />
@@ -483,10 +374,10 @@ function DeviceItem({ device, isOther, leaderPlan, onLeaderAction }) {
 
               <div className='space-y-2'>
                 <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-                  {t('sync.delete.title')}
+                  {t('sync.delete.title', { name: vaultName })}
                 </h3>
                 <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-                  {t('sync.delete.description')}
+                  {t('sync.delete.description', { name: vaultName })}
                 </p>
               </div>
 

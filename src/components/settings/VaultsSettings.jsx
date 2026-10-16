@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { Check, LogIn, Pencil, Plus, Trash2, UserPlus } from 'lucide-react'
+import { Check, Laptop, LogIn, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import { MAX_VAULTS, VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import {
@@ -20,15 +20,11 @@ import { getVaultErrorText, getVaultLabel } from '../../lib/vaultNames'
 
 import CreateVaultForm from './CreateVaultForm'
 import JoinVaultForm from './JoinVaultForm'
-import VaultInvitePanel from './VaultInvitePanel'
 
-const INVITE_OPTION = { mode: 'invite', icon: UserPlus, labelKey: 'vaults.invite.title' }
-const ADD_OPTIONS = [
-  { mode: 'create', icon: Plus, labelKey: 'vaults.newVault' },
-  { mode: 'join', icon: LogIn, labelKey: 'vaults.join.sectionTitle' }
-]
+const CREATE_OPTION = { mode: 'create', icon: Plus, labelKey: 'vaults.newVault' }
+const JOIN_OPTION = { mode: 'join', icon: LogIn, labelKey: 'vaults.join.sectionTitle' }
 
-export default function VaultsSettings() {
+export default function VaultsSettings({ onOpenDevices }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const vaults = useSelector(getVaults)
@@ -203,19 +199,26 @@ export default function VaultsSettings() {
 
       <div className='space-y-4'>
         <div className='flex flex-wrap gap-2'>
-          {renderAddOption(INVITE_OPTION)}
-          {canAdd && ADD_OPTIONS.map(renderAddOption)}
+          <button
+            type='button'
+            onClick={onOpenDevices}
+            disabled={busy}
+            className='flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold border disabled:opacity-50 border-border-secondary text-text-secondary hover:bg-overlay-light hover:text-text-primary'
+          >
+            <Laptop className='w-4 h-4' />
+            {t('sync.devicesIn', { name: currentLabel })}
+          </button>
+          {canAdd && renderAddOption(CREATE_OPTION)}
+          {renderAddOption(JOIN_OPTION)}
         </div>
         {!canAdd && (
           <p className='text-sm text-text-tertiary'>
             {t('vaults.limitReached', { max: MAX_VAULTS })}
           </p>
         )}
-        {addMode === 'invite' && <VaultInvitePanel name={currentLabel} />}
         {canAdd && addMode === 'create' && <CreateVaultForm onDone={closeAddForm} />}
-        {canAdd && addMode === 'join' && <JoinVaultForm />}
+        {addMode === 'join' && <JoinVaultForm />}
       </div>
-
     </div>
   )
 }

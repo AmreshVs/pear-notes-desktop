@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
 import {
   Database,
   HardDrive,
@@ -16,10 +17,12 @@ import {
 
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
+import { getVaults } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
 import { version as appVersion } from '../../../package.json'
 import { useDialog } from '../../hooks/useDialog'
 import { getAppVersionLabel } from '../../lib/appFlags'
+import { getVaultLabel } from '../../lib/vaultNames'
 
 import ActivitySettings from './ActivitySettings'
 import BackupSettings from './BackupSettings'
@@ -43,6 +46,16 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const contentScrollRef = useRef(null)
 
   const activeSection = selectedSection
+  const vaults = useSelector(getVaults)
+  const devicesTitle =
+    vaults.length > 1
+      ? t('sync.devicesIn', {
+          name: getVaultLabel(
+            vaults.find((vault) => vault.current),
+            t
+          )
+        })
+      : t('layouts.linkDevices')
 
   useEffect(() => {
     if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0
@@ -58,7 +71,13 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const sections = [
     { id: 'general', group: 'vault', name: t('layouts.general'), icon: SettingsIcon },
     { id: 'privacy', group: 'vault', name: t('layouts.privacyAndSecurity'), icon: ShieldCheck },
-    { id: 'devices', group: 'vault', name: t('layouts.linkDevices'), icon: Laptop },
+    {
+      id: 'devices',
+      group: 'vault',
+      name: t('layouts.linkDevices'),
+      title: devicesTitle,
+      icon: Laptop
+    },
     { id: 'sync', group: 'vault', name: t('layouts.sync'), icon: RefreshCw },
     { id: 'activity', group: 'vault', name: t('layouts.activity'), icon: History },
     { id: 'backup', group: 'vault', name: t('layouts.backupRestore'), icon: HardDrive },
@@ -82,6 +101,8 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
     { id: 'debug', name: t('layouts.debug') },
     { id: 'errorLog', name: t('layouts.errorLog') }
   ]
+
+  const headerSection = allSections.find((s) => s.id === activeSection)
 
   return (
     <div className='fixed inset-0 flex items-center justify-center z-[110] p-6'>
@@ -154,7 +175,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           <div className='px-10 py-10 flex items-center justify-between'>
             <div>
               <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
-                {allSections.find((s) => s.id === activeSection)?.name || t('settings.title')}
+                {headerSection?.title || headerSection?.name || t('settings.title')}
               </h2>
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' && t('settings.descriptions.general')}
@@ -180,8 +201,10 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'general' && <GeneralSettings />}
             {activeSection === 'privacy' && <PrivacySettings />}
             {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
-            {isMultiVaultEnabled() && activeSection === 'vaults' && <VaultsSettings />}
-            {activeSection === 'devices' && <DevicesSettings onClose={handleAnimatedClose} />}
+            {isMultiVaultEnabled() && activeSection === 'vaults' && (
+              <VaultsSettings onOpenDevices={() => setSelectedSection('devices')} />
+            )}
+            {activeSection === 'devices' && <DevicesSettings />}
             {activeSection === 'sync' && (
               <SyncSettings onOpenDiagnostics={() => setSelectedSection('debug')} />
             )}

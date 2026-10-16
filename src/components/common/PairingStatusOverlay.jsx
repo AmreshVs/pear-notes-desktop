@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Check, Globe, Link2, Loader2, ShieldCheck } from 'lucide-react'
 
-import { INVITE_KIND } from '@pear-notes/core/constant.js'
 import {
   confirmPairing,
   getInviterStatus,
@@ -18,12 +17,14 @@ import {
 import {
   extractInvite,
   getFingerprint,
-  isInviteForOtherKind,
+  getInviteNameHint,
   isValidInvite
 } from '@pear-notes/core/utils.js'
 
+import { buildJoinRequest, useJoinChoice } from '../../hooks/useJoinChoice'
+import { getVaultLabel } from '../../lib/vaultNames'
 import { getRelativeTime } from '../../utils/relativeTime'
-import MergeConfirmModal from '../modals/MergeConfirmModal'
+import JoinChoiceModal from '../modals/JoinChoiceModal'
 
 const REQUESTED_AGE_TICK_MS = 30000
 
@@ -38,6 +39,7 @@ export default function PairingStatusOverlay() {
   const inviterStatus = useSelector(getInviterStatus)
   const receiverStatus = useSelector(getReceiverStatus)
   const showPairingInput = useSelector(getShowPairingInput)
+  const joinChoice = useJoinChoice()
 
   const isInviterActive = inviterStatus.step !== 'idle'
   const isReceiverActive = receiverStatus.step !== 'idle'
@@ -128,21 +130,25 @@ export default function PairingStatusOverlay() {
     dispatch(resetReceiverStatus())
   }
 
-  const handleConnect = () => {
-    if (isValidInvite(pasteCode, INVITE_KIND.DEVICE)) {
-      setPendingInvite(extractInvite(pasteCode))
-    }
-  }
-
-  const handleConfirmMerge = () => {
-    if (!pendingInvite) return
-    dispatch(subscribePairUser({ invite: pendingInvite }))
+  const joinWithInvite = (code, keepsSeparate) => {
+    const vaultName = getInviteNameHint(code) || getVaultLabel(null, t)
+    dispatch(subscribePairUser(buildJoinRequest(extractInvite(code), keepsSeparate, vaultName)))
     dispatch(setShowPairingInput(false))
     setPendingInvite(null)
     setPasteCode('')
   }
 
-  const handleCancelMerge = () => {
+  const handleConnect = () => {
+    if (!isValidInvite(pasteCode)) return
+    if (joinChoice.hasNotes) setPendingInvite(pasteCode)
+    else joinWithInvite(pasteCode, false)
+  }
+
+  const handleConfirmChoice = () => {
+    if (pendingInvite) joinWithInvite(pendingInvite, joinChoice.keepsSeparate)
+  }
+
+  const handleCancelChoice = () => {
     setPendingInvite(null)
   }
 
@@ -401,14 +407,7 @@ export default function PairingStatusOverlay() {
                     className='w-full px-4 py-3 bg-bg-panel/40 border border-border-primary rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 focus:outline-none focus:border-accent-primary/40 focus:bg-bg-panel/60 transition-all text-center font-mono tracking-wider shadow-inner'
                     autoFocus
                   />
-                  {isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE) && (
-                    <p className='text-xs font-medium text-accent-danger text-left ml-1'>
-                      {t('sync.paste.vaultLinkError')}
-                    </p>
-                  )}
-                  {pasteCode.trim() &&
-                    !isInviteForOtherKind(pasteCode, INVITE_KIND.DEVICE) &&
-                    !isValidInvite(pasteCode) && (
+                  {pasteCode.trim() && !isValidInvite(pasteCode) && (
                     <p className='text-xs text-text-tertiary text-left ml-1'>
                       {t('sync.paste.hintInvalid')}
                     </p>
@@ -424,7 +423,7 @@ export default function PairingStatusOverlay() {
                   </button>
                   <button
                     onClick={handleConnect}
-                    disabled={!isValidInvite(pasteCode, INVITE_KIND.DEVICE)}
+                    disabled={!isValidInvite(pasteCode)}
                     className='flex-1 py-4 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
                   >
                     {t('pairing.overlay.connectBtn')}
@@ -435,10 +434,11 @@ export default function PairingStatusOverlay() {
           </div>
         </div>
 
-        <MergeConfirmModal
+        <JoinChoiceModal
           open={!!pendingInvite}
-          onConfirm={handleConfirmMerge}
-          onCancel={handleCancelMerge}
+          joinChoice={joinChoice}
+          onConfirm={handleConfirmChoice}
+          onCancel={handleCancelChoice}
         />
       </div>
     )

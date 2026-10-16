@@ -568,7 +568,21 @@
     }
   },
   "sync": {
-    "title": "My devices",
+    "title": "Devices",
+    "devicesIn": "Devices in {{name}}",
+    "add": {
+      "button": "Add a device",
+      "title": "Add a device",
+      "idleTitle": "Add a device to {{name}}",
+      "idleDesc": "Every device you add can read and edit all notes in {{name}}. You approve each one before it joins.",
+      "generateBtn": "Create invite link",
+      "readyTitle": "Invite ready",
+      "qrTitle": "Scan to join faster",
+      "qrDescription": "On the other device, open Pear Notes, choose Join with a link, and scan this code or paste the link.",
+      "codeLabel": "Invite link",
+      "copyBtn": "Copy link",
+      "warning": "Don't post this link publicly. Anyone who has it can ask to join {{name}}."
+    },
     "tabs": {
       "link": "Link device",
       "devices": "My devices"
@@ -586,17 +600,13 @@
     "hero": {
       "title": "Link your devices",
       "description": "Create a secure, end-to-end encrypted connection to sync your notes across devices instantly.",
-      "generateBtn": "Generate invite",
       "preparing": "Preparing…"
     },
     "invite": {
-      "header": "Invitation ready",
       "qrTitle": "Scan to link faster",
       "qrDescription": "Open the link screen on your other device and scan this QR code to paste the invite instantly.",
-      "codeLabel": "Secure pair code",
       "copyBtn": "Copy invite code",
       "copied": "Copied!",
-      "warning": "For security, don't share this code in public channels as it grants full access to your notes.",
       "expiresIn": "Expires in {{countdown}}",
       "expiredTitle": "Invite expired",
       "expiredDesc": "For security, invites are valid for {{minutes}} minutes. Generate a new one to link a device.",
@@ -607,11 +617,11 @@
       "scanBtn": "Scan QR",
       "placeholder": "Paste invite code here...",
       "linkBtn": "Link",
-      "hintInvalid": "That isn't a complete invite code yet.",
-      "vaultLinkError": "This is a vault invite. Use it in Vaults › Join a vault."
+      "hintInvalid": "That isn't a complete invite code yet."
     },
     "footer": "Your data moves directly between devices using encrypted Hypercore logs. No central server involved.",
     "devices": {
+      "screenDesc": "Every device here can read and edit all notes in {{name}}.",
       "thisDevice": "This device",
       "otherDevices": "Other devices",
       "empty": "No other devices connected yet.",
@@ -661,10 +671,11 @@
       "description": "Point your camera at the QR code shown on your other device to fill the invite automatically."
     },
     "delete": {
-      "title": "Remove device?",
-      "description": "The device will lose the data sync and all data will be removed from that device.",
+      "title": "Remove this device from {{name}}?",
+      "description": "It stops syncing {{name}} and clears its copy the next time it opens. Your other devices keep their notes.",
       "cancel": "Cancel",
-      "remove": "Remove"
+      "remove": "Remove",
+      "menu": "Remove from {{name}}"
     },
     "backgroundSync": {
       "header": "Background sync",
@@ -777,7 +788,7 @@
       "onboardingTitle": "Start your first note",
       "onboardingSubtitle": "Write something new, connect another device to sync, or restore from a backup file.",
       "newNoteBtn": "New note",
-      "connectBtn": "Connect device",
+      "connectBtn": "Join with a link",
       "restoreBtn": "Restore from backup",
       "noNotesHint": "Tap + to create a note in this folder"
     },
@@ -1007,12 +1018,12 @@
       "syncingTitle": "Syncing data",
       "syncingDesc": "Moving your notes and media to this device...",
       "complete": "{{progress}}% complete",
-      "linkTitle": "Link your device",
-      "linkDesc": "Enter the invite code from your other device to sync your notes securely.",
-      "inviteCode": "Invite code",
+      "linkTitle": "Join with a link",
+      "linkDesc": "Paste an invite link from a device that already has your notes.",
+      "inviteCode": "Invite link",
       "scanBtn": "Scan QR",
-      "placeholder": "Paste your code here...",
-      "connectBtn": "Connect",
+      "placeholder": "Paste the invite link",
+      "connectBtn": "Join",
       "mergeTitle": "Combine this device?",
       "mergeDesc": "Notes, folders, and media on this device will be merged into the linked vault. Nothing on this device will be deleted.",
       "mergeConfirm": "Combine & link",
@@ -1071,7 +1082,7 @@
     "storage": "Device storage",
     "vaultStorage": "Vault storage",
     "activity": "Activity",
-    "linkDevices": "My devices",
+    "linkDevices": "Devices",
     "sync": "Sync",
     "debug": "Diagnostics",
     "errorLog": "Logs",
@@ -1474,11 +1485,6 @@
     "cannotPreview": "This file type cannot be previewed.",
     "downloadingProgress": "Downloading… {{progress}}%"
   },
-  "mergeConfirm": {
-    "title": "Combine this device?",
-    "description": "Notes, folders, and media on this device will be merged into the linked vault. Nothing on this device will be deleted.",
-    "combineBtn": "Combine & link"
-  },
   "notesList": {
     "toggleSidebar": "Toggle sidebar",
     "selection": {
@@ -1604,7 +1610,7 @@
       "noteTitle": "No history for this note",
       "noteDescription": "Edits made from here on will be listed with the device that made them.",
       "noDevicesTitle": "Link a device to use activity",
-      "noDevicesDescription": "Activity keeps a history of what each linked device changed. Link a device under Link devices to start recording."
+      "noDevicesDescription": "Activity keeps a history of what each linked device changed. Add one under Settings › Devices to start recording."
     },
     "diff": {
       "plainText": "Plain text",
@@ -2331,7 +2337,7 @@
     "namePlaceholder": "Vault name, for example Shared",
     "create": "Create",
     "creating": "Creating…",
-    "newVaultHint": "A new vault starts empty and only on this device. To use a vault that another device already has, use Join a vault instead.",
+    "newVaultHint": "A new vault starts empty and only on this device. To use a vault that another device already has, use Join with a link instead.",
     "open": "Open now",
     "notOpen": "Not syncing while closed",
     "openBtn": "Open",
@@ -2349,26 +2355,19 @@
     "removing": "Leaving the vault and removing it…",
     "limitReached": "You can have up to {{max}} vaults on a device.",
     "join": {
-      "sectionTitle": "Join a vault",
-      "joinBtn": "Join vault",
-      "hint": "On a device that has the vault, open it and go to Vaults › Invite to vault. Then paste the link here.",
-      "screenDesc": "Add a vault that another device already has. It opens next to your other vaults, and your notes here stay where they are.",
+      "sectionTitle": "Join with a link",
+      "joinBtn": "Join",
+      "hint": "On a device that has the vault, open Settings › Devices and choose Add a device. Then paste the link here.",
+      "screenDesc": "Use an invite link from a device that already has the vault.",
       "codeLabel": "Invite link",
-      "linkPlaceholder": "Paste the vault invite link",
+      "linkPlaceholder": "Paste the invite link",
       "nameFromInvite": "Suggested by the invite. You can change it.",
-      "deviceLinkError": "This is a device link. Use it in My devices."
-    },
-    "invite": {
-      "title": "Invite to {{name}}",
-      "idleTitle": "Share {{name}}",
-      "idleDesc": "Someone who joins with this link gets full access to {{name}}. You approve them before they join.",
-      "generateBtn": "Create invite link",
-      "readyTitle": "Invite ready",
-      "qrTitle": "Scan to join faster",
-      "qrDescription": "On the other device, open Vaults › Join a vault and scan this code.",
-      "codeLabel": "Vault invite link",
-      "copyBtn": "Copy link",
-      "warning": "Don't post this link publicly. Anyone who has it can ask to join {{name}}."
+      "choiceLabel": "Notes on this device",
+      "choiceDesc": "This device already has notes in {{name}}. Choose what happens to them.",
+      "keepTitle": "Keep them separate",
+      "keepDesc": "The vault you join is added as another vault. {{name}} stays as it is.",
+      "combineTitle": "Combine them",
+      "combineDesc": "Notes in {{name}} move into the vault you join, and every device in it can read them. This can't be undone."
     },
     "errors": {
       "emptyName": "Enter a name for the vault.",

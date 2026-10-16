@@ -3,16 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { LogIn } from 'lucide-react'
 
-import { INVITE_KIND, VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
+import { VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { subscribePairUser } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
-import {
-  extractInvite,
-  getInviteNameHint,
-  isInviteForOtherKind,
-  isValidInvite
-} from '@pear-notes/core/utils.js'
+import { extractInvite, getInviteNameHint, isValidInvite } from '@pear-notes/core/utils.js'
+
+import { buildJoinRequest, useJoinChoice } from '../../hooks/useJoinChoice'
+import { getVaultLabel } from '../../lib/vaultNames'
+
+import JoinChoiceOptions from './JoinChoiceOptions'
 
 const INPUT_CLASS =
   'w-full bg-bg-panel text-text-primary px-4 py-3 rounded-xl border border-border-secondary text-sm focus:outline-none focus:border-accent-primary'
@@ -26,9 +26,11 @@ export default function JoinVaultForm() {
   const [nameHint, setNameHint] = useState('')
   const [code, setCode] = useState('')
 
-  const isValid = isValidInvite(code, INVITE_KIND.VAULT)
-  const isDeviceLink = isInviteForOtherKind(code, INVITE_KIND.VAULT)
-  const canJoin = isValid && !!name.trim() && !pending
+  const { openVault, hasNotes, canAdd, choice, setChoice, keepsSeparate, choiceMade } =
+    useJoinChoice()
+
+  const isValid = isValidInvite(code)
+  const canJoin = isValid && choiceMade && (!keepsSeparate || !!name.trim()) && !pending
   const nameFromInvite = !!nameHint && name === nameHint
 
   const handleCodeChange = (e) => {
@@ -47,9 +49,7 @@ export default function JoinVaultForm() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!canJoin) return
-    dispatch(
-      subscribePairUser({ invite: extractInvite(code), mode: 'add', vaultName: name.trim() })
-    )
+    dispatch(subscribePairUser(buildJoinRequest(extractInvite(code), keepsSeparate, name.trim())))
     setName('')
     setCode('')
     dispatch(setShowSettings(false))
@@ -73,22 +73,29 @@ export default function JoinVaultForm() {
         spellCheck={false}
         className={`${INPUT_CLASS} font-mono`}
       />
-      {isDeviceLink && (
-        <p className='text-xs font-medium text-accent-danger'>{t('vaults.join.deviceLinkError')}</p>
-      )}
-      {code.trim() && !isValid && !isDeviceLink && (
+      {code.trim() && !isValid && (
         <p className='text-xs font-medium text-accent-danger'>{t('sync.paste.hintInvalid')}</p>
       )}
-      <input
-        id='vault-join-name'
-        value={name}
-        maxLength={VAULT_NAME_MAX_LENGTH}
-        onChange={handleNameChange}
-        placeholder={t('vaults.namePlaceholder')}
-        aria-label={t('vaults.nameLabel')}
-        className={INPUT_CLASS}
-      />
-      {nameFromInvite && (
+      {hasNotes && (
+        <JoinChoiceOptions
+          vaultName={getVaultLabel(openVault, t)}
+          choice={choice}
+          canKeepSeparate={canAdd}
+          onSelect={setChoice}
+        />
+      )}
+      {keepsSeparate && (
+        <input
+          id='vault-join-name'
+          value={name}
+          maxLength={VAULT_NAME_MAX_LENGTH}
+          onChange={handleNameChange}
+          placeholder={t('vaults.namePlaceholder')}
+          aria-label={t('vaults.nameLabel')}
+          className={INPUT_CLASS}
+        />
+      )}
+      {keepsSeparate && nameFromInvite && (
         <p className='text-xs text-text-tertiary'>{t('vaults.join.nameFromInvite')}</p>
       )}
       <button
