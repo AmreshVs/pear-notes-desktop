@@ -38,6 +38,8 @@ import SyncSettings from './SyncSettings'
 import VaultsSettings from './VaultsSettings'
 import VaultStorageSettings from './VaultStorageSettings'
 
+const FAQ_URL = 'https://amreshvs.github.io/pear-notes/faq/'
+
 const SETTINGS_GROUPS = ['vault', 'device']
 
 export default function SettingsScreen({ onClose, initialSection = 'general' }) {
@@ -173,7 +175,14 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             ))}
           </div>
 
-          <div className='px-6 pb-6'>
+          <div className='px-6 pb-6 flex flex-col items-center gap-2'>
+            <button
+              type='button'
+              onClick={() => window.electronBridge.openExternal(FAQ_URL)}
+              className='text-accent-primary text-xs font-semibold hover:underline'
+            >
+              {t('settings.helpAndFaq')}
+            </button>
             <p className='text-text-tertiary text-xs text-center opacity-50 select-none'>
               {getAppVersionLabel(appVersion)}
             </p>

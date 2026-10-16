@@ -301,6 +301,7 @@ function defaultWindowSize() {
 }
 
 const EXTERNAL_URL_SCHEMES = new Set(['https:', 'http:', 'mailto:'])
+const FAQ_URL = 'https://amreshvs.github.io/pear-notes/faq/'
 
 function isExternallyOpenable(url) {
   if (typeof url !== 'string' || url.length === 0) return false
@@ -409,7 +410,11 @@ function setAppMenu() {
         { role: 'togglefullscreen' }
       ]
     },
-    { role: 'windowMenu' }
+    { role: 'windowMenu' },
+    {
+      role: 'help',
+      submenu: [{ label: 'Help & FAQ', click: () => shell.openExternal(FAQ_URL) }]
+    }
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }

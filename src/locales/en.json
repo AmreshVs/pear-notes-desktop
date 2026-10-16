@@ -106,7 +106,7 @@
       "confirmMessage": "This will permanently delete all your notes, media, and files on this device. This action cannot be undone and your data cannot be recovered if you haven't backed it up or synced with another device."
     },
     "e2eEncrypted": "End-to-end encrypted",
-    "footer": "End-to-end encrypted • Fully private",
+    "helpAndFaq": "Help & FAQ",
     "mediaSync": {
       "title": "Media sync",
       "pauseMedia": "Pause media transfers",
@@ -625,7 +625,7 @@
       "linkBtn": "Link",
       "hintInvalid": "That isn't a complete invite code yet."
     },
-    "footer": "Your data moves directly between devices using encrypted Hypercore logs. No central server involved.",
+    "footer": "Your data moves directly between your devices over an end-to-end encrypted connection. Nothing is stored on our servers.",
     "devices": {
       "screenDesc": "Every device here can read and edit all notes in {{name}}.",
       "thisDevice": "This device",

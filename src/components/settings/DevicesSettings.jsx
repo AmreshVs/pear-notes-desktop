@@ -149,13 +149,11 @@ export default function DevicesSettings({ adding, onAdd }) {
             plan={leaderPlan}
             onSuggest={(device) => openLeaderAction(device, true)}
           />
-        </div>
 
-        <div className='pt-2'>
-          <p className='text-center text-xs text-text-tertiary px-4'>
-            <ShieldCheck className='w-3.5 h-3.5 text-accent-primary inline mr-1.5 opacity-60' />
-            {t('sync.footer')}
-          </p>
+          <div className='mt-3 ml-1 flex items-start gap-2'>
+            <ShieldCheck className='w-3.5 h-3.5 text-accent-primary shrink-0 mt-0.5' />
+            <p className='text-xs text-text-tertiary leading-relaxed'>{t('sync.footer')}</p>
+          </div>
         </div>
       </div>
 
