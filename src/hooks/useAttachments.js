@@ -30,3 +30,28 @@ export function useAttachments(enabled = true) {
 
   return { items, refresh }
 }
+
+export function useAttachmentCount(enabled = true) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!enabled) return
+    let active = true
+    const refresh = () => {
+      backendApi
+        .getAttachmentCount()
+        .then((next) => active && setCount(next))
+        .catch(() => {})
+    }
+    refresh()
+    const timer = setInterval(refresh, REFRESH_MS)
+    window.addEventListener('focus', refresh)
+    return () => {
+      active = false
+      clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [enabled])
+
+  return count
+}

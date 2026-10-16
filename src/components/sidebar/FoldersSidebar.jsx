@@ -44,7 +44,7 @@ import {
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
-import { useAttachments } from '../../hooks/useAttachments'
+import { useAttachmentCount } from '../../hooks/useAttachments'
 import { useUpcomingCount } from '../../hooks/useUpcomingCount'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
@@ -74,7 +74,7 @@ export default function FoldersSidebar({
   const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
   const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
   const upcomingCount = useUpcomingCount(Boolean(onSelectTool) && tasksOn)
-  const attachmentCount = useAttachments(Boolean(onSelectTool)).items?.length ?? 0
+  const attachmentCount = useAttachmentCount(Boolean(onSelectTool))
   const dispatch = useDispatch()
   const index = useSelector(getLocalAiIndex)
   const duplicateCount = useSelector(getDuplicatePairRows).length
