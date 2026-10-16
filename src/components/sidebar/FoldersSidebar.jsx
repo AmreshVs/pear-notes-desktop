@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   CalendarClock,
+  ChevronRight,
   Copy,
   FolderPlus,
   History,
@@ -45,6 +46,7 @@ import {
 import { findDuplicateFolder, validateFolderName } from '@pear-notes/core/utils.js'
 
 import { useAttachmentCount } from '../../hooks/useAttachments'
+import { useLocalToggle } from '../../hooks/useLocalToggle'
 import { useUpcomingCount } from '../../hooks/useUpcomingCount'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
@@ -71,6 +73,7 @@ export default function FoldersSidebar({
   onSelectTool
 }) {
   const { t } = useTranslation()
+  const [smartViewsCollapsed, toggleSmartViews] = useLocalToggle('smartViewsCollapsed', false)
   const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
   const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
   const upcomingCount = useUpcomingCount(Boolean(onSelectTool) && tasksOn)
@@ -424,16 +427,33 @@ export default function FoldersSidebar({
         <div className='mt-auto pt-6 flex flex-col transition-none'>
           {onSelectTool && (
             <>
-              <div className='text-sm font-bold text-text-secondary tracking-[0.1em] mb-3 px-4 transition-none'>
-                {t('tools.header')}
-              </div>
-              {tasksOn &&
-                renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
-              {attachmentCount > 0 &&
-                renderToolItem('attachments', Paperclip, t('tools.attachments'), attachmentCount)}
-              {showDuplicates &&
-                renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
-              {renderToolItem('recap', History, t('tools.recap'), 0)}
+              <button
+                type='button'
+                onClick={toggleSmartViews}
+                aria-expanded={!smartViewsCollapsed}
+                className='w-full flex items-center justify-between text-sm font-bold text-text-secondary hover:text-text-primary tracking-[0.1em] mb-3 px-4 transition-none'
+              >
+                <span>{t('tools.header')}</span>
+                <ChevronRight
+                  className={`w-4 h-4 transition-transform ${smartViewsCollapsed ? '' : 'rotate-90'}`}
+                />
+              </button>
+              {!smartViewsCollapsed && (
+                <>
+                  {tasksOn &&
+                    renderToolItem('upcoming', CalendarClock, t('tools.upcoming'), upcomingCount)}
+                  {attachmentCount > 0 &&
+                    renderToolItem(
+                      'attachments',
+                      Paperclip,
+                      t('tools.attachments'),
+                      attachmentCount
+                    )}
+                  {showDuplicates &&
+                    renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
+                  {renderToolItem('recap', History, t('tools.recap'), 0)}
+                </>
+              )}
             </>
           )}
           <div
