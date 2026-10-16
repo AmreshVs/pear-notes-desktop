@@ -405,6 +405,8 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
   const isAsk = mode === 'ask'
   const showSuggestions = isAsk && ready && turns.length === 0 && suggestions.length > 0
 
+  const hasAskBody = !ready || !!indexNotice || turns.length > 0
+
   return (
     <div className='fixed inset-0 flex items-start justify-center z-[110] p-6 pt-[10vh]'>
       <div
@@ -491,40 +493,42 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
         </div>
 
         {isAsk ? (
-          <div className='flex flex-col gap-4 px-5 pt-[18px] pb-1.5 min-h-0'>
-            {!ready && (
-              <div className='flex flex-col gap-2 rounded-xl border border-overlay-soft px-4 py-3 bg-overlay-subtle'>
-                <p className='text-sm text-text-secondary'>
-                  {t(meaningReady ? 'localAi.askVault.askNotReady' : 'localAi.askVault.notReady')}
+          hasAskBody && (
+            <div className='flex flex-col gap-4 px-5 pt-[18px] pb-1.5 min-h-0'>
+              {!ready && (
+                <div className='flex flex-col gap-2 rounded-xl border border-overlay-soft px-4 py-3 bg-overlay-subtle'>
+                  <p className='text-sm text-text-secondary'>
+                    {t(meaningReady ? 'localAi.askVault.askNotReady' : 'localAi.askVault.notReady')}
+                  </p>
+                  <button
+                    onClick={() => {
+                      handleClose()
+                      onOpenSettings()
+                    }}
+                    className='self-start text-xs font-bold text-accent-primary hover:underline'
+                  >
+                    {t('localAi.askVault.openSettings')}
+                  </button>
+                </div>
+              )}
+
+              {ready && indexNotice && (
+                <p className='text-xs text-text-tertiary' role='status'>
+                  {indexNoticeText(t, indexNotice)}
                 </p>
-                <button
-                  onClick={() => {
-                    handleClose()
-                    onOpenSettings()
-                  }}
-                  className='self-start text-xs font-bold text-accent-primary hover:underline'
+              )}
+
+              {turns.length > 0 && (
+                <div
+                  ref={threadRef}
+                  className='flex flex-col gap-6 overflow-y-auto custom-scrollbar min-h-0 max-h-[50vh] pr-1 pb-3'
+                  aria-live='polite'
                 >
-                  {t('localAi.askVault.openSettings')}
-                </button>
-              </div>
-            )}
-
-            {ready && indexNotice && (
-              <p className='text-xs text-text-tertiary' role='status'>
-                {indexNoticeText(t, indexNotice)}
-              </p>
-            )}
-
-            {turns.length > 0 && (
-              <div
-                ref={threadRef}
-                className='flex flex-col gap-6 overflow-y-auto custom-scrollbar min-h-0 max-h-[50vh] pr-1 pb-3'
-                aria-live='polite'
-              >
-                {turns.map(renderTurn)}
-              </div>
-            )}
-          </div>
+                  {turns.map(renderTurn)}
+                </div>
+              )}
+            </div>
+          )
         ) : (
           <AskVaultSearchResults
             query={searchQuery}
@@ -536,7 +540,9 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
         )}
 
         {showSuggestions && (
-          <div className='flex flex-col gap-0.5 px-3 py-2.5 mt-1 border-t border-overlay-soft'>
+          <div
+            className={`flex flex-col gap-0.5 px-3 py-2.5 ${isAsk && !hasAskBody ? '' : 'mt-1 border-t border-overlay-soft'}`}
+          >
             <p className='px-3 py-1 text-[11.5px] font-semibold text-text-tertiary'>
               {t('localAi.askVault.tryAsking')}
             </p>

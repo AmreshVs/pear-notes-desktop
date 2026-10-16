@@ -2,16 +2,34 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { ShieldAlert } from 'lucide-react'
 
-import { clearStorage, getDeviceRemoved } from '@pear-notes/core/store/slices/syncSlice.js'
+import {
+  clearStorage,
+  getDeviceRemoved,
+  setDeviceRemoved
+} from '@pear-notes/core/store/slices/syncSlice.js'
+import {
+  getCurrentVault,
+  getHasMultipleVaults,
+  removeVault
+} from '@pear-notes/core/store/slices/vaultsSlice.js'
+
+import { getVaultLabel } from '../../lib/vaultNames'
 
 export default function DeviceRemovedModal() {
   const dispatch = useDispatch()
   const { t } = useTranslation()
   const deviceRemoved = useSelector(getDeviceRemoved)
+  const currentVault = useSelector(getCurrentVault)
+  const hasOtherVaults = useSelector(getHasMultipleVaults) && !!currentVault
 
   if (!deviceRemoved) return null
 
   const handleRestart = () => {
+    if (hasOtherVaults) {
+      dispatch(setDeviceRemoved(false))
+      dispatch(removeVault({ id: currentVault.id }))
+      return
+    }
     dispatch(clearStorage())
     location.reload()
   }
@@ -34,7 +52,11 @@ export default function DeviceRemovedModal() {
               {t('pairing.overlay.deviceRemovedTitle')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {t('pairing.overlay.deviceRemovedDesc')}
+              {hasOtherVaults
+                ? t('pairing.overlay.deviceRemovedVaultDesc', {
+                    name: getVaultLabel(currentVault, t)
+                  })
+                : t('pairing.overlay.deviceRemovedDesc')}
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
@@ -20,9 +20,7 @@ import {
 import {
   htmlToNoteText,
   isRewriteTask,
-  keepsOriginalText,
-  NOTE_TASK,
-  TEMPLATE_TASKS
+  keepsOriginalText
 } from '@pear-notes/core/store/services/localAiPrompts.js'
 import { splitNoteByHeadings } from '@pear-notes/core/store/services/noteSplit.js'
 import {
@@ -31,6 +29,7 @@ import {
   openNoteHistory
 } from '@pear-notes/core/store/slices/activitySlice.js'
 import {
+  getEditorBaseKey,
   getEditorConflict,
   getEditorContent,
   getEditorContentText,
@@ -57,6 +56,7 @@ import {
   getFontFamily,
   getLockMethod
 } from '@pear-notes/core/store/slices/settingsSlice.js'
+import { getOtherVaults, moveToVault } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
 import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
 import { useFindInNote } from '../../hooks/useFindInNote'
@@ -75,7 +75,14 @@ import {
 } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import { buildNoteMenu, GENERATE_MENU_PREFIX, MOVE_MENU_PREFIX } from '../../lib/noteMenu'
+import {
+  clearPendingNoteAction,
+  getPendingNoteAction,
+  subscribePendingNoteAction
+} from '../../lib/pendingNoteAction'
 import { canReadAloud, isReadingAloud, readAloud, stopReadingAloud } from '../../lib/readAloud'
+import { confirmVaultMove, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
 import { getFontFamilyValue } from '../../utils/fonts'
 import UploadProgressToast from '../common/UploadProgressToast'
 import AskNoteModal from '../modals/AskNoteModal'
@@ -146,6 +153,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const contentText = useSelector(getEditorContentText)
   const editorInstance = useSelector(getEditorInstance)
   const syncToken = useSelector(getEditorSyncToken)
+  const editorBaseKey = useSelector(getEditorBaseKey)
+  const otherVaults = useSelector(getOtherVaults)
+  const pendingNoteAction = useSyncExternalStore(subscribePendingNoteAction, getPendingNoteAction)
 
   const titleRef = useRef(null)
   const richTextEditorRef = useRef(null)
@@ -638,6 +648,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     }
   }
 
+  const handleMoveToVault = (vaultId) => {
+    const vault = otherVaults.find((v) => v.id === vaultId)
+    if (!vault || !confirmVaultMove({ vault, noteCount: 1, t })) return
+    dispatch(moveToVault({ targetId: vaultId, noteKeys: [selectedNoteKey] }))
+  }
+
   const handleMoveTo = (folderKey) => {
     if (noteData) {
       dispatch(
@@ -682,14 +698,6 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
           { type: 'separator' }
         ]
       : []
-    const splitParts = splitNoteByHeadings(content, title)
-    const moveTargets = folders.filter(
-      (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
-    )
-    const moveSubmenu =
-      moveTargets.length > 0
-        ? moveTargets.map((f) => ({ id: `move:${f.id}`, label: f.name }))
-        : [{ label: t('noteEditor.contextMenu.noOtherLists'), enabled: false }]
     const result = await showContextMenu([
       ...spellingItems,
       { role: 'cut', label: t('noteEditor.contextMenu.cut') },
@@ -697,92 +705,84 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       { role: 'paste', label: t('noteEditor.contextMenu.paste') },
       { role: 'selectAll', label: t('noteEditor.contextMenu.selectAll') },
       { type: 'separator' },
-      { label: t('noteEditor.contextMenu.moveTo'), submenu: moveSubmenu },
-      { id: 'copyNote', label: t('noteEditor.contextMenu.copyNote') },
-      ...(canReadAloud() && !isLocked
-        ? [
-            isReadingAloud()
-              ? { id: 'stopReading', label: t('noteEditor.contextMenu.stopReading') }
-              : { id: 'readAloud', label: t('noteEditor.contextMenu.readAloud') }
-          ]
-        : []),
-      ...(splitParts.length >= 2 && !isLocked
-        ? [{ id: 'splitNote', label: t('noteEditor.contextMenu.splitNote') }]
-        : []),
-      ...(summarizeReady && !isLocked
-        ? [
-            {
-              label: t('noteEditor.contextMenu.restructureAs'),
-              submenu: TEMPLATE_TASKS.map((task) => ({
-                id: `generate:${task}`,
-                label: t(`generate.actions.${task}`)
-              }))
-            },
-            {
-              label: t('noteEditor.contextMenu.createFromNote'),
-              submenu: [NOTE_TASK.FLASHCARDS, NOTE_TASK.ACTION_LIST].map((task) => ({
-                id: `generate:${task}`,
-                label: t(`generate.actions.${task}`)
-              }))
-            }
-          ]
-        : []),
-      ...(activityEnabled
-        ? [{ id: 'history', label: t('noteEditor.contextMenu.noteHistory') }]
-        : []),
-      ...(inThisNoteEnabled && !isLocked
-        ? [{ id: 'related', label: t('noteEditor.contextMenu.relatedNotes') }]
-        : []),
-      {
-        id: 'togglePin',
-        label: isPinned
-          ? t('noteEditor.contextMenu.unpinNote')
-          : t('noteEditor.contextMenu.pinNote')
-      },
-      {
-        id: 'toggleLock',
-        label: isLocked
-          ? t('noteEditor.contextMenu.removeLock')
-          : t('noteEditor.contextMenu.lockNote')
-      },
-      { type: 'separator' },
-      { id: 'delete', label: t('noteEditor.contextMenu.delete') }
+      ...buildNoteMenu({
+        t,
+        moveFolders: folders.filter(
+          (f) => !f.isTrash && f.id !== ALL_NOTES_KEY && f.id !== noteData?.folderKey
+        ),
+        otherVaults,
+        pinned: isPinned,
+        locked: isLocked,
+        canSplit: splitNoteByHeadings(content, title).length >= 2,
+        canRead: canReadAloud(),
+        reading: isReadingAloud(),
+        aiReady: summarizeReady,
+        activityEnabled,
+        relatedEnabled: inThisNoteEnabled
+      })
     ])
     if (!result) return
     if (result.startsWith('spell:')) {
       window.electronBridge?.replaceMisspelling?.(result.slice(6))
     } else if (result === 'spellAdd') {
       window.electronBridge?.addToDictionary?.(spelling.word)
-    } else if (result.startsWith('move:')) {
-      handleMoveTo(result.slice(5))
-    } else if (result === 'readAloud') {
+    } else {
+      runNoteAction(result)
+    }
+  }
+
+  const runNoteAction = (action) => {
+    if (action.startsWith(MOVE_MENU_PREFIX)) {
+      handleMoveTo(action.slice(MOVE_MENU_PREFIX.length))
+    } else if (action.startsWith(VAULT_MENU_PREFIX)) {
+      handleMoveToVault(action.slice(VAULT_MENU_PREFIX.length))
+    } else if (action.startsWith(GENERATE_MENU_PREFIX)) {
+      setGenerateTask(action.slice(GENERATE_MENU_PREFIX.length))
+    } else if (action === 'readAloud') {
       const selected = window.getSelection()?.toString().trim()
       readAloud(selected || [title, editorInstance?.getText() ?? ''].filter(Boolean).join('. '))
-    } else if (result === 'stopReading') {
+    } else if (action === 'stopReading') {
       stopReadingAloud()
-    } else if (result.startsWith('generate:')) {
-      setGenerateTask(result.slice(9))
-    } else if (result === 'splitNote') {
+    } else if (action === 'splitNote') {
+      const splitParts = splitNoteByHeadings(content, title)
+      if (splitParts.length < 2) return
       const titles = splitParts.map((part) => part.title || t('noteCard.untitled')).join(', ')
       if (window.confirm(t('noteEditor.split.confirm', { count: splitParts.length, titles }))) {
         dispatch(splitNote({ key: selectedNoteKey }))
       }
-    } else if (result === 'copyNote') {
+    } else if (action === 'copyNote') {
       copyNoteToClipboard()
-    } else if (result === 'history') {
+    } else if (action === 'history') {
       dispatch(closeRelatedNotes())
       dispatch(openNoteHistory(selectedNoteKey))
-    } else if (result === 'related') {
+    } else if (action === 'related') {
       dispatch(closeNoteHistory())
       dispatch(openRelatedNotes(selectedNoteKey))
-    } else if (result === 'togglePin') {
+    } else if (action === 'togglePin') {
       handleTogglePin()
-    } else if (result === 'toggleLock') {
+    } else if (action === 'toggleLock') {
       handleToggleLock()
-    } else if (result === 'delete') {
+    } else if (action === 'delete') {
       onDelete(selectedNoteKey)
     }
   }
+
+  const editorReady =
+    !!editorInstance &&
+    !noteData.bodyOmitted &&
+    !showLockScreen &&
+    editorBaseKey === selectedNoteKey
+
+  useEffect(() => {
+    if (!pendingNoteAction) return
+    if (pendingNoteAction.key !== selectedNoteKey || showLockScreen) {
+      clearPendingNoteAction()
+      return
+    }
+    if (!editorReady) return
+    clearPendingNoteAction()
+    runNoteAction(pendingNoteAction.action)
+  })
 
   if (!noteData || !selectedNoteKey) {
     return (

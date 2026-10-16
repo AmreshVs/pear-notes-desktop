@@ -248,11 +248,16 @@
           "title": "Extract text",
           "inline": "text extraction",
           "desc": "Copy text from photos, scans and PDFs.",
+          "tierDescriptions": {
+            "standard": "EasyOCR · {{size}} · recommended",
+            "best": "Qwen3.5 0.8B · {{size}} · most languages"
+          },
           "limitations": [
-            "Reads most languages and scripts, including Russian, Arabic, Hindi, Chinese, Japanese and Korean.",
-            "It can misread or, rarely, make up words, especially in handwriting, low light, blur or tilted photos. Check the text before you rely on it.",
+            "Standard (EasyOCR) reads Latin-script languages only, such as English, French, German, Spanish, Polish and Vietnamese.",
+            "Best (Qwen3.5) also reads other scripts, such as Russian, Arabic, Hindi, Chinese, Japanese and Korean, but it can repeat lines or make up words.",
+            "Handwriting, low light, blur and tilted photos reduce accuracy.",
             "Reads up to 20 pages of a PDF. Layout, tables and formatting aren't kept.",
-            "Uses the same model as Describe images, so turning on both downloads it once."
+            "Best uses the same model as Describe images, so using both downloads it once."
           ]
         },
         "translateNotes": {
@@ -777,6 +782,7 @@
   },
   "folderView": {
     "searchPlaceholder": "Search notes...",
+    "searchPlaceholderShortcut": "Search notes...  {{shortcut}}",
     "noteCount_one": "{{count}} NOTE",
     "noteCount_other": "{{count}} NOTES",
     "empty": {
@@ -1008,6 +1014,7 @@
     "overlay": {
       "deviceRemovedTitle": "Device removed",
       "deviceRemovedDesc": "This device has been removed from the synced cluster. Press Okay to clear local synced data and reset common storage.",
+      "deviceRemovedVaultDesc": "This device was removed from {{name}}. Press Okay to remove {{name}} from this device. Your other vaults stay as they are.",
       "okay": "Okay",
       "resettingTitle": "Clearing data",
       "resettingDesc": "Removing synced data from this device...",

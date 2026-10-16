@@ -21,6 +21,8 @@ const IMAGE_FILE_PREFIX = 'pear-notes-local-ai-image-'
 const IMAGE_EXTENSION_PATTERN = /^[a-z0-9]{2,5}$/i
 const DEFAULT_IMAGE_EXTENSION = 'png'
 const RESIZED_IMAGE_QUALITY = 90
+const OCR_MAG_RATIO = 1
+const OCR_CANVAS_SIZE = 1600
 const PCM_SAMPLE_RATE = 16000
 const PCM_BYTES_PER_SAMPLE = 2
 const TRANSLATE_BATCH_PARAGRAPHS = 8
@@ -30,6 +32,7 @@ const LIVE_TEXT_CHANNEL = 'local-ai:live-text'
 let options = null
 let catalogPromise = null
 let promptsPromise = null
+let textPromise = null
 let workPromise = null
 let tiersPromise = null
 let sdkPromise = null
@@ -135,6 +138,11 @@ function toolStep(sdk, params) {
       }
     }
   )
+}
+
+function loadText() {
+  if (!textPromise) textPromise = import('@pear-notes/core/store/services/localAiText.js')
+  return textPromise
 }
 
 function loadPrompts() {
@@ -591,7 +599,56 @@ async function liveCancel(event, { sessionId }) {
   return {}
 }
 
-async function extractText(event, { image, extension, taskId }) {
+async function extractText(event, { image, extension, featureConfig = {}, taskId }) {
+  const catalog = await loadCatalog()
+  const names = catalog.getFeatureRegistryNames(catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT, featureConfig)
+  return catalog.isOcrModel(names[0])
+    ? ocrImageText(event, { image, extension, names, taskId })
+    : readImageTextWithVision(event, { image, extension, featureConfig, taskId })
+}
+
+async function ocrImageText(event, { image, extension, names: [recognizerName, detectorName], taskId }) {
+  const [sdk, catalog, prompts, text, work] = await Promise.all([
+    loadSdk(),
+    loadCatalog(),
+    loadPrompts(),
+    loadText(),
+    loadWork()
+  ])
+  const send = progressSender(event, taskId)
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: recognizerName })
+  const modelId = await ensureModelLoaded(sdk, `${recognizerName}|${detectorName}|desktop`, () =>
+    sdk.loadModel({
+      modelSrc: registryAsset(sdk, catalog, recognizerName),
+      modelType: 'ocr',
+      modelConfig: {
+        detectorModelSrc: registryAsset(sdk, catalog, detectorName),
+        langList: catalog.LOCAL_AI_OCR_LANGUAGES,
+        magRatio: OCR_MAG_RATIO,
+        canvasSize: OCR_CANVAS_SIZE,
+        defaultRotationAngles: [],
+        backendDevice: process.platform === 'darwin' ? 'metal' : 'cpu'
+      }
+    })
+  )
+  send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
+  const images = await writeTempImages(image, extension, { maxSide: prompts.EXTRACT_IMAGE_MAX_SIDE })
+  try {
+    const { blockStream } = sdk.ocr({ modelId, image: images.inputs[0], stream: true })
+    const found = []
+    let extracted = ''
+    for await (const chunk of blockStream) {
+      found.push(...chunk)
+      extracted = text.formatOcrBlocks(found)
+      send({ type: work.WORK_EVENT.TEXT, text: extracted })
+    }
+    return { text: extracted }
+  } finally {
+    await removeTempImages(images.files)
+  }
+}
+
+async function readImageTextWithVision(event, { image, extension, featureConfig, taskId }) {
   const [sdk, catalog, prompts, work] = await Promise.all([
     loadSdk(),
     loadCatalog(),
@@ -599,9 +656,18 @@ async function extractText(event, { image, extension, taskId }) {
     loadWork()
   ])
   const send = progressSender(event, taskId)
-  const [modelName] = catalog.getFeatureRegistryNames(catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT, {})
+  const [modelName] = catalog.getFeatureRegistryNames(
+    catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT,
+    featureConfig
+  )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.LOAD_MODEL, model: modelName })
-  const modelId = await loadLlmFeature(sdk, catalog, prompts, catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT)
+  const modelId = await loadLlmFeature(
+    sdk,
+    catalog,
+    prompts,
+    catalog.LOCAL_AI_FEATURE.EXTRACT_TEXT,
+    featureConfig
+  )
   send({ type: work.WORK_EVENT.STEP, step: work.WORK_STEP.READ_TEXT })
   const images = await writeTempImages(image, extension, {
     maxSide: prompts.EXTRACT_IMAGE_MAX_SIDE,

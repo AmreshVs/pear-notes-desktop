@@ -45,9 +45,12 @@ import {
   LOCAL_AI_FEATURE
 } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { GENERATE_TASKS } from '@pear-notes/core/store/services/localAiPrompts.js'
+import { splitNoteByHeadings } from '@pear-notes/core/store/services/noteSplit.js'
 import { openNoteHistory } from '@pear-notes/core/store/slices/activitySlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
+  closeRelatedNotes,
+  getLocalAiIndexEnabled,
   getMeaningSearchNotice,
   getMeaningSearchReady,
   selectIsLocalAiFeatureReady
@@ -104,14 +107,18 @@ import { useTidyMoves } from '../../hooks/useTidyMoves'
 import { useVisibleNotes } from '../../hooks/useVisibleNotes'
 import { showContextMenu } from '../../lib/contextMenu'
 import { getFolderIconComponent } from '../../lib/folderIcons'
+import { useShowAiTools } from '../../lib/localAi/aiToolsPreference'
 import { isNoteUnlocked, useHasUnlockedNotes, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
 import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import { buildNoteMenu, isEditorNoteAction, MOVE_MENU_PREFIX } from '../../lib/noteMenu'
 import {
   attachmentIdentity,
   getCachedPdfThumb,
   subscribePdfThumbWrites
 } from '../../lib/pdfThumbCache'
+import { requestNoteAction } from '../../lib/pendingNoteAction'
+import { canReadAloud, isReadingAloud, stopReadingAloud } from '../../lib/readAloud'
 import { confirmVaultMove, getVaultMenuItems, VAULT_MENU_PREFIX } from '../../lib/vaultNames'
 import HighlightedText from '../common/HighlightedText'
 import GenerateNoteModal from '../modals/GenerateNoteModal'
@@ -198,7 +205,8 @@ const NotesItem = memo(
     isChecked,
     onToggleSelect,
     meaningSnippet,
-    matchReason
+    matchReason,
+    menuFlags
   }) => {
     const { t } = useTranslation()
     const dispatch = useDispatch()
@@ -329,28 +337,26 @@ const NotesItem = memo(
                 { type: 'separator' },
                 { id: 'delete', label: t('folderView.permanentlyDeleteTitle') }
               ]
-            : [
-                {
-                  id: 'togglePin',
-                  label: pinned ? t('noteCard.actions.unpin') : t('noteCard.actions.pin')
-                },
-                { type: 'separator' },
-                { label: t('noteCard.actions.moveToFolder'), submenu: moveSubmenu },
-                ...vaultItems,
-                { type: 'separator' },
-                ...(activityEnabled
-                  ? [{ id: 'history', label: t('noteCard.actions.noteHistory') }]
-                  : []),
-                {
-                  id: 'toggleLock',
-                  label: locked ? t('noteCard.actions.unlock') : t('noteCard.actions.lock')
-                },
-                { type: 'separator' },
-                { id: 'delete', label: t('noteCard.actions.delete') }
-              ]
+            : buildNoteMenu({
+                t,
+                moveFolders: availableMoveFolders,
+                otherVaults,
+                pinned,
+                locked,
+                canCopy: !locked || isNoteUnlocked(key),
+                canSplit:
+                  !noteData?.bodyOmitted &&
+                  splitNoteByHeadings(noteData?.note || '', noteData?.title || '').length >= 2,
+                canRead: canReadAloud(),
+                reading: isReadingAloud(),
+                aiReady: menuFlags.aiReady,
+                activityEnabled,
+                relatedEnabled: menuFlags.relatedEnabled
+              })
         )
         if (!result) return
-        if (result.startsWith('move:')) onMenuAction('move', key, result.slice(5))
+        if (result.startsWith(MOVE_MENU_PREFIX))
+          onMenuAction('move', key, result.slice(MOVE_MENU_PREFIX.length))
         else if (result.startsWith(VAULT_MENU_PREFIX))
           onMenuAction('moveToVault', key, result.slice(VAULT_MENU_PREFIX.length))
         else onMenuAction(result, key)
@@ -360,6 +366,10 @@ const NotesItem = memo(
         otherVaults,
         noteData?.locked,
         noteData?.pinned,
+        noteData?.bodyOmitted,
+        noteData?.note,
+        noteData?.title,
+        menuFlags,
         activityEnabled,
         isTrash,
         isSelecting,
@@ -528,6 +538,17 @@ export default function NotesList({
       LOCAL_AI_ENABLED && selectIsLocalAiFeatureReady(state, LOCAL_AI_FEATURE.SUMMARIZE_RECORDINGS)
   )
   const meaningReady = useSelector(getMeaningSearchReady)
+  const showAiTools = useShowAiTools()
+  const relatedOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.RELATED))
+  const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
+  const indexEnabled = useSelector(getLocalAiIndexEnabled)
+  const menuFlags = useMemo(
+    () => ({
+      aiReady: textAiReady && showAiTools,
+      relatedEnabled: LOCAL_AI_ENABLED && ((indexEnabled && relatedOn) || tasksOn)
+    }),
+    [textAiReady, showAiTools, indexEnabled, relatedOn, tasksOn]
+  )
   const foldersOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.FOLDERS))
   const tidyMoves = useTidyMoves(selectedFolder === ALL_NOTES_KEY && meaningReady && foldersOn)
   const { t } = useTranslation()
@@ -797,6 +818,11 @@ export default function NotesList({
   const handleMenuAction = useCallback(
     async (action, noteKey, folderId) => {
       const noteData = getNoteData(noteKey)(store.getState())
+      if (isEditorNoteAction(action)) {
+        dispatch(selectNote(noteKey))
+        requestNoteAction(noteKey, action)
+        return
+      }
 
       switch (action) {
         case 'moveToVault':
@@ -824,6 +850,7 @@ export default function NotesList({
           break
         case 'history':
           dispatch(selectNote(noteKey))
+          dispatch(closeRelatedNotes())
           dispatch(openNoteHistory(noteKey))
           break
         case 'toggleLock':
@@ -845,6 +872,9 @@ export default function NotesList({
               pinned: !(noteData?.pinned === true)
             })
           )
+          break
+        case 'stopReading':
+          stopReadingAloud()
           break
         case 'restore':
           dispatch(restoreNote(noteKey))
@@ -891,6 +921,7 @@ export default function NotesList({
           meaningSnippet={note.snippet || null}
           matchReason={hasSearchQuery ? (note.value ? 'exact' : 'meaning') : null}
           onMenuAction={handleMenuAction}
+          menuFlags={menuFlags}
           allFolders={folders}
           selectedFolder={selectedFolder}
           showFolder={showFolders}
@@ -904,6 +935,7 @@ export default function NotesList({
     [
       folders,
       handleMenuAction,
+      menuFlags,
       selectedFolder,
       showFolders,
       isSelecting,
@@ -1055,7 +1087,11 @@ export default function NotesList({
             <input
               type='search'
               aria-label={t('search.title')}
-              placeholder={t('folderView.searchPlaceholder')}
+              placeholder={
+                LOCAL_AI_ENABLED
+                  ? t('folderView.searchPlaceholderShortcut', { shortcut: ASK_SHORTCUT })
+                  : t('folderView.searchPlaceholder')
+              }
               value={searchQuery}
               maxLength={SEARCH_QUERY_MAX_LENGTH}
               onChange={(e) => onSearchChange(e.target.value)}

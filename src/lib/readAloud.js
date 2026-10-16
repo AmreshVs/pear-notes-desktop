@@ -1,8 +1,10 @@
+import { isReadAloudEnabled } from '@pear-notes/core/constant.js'
 import { detectTextLanguage } from '@pear-notes/core/store/services/localAiLanguage.js'
 
 const synth = () => (typeof window !== 'undefined' ? window.speechSynthesis : null)
 
 export const canReadAloud = () => {
+  if (!isReadAloudEnabled()) return false
   const voices = synth()?.getVoices() ?? null
   return Boolean(voices) && (voices.length === 0 || voices.some((voice) => voice.localService))
 }

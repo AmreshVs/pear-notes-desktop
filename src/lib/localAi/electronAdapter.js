@@ -2,10 +2,13 @@ import { METERED_CONNECTION_KEY } from '@pear-notes/core/constant.js'
 import {
   LOCAL_AI_DEVICE_STATUS,
   LOCAL_AI_ERROR,
+  LOCAL_AI_FEATURE,
   LOCAL_AI_NETWORK,
   LOCAL_AI_UNSUPPORTED_REASON
 } from '@pear-notes/core/store/services/localAiCatalog.js'
 import { holdAiJobs } from '@pear-notes/core/store/services/localAiJobs.js'
+import { getLocalAiFeatureConfig } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { store } from '@pear-notes/core/store/store.js'
 import { getMediaSyncFlag } from '@pear-notes/core/utils.js'
 
 import { attachmentText } from './attachmentText'
@@ -124,7 +127,13 @@ export async function transcribePcm(pcm, feature, featureConfig, { onProgress } 
 }
 
 export async function extractTextFromImage(image, { onProgress } = {}) {
-  const { text } = await invokeWithProgress('localAiExtractText', { image }, onProgress)
+  const featureConfig =
+    getLocalAiFeatureConfig(store.getState(), LOCAL_AI_FEATURE.EXTRACT_TEXT) ?? {}
+  const { text } = await invokeWithProgress(
+    'localAiExtractText',
+    { image, featureConfig },
+    onProgress
+  )
   return text
 }
 
