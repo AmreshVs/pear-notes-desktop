@@ -2,7 +2,7 @@
   "name": "pear-notes-desktop",
   "productName": "Pear Notes",
   "version": "1.1.0",
-  "buildNumber": 15,
+  "buildNumber": 16,
   "description": "Private notes, encrypted on-device and synced peer-to-peer.",
   "author": "AmreshVs",
   "main": "electron/main.cjs",
