@@ -34,6 +34,7 @@ import { getNotesData, selectNote } from '@pear-notes/core/store/slices/notesSli
 import { useAskVault } from '../../hooks/useAskVault'
 import { useLocalToggle } from '../../hooks/useLocalToggle'
 import { REMINDERS_TOGGLE_KEY } from '../../hooks/useReminders'
+import { openReportProblem } from '../../lib/localAi/reportProblem'
 
 import { AskVaultDraftActions, AskVaultDraftCard } from './AskVaultDraft'
 import AskVaultRecent from './AskVaultRecent'
@@ -278,6 +279,15 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
     )
   }
 
+  const renderReportLink = () => (
+    <button
+      onClick={() => openReportProblem(t('localAi.reportSubject'))}
+      className='self-start text-xs font-bold text-accent-primary hover:underline'
+    >
+      {t('localAi.actions.reportProblem')}
+    </button>
+  )
+
   const renderActions = (turn) => {
     const copied = copiedId === turn.id
     const saved = savedId === turn.id
@@ -370,6 +380,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
             onFollowUp={focusFollowUp}
             onCopy={handleCopy}
           />
+          {renderReportLink()}
         </div>
       )
     }
@@ -383,6 +394,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
         )}
         {renderSources(turn)}
         {renderActions(turn)}
+        {renderReportLink()}
       </div>
     )
   }
