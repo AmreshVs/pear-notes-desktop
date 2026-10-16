@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import {
+  ArrowLeft,
   Database,
   HardDrive,
   History,
@@ -43,6 +44,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
   const { t } = useTranslation()
   const [selectedSection, setSelectedSection] = useState(initialSection)
   const [isExiting, setIsExiting] = useState(false)
+  const [addingDevice, setAddingDevice] = useState(false)
   const contentScrollRef = useRef(null)
 
   const activeSection = selectedSection
@@ -57,9 +59,16 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
         })
       : t('layouts.linkDevices')
 
+  const isAddingDevice = addingDevice && activeSection === 'devices'
+
   useEffect(() => {
     if (contentScrollRef.current) contentScrollRef.current.scrollTop = 0
-  }, [activeSection])
+  }, [activeSection, isAddingDevice])
+
+  const selectSection = useCallback((id) => {
+    setAddingDevice(false)
+    setSelectedSection(id)
+  }, [])
 
   const handleAnimatedClose = useCallback(() => {
     setIsExiting(true)
@@ -141,7 +150,7 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
                   return (
                     <button
                       key={section.id}
-                      onClick={() => setSelectedSection(section.id)}
+                      onClick={() => selectSection(section.id)}
                       className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors duration-0 relative group
                         ${
                           isActive
@@ -174,9 +183,25 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
         <div className='flex-1 flex flex-col overflow-hidden bg-transparent relative z-10'>
           <div className='px-10 py-10 flex items-center justify-between'>
             <div>
-              <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
-                {headerSection?.title || headerSection?.name || t('settings.title')}
-              </h2>
+              {isAddingDevice ? (
+                <div className='flex items-center gap-3'>
+                  <button
+                    type='button'
+                    onClick={() => setAddingDevice(false)}
+                    aria-label={t('sync.add.back')}
+                    className='p-2 -ml-2 text-text-tertiary hover:text-text-primary hover:bg-overlay-subtle rounded-xl transition-all active:scale-90'
+                  >
+                    <ArrowLeft className='w-6 h-6' />
+                  </button>
+                  <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
+                    {t('sync.add.title')}
+                  </h2>
+                </div>
+              ) : (
+                <h2 className='text-text-primary text-3xl font-black tracking-tighter'>
+                  {headerSection?.title || headerSection?.name || t('settings.title')}
+                </h2>
+              )}
               <p className='text-sm mt-2 text-text-tertiary font-medium opacity-70 max-w-md leading-relaxed'>
                 {activeSection === 'general' && t('settings.descriptions.general')}
                 {activeSection === 'privacy' && t('settings.privacy.screenDesc')}
@@ -202,23 +227,25 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             {activeSection === 'privacy' && <PrivacySettings />}
             {LOCAL_AI_ENABLED && activeSection === 'onDeviceAi' && <LocalAiSettings />}
             {isMultiVaultEnabled() && activeSection === 'vaults' && (
-              <VaultsSettings onOpenDevices={() => setSelectedSection('devices')} />
+              <VaultsSettings onOpenDevices={() => selectSection('devices')} />
             )}
-            {activeSection === 'devices' && <DevicesSettings />}
+            {activeSection === 'devices' && (
+              <DevicesSettings adding={isAddingDevice} onAdd={() => setAddingDevice(true)} />
+            )}
             {activeSection === 'sync' && (
-              <SyncSettings onOpenDiagnostics={() => setSelectedSection('debug')} />
+              <SyncSettings onOpenDiagnostics={() => selectSection('debug')} />
             )}
             {activeSection === 'activity' && <ActivitySettings />}
             {activeSection === 'backup' && <BackupSettings />}
             {activeSection === 'storage' && (
               <DeviceStorageSettings
-                onOpenOnDeviceAi={() => setSelectedSection('onDeviceAi')}
-                onOpenVaultStorage={() => setSelectedSection('vaultStorage')}
+                onOpenOnDeviceAi={() => selectSection('onDeviceAi')}
+                onOpenVaultStorage={() => selectSection('vaultStorage')}
               />
             )}
             {activeSection === 'vaultStorage' && <VaultStorageSettings />}
             {activeSection === 'debug' && (
-              <DebugSettings onOpenErrorLog={() => setSelectedSection('errorLog')} />
+              <DebugSettings onOpenErrorLog={() => selectSection('errorLog')} />
             )}
             {activeSection === 'errorLog' && <ErrorLogSettings />}
           </div>

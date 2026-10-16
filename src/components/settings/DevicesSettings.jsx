@@ -53,18 +53,19 @@ function getPlatformName(platform) {
   return PLATFORM_NAMES[platform] || platform
 }
 
-export default function DevicesSettings() {
+export default function DevicesSettings({ adding, onAdd }) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const syncedDevices = useSelector(getSyncedDevices)
   const vaults = useSelector(getVaults)
   const leaderPlan = useSelector(getSyncLeaderPlan)
   const [leaderAction, setLeaderAction] = useState(null)
-  const [isAdding, setIsAdding] = useState(false)
   const vaultName = getVaultLabel(
     vaults.find((vault) => vault.current),
     t
   )
+
+  const otherDevices = syncedDevices.filter((d) => !d.isLocal)
 
   const openLeaderAction = (device, isIndexer) => {
     dispatch(clearIndexerError())
@@ -77,24 +78,19 @@ export default function DevicesSettings() {
     dispatch(setDeviceIndexer({ key: device.key, localKey: device.localKey, isIndexer }))
   }
 
+  if (adding) {
+    return (
+      <div className='max-w-2xl mx-auto px-6 py-4'>
+        <AddDevicePanel name={vaultName} />
+      </div>
+    )
+  }
+
   return (
     <div className='max-w-2xl mx-auto px-6 py-4 space-y-6'>
-      <div className='flex items-center justify-between gap-4'>
-        <p className='text-sm text-text-tertiary leading-relaxed'>
-          {t('sync.devices.screenDesc', { name: vaultName })}
-        </p>
-        <button
-          type='button'
-          onClick={() => setIsAdding((open) => !open)}
-          aria-expanded={isAdding}
-          className='shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-accent-primary text-accent-on-primary hover:bg-accent-primary-hover transition-colors active:scale-95'
-        >
-          <Plus className='w-4 h-4' />
-          {t('sync.add.button')}
-        </button>
-      </div>
-
-      {isAdding && <AddDevicePanel name={vaultName} />}
+      <p className='text-sm text-text-tertiary leading-relaxed'>
+        {t('sync.devices.screenDesc', { name: vaultName })}
+      </p>
 
       <div className='space-y-6'>
         <div className='space-y-1'>
@@ -121,28 +117,32 @@ export default function DevicesSettings() {
             {t('sync.devices.otherDevices')}
           </h4>
           <div className='grid gap-4'>
-            {syncedDevices.filter((d) => !d.isLocal).length > 0 ? (
-              syncedDevices
-                .filter((d) => !d.isLocal)
-                .map((device) => (
-                  <DeviceItem
-                    key={device.key}
-                    device={device}
-                    isOther
-                    vaultName={vaultName}
-                    leaderPlan={leaderPlan}
-                    onLeaderAction={openLeaderAction}
-                  />
-                ))
-            ) : (
-              <div className='p-6 bg-bg-tertiary/30 border border-dashed border-border-primary rounded-2xl flex flex-col items-center text-center space-y-2'>
-                <div className='w-10 h-10 bg-bg-panel/30 rounded-full flex items-center justify-center text-text-tertiary'>
-                  <Smartphone className='w-5 h-5 opacity-50' />
-                </div>
-                <p className='text-xs text-text-tertiary italic'>{t('sync.devices.empty')}</p>
+            {otherDevices.map((device) => (
+              <DeviceItem
+                key={device.key}
+                device={device}
+                isOther
+                vaultName={vaultName}
+                leaderPlan={leaderPlan}
+                onLeaderAction={openLeaderAction}
+              />
+            ))}
+            <button
+              type='button'
+              onClick={onAdd}
+              className='p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 text-left hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors active:scale-[0.99]'
+            >
+              <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary'>
+                <Plus className='w-7 h-7' />
               </div>
-            )}
+              <span className='px-2 font-bold text-base text-accent-primary'>
+                {t('sync.add.button')}
+              </span>
+            </button>
           </div>
+          {otherDevices.length === 0 && (
+            <p className='px-2 pt-2 text-xs text-text-tertiary'>{t('sync.devices.empty')}</p>
+          )}
 
           <SyncLeadersPanel
             plan={leaderPlan}

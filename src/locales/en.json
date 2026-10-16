@@ -573,6 +573,7 @@
     "add": {
       "button": "Add a device",
       "title": "Add a device",
+      "back": "Back to devices",
       "idleTitle": "Add a device to {{name}}",
       "idleDesc": "Every device you add can read and edit all notes in {{name}}. You approve each one before it joins.",
       "generateBtn": "Create invite link",
