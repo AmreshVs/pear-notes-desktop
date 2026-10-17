@@ -1,6 +1,7 @@
 const { spawn } = require('child_process')
 const fs = require('fs')
 const path = require('path')
+const { macSdkEnv } = require('./mac-sdk-env.cjs')
 
 const STAMP = path.join(__dirname, '..', 'dist', '.dev-build')
 const POLL_MS = 300
@@ -17,7 +18,7 @@ function freshDevBuild() {
 }
 
 function launch() {
-  const child = spawn('electron-forge start', { stdio: 'inherit', shell: true })
+  const child = spawn('electron-forge start', { stdio: 'inherit', shell: true, env: macSdkEnv() })
   child.on('exit', (code) => process.exit(code ?? 0))
 }
 
