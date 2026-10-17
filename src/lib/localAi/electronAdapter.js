@@ -109,6 +109,11 @@ async function deleteModel(name) {
   await invoke('localAiDeleteModel', { name })
 }
 
+async function findIncompleteModels(names) {
+  const result = await invoke('localAiFindIncompleteModels', { names })
+  return result.names ?? []
+}
+
 async function closeAndWipe() {
   await invoke('localAiCloseAndWipe')
 }
@@ -231,6 +236,7 @@ export const electronAdapter = {
   download,
   cancel,
   deleteModel,
+  findIncompleteModels,
   closeAndWipe,
   clearAskCache,
   embedTexts,

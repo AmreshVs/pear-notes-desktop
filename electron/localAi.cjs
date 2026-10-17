@@ -392,29 +392,93 @@ async function getDownloadedBytes(sdk, catalog, name) {
   return catalog.LOCAL_AI_REGISTRY_MODELS[name]?.bytes ?? 0
 }
 
+function getCoremlSetDir(set) {
+  return path.join(getModelsDir(), 'sets', set.setKey)
+}
+
+async function hasCompleteCoremlSet(set) {
+  const dir = getCoremlSetDir(set)
+  for (const file of set.files) {
+    try {
+      const stat = await fs.promises.stat(path.join(dir, file.path))
+      if (!stat.isFile() || stat.size !== file.bytes) return false
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
+async function hasFlatModelFile(name, catalog) {
+  try {
+    const stat = await fs.promises.stat(path.join(getModelsDir(), catalog.getFlatModelFile(name)))
+    return stat.size === catalog.LOCAL_AI_REGISTRY_MODELS[name]?.bytes
+  } catch {
+    return false
+  }
+}
+
+async function findIncompleteModels(event, { names }) {
+  const catalog = await loadCatalog()
+  const incomplete = []
+  for (const name of names ?? []) {
+    const set = catalog.getCoremlSet(name, process.platform)
+    const flatFile = catalog.getFlatModelFile(name)
+    if (set ? !(await hasCompleteCoremlSet(set)) : flatFile && !(await hasFlatModelFile(name, catalog))) {
+      incomplete.push(name)
+    }
+  }
+  return { names: incomplete }
+}
+
+function trackSetProgress(totalBytes, send) {
+  let doneBytes = 0
+  let fileTotal = 0
+  let fileDone = 0
+  return (progress) => {
+    if (fileTotal > 0 && (progress.total !== fileTotal || progress.downloaded < fileDone)) {
+      doneBytes += fileTotal
+    }
+    fileTotal = progress.total
+    fileDone = progress.downloaded
+    send(Math.min(totalBytes, doneBytes + fileDone), totalBytes)
+  }
+}
+
 async function download(event, { requestId, name }) {
   const pending = { sdkRequestId: null, cancelled: false, discard: false }
   pendingDownloads.set(requestId, pending)
   try {
     const [sdk, catalog] = await Promise.all([loadSdk(), loadCatalog()])
-    const operation = sdk.downloadAsset({
-      assetSrc: registryAsset(sdk, catalog, name),
-      onProgress: (progress) => {
-        if (event.sender.isDestroyed()) return
-        event.sender.send('local-ai:download-progress', {
-          requestId,
-          downloadedBytes: progress.downloaded,
-          totalBytes: progress.total
-        })
-      },
-      requireSecureTransport: true,
-      requireHttpChecksum: true
-    })
-    pending.sdkRequestId = operation.requestId
-    if (pending.cancelled) {
-      sdk.cancel({ requestId: operation.requestId, clearCache: pending.discard }).catch(() => {})
+    const set = catalog.getCoremlSet(name, process.platform)
+    const send = (downloadedBytes, totalBytes) => {
+      if (event.sender.isDestroyed()) return
+      event.sender.send('local-ai:download-progress', { requestId, downloadedBytes, totalBytes })
     }
-    await operation
+    const attempts = set ? 2 : 1
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      if (pending.cancelled) throw new LocalAiError(catalog.LOCAL_AI_ERROR.DOWNLOAD_FAILED, 'cancelled')
+      const operation = sdk.downloadAsset({
+        assetSrc: registryAsset(sdk, catalog, name),
+        onProgress: set
+          ? trackSetProgress(catalog.getCoremlSetBytes(set), send)
+          : (progress) => send(progress.downloaded, progress.total),
+        requireSecureTransport: true,
+        requireHttpChecksum: true
+      })
+      pending.sdkRequestId = operation.requestId
+      if (pending.cancelled) {
+        sdk.cancel({ requestId: operation.requestId, clearCache: pending.discard }).catch(() => {})
+      }
+      await operation
+      if (!set || (await hasCompleteCoremlSet(set))) break
+      console.warn(`[local-ai] ${name}: Core ML files missing after download ${attempt}`)
+      if (attempt === attempts) {
+        await fs.promises.rm(path.join(getModelsDir(), set.flatFile), { force: true }).catch(() => {})
+        throw new LocalAiError(catalog.LOCAL_AI_ERROR.DOWNLOAD_FAILED, 'Core ML files missing')
+      }
+    }
+    if (set) await fs.promises.rm(path.join(getModelsDir(), set.flatFile), { force: true }).catch(() => {})
     return { bytes: await getDownloadedBytes(sdk, catalog, name) }
   } finally {
     pendingDownloads.delete(requestId)
@@ -438,6 +502,11 @@ async function deleteModel(event, { name }) {
   const info = await sdk.getModelInfo({ name })
   for (const cacheFile of info?.cacheFiles ?? []) {
     if (cacheFile?.path) await fs.promises.rm(cacheFile.path, { force: true })
+  }
+  const set = (await loadCatalog()).getCoremlSet(name, process.platform)
+  if (set) {
+    await fs.promises.rm(getCoremlSetDir(set), { recursive: true, force: true })
+    await fs.promises.rm(path.join(getModelsDir(), set.flatFile), { force: true })
   }
   return {}
 }
@@ -463,7 +532,11 @@ async function closeAndWipe() {
 function loadSpeechModel(sdk, catalog, feature, featureConfig) {
   const names = catalog.getFeatureRegistryNames(feature, featureConfig)
   const [modelName, vadName] = names
-  return ensureModelLoaded(sdk, names.join('|'), () => {
+  return ensureModelLoaded(sdk, names.join('|'), async () => {
+    const { names: missing } = await findIncompleteModels(null, { names: [modelName] })
+    if (missing.length) {
+      throw new LocalAiError(catalog.LOCAL_AI_ERROR.MODEL_MISSING, `${modelName} files missing`)
+    }
     if (catalog.LOCAL_AI_REGISTRY_MODELS[modelName]?.engine === PARAKEET_ENGINE) {
       return sdk.loadModel({ modelSrc: registryAsset(sdk, catalog, modelName), modelType: PARAKEET_ENGINE })
     }
@@ -1116,6 +1189,7 @@ function setupLocalAi(setupOptions) {
   handle('local-ai:device-support', 'TASK_FAILED', async () => ({ support: await getDeviceSupport() }))
   handle('local-ai:disk-space', 'TASK_FAILED', async () => ({ disk: await getDiskSpace() }))
   handle('local-ai:download', 'DOWNLOAD_FAILED', download)
+  handle('local-ai:find-incomplete-models', 'TASK_FAILED', findIncompleteModels)
   handle('local-ai:cancel', 'TASK_FAILED', cancel)
   handle('local-ai:delete-model', 'TASK_FAILED', deleteModel)
   handle('local-ai:close-and-wipe', 'TASK_FAILED', closeAndWipe)
