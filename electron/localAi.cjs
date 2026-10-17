@@ -28,6 +28,7 @@ const PCM_BYTES_PER_SAMPLE = 2
 const TRANSLATE_BATCH_PARAGRAPHS = 8
 const TASK_PROGRESS_CHANNEL = 'local-ai:task-progress'
 const LIVE_TEXT_CHANNEL = 'local-ai:live-text'
+const DOWNLOAD_PROGRESS_INTERVAL_MS = 250
 
 let options = null
 let catalogPromise = null
@@ -451,8 +452,11 @@ async function download(event, { requestId, name }) {
   try {
     const [sdk, catalog] = await Promise.all([loadSdk(), loadCatalog()])
     const set = catalog.getCoremlSet(name, process.platform)
+    let lastSentAt = 0
     const send = (downloadedBytes, totalBytes) => {
-      if (event.sender.isDestroyed()) return
+      const now = Date.now()
+      if (now - lastSentAt < DOWNLOAD_PROGRESS_INTERVAL_MS || event.sender.isDestroyed()) return
+      lastSentAt = now
       event.sender.send('local-ai:download-progress', { requestId, downloadedBytes, totalBytes })
     }
     const attempts = set ? 2 : 1
