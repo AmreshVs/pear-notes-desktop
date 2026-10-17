@@ -1,21 +1,7 @@
 const { execSync } = require('child_process')
 const path = require('path')
 const fs = require('fs')
-
-// A newer Command Line Tools SDK than the selected Xcode breaks its linker (unknown architecture arm64e.x1).
-function macSdkEnv() {
-  if (process.platform !== 'darwin' || process.env.SDKROOT) return process.env
-  try {
-    const sdk = execSync('xcrun --sdk macosx --show-sdk-path', {
-      stdio: ['ignore', 'pipe', 'ignore']
-    })
-      .toString()
-      .trim()
-    return sdk ? { ...process.env, SDKROOT: sdk } : process.env
-  } catch {
-    return process.env
-  }
-}
+const { macSdkEnv } = require('./mac-sdk-env.cjs')
 
 const env = macSdkEnv()
 
