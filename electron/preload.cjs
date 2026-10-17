@@ -104,6 +104,8 @@ contextBridge.exposeInMainWorld('electronBridge', {
   },
   localAiCancel: (payload) => ipcRenderer.invoke('local-ai:cancel', payload),
   localAiDeleteModel: (payload) => ipcRenderer.invoke('local-ai:delete-model', payload),
+  localAiFindIncompleteModels: (payload) =>
+    ipcRenderer.invoke('local-ai:find-incomplete-models', payload),
   localAiCloseAndWipe: () => ipcRenderer.invoke('local-ai:close-and-wipe'),
   localAiClearAskCache: () => ipcRenderer.invoke('local-ai:clear-ask-cache'),
   localAiTranscribe: (payload) => ipcRenderer.invoke('local-ai:transcribe', payload),

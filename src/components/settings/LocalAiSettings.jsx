@@ -23,6 +23,7 @@ import {
   getFeatureRegistryNames,
   getFeatureTiers,
   getModelDocsUrl,
+  getModelDownloadBytes,
   getOnDemandModelNames,
   getRegistryNamesBytes,
   getTextModelLabel,
@@ -137,7 +138,7 @@ function AskModelPicker({ featureConfig, device }) {
       model,
       label: t('settings.onDeviceAi.features.summarizeRecordings.advancedModel', {
         model: getTextModelLabel(model),
-        size: formatBytes(LOCAL_AI_REGISTRY_MODELS[model]?.bytes ?? 0)
+        size: formatBytes(getModelDownloadBytes(model))
       }),
       fits: canRunModels([model], device.totalMemoryBytes)
     }))
@@ -180,7 +181,7 @@ function AskModelPicker({ featureConfig, device }) {
 
 function buildModelRow(state, name) {
   const model = state.models[name]
-  const expected = model?.totalBytes || LOCAL_AI_REGISTRY_MODELS[name]?.bytes || 0
+  const expected = model?.totalBytes || getModelDownloadBytes(name) || 0
   const bytes =
     !model || model.status === LOCAL_AI_MODEL_STATUS.READY
       ? expected
