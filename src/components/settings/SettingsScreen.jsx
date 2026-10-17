@@ -176,6 +176,9 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
           </div>
 
           <div className='px-6 pb-6 flex flex-col items-center gap-2'>
+            <p className='text-text-tertiary text-xs text-center opacity-50 select-none'>
+              {getAppVersionLabel(appVersion)}
+            </p>
             <button
               type='button'
               onClick={() => window.electronBridge.openExternal(FAQ_URL)}
@@ -183,9 +186,6 @@ export default function SettingsScreen({ onClose, initialSection = 'general' }) 
             >
               {t('settings.helpAndFaq')}
             </button>
-            <p className='text-text-tertiary text-xs text-center opacity-50 select-none'>
-              {getAppVersionLabel(appVersion)}
-            </p>
           </div>
         </div>
 
