@@ -4,6 +4,7 @@ import path from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
+import coreInstall from './coreInstall.cjs'
 import { formatDuration, streamCommand } from './progress.mjs'
 import { storeBuild } from '../electron/storeBuild.cjs'
 
@@ -522,6 +523,18 @@ function notaryAuth(config) {
   ]
 }
 
+function checkCorePin() {
+  const { level, detail } = coreInstall.checkCorePinRef(root)
+  if (level === 'fail') {
+    throw new ReleaseError(
+      detail,
+      'Pin core again: node ../scripts/bump.js, then Mobile + desktop > Pin a core version'
+    )
+  }
+  if (level === 'warn') warn(detail)
+  else ok(detail)
+}
+
 function checkNotaryCredentials(config) {
   const history = run('xcrun', ['notarytool', 'history', ...notaryAuth(config)])
   if (history.status !== 0) {
@@ -795,6 +808,7 @@ async function main() {
   requireIdentity(config.MAS_CODESIGN_IDENTITY, 'application signing identity')
   requireIdentity(config.MAS_INSTALLER_IDENTITY, 'installer signing identity')
   checkProfile(config)
+  checkCorePin()
   if (config.ASC_KEY_ID && config.ASC_ISSUER_ID) await checkAppRecord(config)
 
   if (args.checkOnly) {
@@ -848,6 +862,7 @@ async function mainDmg(args, config) {
   }
   ok(`bundle id ${config.APPLE_BUNDLE_ID}`)
   requireIdentity(config.MAC_CODESIGN_IDENTITY, 'Developer ID Application identity')
+  checkCorePin()
   checkNotaryCredentials(config)
 
   if (args.checkOnly) {

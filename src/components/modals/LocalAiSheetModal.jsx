@@ -30,6 +30,7 @@ import { formatBytes } from '@pear-notes/core/utils.js'
 
 import { useLocalAiSheet } from '../../hooks/useLocalAiSheet'
 import { copyToClipboard } from '../../lib/clipboard'
+import { openReportProblem } from '../../lib/localAi/reportProblem'
 import { formatTime } from '../../utils/formatters'
 
 import ImageDetailsPreview from './ImageDetailsPreview'
@@ -38,7 +39,6 @@ import LocalAiWorkProgress from './LocalAiWorkProgress'
 import RewriteChanges from './RewriteChanges'
 
 const COPIED_RESET_MS = 2000
-const REPORT_EMAIL = 'vsamreshpro@gmail.com'
 
 const NOTE_TASK_ERRORS = { empty: 'emptyNote', failed: 'failedNoteTask' }
 const SELECTION_ERRORS = { empty: 'emptySelection', tooLong: 'selectionTooLong' }
@@ -442,11 +442,7 @@ export default function LocalAiSheetModal({
 
           {phase === 'preview' && showReportLink && (
             <button
-              onClick={() =>
-                window.electronBridge.openExternal(
-                  `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(t('localAi.reportSubject'))}`
-                )
-              }
+              onClick={() => openReportProblem(t('localAi.reportSubject'))}
               className='mt-2 text-xs font-bold text-accent-primary hover:underline'
             >
               {t('localAi.actions.reportProblem')}
