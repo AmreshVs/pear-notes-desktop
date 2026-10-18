@@ -363,7 +363,25 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: \
             -s -k "$keychain_password" "$keychain" > /dev/null
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-          security find-identity -v
+          identities=$(security find-identity -v)
+          echo "$identities"
+          fail=0
+          need() {
+            case "$2" in
+              "$3"*) ;;
+              *) echo "::error::The $1 secret must start with \"$3\""; fail=1; return ;;
+            esac
+            grep -qF "\"$2\"" <<< "$identities" || {
+              echo "::error::MAC_CERTS_P12 has no identity named exactly like the $1 secret"
+              fail=1
+            }
+          }
+          if [ "$BUILD_DMG" = true ]; then need MAC_CODESIGN_IDENTITY "$MAC_CODESIGN_IDENTITY" "Developer ID Application: "; fi
+          if [ "$BUILD_PKG" = true ]; then
+            need MAS_CODESIGN_IDENTITY "$MAS_CODESIGN_IDENTITY" "3rd Party Mac Developer Application: "
+            need MAS_INSTALLER_IDENTITY "$MAS_INSTALLER_IDENTITY" "3rd Party Mac Developer Installer: "
+          fi
+          [ "$fail" = 0 ] || exit 1
 
           mkdir -p ~/.appstoreconnect/private_keys
           printf '%s\n' "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
