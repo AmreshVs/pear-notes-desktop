@@ -7,7 +7,7 @@
   "author": "AmreshVs",
   "main": "electron/main.cjs",
   "type": "module",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "postinstall": "node scripts/postinstall.cjs",
     "setup": "node scripts/setup.cjs",

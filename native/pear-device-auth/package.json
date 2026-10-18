@@ -4,7 +4,7 @@
   "description": "Cross-platform device authentication (Touch ID / Windows Hello / polkit) for Pear Notes desktop.",
   "main": "index.js",
   "gypfile": true,
-  "license": "MIT",
+  "license": "SEE LICENSE IN ../../LICENSE",
   "dependencies": {
     "bindings": "^1.5.0",
     "node-addon-api": "^8.3.0"

@@ -1,5 +1,6 @@
 {
   "name": "pear-notes-desktop-local-ai",
+  "license": "SEE LICENSE IN ../LICENSE",
   "private": true,
   "type": "module",
   "dependencies": {

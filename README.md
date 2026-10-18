@@ -1,45 +1,37 @@
-# Pear + React + TailwindCSS (Vite Edition)
+# Pear Notes for macOS, Windows and Linux
 
-<img src="https://s3.brnbw.com/CleanShot-2025-08-07-at-10.01.38-2x-GH7rgUEYx7.png" width="800" />
+Private notes, encrypted on your devices and synced peer to peer. There's no account and no server: your devices find each other and sync directly.
 
-A minimal Pear desktop app setup with React and Tailwind CSS v4 via Vite.
+Website and downloads: https://amreshvs.github.io/pear-notes/
 
-Build resilient P2P with the stack you already know.
+## What's in the app
 
-🍐 [Pear](https://pears.com) - P2P desktop app runtime
+- Notes, folders, checklists, images, PDFs, audio and file attachments, with full-text search
+- Sync between your computers, phones and tablets over a peer-to-peer network (Holepunch: Hyperswarm, Autobase, Hyperdrive)
+- Encryption at rest, with the vault key kept in the system keychain
+- Note lock with Touch ID, Windows Hello or a custom password, plus screenshot protection
+- Encrypted backups
+- On-device AI that never leaves the computer: voice typing, transcription, text extraction, summaries, translation, and Ask your notes
 
-## Setup
+## Source-available, not open source
 
-```bash
-npm install
-```
+This repository is published so you can read and audit how the app works. It is licensed under the [PolyForm Strict License 1.0.0](LICENSE): you may read and study the code for non-commercial purposes, but you may not modify it, redistribute it, or publish it as an app. The name, logo and icon are covered separately by [TRADEMARK.md](TRADEMARK.md).
 
-## Development
+**This repository doesn't build on its own.** The backend, sync and encryption logic live in `@pear-notes/core`, which is private, and the app installs it from a private repository.
 
-```bash
-npm run dev
-```
+Pull requests aren't accepted. Bug reports are welcome in Issues. For security issues, see [SECURITY.md](SECURITY.md).
 
-Runs:
+## Layout
 
-- Vite in watch mode
-- Tailwind CSS in watch mode
-- Pear dev server with hot reload
-
-## Build
-
-```bash
-npm run build
-```
+| Path | What it is |
+|---|---|
+| `electron/` | Main process: windows, IPC, keychain storage, the Bare sidecar that runs core, and the on-device AI host |
+| `src/` | Renderer (React + Vite): components, hooks, platform logic and locales |
+| `local-ai/` | Isolated package for the QVAC on-device AI SDK |
+| `native/pear-device-auth/` | Native addon for Touch ID, Windows Hello and polkit |
+| `scripts/`, `forge.config.cjs` | Build, signing and release for the Mac App Store, DMG, Microsoft Store and Linux |
+| `docs/` | Release guides per platform |
 
 ## License
 
-MIT
-
-dev key - pear://5r36ucqowh694j348synyh4ur9pqwope9en837xywb5p6yjcib9y
-
-pear stage production
-pear release production
-pear seed production
-
-production key - pear://wx5kczf8htshsmg4mh5cit1g5q5uz5qbb4hq59h3jp3ifmumeqgo
+Copyright 2025–2026 Amresh Vs. Licensed under the [PolyForm Strict License 1.0.0](LICENSE). Third-party software, fonts and models are listed in [NOTICE.md](NOTICE.md).

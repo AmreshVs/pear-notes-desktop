@@ -19,3 +19,12 @@ local-ai/qvac/
 flatpak-build/
 flatpak-repo/
 *.flatpak
+
+# Local agent and tool config
+.agents/
+.argent/
+.gemini/
+.codex/
+.mcp.json
+.vscode/mcp.json
+skills-lock.json
