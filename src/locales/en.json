@@ -1379,6 +1379,11 @@
       "dismiss": "Dismiss"
     }
   },
+  "keyringWarning": {
+    "title": "Your encryption key isn't protected",
+    "description": "No system keyring was found, so the key that encrypts your notes is saved in a plain file on this computer. Install and unlock GNOME Keyring or KWallet, then restart Pear Notes.",
+    "dismiss": "Dismiss"
+  },
   "linkModal": {
     "addLink": "Add link",
     "linkText": "Link text",

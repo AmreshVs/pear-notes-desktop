@@ -19,6 +19,7 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 const PearRuntime = require('pear-runtime')
+const secretStore = require('./secretStore.cjs')
 const { createVaultKeys } = require('./vaultKeys.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
@@ -517,7 +518,7 @@ function setupIPC() {
     return 'quit'
   })
 
-  const vaultKeys = createVaultKeys({ getStoragePath, getAppDir })
+  const vaultKeys = createVaultKeys({ getStoragePath, getAppDir, isDev })
 
   ipcMain.on('vault-key:get', (event) => {
     event.returnValue = vaultKeys.getDbEncryptionKey()
@@ -541,7 +542,11 @@ function setupIPC() {
   })
 
   ipcMain.on('get-app-flags', (event) => {
-    event.returnValue = { isMas, buildNumber: getBuildNumber() }
+    event.returnValue = {
+      isMas,
+      buildNumber: getBuildNumber(),
+      keyringMissing: process.platform === 'linux' && !secretStore.isAvailable()
+    }
   })
 
   ipcMain.on('app-reload', () => {

@@ -41,6 +41,7 @@ import appIcon from '../build/icon.png'
 
 import AppToast from './components/common/AppToast'
 import BackupProgressBanner from './components/common/BackupProgressBanner'
+import KeyringWarningBanner from './components/common/KeyringWarningBanner'
 import MergeNotesToast from './components/common/MergeNotesToast'
 import NoteLockPasswordProvider from './components/common/NoteLockPasswordProvider'
 import PairingStatusOverlay from './components/common/PairingStatusOverlay'
@@ -376,6 +377,7 @@ function App() {
           <PairingStatusOverlay />
           <DeviceRemovedModal />
           <BackupProgressBanner />
+          <KeyringWarningBanner />
           <AppToast />
           {updateStatus?.mandatory && (
             <UpdateRequiredModal

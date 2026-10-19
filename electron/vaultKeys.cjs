@@ -8,7 +8,7 @@ const VAULT_ENTROPY_SECRET = 'vaultEntropy'
 const LEGACY_CONFIG_FILE = 'desktop-config.json'
 const ENV_KEY_NAME = 'PEAR_NOTES_ENCRYPTION_KEY='
 
-function createVaultKeys({ getStoragePath, getAppDir }) {
+function createVaultKeys({ getStoragePath, getAppDir, isDev }) {
   const legacyConfigFile = () => path.join(getStoragePath(), LEGACY_CONFIG_FILE)
 
   function takeLegacyEncryptionKey() {
@@ -32,6 +32,7 @@ function createVaultKeys({ getStoragePath, getAppDir }) {
   }
 
   function readEnvEncryptionKey() {
+    if (!isDev) return ''
     try {
       const envPath = path.join(getAppDir(), '.env')
       if (!fs.existsSync(envPath)) return ''

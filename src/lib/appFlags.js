@@ -1,4 +1,4 @@
-const DEFAULT_FLAGS = { isMas: false, buildNumber: '' }
+const DEFAULT_FLAGS = { isMas: false, buildNumber: '', keyringMissing: false }
 
 let cachedFlags = null
 
@@ -19,6 +19,10 @@ function readFlags() {
 
 export function isMasBuild() {
   return readFlags().isMas === true
+}
+
+export function isKeyringMissing() {
+  return readFlags().keyringMissing === true
 }
 
 export function getBuildNumber() {

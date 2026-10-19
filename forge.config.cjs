@@ -597,6 +597,28 @@ async function hardenPackagedCore(buildPath) {
   )
 }
 
+// Not plugin-fuses: osx-sign can't --force over the invalid signature a flip leaves, so re-sign ad hoc first.
+async function lockDownElectronFuses(buildPath, platform) {
+  const { flipFuses, FuseVersion, FuseV1Options } = require('@electron/fuses')
+  const resources = path.dirname(buildPath)
+  const target =
+    platform === 'darwin'
+      ? path.join(resources, '..', 'MacOS', 'Electron')
+      : path.join(resources, '..', platform === 'win32' ? 'electron.exe' : 'electron')
+  await flipFuses(target, {
+    version: FuseVersion.V1,
+    resetAdHocDarwinSignature: false,
+    [FuseV1Options.RunAsNode]: false,
+    [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+    [FuseV1Options.EnableNodeCliInspectArguments]: false
+  })
+  if (platform !== 'darwin') return
+  const framework = path.join(resources, '..', 'Frameworks', 'Electron Framework.framework')
+  require('child_process').execFileSync('codesign', ['--sign', '-', '--force', framework], {
+    stdio: 'inherit'
+  })
+}
+
 function stripPackageScripts(buildPath) {
   const manifestPath = path.join(buildPath, 'package.json')
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
@@ -645,20 +667,9 @@ module.exports = {
       minifyElectronEntries(buildPath)
       await hardenPackagedCore(buildPath)
       stripPackageScripts(buildPath)
+      await lockDownElectronFuses(buildPath, nativePlatform)
     }
   },
 
-  // No @electron-forge/plugin-fuses. It does not compose with this app's signing:
-  //   - resetAdHocDarwinSignature:false -> osx-sign fails on the fuse-invalidated
-  //     Electron binaries (it won't --force over an invalid sig) and silently ships
-  //     the app UNSIGNED (caught only at codesign --verify).
-  //   - resetAdHocDarwinSignature:true  -> @electron/fuses runs its own ad-hoc
-  //     codesign whose app-path guess (`path.split('.app')[0] + '.app'`) mangles the
-  //     MAS temp-staging path to `.../T/com.app` and aborts the build.
-  // Builds <=20 shipped signed with no fuses, and under the Mac App Store sandbox +
-  // hardened runtime the RunAsNode / Node-CLI-inspect / NODE_OPTIONS escape hatches
-  // these fuses close are already constrained. If a non-MAS Developer-ID build is
-  // ever added, flip fuses on the FINAL signed .app via the @electron/fuses CLI and
-  // re-sign, rather than through this plugin.
   plugins: []
 }
