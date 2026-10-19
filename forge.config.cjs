@@ -26,7 +26,7 @@ const escapeXml = (value) =>
 
 // MSIX_STORE_UPLOAD=1 leaves the package unsigned; the Store signs it.
 // Otherwise sign for side-loading: a hook, or a .pfx whose subject equals
-// MSIX_IDENTITY.publisher (see docs/windows-test-build.md).
+// MSIX_IDENTITY.publisher (see the Windows test build guide).
 function msixSigning() {
   if (process.env.MSIX_STORE_UPLOAD === '1') return { sign: false }
   if (process.env.WINDOWS_SIGN_HOOK) {

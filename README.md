@@ -30,7 +30,6 @@ Pull requests aren't accepted. Bug reports are welcome in Issues. For security i
 | `local-ai/` | Isolated package for the QVAC on-device AI SDK |
 | `native/pear-device-auth/` | Native addon for Touch ID, Windows Hello and polkit |
 | `scripts/`, `forge.config.cjs` | Build, signing and release for the Mac App Store, DMG, Microsoft Store and Linux |
-| `docs/` | Release guides per platform |
 
 ## License
 
