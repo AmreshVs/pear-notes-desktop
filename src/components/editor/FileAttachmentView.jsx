@@ -20,7 +20,7 @@ import {
 
 import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
 import { LOCAL_AI_FEATURE } from '@pear-notes/core/store/services/localAiCatalog.js'
-import { getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getNoteData, getSelectedNote } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHyperdriveAddress } from '@pear-notes/core/store/slices/uiSlice.js'
 
 import { useAiFeatureGate, useAiToolsVisible } from '../../hooks/useAiFeatureGate'
@@ -66,11 +66,14 @@ export default function FileAttachmentView({ node, deleteNode }) {
     url && url.startsWith(HYPERDRIVE_URL_PREFIX) ? getHyperdriveAddress(state, url) : url
   )
   const noteKey = useSelector(getSelectedNote)
+  const noteLocked = useSelector((state) => getNoteData(noteKey)(state)?.locked === true)
 
   const isVideo = fileType?.startsWith('video/')
   const isAudio = fileType?.startsWith('audio/')
   const isPdf = isPdfAttachment(fileName, fileType)
-  const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null)
+  const pdfPreview = usePdfPreview(isPdf ? resolvedUrl || fileData : null, {
+    persist: !noteLocked
+  })
   const aiToolsVisible = useAiToolsVisible()
   const gateAiFeature = useAiFeatureGate()
 

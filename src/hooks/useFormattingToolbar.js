@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { backendApi } from '@pear-notes/core/backend/api.js'
 
 import { requestLocalAiSheet } from '../lib/localAi/localAiRequests'
+import { isStoredNoteLocked } from '../lib/noteLockActions'
 import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
 import { isPdfAttachment, warmPdfThumbFromFile } from '../lib/pdfPreview'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../lib/uploadRegistry'
@@ -220,7 +221,9 @@ export function useFormattingToolbar(editor, noteKey) {
             .run()
 
           // The bytes are right here, so the sidebar thumbnail costs a render and no network.
-          if (isPdfAttachment(file.name, file.type)) await warmPdfThumbFromFile(link, file)
+          if (isPdfAttachment(file.name, file.type) && !isStoredNoteLocked(noteKey)) {
+            await warmPdfThumbFromFile(link, file)
+          }
         }
       } catch (error) {
         if (!(error instanceof UploadCancelledError)) console.error('Error uploading file:', error)

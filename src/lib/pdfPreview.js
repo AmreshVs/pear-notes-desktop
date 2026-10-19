@@ -93,7 +93,8 @@ export async function renderPdfPagesForOcr(url, { maxPages, signal, onPage }) {
 
 // Rendering on note open also fills the persistent cache, which is what lets the sidebar show a
 // thumbnail for a note it never renders itself.
-async function loadPreview(url) {
+async function loadPreview(url, persist) {
+  if (!persist) return renderFirstPage(url)
   const stored = await getCachedPdfThumb(url).catch(() => null)
   if (stored?.dataUrl) return stored
 
@@ -102,7 +103,7 @@ async function loadPreview(url) {
   return preview
 }
 
-export function getPdfPreview(url) {
+export function getPdfPreview(url, { persist = true } = {}) {
   if (!url) return Promise.resolve(null)
   const identity = attachmentIdentity(url)
 
@@ -112,7 +113,7 @@ export function getPdfPreview(url) {
   const inFlight = pendingPreviews.get(identity)
   if (inFlight) return inFlight
 
-  const request = loadPreview(url)
+  const request = loadPreview(url, persist)
     .then((preview) => {
       if (preview) rememberPreview(identity, preview)
       return preview

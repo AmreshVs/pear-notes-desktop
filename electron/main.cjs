@@ -800,6 +800,7 @@ if (!lock) {
   })
 
   app.whenReady().then(async () => {
+    session.defaultSession.clearCache().catch(() => {})
     session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
       if (permission === 'media' || permission === 'microphone') {
         callback(true)

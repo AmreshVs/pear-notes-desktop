@@ -138,7 +138,7 @@ export function deletePdfThumb(url) {
  * sidebar draws, so they must not expire on a timer — one lives exactly as long as its attachment,
  * and this is what reclaims the space when a *linked device* removes the PDF.
  */
-export function sweepPdfThumbs(liveIdentities) {
+export function sweepPdfThumbs(liveIdentities, lockedIdentities = new Set()) {
   return runTransaction('readwrite', (store) => {
     const cutoff = Date.now() - SWEEP_GRACE_MS
     const request = store.openCursor()
@@ -146,7 +146,8 @@ export function sweepPdfThumbs(liveIdentities) {
       const cursor = request.result
       if (!cursor) return
       const savedAt = cursor.value?.savedAt || 0
-      if (!liveIdentities.has(cursor.key) && savedAt <= cutoff) cursor.delete()
+      const expired = lockedIdentities.has(cursor.key) || savedAt <= cutoff
+      if (!liveIdentities.has(cursor.key) && expired) cursor.delete()
       cursor.continue()
     }
     return null

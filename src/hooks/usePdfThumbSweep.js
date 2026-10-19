@@ -32,14 +32,16 @@ export function usePdfThumbSweep() {
       const notes = getNotes(state) || []
       if (notes.length !== (notesState.notesKeys?.length ?? 0)) return null
 
-      const identities = new Set()
+      const live = new Set()
+      const locked = new Set()
       for (const note of notes) {
         if (!note?.value) continue
+        const target = note.value.locked === true ? locked : live
         for (const pdf of getNoteSummary(note.value).pdfs || []) {
-          identities.add(attachmentIdentity(pdf.url))
+          target.add(attachmentIdentity(pdf.url))
         }
       }
-      return identities
+      return { live, locked }
     }
 
     const sweep = () => {
@@ -48,7 +50,7 @@ export function usePdfThumbSweep() {
       const identities = collectIdentities()
       if (!identities) return
       lastSweepAt = now
-      sweepPdfThumbs(identities).catch(() => {})
+      sweepPdfThumbs(identities.live, identities.locked).catch(() => {})
     }
 
     let lastNotesData = store.getState()?.notes?.notesData
