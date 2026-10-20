@@ -76,14 +76,13 @@ export default function JoinVaultForm() {
       {code.trim() && !isValid && (
         <p className='text-xs font-medium text-accent-danger'>{t('sync.paste.hintInvalid')}</p>
       )}
-      {hasNotes && (
-        <JoinChoiceOptions
-          vaultName={getVaultLabel(openVault, t)}
-          choice={choice}
-          canKeepSeparate={canAdd}
-          onSelect={setChoice}
-        />
-      )}
+      <JoinChoiceOptions
+        vaultName={getVaultLabel(openVault, t)}
+        hasNotes={hasNotes}
+        choice={choice}
+        canKeepSeparate={canAdd}
+        onSelect={setChoice}
+      />
       {keepsSeparate && (
         <input
           id='vault-join-name'

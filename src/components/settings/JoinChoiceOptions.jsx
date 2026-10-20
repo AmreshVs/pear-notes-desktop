@@ -26,7 +26,13 @@ function ChoiceOption({ selected, disabled, title, description, onSelect }) {
   )
 }
 
-export default function JoinChoiceOptions({ vaultName, choice, canKeepSeparate, onSelect }) {
+export default function JoinChoiceOptions({
+  vaultName,
+  hasNotes = true,
+  choice,
+  canKeepSeparate,
+  onSelect
+}) {
   const { t } = useTranslation()
 
   return (
@@ -35,7 +41,9 @@ export default function JoinChoiceOptions({ vaultName, choice, canKeepSeparate, 
         {t('vaults.join.choiceLabel')}
       </p>
       <p className='text-xs text-text-tertiary leading-relaxed text-left'>
-        {t('vaults.join.choiceDesc', { name: vaultName })}
+        {t(hasNotes ? 'vaults.join.choiceDesc' : 'vaults.join.choiceDescEmpty', {
+          name: vaultName
+        })}
       </p>
       <ChoiceOption
         selected={choice === JOIN_CHOICE.separate}
@@ -51,7 +59,9 @@ export default function JoinChoiceOptions({ vaultName, choice, canKeepSeparate, 
       <ChoiceOption
         selected={choice === JOIN_CHOICE.combine}
         title={t('vaults.join.combineTitle')}
-        description={t('vaults.join.combineDesc', { name: vaultName })}
+        description={t(hasNotes ? 'vaults.join.combineDesc' : 'vaults.join.combineDescEmpty', {
+          name: vaultName
+        })}
         onSelect={() => onSelect(JOIN_CHOICE.combine)}
       />
     </div>

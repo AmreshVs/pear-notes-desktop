@@ -20,8 +20,8 @@ export function useJoinChoice() {
     canAdd,
     choice,
     setChoice,
-    keepsSeparate: hasNotes && choice === JOIN_CHOICE.separate,
-    choiceMade: !hasNotes || !!choice
+    keepsSeparate: choice === JOIN_CHOICE.separate,
+    choiceMade: !!choice
   }
 }
 

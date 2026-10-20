@@ -2387,10 +2387,12 @@
       "nameFromInvite": "Suggested by the invite. You can change it.",
       "choiceLabel": "Notes on this device",
       "choiceDesc": "This device already has notes in {{name}}. Choose what happens to them.",
+      "choiceDescEmpty": "{{name}} on this device has no notes yet. Choose whether to keep it.",
       "keepTitle": "Keep them separate",
       "keepDesc": "The vault you join is added as another vault. {{name}} stays as it is.",
       "combineTitle": "Combine them",
-      "combineDesc": "Notes in {{name}} move into the vault you join, and every device in it can read them. This can't be undone."
+      "combineDesc": "Notes in {{name}} move into the vault you join, and every device in it can read them. This can't be undone.",
+      "combineDescEmpty": "The vault you join replaces {{name}}, which has no notes."
     },
     "errors": {
       "emptyName": "Enter a name for the vault.",
