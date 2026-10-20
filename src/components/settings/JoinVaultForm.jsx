@@ -7,7 +7,7 @@ import { VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { subscribePairUser } from '@pear-notes/core/store/slices/syncSlice.js'
 import { setShowSettings } from '@pear-notes/core/store/slices/uiSlice.js'
 import { getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
-import { extractInvite, getInviteNameHint, isValidInvite } from '@pear-notes/core/utils.js'
+import { getInviteNameHint, isValidInvite } from '@pear-notes/core/utils.js'
 
 import { buildJoinRequest, useJoinChoice } from '../../hooks/useJoinChoice'
 import { getVaultLabel } from '../../lib/vaultNames'
@@ -49,7 +49,7 @@ export default function JoinVaultForm() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!canJoin) return
-    dispatch(subscribePairUser(buildJoinRequest(extractInvite(code), keepsSeparate, name.trim())))
+    dispatch(subscribePairUser(buildJoinRequest(code.trim(), keepsSeparate, name.trim())))
     setName('')
     setCode('')
     dispatch(setShowSettings(false))

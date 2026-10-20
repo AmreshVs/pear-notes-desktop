@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Check, Globe, Link2, Loader2, ShieldCheck } from 'lucide-react'
 
+import { PAIRING_OUTDATED } from '@pear-notes/core/constant.js'
 import {
   confirmPairing,
   getInviterStatus,
@@ -11,15 +12,11 @@ import {
   rejectPairing,
   resetInvite,
   resetReceiverStatus,
+  setInviterStatus,
   setShowPairingInput,
   subscribePairUser
 } from '@pear-notes/core/store/slices/syncSlice.js'
-import {
-  extractInvite,
-  getFingerprint,
-  getInviteNameHint,
-  isValidInvite
-} from '@pear-notes/core/utils.js'
+import { getFingerprint, getInviteNameHint, isValidInvite } from '@pear-notes/core/utils.js'
 
 import { buildJoinRequest, useJoinChoice } from '../../hooks/useJoinChoice'
 import { getVaultLabel } from '../../lib/vaultNames'
@@ -27,6 +24,7 @@ import { getRelativeTime } from '../../utils/relativeTime'
 import JoinChoiceModal from '../modals/JoinChoiceModal'
 
 const REQUESTED_AGE_TICK_MS = 30000
+const OUTDATED_REASONS = Object.values(PAIRING_OUTDATED)
 
 export default function PairingStatusOverlay() {
   const { t } = useTranslation()
@@ -56,7 +54,7 @@ export default function PairingStatusOverlay() {
 
   const activeStatus = isInviterActive ? inviterStatus : receiverStatus
   const isInviter = isInviterActive
-  const { step, progress, userData, localKey, requestedAt } = activeStatus
+  const { step, progress, localKey, requestedAt, reason, code } = activeStatus
 
   const getMessage = () => {
     switch (step) {
@@ -95,6 +93,7 @@ export default function PairingStatusOverlay() {
   const isError = step === 'error'
   const isRejected = step === 'rejected'
   const isExpired = step === 'expired'
+  const isOutdated = isError && OUTDATED_REASONS.includes(reason)
   const isStepSyncing = [
     'initializing_storage',
     'replicating_data',
@@ -127,12 +126,13 @@ export default function PairingStatusOverlay() {
   }
 
   const handleResetAfterFailedPairing = () => {
-    dispatch(resetReceiverStatus())
+    if (isInviter) dispatch(setInviterStatus({ step: 'idle', reason: '' }))
+    else dispatch(resetReceiverStatus())
   }
 
   const joinWithInvite = (code, keepsSeparate) => {
     const vaultName = getInviteNameHint(code) || getVaultLabel(null, t)
-    dispatch(subscribePairUser(buildJoinRequest(extractInvite(code), keepsSeparate, vaultName)))
+    dispatch(subscribePairUser(buildJoinRequest(code.trim(), keepsSeparate, vaultName)))
     dispatch(setShowPairingInput(false))
     setPendingInvite(null)
     setPasteCode('')
@@ -199,18 +199,22 @@ export default function PairingStatusOverlay() {
           </div>
           <div className='space-y-2'>
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
-              {isExpired
-                ? t('pairing.overlay.pairingExpiredTitle')
-                : isRejected
-                  ? t('pairing.overlay.pairingRejectedTitle')
-                  : t('pairing.overlay.pairingFailedTitle')}
+              {isOutdated
+                ? t('pairing.overlay.updateTitle')
+                : isExpired
+                  ? t('pairing.overlay.pairingExpiredTitle')
+                  : isRejected
+                    ? t('pairing.overlay.pairingRejectedTitle')
+                    : t('pairing.overlay.pairingFailedTitle')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {isExpired
-                ? t('pairing.overlay.pairingExpiredDesc')
-                : isRejected
-                  ? t('pairing.overlay.pairingRejectedDesc')
-                  : t('pairing.overlay.pairingFailedDesc')}
+              {isOutdated
+                ? t(`pairing.overlay.outdated.${reason}`)
+                : isExpired
+                  ? t('pairing.overlay.pairingExpiredDesc')
+                  : isRejected
+                    ? t('pairing.overlay.pairingRejectedDesc')
+                    : t('pairing.overlay.pairingFailedDesc')}
             </p>
           </div>
           <button
@@ -275,13 +279,12 @@ export default function PairingStatusOverlay() {
       )
     }
 
-    const peerFingerprint = getFingerprint(userData)
     const myFingerprint = getFingerprint(localKey)
 
     const mainIdLabel = isConfirmation ? 'REMOTE ID' : 'MY ID'
-    const mainIdValue = isConfirmation ? peerFingerprint : myFingerprint
-    const subIdLabel = isConfirmation ? 'MY ID' : peerFingerprint ? 'REMOTE ID' : null
-    const subIdValue = isConfirmation ? myFingerprint : peerFingerprint ? peerFingerprint : null
+    const mainIdValue = code || ''
+    const subIdLabel = isConfirmation ? 'MY ID' : null
+    const subIdValue = isConfirmation ? myFingerprint : null
 
     return (
       <div className='flex flex-col items-center text-center space-y-6'>

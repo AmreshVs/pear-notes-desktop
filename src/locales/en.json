@@ -1050,7 +1050,13 @@
       "pairingRejectedTitle": "Pairing declined",
       "pairingRejectedDesc": "The other device declined this pairing request. Your notes on this device have been kept.",
       "pairingExpiredTitle": "Invite expired",
-      "pairingExpiredDesc": "That invite is no longer valid. Ask the other device to generate a new one."
+      "pairingExpiredDesc": "That invite is no longer valid. Ask the other device to generate a new one.",
+      "updateTitle": "Update Pear Notes",
+      "outdated": {
+        "invite_outdated": "This invite comes from an older version of Pear Notes. Update Pear Notes on the device that made it, then create a new invite.",
+        "host_outdated": "A device in that vault runs an older version of Pear Notes. Update Pear Notes on your other devices, then try again. Your notes on this device have been kept.",
+        "joiner_outdated": "The device that tried to link runs an older version of Pear Notes. Update Pear Notes on it, then try again."
+      }
     }
   },
   "search": {
