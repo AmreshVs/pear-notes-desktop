@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Check, Globe, Link2, Loader2, ShieldCheck } from 'lucide-react'
 
-import { PAIRING_OUTDATED } from '@pear-notes/core/constant.js'
+import { PAIRING_HOST_UNVERIFIED, PAIRING_OUTDATED } from '@pear-notes/core/constant.js'
 import {
   confirmPairing,
   getInviterStatus,
@@ -94,6 +94,7 @@ export default function PairingStatusOverlay() {
   const isRejected = step === 'rejected'
   const isExpired = step === 'expired'
   const isOutdated = isError && OUTDATED_REASONS.includes(reason)
+  const isUnverified = isError && !!reason && reason === PAIRING_HOST_UNVERIFIED
   const isStepSyncing = [
     'initializing_storage',
     'replicating_data',
@@ -201,20 +202,24 @@ export default function PairingStatusOverlay() {
             <h3 className='text-2xl font-bold text-text-primary tracking-tight'>
               {isOutdated
                 ? t('pairing.overlay.updateTitle')
-                : isExpired
-                  ? t('pairing.overlay.pairingExpiredTitle')
-                  : isRejected
-                    ? t('pairing.overlay.pairingRejectedTitle')
-                    : t('pairing.overlay.pairingFailedTitle')}
+                : isUnverified
+                  ? t('pairing.overlay.pairingUnverifiedTitle')
+                  : isExpired
+                    ? t('pairing.overlay.pairingExpiredTitle')
+                    : isRejected
+                      ? t('pairing.overlay.pairingRejectedTitle')
+                      : t('pairing.overlay.pairingFailedTitle')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
               {isOutdated
                 ? t(`pairing.overlay.outdated.${reason}`)
-                : isExpired
-                  ? t('pairing.overlay.pairingExpiredDesc')
-                  : isRejected
-                    ? t('pairing.overlay.pairingRejectedDesc')
-                    : t('pairing.overlay.pairingFailedDesc')}
+                : isUnverified
+                  ? t('pairing.overlay.pairingUnverifiedDesc')
+                  : isExpired
+                    ? t('pairing.overlay.pairingExpiredDesc')
+                    : isRejected
+                      ? t('pairing.overlay.pairingRejectedDesc')
+                      : t('pairing.overlay.pairingFailedDesc')}
             </p>
           </div>
           <button
