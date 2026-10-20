@@ -49,7 +49,7 @@ function createVaultKeys({ getStoragePath, getAppDir, isDev }) {
 
   function writeLegacyKey(key) {
     const storageDir = getStoragePath()
-    if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true })
+    if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true, mode: 0o700 })
     fs.writeFileSync(legacyConfigFile(), JSON.stringify({ encryptionKey: key }), {
       encoding: 'utf-8',
       mode: 0o600

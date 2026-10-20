@@ -164,10 +164,19 @@ function getAppDir() {
   return isDev ? path.resolve(__dirname, '..') : path.dirname(app.getPath('exe'))
 }
 
+const PRIVATE_DIR_MODE = 0o700
+
 function ensureStorageDir() {
   const storagePath = getStoragePath()
   if (!fs.existsSync(storagePath)) {
-    fs.mkdirSync(storagePath, { recursive: true })
+    fs.mkdirSync(storagePath, { recursive: true, mode: PRIVATE_DIR_MODE })
+  }
+  if (process.platform !== 'win32') {
+    try {
+      fs.chmodSync(storagePath, PRIVATE_DIR_MODE)
+    } catch (e) {
+      console.warn('[storage] could not restrict the storage folder', e.message)
+    }
   }
   return storagePath
 }

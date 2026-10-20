@@ -16,12 +16,22 @@ const SENT_KEY = 'pear-notes:reminders-sent'
 const SENT_LIMIT = 300
 export const REMINDERS_TOGGLE_KEY = 'reminders'
 
+const SENT_ID_RE = /^[0-9a-f]{32}$/
+
 const readSent = () => {
   try {
-    return JSON.parse(window.localStorage.getItem(SENT_KEY) || '[]')
+    const stored = JSON.parse(window.localStorage.getItem(SENT_KEY) || '[]')
+    return Array.isArray(stored) ? stored.filter((id) => SENT_ID_RE.test(id)) : []
   } catch {
     return []
   }
+}
+
+const sentIdOf = async (key) => {
+  const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(key))
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 32)
 }
 
 const writeSent = (keys) => {
@@ -38,6 +48,10 @@ export function useReminders() {
   const [remindersOn] = useLocalToggle(REMINDERS_TOGGLE_KEY, false)
   const tasksOn = useSelector((state) => selectAiSuggestionOn(state, AI_SUGGESTION.TASKS))
   const enabled = remindersOn && tasksOn
+
+  useEffect(() => {
+    writeSent(readSent())
+  }, [])
 
   useEffect(() => {
     const bridge = window.electronBridge
@@ -57,9 +71,11 @@ export function useReminders() {
         loadDoneIds().catch(() => null)
       ])
       const sent = readSent()
-      const due = dueReminders(tasks, { since, now, prefs, doneIds }).filter(
-        (reminder) => !sent.includes(reminder.key)
-      )
+      const candidates = dueReminders(tasks, { since, now, prefs, doneIds })
+      const ids = await Promise.all(candidates.map((reminder) => sentIdOf(reminder.key)))
+      const due = candidates
+        .map((reminder, index) => ({ ...reminder, sentId: ids[index] }))
+        .filter((reminder) => !sent.includes(reminder.sentId))
       since = now
       for (const reminder of due) {
         const title = reminder.title || t('noteCard.untitled')
@@ -73,7 +89,7 @@ export function useReminders() {
             : title,
           noteKey: reminder.noteKey
         })
-        sent.push(reminder.key)
+        sent.push(reminder.sentId)
       }
       if (due.length) writeSent(sent)
     }
