@@ -16,31 +16,83 @@ const STRENGTH_BAR_COLORS = [
   'bg-accent-success'
 ]
 
+const COPY_KEYS = {
+  create: {
+    set: {
+      title: 'noteLockPassword.createTitle',
+      desc: 'noteLockPassword.createDesc',
+      placeholder: 'noteLockPassword.placeholderCreate',
+      button: 'noteLockPassword.createButton'
+    },
+    change: {
+      title: 'noteLockPassword.changeTitle',
+      desc: 'noteLockPassword.createDesc',
+      placeholder: 'noteLockPassword.placeholderNew',
+      button: 'noteLockPassword.changeButton'
+    }
+  },
+  enter: {
+    unlock: {
+      title: 'noteLockPassword.enterTitle',
+      desc: 'noteLockPassword.enterDesc',
+      placeholder: 'noteLockPassword.placeholder',
+      button: 'noteLockPassword.unlockButton'
+    },
+    lock: {
+      title: 'noteLockPassword.enterTitle',
+      desc: 'noteLockPassword.enterLockDesc',
+      placeholder: 'noteLockPassword.placeholder',
+      button: 'noteLockPassword.lockButton'
+    },
+    change: {
+      title: 'noteLockPassword.enterTitle',
+      desc: 'noteLockPassword.enterChangeDesc',
+      placeholder: 'noteLockPassword.currentPlaceholder',
+      button: 'noteLockPassword.continueButton'
+    },
+    biometric: {
+      title: 'noteLockPassword.enterTitle',
+      desc: 'noteLockPassword.enterDesc',
+      placeholder: 'noteLockPassword.placeholder',
+      button: 'noteLockPassword.continueButton'
+    }
+  }
+}
+
+function getCopyKeys(mode, purpose) {
+  const byPurpose = mode === 'create' ? COPY_KEYS.create : COPY_KEYS.enter
+  return byPurpose[purpose] || (mode === 'create' ? byPurpose.set : byPurpose.unlock)
+}
+
 export default function NoteLockPasswordModal({
   open,
   mode,
   purpose = 'unlock',
+  message = '',
+  requireUnderstood = false,
   error,
   onSubmit,
   onCancel
 }) {
   const { t } = useTranslation()
   const isCreate = mode === 'create'
-  const isLockPurpose = purpose === 'lock'
+  const copy = getCopyKeys(mode, purpose)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [visible, setVisible] = useState(false)
+  const [understood, setUnderstood] = useState(false)
 
   const strength = useMemo(() => getPasswordStrengthUi(password, t), [password, t])
   const passwordsMatch = password === confirm
   const canSubmit = isCreate
-    ? isValidBackupPassword(password) && passwordsMatch
+    ? isValidBackupPassword(password) && passwordsMatch && (understood || !requireUnderstood)
     : password.trim().length > 0
 
   const reset = () => {
     setPassword('')
     setConfirm('')
     setVisible(false)
+    setUnderstood(false)
   }
 
   const handleCancel = () => {
@@ -76,15 +128,9 @@ export default function NoteLockPasswordModal({
             <div className='w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center ring-1 ring-accent-primary/20 mb-2'>
               <Lock className='w-6 h-6 text-accent-primary' />
             </div>
-            <h3 className='text-lg font-bold text-text-primary'>
-              {isCreate ? t('noteLockPassword.createTitle') : t('noteLockPassword.enterTitle')}
-            </h3>
+            <h3 className='text-lg font-bold text-text-primary'>{t(copy.title)}</h3>
             <p className='text-text-tertiary text-xs leading-relaxed max-w-[300px]'>
-              {isCreate
-                ? t('noteLockPassword.createDesc')
-                : isLockPurpose
-                  ? t('noteLockPassword.enterLockDesc')
-                  : t('noteLockPassword.enterDesc')}
+              {(!isCreate && message) || t(copy.desc)}
             </p>
           </div>
 
@@ -105,11 +151,7 @@ export default function NoteLockPasswordModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={
-                  isCreate
-                    ? t('noteLockPassword.placeholderCreate')
-                    : t('noteLockPassword.placeholder')
-                }
+                placeholder={t(copy.placeholder)}
                 autoFocus
                 className='w-full px-4 py-3 pr-11 bg-overlay-faint border border-overlay-medium focus:border-accent-primary/30 rounded-xl text-sm text-text-primary placeholder:text-text-tertiary/40 outline-none transition-colors'
               />
@@ -165,6 +207,18 @@ export default function NoteLockPasswordModal({
                   </ul>
                 </div>
 
+                {requireUnderstood && (
+                  <label className='flex items-center gap-2 pt-1 text-xs text-text-secondary cursor-pointer select-none'>
+                    <input
+                      type='checkbox'
+                      checked={understood}
+                      onChange={(e) => setUnderstood(e.target.checked)}
+                      className='w-4 h-4 accent-[var(--accent-primary)]'
+                    />
+                    {t('noteLockPassword.understood')}
+                  </label>
+                )}
+
                 {confirm.length > 0 && !passwordsMatch && (
                   <p className='text-xs text-accent-danger/80 ml-1'>
                     {t('noteLockPassword.mismatch')}
@@ -188,11 +242,7 @@ export default function NoteLockPasswordModal({
               disabled={!canSubmit}
               className='flex-1 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm shadow-[0_8px_25px_rgba(var(--accent-primary-rgb),0.25)] hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed'
             >
-              {isCreate
-                ? t('noteLockPassword.createButton')
-                : isLockPurpose
-                  ? t('noteLockPassword.lockButton')
-                  : t('noteLockPassword.unlockButton')}
+              {t(copy.button)}
             </button>
           </div>
         </div>

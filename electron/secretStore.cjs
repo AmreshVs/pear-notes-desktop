@@ -12,6 +12,7 @@ const path = require('path')
 // storage directory (`PearNotes/`) so that copying or syncing the vault folder
 // does not carry even the sealed key along with it.
 const SECRETS_FILE = 'secrets.json'
+const LOCK_ROOT_SECRET_PREFIX = 'lockRoot:'
 const UNSAFE_LINUX_BACKENDS = new Set(['basic_text', 'unknown'])
 
 function secretsPath() {
@@ -89,4 +90,25 @@ function deleteSecret(name) {
   }
 }
 
-module.exports = { isAvailable, getSecret, setSecret, deleteSecret }
+function deleteSecretsWithPrefix(prefix) {
+  try {
+    const secrets = readAll()
+    const names = Object.keys(secrets).filter((name) => name.startsWith(prefix))
+    if (names.length === 0) return true
+    for (const name of names) delete secrets[name]
+    writeAll(secrets)
+    return true
+  } catch (e) {
+    console.error('[secrets] could not delete', prefix, e)
+    return false
+  }
+}
+
+module.exports = {
+  LOCK_ROOT_SECRET_PREFIX,
+  isAvailable,
+  getSecret,
+  setSecret,
+  deleteSecret,
+  deleteSecretsWithPrefix
+}

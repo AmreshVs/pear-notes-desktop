@@ -49,6 +49,10 @@ contextBridge.exposeInMainWorld('electronBridge', {
 
   authenticate: (reason) => ipcRenderer.invoke('device-auth:authenticate', reason),
   isDeviceAuthSupported: () => ipcRenderer.invoke('device-auth:is-supported'),
+  isLockRootSupported: () => ipcRenderer.invoke('lock-root:supported'),
+  readLockRoot: (vaultId, reason) => ipcRenderer.invoke('lock-root:read', vaultId, reason),
+  storeLockRoot: (vaultId, rootKey) => ipcRenderer.invoke('lock-root:store', vaultId, rootKey),
+  deleteLockRoot: (vaultId) => ipcRenderer.invoke('lock-root:delete', vaultId),
 
   setContentProtection: (enabled) => ipcRenderer.invoke('content-protection:set', enabled),
 

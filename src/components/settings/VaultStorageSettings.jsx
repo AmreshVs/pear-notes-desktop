@@ -26,7 +26,7 @@ import {
 
 import { isMultiVaultEnabled } from '@pear-notes/core/constant.js'
 import { getFolderKeys } from '@pear-notes/core/store/slices/foldersSlice.js'
-import { getNoteKeys } from '@pear-notes/core/store/slices/notesSlice.js'
+import { getNoteData, getNoteKeys } from '@pear-notes/core/store/slices/notesSlice.js'
 import {
   deleteNoteMedia,
   getActiveDownloads,
@@ -51,9 +51,12 @@ import {
   getVaults,
   removeVault
 } from '@pear-notes/core/store/slices/vaultsSlice.js'
+import { store } from '@pear-notes/core/store/store.js'
 import { formatBytes, groupTransfersByNote } from '@pear-notes/core/utils.js'
 
 import { useClearAllData } from '../../hooks/useClearAllData'
+import { isNoteSessionUnlocked } from '../../lib/noteLock'
+import { unlockLockedNotes } from '../../lib/noteLockSession'
 import { buildClearVaultDetails } from '../../lib/removalDetails'
 import { getVaultLabel } from '../../lib/vaultNames'
 
@@ -343,7 +346,11 @@ export default function VaultStorageSettings() {
     }
   }, [dispatch])
 
-  const handleDeleteMedia = (noteKey, mediaPath) => {
+  const handleDeleteMedia = async (noteKey, mediaPath) => {
+    if (getNoteData(noteKey)(store.getState())?.sealed && !isNoteSessionUnlocked()) {
+      const reason = t('noteLockPassword.deleteFileReason')
+      if (!(await unlockLockedNotes(reason, 'unlock', reason))) return
+    }
     dispatch(deleteNoteMedia({ noteKey, mediaPath }))
   }
 

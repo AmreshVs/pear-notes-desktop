@@ -72,16 +72,28 @@
       "sectionHeader": "Privacy & security",
       "rowTitle": "Privacy & security",
       "screenTitle": "Privacy & security",
-      "screenDesc": "Protect your locked notes with biometrics or a custom password, and guard against screenshots and app-switcher previews.",
+      "screenDesc": "Protect locked notes with a password, unlock them with biometrics on this device, and guard against screenshots and app-switcher previews.",
       "noteLock": "Note lock",
       "available": "Available",
-      "noteLockDesc": "Lock individual notes from the note menu. Unlocks with {{method}}.",
+      "noteLockDesc": "Lock individual notes from the note menu. Unlocks with {{method}} until you set a note lock password.",
       "noteLockPasswordDesc": "Locked notes unlock with your custom password on all synced devices.",
       "noteLockUnavailableDesc": "Device lock isn't set up on this device. Change the lock method from another synced device.",
       "changeMethodReason": "Authenticate to change the note lock method",
-      "unlockMethod": "Unlock method",
-      "biometric": "Biometric",
-      "password": "Password",
+      "lockPassword": "Note lock password",
+      "lockPasswordSet": "Set",
+      "lockPasswordChange": "Change",
+      "biometricUnlock": "Unlock with {{method}}",
+      "biometricUnlockDesc": "Only on this device. You'll still need your password on other devices.",
+      "biometricUnlockOutdated_one": "Available after {{devices}} is updated.",
+      "biometricUnlockOutdated_other": "Available after {{devices}} are updated.",
+      "biometricReason": "Turn on unlock with {{method}}",
+      "attachmentsNotEncrypted": "Photos and files in locked notes are protected by your vault's encryption, not your note lock password.",
+      "outdatedDevices": "Add password encryption to locked notes",
+      "outdatedDevicesDesc": "Locked notes are already encrypted with your vault. Update Pear Notes on these devices to also encrypt them with your note lock password:",
+      "outdatedDeviceSeenToday": "Seen today",
+      "outdatedDeviceSeen_one": "Seen {{count}} day ago",
+      "outdatedDeviceSeen_other": "Seen {{count}} days ago",
+      "outdatedDeviceVersion": "v{{version}}",
       "blockScreenshots": "Block screenshots",
       "blockScreenshotsDesc": "Prevent screenshots while viewing a locked note.",
       "hideInSwitcher": "Hide in app switcher",
@@ -89,13 +101,13 @@
       "methods": {
         "faceIos": "Face ID",
         "touchId": "Touch ID",
+        "windowsHello": "Windows Hello",
         "passcodeIos": "Passcode",
         "faceAndroid": "Face unlock",
         "fingerprintAndroid": "Fingerprint",
         "iris": "Iris unlock",
         "screenLock": "Screen lock"
-      },
-      "unlockMethodDesc": "Choose how locked notes are unlocked."
+      }
     },
     "danger": {
       "header": "Danger zone",
@@ -820,6 +832,7 @@
     "downloadComplete": "File downloaded successfully.",
     "noAdditionalText": "No additional text",
     "lockedSummary": "Authenticate to view this note",
+    "lockedSummaryPassword": "Locked with your note lock password",
     "uploading": "Uploading… {{progress}}%",
     "attachment": {
       "image_one": "Photo",
@@ -1112,7 +1125,19 @@
     "createDesc": "This password will be required to open locked notes on all your synced devices.",
     "enterDesc": "Enter your note lock password to unlock this note.",
     "enterLockDesc": "Enter your note lock password to lock this note.",
-    "warning": "Your password itself is never stored — only a secure verification hash. It cannot be recovered, so if you forget it, locked notes cannot be opened. Write it down and keep it safe.",
+    "biometricEnableDesc": "Enter your note lock password to turn on unlock with {{method}}.",
+    "enterChangeDesc": "Enter your current note lock password to change it.",
+    "changeTitle": "Change note lock password",
+    "currentPlaceholder": "Current password",
+    "placeholderNew": "Create a strong new password",
+    "continueButton": "Continue",
+    "changeButton": "Change password",
+    "warning": "Locked notes are encrypted with this password. It isn't stored anywhere, so if you forget it, locked notes can't be recovered on any device or from a backup.",
+    "understood": "I understand this password can't be recovered",
+    "setFailed": "Couldn't set the password. Try again.",
+    "otherPasswordReason": "This note was locked with a different password. Enter that password to open it.",
+    "appendReason": "Unlock locked notes to add to this note",
+    "deleteFileReason": "Unlock locked notes to remove this file",
     "placeholder": "Note lock password",
     "confirmPlaceholder": "Confirm password",
     "mismatch": "Passwords do not match",
@@ -1137,6 +1162,15 @@
       "good": "Good",
       "strong": "Strong"
     }
+  },
+  "noteLockPrompt": {
+    "migrationTitle": "Set a password for locked notes",
+    "migrationBody": "Locked notes are now encrypted with a password. After you set it, you can still unlock them with {{method}} on this device. Keep the password safe: if you forget it, locked notes can't be recovered.",
+    "setPassword": "Set password",
+    "notNow": "Not now",
+    "biometricTitle": "Unlock locked notes with {{method}}?",
+    "biometricBody": "You'll still need your password on new devices and if {{method}} changes.",
+    "useBiometric": "Use {{method}}"
   },
   "tabs": {
     "home": "Home",
@@ -1378,6 +1412,8 @@
     "overlay": {
       "title": "Update required",
       "description": "A required update is available (v{{version}}). Please update Pear Notes to continue.",
+      "vaultDescription": "Another device turned on a feature this version of Pear Notes doesn't support. Update to keep editing. Until then, this vault is read-only.",
+      "readOnlyButton": "Continue read-only",
       "updateButton": "Update now"
     },
     "banner": {

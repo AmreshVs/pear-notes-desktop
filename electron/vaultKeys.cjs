@@ -117,6 +117,7 @@ function createVaultKeys({ getStoragePath, getAppDir, isDev }) {
   function deleteDbEncryptionKey() {
     secretStore.deleteSecret(VAULT_KEY_SECRET)
     secretStore.deleteSecret(VAULT_ENTROPY_SECRET)
+    secretStore.deleteSecretsWithPrefix(secretStore.LOCK_ROOT_SECRET_PREFIX)
     dropLegacyEncryptionKey()
   }
 

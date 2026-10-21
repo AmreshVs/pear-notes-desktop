@@ -37,6 +37,8 @@ import {
 
 import { copyToClipboard } from '../lib/clipboard'
 import { askVault, cancelLocalAiTask, embedTexts } from '../lib/localAi/electronAdapter'
+import { unlockLockedNotes } from '../lib/noteLockSession'
+import i18n from '../locales/i18n'
 
 import { useLocalAiFeatureReady } from './useLocalAiFeatureReady'
 import { useLocalAiWorkProgress } from './useLocalAiWorkProgress'
@@ -55,6 +57,15 @@ async function readNote(key, stored) {
   if (stored && !stored.bodyOmitted && typeof stored.note === 'string') return stored
   const response = await backendApi.getSingleNote({ key })
   return response?.data?.folderKey ? response.data : null
+}
+
+async function readNoteToAppend(key, stored) {
+  const note = await readNote(key, stored)
+  if (!note?.sealed || !note.bodyOmitted) return note
+  const reason = i18n.t('noteLockPassword.appendReason')
+  if (!(await unlockLockedNotes(reason, 'unlock', reason))) return null
+  const unlocked = await readNote(key, null)
+  return unlocked?.bodyOmitted ? null : unlocked
 }
 
 async function substringKeys(query, folderKey) {
@@ -240,7 +251,7 @@ export function useAskVault({
       if (!key || draftDone[id]) return
       setDraftDone((current) => ({ ...current, [id]: { addedTo: key } }))
       try {
-        const note = await readNote(key, notesRef.current?.[key])
+        const note = await readNoteToAppend(key, notesRef.current?.[key])
         if (!note) throw new Error('unreadable')
         dispatch(
           updateNote({

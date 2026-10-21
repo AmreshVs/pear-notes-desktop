@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
-import { Fingerprint, KeyRound, LockKeyhole } from 'lucide-react'
+import { LockKeyhole } from 'lucide-react'
 
-import { backendApi } from '@pear-notes/core/backend/api.js'
 import { LOCK_SCREENSHOT_PROTECTION_KEY } from '@pear-notes/core/constant.js'
-import {
-  clearLockPassword,
-  getLockMethod,
-  loadSettings
-} from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLockPrivacyPreference, setLockPrivacyPreference } from '@pear-notes/core/utils.js'
 
-import { authenticate, isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { usePrivacyLock } from '../../hooks/usePrivacyLock'
+import { getBiometricMethodKey } from '../../lib/deviceAuth'
 import { clearUnlockedNotes } from '../../lib/noteLock'
-import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
-import NoteLockPasswordModal from '../modals/NoteLockPasswordModal'
+
+import OutdatedDevicesRow from './OutdatedDevicesRow'
+import SettingsToggle from './SettingsToggle'
+
+const ROW_CLASS = 'p-6 flex items-center justify-between gap-6 border-b border-border-primary'
+const ROW_TITLE_CLASS = 'block text-text-primary text-base font-bold'
+const ROW_DESC_CLASS = 'text-sm text-text-tertiary font-medium opacity-60'
 
 const AUTH_METHOD_LABELS = {
   mac: 'Touch ID or your macOS password',
@@ -32,18 +31,24 @@ function getAuthMethodLabel() {
 
 export default function PrivacySettings() {
   const { t } = useTranslation()
-  const dispatch = useDispatch()
-  const lockMethod = useSelector(getLockMethod)
-  const { requestUnlockPassword } = useNoteLockPassword()
-  const [lockAvailable, setLockAvailable] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const {
+    isPassword,
+    lockAvailable,
+    outdatedDevices,
+    outdatedNames,
+    biometricAvailable,
+    biometricBlocked,
+    biometricOn,
+    biometricBusy,
+    setOrChangePassword,
+    toggleBiometric
+  } = usePrivacyLock()
   const [screenshotProtection, setScreenshotProtection] = useState(true)
+  const biometricMethodKey = getBiometricMethodKey()
+  const biometricMethod = biometricMethodKey ? t(biometricMethodKey) : ''
 
   useEffect(() => {
     let active = true
-    isDeviceAuthSupported().then((supported) => {
-      if (active) setLockAvailable(supported)
-    })
     getLockPrivacyPreference(LOCK_SCREENSHOT_PROTECTION_KEY).then((v) => {
       if (active) setScreenshotProtection(v)
     })
@@ -51,33 +56,6 @@ export default function PrivacySettings() {
       active = false
     }
   }, [])
-
-  const handleSelectBiometric = async () => {
-    if (!lockAvailable) return
-    if (lockMethod !== 'password') return
-    const ok = await requestUnlockPassword()
-    if (ok) dispatch(clearLockPassword())
-  }
-
-  const passwordDisabled = lockMethod !== 'password' && !lockAvailable
-
-  const handleSelectPassword = async () => {
-    if (lockMethod === 'password') {
-      const ok = await requestUnlockPassword()
-      if (!ok) return
-    } else {
-      if (!lockAvailable) return
-      const ok = await authenticate(t('settings.privacy.changeMethodReason'))
-      if (!ok) return
-    }
-    setShowPasswordModal(true)
-  }
-
-  const handleSubmitPassword = async (password) => {
-    const done = await backendApi.setNoteLockPassword({ password })
-    if (done) dispatch(loadSettings())
-    setShowPasswordModal(false)
-  }
 
   const handleToggleScreenshotProtection = () => {
     const next = !screenshotProtection
@@ -99,8 +77,8 @@ export default function PrivacySettings() {
                 <LockKeyhole className='w-5 h-5 text-accent-primary' />
               </div>
               <div className='space-y-1 min-w-0'>
-                <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                  {lockMethod === 'password'
+                <p className={ROW_DESC_CLASS}>
+                  {isPassword
                     ? t('settings.privacy.noteLockPasswordDesc')
                     : lockAvailable
                       ? t('settings.privacy.noteLockDesc', { method: getAuthMethodLabel() })
@@ -110,42 +88,46 @@ export default function PrivacySettings() {
             </div>
           </div>
 
-          <div className='p-6 flex items-center justify-between gap-6 border-b border-border-primary'>
+          <div className={ROW_CLASS}>
             <div className='space-y-1 min-w-0'>
-              <label className='block text-text-primary text-base font-bold'>
-                {t('settings.privacy.unlockMethod')}
-              </label>
-              <p className='text-sm text-text-tertiary font-medium opacity-60'>
-                {t('settings.privacy.unlockMethodDesc')}
-              </p>
+              <label className={ROW_TITLE_CLASS}>{t('settings.privacy.lockPassword')}</label>
+              <p className={ROW_DESC_CLASS}>{t('settings.privacy.attachmentsNotEncrypted')}</p>
             </div>
-            <div className='flex bg-bg-tertiary/50 p-1 rounded-xl border border-border-primary shrink-0'>
-              <button
-                onClick={handleSelectBiometric}
-                disabled={!lockAvailable}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
-                  lockMethod !== 'password'
-                    ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-                }`}
-              >
-                <Fingerprint className='w-4 h-4' />
-                {t('settings.privacy.biometric')}
-              </button>
-              <button
-                onClick={handleSelectPassword}
-                disabled={passwordDisabled}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${
-                  lockMethod === 'password'
-                    ? 'bg-accent-primary text-accent-on-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-overlay-soft'
-                }`}
-              >
-                <KeyRound className='w-4 h-4' />
-                {t('settings.privacy.password')}
-              </button>
-            </div>
+            <button
+              onClick={setOrChangePassword}
+              className='px-4 py-2 rounded-xl text-sm font-bold text-accent-primary bg-bg-tertiary/50 border border-border-primary hover:bg-overlay-soft transition-all active:scale-95 shrink-0'
+            >
+              {isPassword
+                ? t('settings.privacy.lockPasswordChange')
+                : t('settings.privacy.lockPasswordSet')}
+            </button>
           </div>
+
+          {biometricAvailable && biometricMethod && (
+            <div className={ROW_CLASS}>
+              <div className='space-y-1 min-w-0'>
+                <label className={ROW_TITLE_CLASS}>
+                  {t('settings.privacy.biometricUnlock', { method: biometricMethod })}
+                </label>
+                <p className={ROW_DESC_CLASS}>
+                  {biometricBlocked
+                    ? t('settings.privacy.biometricUnlockOutdated', {
+                        devices: outdatedNames,
+                        count: outdatedDevices.length
+                      })
+                    : t('settings.privacy.biometricUnlockDesc')}
+                </p>
+              </div>
+              <SettingsToggle
+                on={biometricOn && !biometricBlocked}
+                disabled={biometricBusy || biometricBlocked}
+                onClick={toggleBiometric}
+                label={t('settings.privacy.biometricUnlock', { method: biometricMethod })}
+              />
+            </div>
+          )}
+
+          {outdatedDevices.length > 0 && <OutdatedDevicesRow devices={outdatedDevices} />}
 
           <div className='p-6 flex items-center justify-between gap-6'>
             <div className='space-y-1 min-w-0'>
@@ -167,13 +149,6 @@ export default function PrivacySettings() {
           </div>
         </div>
       </div>
-
-      <NoteLockPasswordModal
-        open={showPasswordModal}
-        mode='create'
-        onSubmit={handleSubmitPassword}
-        onCancel={() => setShowPasswordModal(false)}
-      />
     </div>
   )
 }

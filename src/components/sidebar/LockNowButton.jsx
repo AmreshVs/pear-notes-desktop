@@ -11,7 +11,7 @@ export const LockNowButton = memo(function LockNowButton() {
   const hasUnlockedNotes = useHasUnlockedNotes()
 
   const handleLockNow = useCallback(() => {
-    clearUnlockedNotes()
+    clearUnlockedNotes({ afterPendingSaves: true })
   }, [])
 
   if (!hasUnlockedNotes) return null

@@ -1,41 +1,36 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
+import { loadSettings } from '@pear-notes/core/store/slices/settingsSlice.js'
 
-import { NoteLockPasswordContext } from '../../lib/noteLockPasswordContext'
+import {
+  hideLockUnavailable,
+  resolveNoteLockPassword,
+  useNoteLockPasswordRequest
+} from '../../lib/noteLockPasswordFlow'
+import { hasLockPassword, submitLockPassword } from '../../lib/noteLockSession'
 import LockUnavailableModal from '../modals/LockUnavailableModal'
 import NoteLockPasswordModal from '../modals/NoteLockPasswordModal'
+import NoteLockPromptModal from '../modals/NoteLockPromptModal'
 
 export default function NoteLockPasswordProvider({ children }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const dispatch = useDispatch()
+  const request = useNoteLockPasswordRequest()
   const [error, setError] = useState('')
-  const [unavailableOpen, setUnavailableOpen] = useState(false)
-  const [purpose, setPurpose] = useState('unlock')
-  const resolverRef = useRef(null)
-
-  const requestUnlockPassword = useCallback((nextPurpose = 'unlock') => {
-    setError('')
-    setPurpose(nextPurpose)
-    setOpen(true)
-    return new Promise((resolve) => {
-      resolverRef.current = resolve
-    })
-  }, [])
+  const isCreate = request.mode === 'create'
 
   const settle = useCallback((value) => {
-    setOpen(false)
     setError('')
-    const resolve = resolverRef.current
-    resolverRef.current = null
-    if (resolve) resolve(value)
+    resolveNoteLockPassword(value)
   }, [])
 
-  const handleSubmit = useCallback(
+  const handleEnter = useCallback(
     async (password) => {
-      const { valid, retryAfter } = await backendApi.verifyNoteLockPassword({ password })
-      if (valid) {
+      const { ok, retryAfter } = await submitLockPassword(password)
+      if (ok) {
         settle(true)
       } else if (retryAfter > 0) {
         setError(t('noteLockPassword.tooManyAttempts', { seconds: retryAfter }))
@@ -46,22 +41,39 @@ export default function NoteLockPasswordProvider({ children }) {
     [settle, t]
   )
 
+  const handleCreate = useCallback(
+    async (password) => {
+      const firstTime = !hasLockPassword()
+      const done = await backendApi.setNoteLockPassword({ password })
+      if (!done) {
+        setError(t('noteLockPassword.setFailed'))
+        return
+      }
+      dispatch(loadSettings())
+      if (firstTime) await submitLockPassword(password)
+      settle(true)
+    },
+    [dispatch, settle, t]
+  )
+
   const handleCancel = useCallback(() => settle(false), [settle])
 
-  const showLockUnavailable = useCallback(() => setUnavailableOpen(true), [])
-
   return (
-    <NoteLockPasswordContext.Provider value={{ requestUnlockPassword, showLockUnavailable }}>
+    <>
       {children}
       <NoteLockPasswordModal
-        open={open}
-        mode='enter'
-        purpose={purpose}
+        key={request.mode || 'closed'}
+        open={request.mode !== null}
+        mode={isCreate ? 'create' : 'enter'}
+        purpose={request.purpose}
+        message={request.message}
+        requireUnderstood={isCreate && !hasLockPassword()}
         error={error}
-        onSubmit={handleSubmit}
+        onSubmit={isCreate ? handleCreate : handleEnter}
         onCancel={handleCancel}
       />
-      <LockUnavailableModal open={unavailableOpen} onCancel={() => setUnavailableOpen(false)} />
-    </NoteLockPasswordContext.Provider>
+      <NoteLockPromptModal />
+      <LockUnavailableModal open={request.unavailable} onCancel={hideLockUnavailable} />
+    </>
   )
 }

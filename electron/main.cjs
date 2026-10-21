@@ -81,6 +81,16 @@ try {
 }
 
 const usesStartupTask = process.windowsStore === true && deviceAuth !== null
+
+function isLockRootSupported() {
+  if (process.platform === 'linux' || !deviceAuth) return false
+  return deviceAuth.isSupported() && secretStore.isAvailable()
+}
+
+function lockRootSecretName(vaultId) {
+  const id = typeof vaultId === 'string' ? vaultId.replace(/[^A-Za-z0-9._-]/g, '') : ''
+  return id ? `${secretStore.LOCK_ROOT_SECRET_PREFIX}${id}` : null
+}
 const usesXdgAutostart = process.platform === 'linux' && !process.env.FLATPAK_ID
 
 function xdgAutostartPath() {
@@ -287,6 +297,7 @@ function watchPowerState() {
   // A macOS screen lock does not raise 'suspend', so a long locked session ends
   // with the swarm holding connections the network has already dropped.
   powerMonitor.on('unlock-screen', () => sendPowerState('resume'))
+  powerMonitor.on('lock-screen', () => sendPowerState('lock'))
 }
 
 const MIN_WINDOW_WIDTH = 880
@@ -582,6 +593,35 @@ function setupIPC() {
 
   ipcMain.handle('device-auth:is-supported', () => {
     return deviceAuth ? deviceAuth.isSupported() : false
+  })
+
+  ipcMain.handle('lock-root:supported', () => isLockRootSupported())
+
+  ipcMain.handle('lock-root:read', async (event, vaultId, reason) => {
+    const name = lockRootSecretName(vaultId)
+    if (!name || !isLockRootSupported()) return { cancelled: true, rootKey: '' }
+    try {
+      const windowHandle =
+        mainWindow && !mainWindow.isDestroyed() ? mainWindow.getNativeWindowHandle() : null
+      if (!(await deviceAuth.authenticate(reason, windowHandle))) {
+        return { cancelled: true, rootKey: '' }
+      }
+    } catch (e) {
+      console.error('lock-root:read authenticate failed', e)
+      return { cancelled: true, rootKey: '' }
+    }
+    return { cancelled: false, rootKey: secretStore.getSecret(name) || '' }
+  })
+
+  ipcMain.handle('lock-root:store', (event, vaultId, rootKey) => {
+    const name = lockRootSecretName(vaultId)
+    if (!name || !isLockRootSupported() || typeof rootKey !== 'string') return false
+    return secretStore.setSecret(name, rootKey)
+  })
+
+  ipcMain.handle('lock-root:delete', (event, vaultId) => {
+    const name = lockRootSecretName(vaultId)
+    return name ? secretStore.deleteSecret(name) : false
   })
 
   ipcMain.handle('content-protection:set', (event, enabled) => {

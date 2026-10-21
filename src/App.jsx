@@ -23,7 +23,10 @@ import {
   updateNote
 } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getHasLinkedDevices } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
-import { getReceiverStatus } from '@pear-notes/core/store/slices/syncSlice.js'
+import {
+  getReceiverStatus,
+  getVaultUpdateRequired
+} from '@pear-notes/core/store/slices/syncSlice.js'
 import {
   appReady,
   closeAskVault,
@@ -38,6 +41,7 @@ import {
 import { getHasMultipleVaults, getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
 import appIcon from '../build/icon.png'
+import { version as appVersion } from '../package.json'
 
 import AppToast from './components/common/AppToast'
 import BackupProgressBanner from './components/common/BackupProgressBanner'
@@ -65,6 +69,7 @@ import DuplicatesList from './components/tools/DuplicatesList'
 import RecapList from './components/tools/RecapList'
 import UpcomingList from './components/tools/UpcomingList'
 import { useAppReload } from './hooks/useAppReload'
+import { useNoteAutoRelock } from './hooks/useNoteAutoRelock'
 import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
 import { useReminders } from './hooks/useReminders'
@@ -117,6 +122,7 @@ function App() {
   useVaultErrors()
   usePdfThumbSweep()
   usePowerState()
+  useNoteAutoRelock()
   useLocalAiBridge()
   useAiJobConditions()
   useAiOffloadServer()
@@ -146,6 +152,7 @@ function App() {
   const isVaultOpening = ['create', 'switch', 'remove', 'move'].includes(vaultPending)
   const folders = useSelector(getFolders)
   const updateStatus = useAppUpdateStatus()
+  const vaultUpdateRequired = useSelector(getVaultUpdateRequired)
   const updateBannerVisible =
     !!updateStatus?.mandatory ||
     (!!updateStatus?.updateAvailable &&
@@ -169,7 +176,8 @@ function App() {
         backendApi.ready({
           storage: storagePath,
           encryption: key,
-          entropy: getVaultEntropy()
+          entropy: getVaultEntropy(),
+          appVersion
         })
       let result = await openVault()
       let startedFresh = false
@@ -379,10 +387,11 @@ function App() {
           <BackupProgressBanner />
           <KeyringWarningBanner />
           <AppToast />
-          {updateStatus?.mandatory && (
+          {(updateStatus?.mandatory || vaultUpdateRequired) && (
             <UpdateRequiredModal
-              latestVersion={updateStatus.latestVersion}
-              downloadUrl={updateStatus.downloadUrl}
+              latestVersion={updateStatus?.latestVersion}
+              downloadUrl={updateStatus?.downloadUrl}
+              forVault={vaultUpdateRequired && !updateStatus?.mandatory}
             />
           )}
           {!updateBannerVisible && <TipBanner onOpenUpcoming={() => setToolView('upcoming')} />}

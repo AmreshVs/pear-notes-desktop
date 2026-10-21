@@ -1,8 +1,12 @@
 import { useTranslation } from 'react-i18next'
+import { useDispatch } from 'react-redux'
 import { Download } from 'lucide-react'
 
-export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
+import { setVaultUpdateRequired } from '@pear-notes/core/store/slices/syncSlice.js'
+
+export default function UpdateRequiredModal({ latestVersion, downloadUrl, forVault = false }) {
   const { t } = useTranslation()
+  const dispatch = useDispatch()
   const handleUpdate = () => {
     window.electronBridge.openExternal(downloadUrl)
   }
@@ -25,18 +29,30 @@ export default function UpdateRequiredModal({ latestVersion, downloadUrl }) {
               {t('update.overlay.title')}
             </h3>
             <p className='text-text-tertiary text-sm leading-relaxed max-w-[280px]'>
-              {latestVersion
-                ? t('update.overlay.description', { version: latestVersion })
-                : t('update.overlay.description').replace(' (v{{version}})', '')}
+              {forVault
+                ? t('update.overlay.vaultDescription')
+                : latestVersion
+                  ? t('update.overlay.description', { version: latestVersion })
+                  : t('update.overlay.description').replace(' (v{{version}})', '')}
             </p>
           </div>
 
-          <button
-            onClick={handleUpdate}
-            className='w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
-          >
-            {t('update.overlay.updateButton')}
-          </button>
+          {downloadUrl && (
+            <button
+              onClick={handleUpdate}
+              className='w-full py-4 bg-accent-danger text-white rounded-xl font-bold text-base shadow-[0_8px_25px_rgba(var(--accent-danger-rgb),0.3)] hover:bg-accent-danger-hover transition-all active:scale-95'
+            >
+              {t('update.overlay.updateButton')}
+            </button>
+          )}
+          {forVault && (
+            <button
+              onClick={() => dispatch(setVaultUpdateRequired(false))}
+              className='w-full py-3 text-text-tertiary rounded-xl font-bold text-sm hover:text-text-primary transition-all'
+            >
+              {t('update.overlay.readOnlyButton')}
+            </button>
+          )}
         </div>
       </div>
     </div>

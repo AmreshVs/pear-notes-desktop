@@ -38,7 +38,8 @@ import {
   getEditorTitle,
   setEditorContent,
   setEditorInstance,
-  setEditorTitle
+  setEditorTitle,
+  syncEditorWithNote
 } from '@pear-notes/core/store/slices/editorSlice.js'
 import { getFolders } from '@pear-notes/core/store/slices/foldersSlice.js'
 import {
@@ -68,13 +69,15 @@ import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
 import { clearLocalAiSheetRequest, useLocalAiSheetRequest } from '../../lib/localAi/localAiRequests'
 import {
+  isNoteSessionUnlocked,
   isNoteUnlocked,
   markNoteUnlocked,
-  unlockNote,
+  useNeedsOtherLockPassword,
   useNoteLockVersion
 } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
-import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
+import { requestNoteLockPassword } from '../../lib/noteLockPasswordFlow'
+import { unlockLockedNotes } from '../../lib/noteLockSession'
 import { buildNoteMenu, GENERATE_MENU_PREFIX, MOVE_MENU_PREFIX } from '../../lib/noteMenu'
 import {
   clearPendingNoteAction,
@@ -175,11 +178,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const [unlocking, setUnlocking] = useState(false)
   const [authSupported, setAuthSupported] = useState(true)
   const lockMethod = useSelector(getLockMethod)
-  const { requestUnlockPassword, showLockUnavailable } = useNoteLockPassword()
   const isLocked = noteData?.locked === true
   const isPinned = noteData?.pinned === true
   const noteUnlocked = isNoteUnlocked(selectedNoteKey)
-  const showLockScreen = isLocked && !noteUnlocked
+  const needsOtherPassword = useNeedsOtherLockPassword(selectedNoteKey, noteData)
+  const showLockScreen = isLocked && (!noteUnlocked || needsOtherPassword)
   const showInThisNote = inThisNoteEnabled && !!relatedNoteKey && !isLocked && !showHistory
 
   useEffect(() => {
@@ -576,12 +579,11 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const handleUnlock = async () => {
     setUnlocking(true)
     try {
-      if (lockMethod === 'password') {
-        const ok = await requestUnlockPassword()
-        if (ok) markNoteUnlocked(selectedNoteKey)
-      } else {
-        await unlockNote(selectedNoteKey)
-      }
+      const ok =
+        needsOtherPassword && isNoteSessionUnlocked()
+          ? await requestNoteLockPassword('unlock', t('noteLockPassword.otherPasswordReason'))
+          : await unlockLockedNotes(t('noteCard.unlockReason'))
+      if (ok) markNoteUnlocked(selectedNoteKey)
     } finally {
       setUnlocking(false)
     }
@@ -593,10 +595,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       currentlyLocked: isLocked,
       reason: t('noteCard.unlockReason'),
       lockReason: t('noteCard.lockReason'),
-      dispatch,
-      lockMethod,
-      requestPassword: requestUnlockPassword,
-      onUnavailable: showLockUnavailable
+      dispatch
     })
   }
 
@@ -772,6 +771,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
     !noteData.bodyOmitted &&
     !showLockScreen &&
     editorBaseKey === selectedNoteKey
+
+  const bodyReady = !!noteData && !noteData.bodyOmitted && !showLockScreen
+  useEffect(() => {
+    if (!bodyReady || editorBaseKey === selectedNoteKey) return
+    dispatch(syncEditorWithNote({ key: selectedNoteKey, data: noteData }))
+  }, [bodyReady, editorBaseKey, selectedNoteKey, noteData, dispatch])
 
   useEffect(() => {
     if (!pendingNoteAction) return

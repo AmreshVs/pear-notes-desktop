@@ -2,7 +2,7 @@ import { getNoteData, updateNote } from '@pear-notes/core/store/slices/notesSlic
 import { store } from '@pear-notes/core/store/store.js'
 import { getNoteSummary } from '@pear-notes/core/utils.js'
 
-import { authenticate, isDeviceAuthSupported } from './deviceAuth'
+import { unlockLockedNotes } from './noteLockSession'
 import { deletePdfThumb } from './pdfThumbCache'
 
 export function isStoredNoteLocked(key) {
@@ -16,29 +16,12 @@ async function deleteNoteThumbnails(key) {
   for (const pdf of getNoteSummary(note).pdfs || []) await deletePdfThumb(pdf.url).catch(() => {})
 }
 
-export async function toggleNoteLock({
-  key,
-  currentlyLocked,
-  reason,
-  lockReason,
-  dispatch,
-  lockMethod = 'biometric',
-  requestPassword,
-  onUnavailable
-}) {
+export async function toggleNoteLock({ key, currentlyLocked, reason, lockReason, dispatch }) {
   if (!key) return
-  const usePassword = lockMethod === 'password'
-  if (!usePassword) {
-    const supported = await isDeviceAuthSupported()
-    if (!supported) {
-      onUnavailable?.()
-      return
-    }
-  }
-  const authReason = currentlyLocked ? reason : lockReason
-  const ok = usePassword
-    ? await requestPassword?.(currentlyLocked ? 'unlock' : 'lock')
-    : await authenticate(authReason)
+  const ok = await unlockLockedNotes(
+    currentlyLocked ? reason : lockReason,
+    currentlyLocked ? 'unlock' : 'lock'
+  )
   if (!ok) return
   dispatch(updateNote({ key, locked: !currentlyLocked }))
   if (!currentlyLocked) await deleteNoteThumbnails(key)

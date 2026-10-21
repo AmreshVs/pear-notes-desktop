@@ -82,8 +82,10 @@ import {
   SEARCH_SCOPE,
   setSearchIncludeLocked
 } from '@pear-notes/core/store/slices/searchSlice.js'
-import { getLockMethod } from '@pear-notes/core/store/slices/settingsSlice.js'
-import { getActivityLogEnabled } from '@pear-notes/core/store/slices/settingsSlice.js'
+import {
+  getActivityLogEnabled,
+  getLockMethod
+} from '@pear-notes/core/store/slices/settingsSlice.js'
 import { getLocalPreferences } from '@pear-notes/core/store/slices/syncedDevicesSlice.js'
 import { getInviterStatus, setShowPairingInput } from '@pear-notes/core/store/slices/syncSlice.js'
 import {
@@ -110,7 +112,6 @@ import { getFolderIconComponent } from '../../lib/folderIcons'
 import { useShowAiTools } from '../../lib/localAi/aiToolsPreference'
 import { isNoteUnlocked, useHasUnlockedNotes, useNoteLockVersion } from '../../lib/noteLock'
 import { toggleNoteLock } from '../../lib/noteLockActions'
-import { useNoteLockPassword } from '../../lib/noteLockPasswordContext'
 import { buildNoteMenu, isEditorNoteAction, MOVE_MENU_PREFIX } from '../../lib/noteMenu'
 import {
   attachmentIdentity,
@@ -217,6 +218,7 @@ const NotesItem = memo(
     )
     const titleRanges = useMemo(() => parseHighlight(titleHighlight), [titleHighlight])
     const searchHit = useSelector((state) => getSearchHit(state, key))
+    const hasLockPassword = useSelector((state) => getLockMethod(state) === 'password')
 
     useNoteLockVersion()
     const isMasked = noteData?.locked === true && !isNoteUnlocked(key)
@@ -268,7 +270,7 @@ const NotesItem = memo(
     const showAttachmentPreview =
       !isMasked && !meaningSnippet && !searchSnippet && !rawPreviewText && !!attachmentInfo
     const previewText = isMasked
-      ? t('noteCard.lockedSummary')
+      ? t(hasLockPassword ? 'noteCard.lockedSummaryPassword' : 'noteCard.lockedSummary')
       : meaningSnippet || rawPreviewText || t('noteCard.noAdditionalText')
 
     const availableMoveFolders = allFolders.filter(
@@ -558,8 +560,6 @@ export default function NotesList({
   const meaningNotice = useSelector(getMeaningSearchNotice, shallowEqual)
   const folders = useSelector(getFolders)
   const vaults = useSelector(getVaults)
-  const lockMethod = useSelector(getLockMethod)
-  const { requestUnlockPassword, showLockUnavailable } = useNoteLockPassword()
   const { step } = useSelector(getInviterStatus)
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
@@ -859,10 +859,7 @@ export default function NotesList({
             currentlyLocked: noteData?.locked === true,
             reason: t('noteCard.unlockReason'),
             lockReason: t('noteCard.lockReason'),
-            dispatch,
-            lockMethod,
-            requestPassword: requestUnlockPassword,
-            onUnavailable: showLockUnavailable
+            dispatch
           })
           break
         case 'togglePin':
@@ -897,9 +894,6 @@ export default function NotesList({
       dispatch,
       store,
       selectedFolder,
-      lockMethod,
-      requestUnlockPassword,
-      showLockUnavailable,
       handleBulkMove,
       handleBulkDelete,
       handleBulkMerge,
