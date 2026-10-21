@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { loadUpcomingGroups, setTaskDone } from '@pear-notes/core/store/services/upcomingTasks.js'
 
+import { useOnNotesChanged } from './useOnNotesChanged'
+
 const REFRESH_MS = 30 * 1000
 
 export function useUpcoming() {
@@ -26,6 +28,8 @@ export function useUpcoming() {
       window.removeEventListener('focus', refresh)
     }
   }, [refresh])
+
+  useOnNotesChanged(refresh)
 
   const toggleDone = useCallback(
     async (task) => {
