@@ -30,7 +30,12 @@ export async function uploadFileWithProgress({ noteKey, file, fileName, itemId }
   })
 
   if (!attempt) {
-    return insertFileFromFile({ noteKey, file, fileName: name })
+    if (itemId) beginUploadItem(itemId)
+    try {
+      return await insertFileFromFile({ noteKey, file, fileName: name })
+    } finally {
+      if (itemId && !isUploadCancelled(itemId)) completeUploadItem(itemId)
+    }
   }
 
   if (itemId) beginUploadItem(itemId, attempt.cancel)

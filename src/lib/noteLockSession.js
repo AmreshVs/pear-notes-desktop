@@ -58,6 +58,18 @@ async function writePref(key, value) {
   }
 }
 
+const biometricListeners = new Set()
+
+export function subscribeBiometricUnlock(listener) {
+  biometricListeners.add(listener)
+  return () => biometricListeners.delete(listener)
+}
+
+async function writeBiometricPref(vaultId, value) {
+  await writePref(biometricPref(vaultId), value)
+  biometricListeners.forEach((listener) => listener())
+}
+
 export function canUseBiometricUnlock() {
   return canUseLockRootSecret()
 }
@@ -76,7 +88,7 @@ async function shouldOfferBiometric() {
 async function storeRootKey(rootKey) {
   const vaultId = currentVaultId()
   if (!vaultId || !(await storeLockRootKey(vaultId, rootKey))) return false
-  await writePref(biometricPref(vaultId), BIOMETRIC_ON)
+  await writeBiometricPref(vaultId, BIOMETRIC_ON)
   return true
 }
 
@@ -87,13 +99,13 @@ async function offerBiometric(rootKey) {
   if (await showNoteLockPrompt('biometricOffer')) {
     await storeRootKey(rootKey)
   } else {
-    await writePref(biometricPref(vaultId), BIOMETRIC_OFF)
+    await writeBiometricPref(vaultId, BIOMETRIC_OFF)
   }
 }
 
 async function forgetBiometric(vaultId, offerAgain) {
   await deleteLockRootKey(vaultId)
-  await writePref(biometricPref(vaultId), offerAgain ? '' : BIOMETRIC_OFF)
+  await writeBiometricPref(vaultId, offerAgain ? '' : BIOMETRIC_OFF)
 }
 
 async function unlockWithBiometric(reason) {

@@ -51,6 +51,7 @@ import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { clearEditorHistory } from '../../lib/editorHistory'
 import { EmptyFirstLine } from '../../lib/emptyFirstLine'
 import { FindInNote } from '../../lib/findInNote'
+import { insertUploadedNode } from '../../lib/insertUploadedNode'
 import { KeptSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
@@ -188,8 +189,7 @@ const RichTextEditor = forwardRef(
 
                   if (file.type.startsWith('image/')) {
                     const node = schema.nodes.image.create({ src: link })
-                    const transaction = view.state.tr.replaceSelectionWith(node)
-                    view.dispatch(transaction)
+                    insertUploadedNode(view, node)
                   } else {
                     if (schema.nodes.fileAttachment) {
                       const node = schema.nodes.fileAttachment.create({
@@ -198,8 +198,7 @@ const RichTextEditor = forwardRef(
                         fileType: file.type,
                         url: link
                       })
-                      const transaction = view.state.tr.replaceSelectionWith(node)
-                      view.dispatch(transaction)
+                      insertUploadedNode(view, node)
                     }
                   }
                 } catch (error) {
@@ -242,8 +241,7 @@ const RichTextEditor = forwardRef(
 
                   if (file.type.startsWith('image/')) {
                     const node = schema.nodes.image.create({ src: link })
-                    const transaction = view.state.tr.replaceSelectionWith(node)
-                    view.dispatch(transaction)
+                    insertUploadedNode(view, node)
                   } else {
                     if (schema.nodes.fileAttachment) {
                       const node = schema.nodes.fileAttachment.create({
@@ -252,8 +250,7 @@ const RichTextEditor = forwardRef(
                         fileType: file.type,
                         url: link
                       })
-                      const transaction = view.state.tr.replaceSelectionWith(node)
-                      view.dispatch(transaction)
+                      insertUploadedNode(view, node)
                     }
                   }
                 } catch (error) {
