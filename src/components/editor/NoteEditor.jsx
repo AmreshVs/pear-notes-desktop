@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Lock } from 'lucide-react'
 
-import { backendApi } from '@pear-notes/core/backend/api.js'
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import { imageDetailsContent } from '@pear-notes/core/store/services/imageDetails.js'
@@ -67,6 +66,7 @@ import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { insertNoteFile } from '../../lib/fileManager'
 import { clearLocalAiSheetRequest, useLocalAiSheetRequest } from '../../lib/localAi/localAiRequests'
 import {
   isNoteSessionUnlocked,
@@ -416,7 +416,7 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
       const extension =
         AUDIO_EXTENSION_BY_TYPE.find(([marker]) => blob.type.includes(marker))?.[1] ?? 'webm'
       const fileName = `Audio Recording ${new Date().toLocaleString()}.${extension}`
-      const { link } = await backendApi.insertFile({
+      const { link } = await insertNoteFile({
         key: noteKey,
         fileName,
         buffer: await blob.arrayBuffer()

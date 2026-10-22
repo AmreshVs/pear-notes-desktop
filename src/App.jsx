@@ -69,6 +69,7 @@ import DuplicatesList from './components/tools/DuplicatesList'
 import RecapList from './components/tools/RecapList'
 import UpcomingList from './components/tools/UpcomingList'
 import { useAppReload } from './hooks/useAppReload'
+import { useLockRefusals } from './hooks/useLockRefusals'
 import { useNoteAutoRelock } from './hooks/useNoteAutoRelock'
 import { usePdfThumbSweep } from './hooks/usePdfThumbSweep'
 import { usePowerState } from './hooks/usePowerState'
@@ -120,6 +121,7 @@ function App() {
 
   useAppReload()
   useVaultErrors()
+  useLockRefusals()
   usePdfThumbSweep()
   usePowerState()
   useNoteAutoRelock()

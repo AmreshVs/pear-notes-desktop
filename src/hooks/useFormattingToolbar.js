@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { backendApi } from '@pear-notes/core/backend/api.js'
-
+import { insertNoteFile } from '../lib/fileManager'
 import { requestLocalAiSheet } from '../lib/localAi/localAiRequests'
 import { isStoredNoteLocked } from '../lib/noteLockActions'
 import { UploadCancelledError, uploadFileWithProgress } from '../lib/noteUploadManager'
@@ -240,7 +239,7 @@ export function useFormattingToolbar(editor, noteKey) {
       const buffer = await blob.arrayBuffer()
       const fileName = `Audio Recording ${new Date().toLocaleString()}.webm`
 
-      const { link } = await backendApi.insertFile({
+      const { link } = await insertNoteFile({
         key: noteKey,
         fileName,
         buffer

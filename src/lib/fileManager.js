@@ -1,5 +1,9 @@
+import i18next from 'i18next'
+
 import { backendApi } from '@pear-notes/core/backend/api.js'
-import { HYPERDRIVE_URL_PREFIX } from '@pear-notes/core/constant.js'
+import { HYPERDRIVE_URL_PREFIX, LOCK_REFUSAL } from '@pear-notes/core/constant.js'
+
+import { unlockLockedNotes } from './noteLockSession'
 
 export function getFilePath(file) {
   try {
@@ -9,14 +13,26 @@ export function getFilePath(file) {
   }
 }
 
+export function unlockToAddFile(result) {
+  if (result?.reason !== LOCK_REFUSAL.SESSION_CLOSED) return false
+  const reason = i18next.t('noteLockPassword.addFileReason')
+  return unlockLockedNotes(reason, 'unlock', reason)
+}
+
+export async function insertNoteFile(args) {
+  const result = await backendApi.insertFile(args)
+  if (!(await unlockToAddFile(result))) return result
+  return backendApi.insertFile(args)
+}
+
 export async function insertFileFromFile({ noteKey, file, fileName }) {
   const name = fileName || file.name
   const path = getFilePath(file)
   if (path) {
-    return backendApi.insertFile({ key: noteKey, fileName: name, path })
+    return insertNoteFile({ key: noteKey, fileName: name, path })
   }
   const buffer = await file.arrayBuffer()
-  return backendApi.insertFile({ key: noteKey, fileName: name, buffer })
+  return insertNoteFile({ key: noteKey, fileName: name, buffer })
 }
 
 export async function uploadFile({ noteKey, file }) {
@@ -46,10 +62,15 @@ export function createProgressUpload({ noteKey, file, fileName, onProgress }) {
   }
   const promise = (async () => {
     let link = ''
+    let reason = ''
     let gotDone = false
     try {
       for await (const msg of stream) {
         if (cancelled) break
+        if (msg.reason) {
+          reason = msg.reason
+          continue
+        }
         if (msg.done) {
           link = msg.link
           gotDone = true
@@ -65,7 +86,7 @@ export function createProgressUpload({ noteKey, file, fileName, onProgress }) {
       throw e
     }
     if (cancelled && !gotDone) throw new UploadCancelledError()
-    return { link }
+    return { link, reason }
   })()
   return { promise, cancel }
 }

@@ -91,7 +91,7 @@ export default function PrivacySettings() {
           <div className={ROW_CLASS}>
             <div className='space-y-1 min-w-0'>
               <label className={ROW_TITLE_CLASS}>{t('settings.privacy.lockPassword')}</label>
-              <p className={ROW_DESC_CLASS}>{t('settings.privacy.attachmentsNotEncrypted')}</p>
+              <p className={ROW_DESC_CLASS}>{t('settings.privacy.attachmentsEncrypted')}</p>
             </div>
             <button
               onClick={setOrChangePassword}

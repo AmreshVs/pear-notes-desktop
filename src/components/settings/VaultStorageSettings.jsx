@@ -14,6 +14,7 @@ import {
   HardDrive,
   Image as ImageIcon,
   Info,
+  Lock,
   Mic,
   Pause,
   PenLine,
@@ -31,6 +32,7 @@ import {
   deleteNoteMedia,
   getActiveDownloads,
   getActiveUploads,
+  getFilesWaitingToSeal,
   getIsReclaiming,
   getNotesStorageInfo,
   getStorageError,
@@ -292,6 +294,23 @@ function UploadRow({ upload }) {
   )
 }
 
+function SealWaitingRow({ file }) {
+  const { t } = useTranslation()
+  return (
+    <div className='px-5 py-3.5 border-b border-overlay-light last:border-0 flex items-center justify-between gap-3'>
+      <div className='flex items-center gap-2 min-w-0'>
+        <Lock className='w-4 h-4 text-text-tertiary flex-shrink-0' />
+        <span className='text-sm font-medium text-text-primary truncate'>
+          {file.fileName || t('storage.attachment')}
+        </span>
+      </div>
+      <span className='text-sm font-bold text-text-tertiary flex-shrink-0'>
+        {formatBytes(file.size)}
+      </span>
+    </div>
+  )
+}
+
 function TransferNoteGroup({ group, renderRow }) {
   return (
     <div className='border-b border-overlay-light last:border-0'>
@@ -311,6 +330,7 @@ export default function VaultStorageSettings() {
   const isReclaiming = useSelector(getIsReclaiming)
   const activeDownloads = useSelector(getActiveDownloads)
   const activeUploads = useSelector(getActiveUploads)
+  const sealWaiting = useSelector(getFilesWaitingToSeal)
   const notesStorageInfo = useSelector(getNotesStorageInfo)
   const buckets = useSelector(selectStorageByKind)
   const isLoading = useSelector(getStorageIsLoading)
@@ -337,6 +357,10 @@ export default function VaultStorageSettings() {
   const uploadGroups = useMemo(
     () => groupTransfersByNote(activeUploads, noteTitleByKey, t('folders.untitled')),
     [activeUploads, noteTitleByKey, t]
+  )
+  const sealWaitingGroups = useMemo(
+    () => groupTransfersByNote(sealWaiting, noteTitleByKey, t('folders.untitled')),
+    [sealWaiting, noteTitleByKey, t]
   )
 
   useEffect(() => {
@@ -436,6 +460,26 @@ export default function VaultStorageSettings() {
                 key={group.noteKey}
                 group={group}
                 renderRow={(upload) => <UploadRow key={upload.url} upload={upload} />}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {sealWaiting.length > 0 && (
+        <div className='space-y-1'>
+          <h3 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-1'>
+            {t('storage.waitingToEncrypt')} ({sealWaiting.length})
+          </h3>
+          <p className='text-sm text-text-tertiary ml-2 mb-3'>
+            {t('storage.waitingToEncryptDesc')}
+          </p>
+          <div className={TRANSFER_LIST_CLASS}>
+            {sealWaitingGroups.map((group) => (
+              <TransferNoteGroup
+                key={group.noteKey}
+                group={group}
+                renderRow={(file) => <SealWaitingRow key={file.link} file={file} />}
               />
             ))}
           </div>

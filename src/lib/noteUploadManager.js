@@ -1,4 +1,9 @@
-import { createProgressUpload, insertFileFromFile, UploadCancelledError } from './fileManager'
+import {
+  createProgressUpload,
+  insertFileFromFile,
+  unlockToAddFile,
+  UploadCancelledError
+} from './fileManager'
 import {
   beginUploadItem,
   completeUploadItem,
@@ -8,7 +13,7 @@ import {
 
 export { UploadCancelledError }
 
-export async function uploadFileWithProgress({ noteKey, file, fileName, itemId }) {
+export async function uploadFileWithProgress({ noteKey, file, fileName, itemId }, retried = false) {
   const name = fileName || file.name
 
   if (itemId && isUploadCancelled(itemId)) {
@@ -29,9 +34,14 @@ export async function uploadFileWithProgress({ noteKey, file, fileName, itemId }
   }
 
   if (itemId) beginUploadItem(itemId, attempt.cancel)
+  let result
   try {
-    return await attempt.promise
+    result = await attempt.promise
   } finally {
     if (itemId && !isUploadCancelled(itemId)) completeUploadItem(itemId)
   }
+  if (!retried && (await unlockToAddFile(result))) {
+    return uploadFileWithProgress({ noteKey, file, fileName, itemId }, true)
+  }
+  return result
 }
