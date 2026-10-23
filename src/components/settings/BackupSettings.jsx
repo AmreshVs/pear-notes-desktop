@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import { Database, History, Import, Lock, Share, Shield } from 'lucide-react'
 
+import { backendApi } from '@pear-notes/core/backend/api.js'
 import {
   getExportStatus,
   getImportStatus,
@@ -21,6 +22,7 @@ import { formatBytes } from '@pear-notes/core/utils.js'
 
 import { getBackupErrorMessage } from '../../utils/backupErrors'
 import BackupPasswordModal from '../modals/BackupPasswordModal'
+import OutdatedDevicesModal from '../modals/OutdatedDevicesModal'
 
 const LAST_BACKUP_KEY = 'pear_notes_last_backup'
 
@@ -52,6 +54,7 @@ export default function BackupSettings() {
   const [showExportPasswordModal, setShowExportPasswordModal] = useState(false)
   const [showRestorePasswordModal, setShowRestorePasswordModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [outdatedDevices, setOutdatedDevices] = useState(null)
 
   useEffect(() => {
     if (exportStatus.step === 'idle') return
@@ -197,10 +200,32 @@ export default function BackupSettings() {
       const name = filePath.split(/[/\\]/).pop() || ''
 
       setSelectedFile({ name, filePath })
-      setShowRestorePasswordModal(true)
+      const blocking = await findOutdatedDevices(filePath)
+      if (blocking.length) setOutdatedDevices(blocking)
+      else setShowRestorePasswordModal(true)
     } catch (err) {
       console.error(err)
     }
+  }
+
+  const findOutdatedDevices = async (filePath) => {
+    try {
+      const check = await backendApi.checkBackupRestore({ filePath })
+      return check.sealed ? check.blocking : []
+    } catch (err) {
+      console.error(err)
+      return []
+    }
+  }
+
+  const handleRestoreAnyway = () => {
+    setOutdatedDevices(null)
+    setShowRestorePasswordModal(true)
+  }
+
+  const handleCancelOutdated = () => {
+    setOutdatedDevices(null)
+    setSelectedFile(null)
   }
 
   const handleConfirmRestore = async (password) => {
@@ -336,6 +361,15 @@ export default function BackupSettings() {
         mode='create'
         onSubmit={handleConfirmExport}
         onCancel={handleCancelExportPassword}
+      />
+
+      <OutdatedDevicesModal
+        devices={outdatedDevices}
+        descriptionKey='backup.outdatedDevices.description'
+        confirmLabel={t('backup.outdatedDevices.restoreAnyway')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleRestoreAnyway}
+        onCancel={handleCancelOutdated}
       />
 
       <BackupPasswordModal

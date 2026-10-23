@@ -1009,6 +1009,16 @@
       "confirm_other": "Split this note into {{count}} notes at its headings: {{titles}}? The original moves to Recently Deleted, and right after you can tap Undo split."
     }
   },
+  "outdatedDevices": {
+    "title": "Update your other devices first",
+    "unnamedDevice": "Unnamed device"
+  },
+  "heldMerge": {
+    "description_one": "Your notes from before you joined include locked notes. {{devices}} is on an older version of Pear Notes, which can erase locked notes. Your notes will be added once it's updated.",
+    "description_other": "Your notes from before you joined include locked notes. {{devices}} are on an older version of Pear Notes, which can erase locked notes. Your notes will be added once they're updated.",
+    "combineAnyway": "Combine anyway",
+    "combineLater": "Combine later"
+  },
   "pairing": {
     "status": {
       "searching": "Searching for device...",
@@ -1252,6 +1262,11 @@
     "clearStorage": "Clear storage",
     "clearAllDataTitle": "Clear all data?",
     "clearAllDataDesc": "This will permanently delete ALL notes, folders, settings, and media. This cannot be undone.",
+    "outdatedDevices": {
+      "description_one": "This backup has locked notes. {{devices}} is on an older version of Pear Notes, which can erase locked notes. Update it before you restore.",
+      "description_other": "This backup has locked notes. {{devices}} are on an older version of Pear Notes, which can erase locked notes. Update them before you restore.",
+      "restoreAnyway": "Restore anyway"
+    },
     "progress": {
       "backingUp": "Backing up your data...",
       "restoring": "Restoring your data...",

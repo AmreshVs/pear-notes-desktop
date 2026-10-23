@@ -73,6 +73,7 @@ export default function PairingStatusOverlay() {
       case 'initializing_storage':
         return t('pairing.status.initializing')
       case 'replicating_data':
+      case 'merge_needs_confirm':
         return t('pairing.status.replicating')
       case 'syncing':
         return t('pairing.status.startingReplication')
@@ -98,6 +99,7 @@ export default function PairingStatusOverlay() {
   const isStepSyncing = [
     'initializing_storage',
     'replicating_data',
+    'merge_needs_confirm',
     'syncing',
     'receiving_data'
   ].includes(step)
