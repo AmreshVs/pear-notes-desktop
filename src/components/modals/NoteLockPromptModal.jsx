@@ -18,15 +18,22 @@ export default function NoteLockPromptModal() {
   const method = t(getBiometricMethodKey() || FALLBACK_METHOD_KEY)
   const isOffer = kind === 'biometricOffer'
   const Icon = isOffer ? Fingerprint : Lock
+  const isChange = kind === 'changeSuggested'
   const title = isOffer
     ? t('noteLockPrompt.biometricTitle', { method })
-    : t('noteLockPrompt.migrationTitle')
+    : isChange
+      ? t('noteLockPrompt.changeTitle')
+      : t('noteLockPrompt.migrationTitle')
   const body = isOffer
     ? t('noteLockPrompt.biometricBody', { method })
-    : t('noteLockPrompt.migrationBody', { method })
+    : isChange
+      ? t('noteLockPrompt.changeBody')
+      : t('noteLockPrompt.migrationBody', { method })
   const confirm = isOffer
     ? t('noteLockPrompt.useBiometric', { method })
-    : t('noteLockPrompt.setPassword')
+    : isChange
+      ? t('noteLockPrompt.changePassword')
+      : t('noteLockPrompt.setPassword')
 
   return (
     <div className='fixed inset-0 z-[2000] flex items-center justify-center p-6'>

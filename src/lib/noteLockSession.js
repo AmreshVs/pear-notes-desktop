@@ -27,12 +27,14 @@ const BIOMETRIC_ON = 'on'
 const BIOMETRIC_OFF = 'off'
 const DEVICES_OUTDATED = 'DEVICES_OUTDATED'
 const WRONG_KEY = 'WRONG_KEY'
+const CHANGE_SUGGESTED = 'CHANGE_SUGGESTED'
 
 let enrollRequested = false
 let enrolledKey = ''
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const biometricPref = (vaultId) => `noteLockBiometric:${vaultId}`
+const changeSuggestedPref = (vaultId) => `noteLockChangeSuggested:${vaultId}`
 
 function currentVaultId() {
   return getCurrentVault(store.getState())?.id || ''
@@ -103,6 +105,20 @@ async function offerBiometric(rootKey) {
   }
 }
 
+async function suggestPasswordChange() {
+  const vaultId = currentVaultId()
+  if (!vaultId || (await readPref(changeSuggestedPref(vaultId))) !== '') return
+  await wait(PROMPT_DELAY_MS)
+  await writePref(changeSuggestedPref(vaultId), 'shown')
+  if (await showNoteLockPrompt('changeSuggested')) await requestNoteLockPasswordCreate('change')
+}
+
+export async function refreshBiometricKey(password) {
+  if (!(await isBiometricUnlockOn())) return
+  const result = await backendApi.openLockSession({ password, returnRootKey: true })
+  if (result.ok && result.rootKey) await storeRootKey(result.rootKey)
+}
+
 async function forgetBiometric(vaultId, offerAgain) {
   await deleteLockRootKey(vaultId)
   await writeBiometricPref(vaultId, offerAgain ? '' : BIOMETRIC_OFF)
@@ -120,6 +136,7 @@ async function unlockWithBiometric(reason) {
   const result = await backendApi.openLockSession({ rootKey })
   if (result.ok) {
     markNoteUnlocked()
+    if (result.reason === CHANGE_SUGGESTED) suggestPasswordChange()
     return true
   }
   if (result.reason === WRONG_KEY) await forgetBiometric(vaultId, true)
@@ -135,8 +152,14 @@ export async function submitLockPassword(password) {
   if (result.rootKey) {
     if (enrolling) enrolledKey = result.rootKey
     else offerBiometric(result.rootKey)
+  } else if (result.reason === CHANGE_SUGGESTED) {
+    suggestPasswordChange()
   }
-  return { ok: true, retryAfter: 0, reason: result.reason }
+  return {
+    ok: true,
+    retryAfter: 0,
+    reason: result.reason === CHANGE_SUGGESTED ? '' : result.reason
+  }
 }
 
 export async function enableBiometricUnlock(message) {

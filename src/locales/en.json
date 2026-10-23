@@ -1183,7 +1183,10 @@
     "notNow": "Not now",
     "biometricTitle": "Unlock locked notes with {{method}}?",
     "biometricBody": "You'll still need your password on new devices and if {{method}} changes.",
-    "useBiometric": "Use {{method}}"
+    "useBiometric": "Use {{method}}",
+    "changeTitle": "Choose a new lock password",
+    "changeBody": "Your locked notes are encrypted. For extra protection, choose a new password: an older copy of your current one, saved in a weaker format, is still kept in your vault's sync history.",
+    "changePassword": "Change password"
   },
   "tabs": {
     "home": "Home",

@@ -10,7 +10,7 @@ import {
   resolveNoteLockPassword,
   useNoteLockPasswordRequest
 } from '../../lib/noteLockPasswordFlow'
-import { hasLockPassword, submitLockPassword } from '../../lib/noteLockSession'
+import { hasLockPassword, refreshBiometricKey, submitLockPassword } from '../../lib/noteLockSession'
 import LockUnavailableModal from '../modals/LockUnavailableModal'
 import NoteLockPasswordModal from '../modals/NoteLockPasswordModal'
 import NoteLockPromptModal from '../modals/NoteLockPromptModal'
@@ -51,6 +51,7 @@ export default function NoteLockPasswordProvider({ children }) {
       }
       dispatch(loadSettings())
       if (firstTime) await submitLockPassword(password)
+      else await refreshBiometricKey(password)
       settle(true)
     },
     [dispatch, settle, t]
