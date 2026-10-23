@@ -54,7 +54,7 @@ export default function BackupSettings() {
   const [showExportPasswordModal, setShowExportPasswordModal] = useState(false)
   const [showRestorePasswordModal, setShowRestorePasswordModal] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
-  const [outdatedDevices, setOutdatedDevices] = useState(null)
+  const [outdated, setOutdated] = useState(null)
 
   useEffect(() => {
     if (exportStatus.step === 'idle') return
@@ -199,39 +199,52 @@ export default function BackupSettings() {
       const filePath = result.filePaths[0]
       const name = filePath.split(/[/\\]/).pop() || ''
 
-      setSelectedFile({ name, filePath })
-      const blocking = await findOutdatedDevices(filePath)
-      if (blocking.length) setOutdatedDevices(blocking)
+      const check = await checkRestore({ filePath })
+      setSelectedFile({ name, filePath, sealed: check.sealed })
+      if (check.blocking.length) setOutdated({ devices: check.blocking })
       else setShowRestorePasswordModal(true)
     } catch (err) {
       console.error(err)
     }
   }
 
-  const findOutdatedDevices = async (filePath) => {
+  const checkRestore = async (request) => {
     try {
-      const check = await backendApi.checkBackupRestore({ filePath })
-      return check.sealed ? check.blocking : []
+      const check = await backendApi.checkBackupRestore(request)
+      return check.sealed ? check : { sealed: false, blocking: [] }
     } catch (err) {
       console.error(err)
-      return []
+      return { sealed: false, blocking: [] }
     }
   }
 
   const handleRestoreAnyway = () => {
-    setOutdatedDevices(null)
-    setShowRestorePasswordModal(true)
+    const password = outdated?.password
+    setOutdated(null)
+    if (password) startRestore(selectedFile, password)
+    else setShowRestorePasswordModal(true)
   }
 
   const handleCancelOutdated = () => {
-    setOutdatedDevices(null)
+    setOutdated(null)
     setSelectedFile(null)
   }
 
   const handleConfirmRestore = async (password) => {
     if (!selectedFile) return
-    const file = selectedFile
     setShowRestorePasswordModal(false)
+    if (!selectedFile.sealed) {
+      const check = await checkRestore({ filePath: selectedFile.filePath, password })
+      if (check.blocking.length) {
+        setOutdated({ devices: check.blocking, password })
+        return
+      }
+    }
+    startRestore(selectedFile, password)
+  }
+
+  const startRestore = (file, password) => {
+    if (!file) return
     setSelectedFile(null)
 
     setModalState({
@@ -364,7 +377,7 @@ export default function BackupSettings() {
       />
 
       <OutdatedDevicesModal
-        devices={outdatedDevices}
+        devices={outdated?.devices}
         descriptionKey='backup.outdatedDevices.description'
         confirmLabel={t('backup.outdatedDevices.restoreAnyway')}
         cancelLabel={t('common.cancel')}
