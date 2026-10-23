@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -121,6 +122,28 @@ function requireIdentity(name, label) {
     )
   }
   ok(`${label} present`)
+}
+
+// Listing an identity does not prove its private key is usable from this
+// process, and @electron/packager swallows osxSign errors, so a locked or
+// inaccessible key otherwise ships an ad-hoc signed app minutes later.
+function requireSigningAccess(name, label) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-notes-sign-'))
+  try {
+    const probe = path.join(dir, 'probe')
+    fs.copyFileSync('/usr/bin/true', probe)
+    const { status, output } = run('codesign', ['--force', '--sign', name, probe])
+    if (status !== 0) {
+      process.stdout.write(output)
+      throw new ReleaseError(
+        `Cannot sign with the ${label}: ${name}`,
+        'Run the release from a normal Terminal session with the login keychain unlocked (security unlock-keychain), and allow codesign to use the key'
+      )
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+  ok(`${label} usable for signing`)
 }
 
 function readProfile(profilePath) {
@@ -387,7 +410,13 @@ function verifyBundle(config, appDir) {
   const verify = run('codesign', ['--verify', '--deep', '--strict', '--verbose=2', appDir])
   if (verify.status !== 0) {
     process.stdout.write(verify.output)
-    throw new ReleaseError('codesign verification failed')
+    const adhoc = run('codesign', ['-dv', appDir]).output.includes('Signature=adhoc')
+    throw new ReleaseError(
+      'codesign verification failed',
+      adhoc
+        ? 'The app is only ad-hoc signed: the signing step failed and @electron/packager hid the error. Check that the signing key is usable from this session'
+        : undefined
+    )
   }
   ok('signature valid, satisfies its Designated Requirement')
 
@@ -806,6 +835,7 @@ async function main() {
   }
   ok(`bundle id ${config.APPLE_BUNDLE_ID}`)
   requireIdentity(config.MAS_CODESIGN_IDENTITY, 'application signing identity')
+  requireSigningAccess(config.MAS_CODESIGN_IDENTITY, 'application signing identity')
   requireIdentity(config.MAS_INSTALLER_IDENTITY, 'installer signing identity')
   checkProfile(config)
   checkCorePin()
@@ -862,6 +892,7 @@ async function mainDmg(args, config) {
   }
   ok(`bundle id ${config.APPLE_BUNDLE_ID}`)
   requireIdentity(config.MAC_CODESIGN_IDENTITY, 'Developer ID Application identity')
+  requireSigningAccess(config.MAC_CODESIGN_IDENTITY, 'Developer ID Application identity')
   checkCorePin()
   checkNotaryCredentials(config)
 
