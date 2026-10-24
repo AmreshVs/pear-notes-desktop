@@ -1,7 +1,5 @@
-const REPORT_EMAIL = 'vsamreshpro@gmail.com'
+const REPORT_URL = 'https://amreshvs.github.io/pear-notes/contact/?topic=ai-result'
 
-export function openReportProblem(subject) {
-  window.electronBridge.openExternal(
-    `mailto:${REPORT_EMAIL}?subject=${encodeURIComponent(subject)}`
-  )
+export function openReportProblem() {
+  window.electronBridge.openExternal(REPORT_URL)
 }

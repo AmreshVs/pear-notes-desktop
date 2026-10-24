@@ -281,7 +281,7 @@ export default function AskVaultModal({ initialQuestion, onOpenSettings, onClose
 
   const renderReportLink = () => (
     <button
-      onClick={() => openReportProblem(t('localAi.reportSubject'))}
+      onClick={() => openReportProblem()}
       className='self-start text-xs font-bold text-accent-primary hover:underline'
     >
       {t('localAi.actions.reportProblem')}

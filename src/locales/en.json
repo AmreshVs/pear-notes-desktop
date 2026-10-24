@@ -1759,7 +1759,6 @@
     }
   },
   "localAi": {
-    "reportSubject": "Pear Notes on-device AI: problem with a result",
     "actions": {
       "insert": "Insert",
       "copy": "Copy",

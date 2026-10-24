@@ -442,7 +442,7 @@ export default function LocalAiSheetModal({
 
           {phase === 'preview' && showReportLink && (
             <button
-              onClick={() => openReportProblem(t('localAi.reportSubject'))}
+              onClick={() => openReportProblem()}
               className='mt-2 text-xs font-bold text-accent-primary hover:underline'
             >
               {t('localAi.actions.reportProblem')}
