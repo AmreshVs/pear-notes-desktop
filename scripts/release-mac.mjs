@@ -6,8 +6,11 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import coreInstall from './coreInstall.cjs'
+import { macSdkEnv } from './mac-sdk-env.cjs'
 import { formatDuration, streamCommand } from './progress.mjs'
 import { storeBuild } from '../electron/storeBuild.cjs'
+
+Object.assign(process.env, macSdkEnv())
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const configPath = path.join(root, '.release.mac.env')
