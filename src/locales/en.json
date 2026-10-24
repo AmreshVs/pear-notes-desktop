@@ -986,6 +986,8 @@
     },
     "lock": {
       "passwordProtected": "This note is protected. Enter your note lock password to view it.",
+      "biometricProtected": "This note is protected. Use {{method}} to view it.",
+      "unlockWith": "Unlock with {{method}}",
       "authProtected": "This note is protected. Use Touch ID or your login password to authenticate and view it.",
       "unavailable": "This note is locked and can't be opened on this device. Set up device authentication (Touch ID or a login password) in System Settings to view it."
     },
@@ -1130,6 +1132,8 @@
     "vaults": "Vaults"
   },
   "noteLockPassword": {
+    "biometricPasswordChanged": "The note lock password was changed on another device, so {{method}} can't open locked notes here yet. Enter the new password. You'll be offered {{method}} again after.",
+    "biometricKeyMissing": "{{method}} can't open locked notes on this device anymore. Enter your note lock password. You'll be offered {{method}} again after.",
     "createTitle": "Set note lock password",
     "enterTitle": "Enter note lock password",
     "createDesc": "This password will be required to open locked notes on all your synced devices.",

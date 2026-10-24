@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { Lock } from 'lucide-react'
+import { Fingerprint, Lock } from 'lucide-react'
 
 import { ALL_NOTES_KEY, NOTE_TITLE_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
@@ -59,6 +59,7 @@ import {
 import { getOtherVaults, moveToVault } from '@pear-notes/core/store/slices/vaultsSlice.js'
 
 import { useAiToolsVisible } from '../../hooks/useAiFeatureGate'
+import { useBiometricUnlockOn } from '../../hooks/useBiometricUnlockOn'
 import { useFindInNote } from '../../hooks/useFindInNote'
 import { useLocalAiFeatureReady } from '../../hooks/useLocalAiFeatureReady'
 import { useLockedNoteProtection } from '../../hooks/useLockedNoteProtection'
@@ -66,6 +67,7 @@ import { useSpellcheck } from '../../hooks/useSpellcheck'
 import { copyToClipboard } from '../../lib/clipboard'
 import { showContextMenu } from '../../lib/contextMenu'
 import { isDeviceAuthSupported } from '../../lib/deviceAuth'
+import { getBiometricMethodKey } from '../../lib/deviceAuth'
 import { insertNoteFile } from '../../lib/fileManager'
 import { clearLocalAiSheetRequest, useLocalAiSheetRequest } from '../../lib/localAi/localAiRequests'
 import {
@@ -178,6 +180,9 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
   const [unlocking, setUnlocking] = useState(false)
   const [authSupported, setAuthSupported] = useState(true)
   const lockMethod = useSelector(getLockMethod)
+  const biometricMethodKey = getBiometricMethodKey()
+  const biometricUnlock = useBiometricUnlockOn(lockMethod === 'password') && !!biometricMethodKey
+  const biometricMethod = biometricUnlock ? t(biometricMethodKey) : ''
   const isLocked = noteData?.locked === true
   const isPinned = noteData?.pinned === true
   const noteUnlocked = isNoteUnlocked(selectedNoteKey)
@@ -831,18 +836,24 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-primary/5 blur-[120px] rounded-full pointer-events-none' />
         <div className='relative z-10 flex flex-col items-center text-center px-8 animate-in fade-in zoom-in-95 duration-500'>
           <div className='w-24 h-24 bg-bg-secondary border border-border-primary rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl'>
-            <Lock className='w-10 h-10 text-accent-primary' />
+            {biometricUnlock ? (
+              <Fingerprint className='w-10 h-10 text-accent-primary' />
+            ) : (
+              <Lock className='w-10 h-10 text-accent-primary' />
+            )}
           </div>
           <div className='space-y-3 max-w-[390px]'>
             <h3 className='text-3xl font-black text-text-primary tracking-tight'>
               {t('noteCard.lockedTitle')}
             </h3>
             <p className='text-base text-text-tertiary leading-relaxed'>
-              {lockMethod === 'password'
-                ? t('noteEditor.lock.passwordProtected')
-                : authSupported
-                  ? t('noteEditor.lock.authProtected')
-                  : t('noteEditor.lock.unavailable')}
+              {biometricUnlock
+                ? t('noteEditor.lock.biometricProtected', { method: biometricMethod })
+                : lockMethod === 'password'
+                  ? t('noteEditor.lock.passwordProtected')
+                  : authSupported
+                    ? t('noteEditor.lock.authProtected')
+                    : t('noteEditor.lock.unavailable')}
             </p>
           </div>
           {(lockMethod === 'password' || authSupported) && (
@@ -851,8 +862,12 @@ export default function NoteEditor({ onUpdate, onDelete, onEditorReady }) {
               disabled={unlocking}
               className='mt-8 flex items-center gap-2 px-6 py-3 bg-accent-primary text-accent-on-primary rounded-xl font-bold text-sm hover:bg-accent-primary-hover transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              <Lock className='w-4 h-4' />
-              {unlocking ? t('noteEditor.authenticating') : t('noteCard.unlock')}
+              {biometricUnlock ? <Fingerprint className='w-4 h-4' /> : <Lock className='w-4 h-4' />}
+              {unlocking
+                ? t('noteEditor.authenticating')
+                : biometricUnlock
+                  ? t('noteEditor.lock.unlockWith', { method: biometricMethod })
+                  : t('noteCard.unlock')}
             </button>
           )}
         </div>

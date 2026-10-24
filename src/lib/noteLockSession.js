@@ -1,3 +1,5 @@
+import i18next from 'i18next'
+
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import * as log from '@pear-notes/core/log.js'
 import { getNotesData } from '@pear-notes/core/store/slices/notesSlice.js'
@@ -9,6 +11,7 @@ import {
   authenticate,
   canUseLockRootSecret,
   deleteLockRootKey,
+  getBiometricMethodKey,
   isDeviceAuthSupported,
   readLockRootKey,
   storeLockRootKey
@@ -28,6 +31,16 @@ const BIOMETRIC_OFF = 'off'
 const DEVICES_OUTDATED = 'DEVICES_OUTDATED'
 const WRONG_KEY = 'WRONG_KEY'
 const CHANGE_SUGGESTED = 'CHANGE_SUGGESTED'
+const FALLBACK_METHOD_KEY = 'settings.privacy.methods.screenLock'
+
+const BIOMETRIC_UNLOCKED = 'unlocked'
+const BIOMETRIC_SKIPPED = 'skipped'
+const KEY_MISSING = 'KEY_MISSING'
+
+const STALE_KEY_MESSAGES = {
+  [WRONG_KEY]: 'noteLockPassword.biometricPasswordChanged',
+  [KEY_MISSING]: 'noteLockPassword.biometricKeyMissing'
+}
 
 let enrollRequested = false
 let enrolledKey = ''
@@ -126,21 +139,29 @@ async function forgetBiometric(vaultId, offerAgain) {
 
 async function unlockWithBiometric(reason) {
   const vaultId = currentVaultId()
-  if (!vaultId || (await readPref(biometricPref(vaultId))) !== BIOMETRIC_ON) return false
+  if (!vaultId || (await readPref(biometricPref(vaultId))) !== BIOMETRIC_ON)
+    return BIOMETRIC_SKIPPED
   const { cancelled, rootKey } = await readLockRootKey(vaultId, reason)
-  if (cancelled) return false
+  if (cancelled) return BIOMETRIC_SKIPPED
   if (!rootKey) {
     await forgetBiometric(vaultId, true)
-    return false
+    return KEY_MISSING
   }
   const result = await backendApi.openLockSession({ rootKey })
   if (result.ok) {
     markNoteUnlocked()
     if (result.reason === CHANGE_SUGGESTED) suggestPasswordChange()
-    return true
+    return BIOMETRIC_UNLOCKED
   }
-  if (result.reason === WRONG_KEY) await forgetBiometric(vaultId, true)
-  return false
+  if (result.reason !== WRONG_KEY) return BIOMETRIC_SKIPPED
+  await forgetBiometric(vaultId, true)
+  return WRONG_KEY
+}
+
+function staleKeyMessage(outcome) {
+  const key = STALE_KEY_MESSAGES[outcome]
+  if (!key) return ''
+  return i18next.t(key, { method: i18next.t(getBiometricMethodKey() || FALLBACK_METHOD_KEY) })
 }
 
 export async function submitLockPassword(password) {
@@ -208,6 +229,7 @@ export async function unlockLockedNotes(reason, purpose = 'unlock', message = ''
     await offerPasswordMigration()
     return true
   }
-  if (await unlockWithBiometric(reason)) return true
-  return requestNoteLockPassword(purpose, message)
+  const outcome = await unlockWithBiometric(reason)
+  if (outcome === BIOMETRIC_UNLOCKED) return true
+  return requestNoteLockPassword(purpose, staleKeyMessage(outcome) || message)
 }
