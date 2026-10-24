@@ -12,6 +12,7 @@ const {
   screen,
   shell,
   clipboard,
+  ClipboardItem,
   nativeTheme,
   Notification
 } = require('electron')
@@ -810,11 +811,18 @@ function setupIPC() {
     }
   })
 
-  ipcMain.handle('clipboard:write', (event, { text, html } = {}) => {
+  ipcMain.handle('clipboard:write', async (event, { text, html } = {}) => {
     if (typeof text !== 'string') return false
-    if (typeof html === 'string' && html) clipboard.write({ text, html })
-    else clipboard.writeText(text)
-    return true
+    try {
+      if (typeof html === 'string' && html) {
+        await clipboard.write([new ClipboardItem({ 'text/plain': text, 'text/html': html })])
+      } else {
+        await clipboard.writeText(text)
+      }
+      return true
+    } catch {
+      return false
+    }
   })
 }
 
