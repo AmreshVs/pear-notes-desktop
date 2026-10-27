@@ -22,6 +22,7 @@ const fs = require('fs')
 const PearRuntime = require('pear-runtime')
 const secretStore = require('./secretStore.cjs')
 const { createVaultKeys } = require('./vaultKeys.cjs')
+const { createLockRoot } = require('./lockRoot.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 const deviceStorage = require('./deviceStorage.cjs')
@@ -83,15 +84,13 @@ try {
 
 const usesStartupTask = process.windowsStore === true && deviceAuth !== null
 
-function isLockRootSupported() {
-  if (process.platform === 'linux' || !deviceAuth) return false
-  return deviceAuth.isSupported() && secretStore.isAvailable()
-}
+const lockRoot = createLockRoot({
+  deviceAuth,
+  secretStore,
+  getWindowHandle: () =>
+    mainWindow && !mainWindow.isDestroyed() ? mainWindow.getNativeWindowHandle() : null
+})
 
-function lockRootSecretName(vaultId) {
-  const id = typeof vaultId === 'string' ? vaultId.replace(/[^A-Za-z0-9._-]/g, '') : ''
-  return id ? `${secretStore.LOCK_ROOT_SECRET_PREFIX}${id}` : null
-}
 const usesXdgAutostart = process.platform === 'linux' && !process.env.FLATPAK_ID
 
 function xdgAutostartPath() {
@@ -580,50 +579,19 @@ function setupIPC() {
     app.quit()
   })
 
-  ipcMain.handle('device-auth:authenticate', async (event, reason) => {
-    if (!deviceAuth) return false
-    try {
-      const windowHandle =
-        mainWindow && !mainWindow.isDestroyed() ? mainWindow.getNativeWindowHandle() : null
-      return await deviceAuth.authenticate(reason, windowHandle)
-    } catch (e) {
-      console.error('device-auth:authenticate failed', e)
-      return false
-    }
-  })
+  ipcMain.handle('device-auth:authenticate', (event, reason) => lockRoot.authenticate(reason))
 
   ipcMain.handle('device-auth:is-supported', () => {
     return deviceAuth ? deviceAuth.isSupported() : false
   })
 
-  ipcMain.handle('lock-root:supported', () => isLockRootSupported())
+  ipcMain.handle('lock-root:supported', () => lockRoot.isSupported())
 
-  ipcMain.handle('lock-root:read', async (event, vaultId, reason) => {
-    const name = lockRootSecretName(vaultId)
-    if (!name || !isLockRootSupported()) return { cancelled: true, rootKey: '' }
-    try {
-      const windowHandle =
-        mainWindow && !mainWindow.isDestroyed() ? mainWindow.getNativeWindowHandle() : null
-      if (!(await deviceAuth.authenticate(reason, windowHandle))) {
-        return { cancelled: true, rootKey: '' }
-      }
-    } catch (e) {
-      console.error('lock-root:read authenticate failed', e)
-      return { cancelled: true, rootKey: '' }
-    }
-    return { cancelled: false, rootKey: secretStore.getSecret(name) || '' }
-  })
+  ipcMain.handle('lock-root:read', (event, vaultId, reason) => lockRoot.read(vaultId, reason))
 
-  ipcMain.handle('lock-root:store', (event, vaultId, rootKey) => {
-    const name = lockRootSecretName(vaultId)
-    if (!name || !isLockRootSupported() || typeof rootKey !== 'string') return false
-    return secretStore.setSecret(name, rootKey)
-  })
+  ipcMain.handle('lock-root:store', (event, vaultId, rootKey) => lockRoot.store(vaultId, rootKey))
 
-  ipcMain.handle('lock-root:delete', (event, vaultId) => {
-    const name = lockRootSecretName(vaultId)
-    return name ? secretStore.deleteSecret(name) : false
-  })
+  ipcMain.handle('lock-root:delete', (event, vaultId) => lockRoot.remove(vaultId))
 
   ipcMain.handle('content-protection:set', (event, enabled) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
