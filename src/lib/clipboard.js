@@ -33,3 +33,14 @@ export async function copyToClipboard(text, html) {
   if (html && (await writeViaNavigator({ text, html }))) return true
   return writeViaNavigator({ text })
 }
+
+export async function readClipboardText() {
+  const bridge = typeof window !== 'undefined' ? window.electronBridge : null
+  if (!bridge || typeof bridge.readClipboardText !== 'function') return ''
+  try {
+    const text = await bridge.readClipboardText()
+    return typeof text === 'string' ? text : ''
+  } catch {
+    return ''
+  }
+}
