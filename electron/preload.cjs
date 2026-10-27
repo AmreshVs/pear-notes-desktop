@@ -87,6 +87,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
 
   writeClipboard: (payload) => ipcRenderer.invoke('clipboard:write', payload),
+  readClipboardText: () => ipcRenderer.invoke('clipboard:read-text'),
 
   getCacheSize: () => ipcRenderer.invoke('cache:size'),
   clearCache: () => ipcRenderer.invoke('cache:clear'),

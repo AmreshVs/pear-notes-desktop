@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
-import { LogIn } from 'lucide-react'
+import { ClipboardPaste, LogIn } from 'lucide-react'
 
 import { VAULT_NAME_MAX_LENGTH } from '@pear-notes/core/constant.js'
 import { subscribePairUser } from '@pear-notes/core/store/slices/syncSlice.js'
@@ -10,6 +10,7 @@ import { getVaultPending } from '@pear-notes/core/store/slices/vaultsSlice.js'
 import { getInviteNameHint, isValidInvite } from '@pear-notes/core/utils.js'
 
 import { buildJoinRequest, useJoinChoice } from '../../hooks/useJoinChoice'
+import { readClipboardText } from '../../lib/clipboard'
 import { getVaultLabel } from '../../lib/vaultNames'
 
 import JoinChoiceOptions from './JoinChoiceOptions'
@@ -33,12 +34,18 @@ export default function JoinVaultForm() {
   const canJoin = isValid && choiceMade && (!keepsSeparate || !!name.trim()) && !pending
   const nameFromInvite = !!nameHint && name === nameHint
 
-  const handleCodeChange = (e) => {
-    const next = e.target.value
+  const applyCode = (next) => {
     setCode(next)
     const hint = getInviteNameHint(next).slice(0, VAULT_NAME_MAX_LENGTH)
     setNameHint(hint)
     if (hint && !nameEdited) setName(hint)
+  }
+
+  const handleCodeChange = (e) => applyCode(e.target.value)
+
+  const handlePaste = async () => {
+    const text = (await readClipboardText()).trim()
+    if (text) applyCode(text)
   }
 
   const handleNameChange = (e) => {
@@ -62,17 +69,28 @@ export default function JoinVaultForm() {
     >
       <h3 className='text-sm font-bold text-text-primary'>{t('vaults.join.sectionTitle')}</h3>
       <p className='text-xs text-text-tertiary leading-relaxed'>{t('vaults.join.screenDesc')}</p>
-      <input
-        id='vault-join-code'
-        autoFocus
-        value={code}
-        onChange={handleCodeChange}
-        placeholder={t('vaults.join.linkPlaceholder')}
-        aria-label={t('vaults.join.codeLabel')}
-        autoComplete='off'
-        spellCheck={false}
-        className={`${INPUT_CLASS} font-mono`}
-      />
+      <div className='relative'>
+        <input
+          id='vault-join-code'
+          autoFocus
+          value={code}
+          onChange={handleCodeChange}
+          placeholder={t('vaults.join.linkPlaceholder')}
+          aria-label={t('vaults.join.codeLabel')}
+          autoComplete='off'
+          spellCheck={false}
+          className={`${INPUT_CLASS} font-mono pr-12`}
+        />
+        <button
+          type='button'
+          onClick={handlePaste}
+          aria-label={t('sync.paste.pasteBtn')}
+          title={t('sync.paste.pasteBtn')}
+          className='absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-accent-primary hover:bg-accent-primary/10 transition-colors'
+        >
+          <ClipboardPaste className='w-4 h-4' />
+        </button>
+      </div>
       {code.trim() && !isValid && (
         <p className='text-xs font-medium text-accent-danger'>{t('sync.paste.hintInvalid')}</p>
       )}

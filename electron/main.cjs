@@ -811,6 +811,8 @@ function setupIPC() {
     }
   })
 
+  ipcMain.handle('clipboard:read-text', () => clipboard.readText())
+
   ipcMain.handle('clipboard:write', async (event, { text, html } = {}) => {
     if (typeof text !== 'string') return false
     try {

@@ -6,6 +6,7 @@ import {
   CircleMinus,
   Crown,
   Loader2,
+  LogIn,
   Monitor,
   Pencil,
   Plus,
@@ -39,6 +40,7 @@ import { syncLeaderLine } from '../../lib/syncLeaderLine'
 import { getVaultLabel } from '../../lib/vaultNames'
 
 import AddDevicePanel from './AddDevicePanel'
+import JoinVaultForm from './JoinVaultForm'
 
 const DEVICE_KEY_TAIL_LENGTH = 5
 
@@ -61,6 +63,7 @@ export default function DevicesSettings({ adding, onAdd }) {
   const vaults = useSelector(getVaults)
   const leaderPlan = useSelector(getSyncLeaderPlan)
   const [leaderAction, setLeaderAction] = useState(null)
+  const [joining, setJoining] = useState(false)
   const vaultName = getVaultLabel(
     vaults.find((vault) => vault.current),
     t
@@ -143,6 +146,29 @@ export default function DevicesSettings({ adding, onAdd }) {
           </div>
           {otherDevices.length === 0 && (
             <p className='px-2 pt-2 text-xs text-text-tertiary'>{t('sync.devices.empty')}</p>
+          )}
+
+          <h4 className='text-text-primary font-bold text-sm tracking-[0.1em] ml-2 mb-3 pt-6'>
+            {t('sync.devices.joinSection')}
+          </h4>
+          {joining ? (
+            <JoinVaultForm />
+          ) : (
+            <button
+              type='button'
+              onClick={() => setJoining(true)}
+              className='w-full p-5 bg-bg-secondary border border-border-primary rounded-2xl flex items-center gap-5 text-left hover:bg-bg-tertiary/50 hover:border-border-secondary transition-colors active:scale-[0.99]'
+            >
+              <div className='w-14 h-14 bg-bg-panel/50 rounded-2xl flex items-center justify-center text-accent-primary border border-border-primary'>
+                <LogIn className='w-7 h-7' />
+              </div>
+              <span className='px-2 font-bold text-base text-accent-primary'>
+                {t('vaults.join.sectionTitle')}
+              </span>
+            </button>
+          )}
+          {!joining && (
+            <p className='px-2 pt-2 text-xs text-text-tertiary'>{t('sync.devices.joinHint')}</p>
           )}
 
           <SyncLeadersPanel

@@ -633,6 +633,7 @@
     "paste": {
       "header": "Already have an invite?",
       "scanBtn": "Scan QR",
+      "pasteBtn": "Paste invite link",
       "placeholder": "Paste invite code here...",
       "linkBtn": "Link",
       "hintInvalid": "That isn't a complete invite code yet."
@@ -643,6 +644,8 @@
       "thisDevice": "This device",
       "otherDevices": "Other devices",
       "empty": "No other devices connected yet.",
+      "joinSection": "Join another vault",
+      "joinHint": "Got an invite link from another device? Use it to open that vault on this device.",
       "removeDevice": "Remove {{name}}",
       "rename": "Rename this device",
       "confirmRename": "Save device name",
