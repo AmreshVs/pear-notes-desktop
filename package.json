@@ -31,7 +31,7 @@
     "clean": "rm -rf dist out",
     "lint": "eslint .",
     "prettier-fix": "prettier . --write",
-    "test": "brittle test/*.test.js"
+    "test": "NODE_OPTIONS=\"--import ./test/helpers/extensionless.js\" brittle test/*.test.js"
   },
   "dependencies": {
     "@pear-notes/core": "github:AmreshVs/pear-notes-core#558d3b7ff9479543d6d85a448d0ee39d332d1ee8",
