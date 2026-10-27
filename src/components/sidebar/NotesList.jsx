@@ -35,6 +35,7 @@ import {
 
 import {
   ALL_NOTES_KEY,
+  LOCKED_NOTES_KEY,
   RECENTLY_DELETED_KEY,
   SEARCH_QUERY_MAX_LENGTH,
   TRASH_RETENTION_DAYS
@@ -564,8 +565,10 @@ export default function NotesList({
   const localPreferences = useSelector(getLocalPreferences)
   const isSynced = localPreferences['isSynced'] === 'true'
   const syncing = step === 'syncing'
-  const currentFolderName =
-    folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
+  const isLockedView = selectedFolder === LOCKED_NOTES_KEY
+  const currentFolderName = isLockedView
+    ? t('tools.locked')
+    : folders.find((f) => f.id === selectedFolder)?.name || t('folders.systemIcons.all')
 
   const notesScrollRef = useRef(null)
   useVisibleNotes(notesScrollRef, filteredNotes)
@@ -573,9 +576,11 @@ export default function NotesList({
   const searchScope = useSelector(getSearchScope)
   const searchSettled = useSelector(getSearchSettled)
   const hasSearchQuery = searchQuery.trim().length > 0
-  const canScopeSearch = selectedFolder !== ALL_NOTES_KEY && selectedFolder !== RECENTLY_DELETED_KEY
+  const canScopeSearch =
+    selectedFolder !== ALL_NOTES_KEY && selectedFolder !== RECENTLY_DELETED_KEY && !isLockedView
   const showFolders =
     selectedFolder === ALL_NOTES_KEY ||
+    isLockedView ||
     (hasSearchQuery && canScopeSearch && searchScope === SEARCH_SCOPE.ALL)
   const hasUnlockedNotes = useHasUnlockedNotes()
   const meaningNoticeText =
@@ -1158,6 +1163,15 @@ export default function NotesList({
                           {t('folderView.empty.trashEmptySubtitle', { days: TRASH_RETENTION_DAYS })}
                         </p>
                       </div>
+                    ) : isLockedView ? (
+                      <div className='flex flex-col items-center gap-2 text-center'>
+                        <p className='text-lg text-text-primary font-bold tracking-tight'>
+                          {t('folderView.empty.lockedEmptyTitle')}
+                        </p>
+                        <p className='text-sm text-text-tertiary leading-relaxed'>
+                          {t('folderView.empty.lockedEmptySubtitle')}
+                        </p>
+                      </div>
                     ) : (
                       <div className='flex flex-col items-center gap-5 text-center'>
                         <div className='space-y-1.5'>
@@ -1177,7 +1191,7 @@ export default function NotesList({
                       </div>
                     )}
 
-                    {!isTrash && !isSynced && (
+                    {!isTrash && !isLockedView && !isSynced && (
                       <div className='pt-2 space-y-3 border-t border-border-primary/30'>
                         <div className='text-center space-y-1 pt-6'>
                           <p className='text-base font-bold text-text-primary'>
