@@ -15,7 +15,10 @@ const { obfuscate } = require('javascript-obfuscator')
 // mangled (core's objects cross the hrpc wire indexed by string key, so an
 // obfuscated build must stay wire-compatible with a non-obfuscated peer).
 
-const OBFUSCATE_ENABLED = process.env.PEAR_OBFUSCATE !== '0'
+// Off unless PEAR_OBFUSCATE=1: the obfuscator's base64 string array tripped
+// the Microsoft Store malware scan (1.1.1 MSIX, constant.js), and generic AV
+// heuristics flag the same pattern on other platforms.
+const OBFUSCATE_ENABLED = process.env.PEAR_OBFUSCATE === '1'
 const OBFUSCATE_LEVEL =
   process.env.PEAR_OBFUSCATE_LEVEL === 'aggressive' ? 'aggressive' : 'standard'
 
@@ -172,7 +175,7 @@ async function hardenCore(coreDir) {
 // CLI: `node scripts/harden-core.cjs` (npm run harden-core) stages a
 // dereferenced copy of core into .core-hardened/ and hardens it there, so a dev
 // can inspect exactly what the packaged app would ship without a full
-// electron-forge package. Honors PEAR_OBFUSCATE / PEAR_OBFUSCATE_LEVEL. The
+// electron-forge package. Honors PEAR_OBFUSCATE=1 / PEAR_OBFUSCATE_LEVEL. The
 // live core source is never touched.
 async function previewFromNodeModules() {
   const liveCore = path.resolve(__dirname, '..', 'node_modules', '@pear-notes', 'core')
@@ -203,7 +206,7 @@ async function previewFromNodeModules() {
       `(${result.delta >= 0 ? '+' : ''}${result.delta}%)`,
   )
   console.log(`  inspect: ${path.relative(path.resolve(__dirname, '..'), out)}/`)
-  console.log('  (staging dir, gitignored; PEAR_OBFUSCATE=0 for minify only)')
+  console.log('  (staging dir, gitignored; PEAR_OBFUSCATE=1 to also obfuscate)')
 }
 
 module.exports = { hardenCore }

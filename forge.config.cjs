@@ -584,8 +584,8 @@ function minifyElectronEntries(buildPath) {
 
 // The Bare sidecar runs @pear-notes/core as raw ESM off disk, so - unlike the
 // Vite-minified renderer - core ships readable unless transformed here. This
-// minifies and (by default) obfuscates the packaged copy in place; the repo
-// copy a dev runs against is untouched. Toggle with PEAR_OBFUSCATE=0.
+// minifies (and, with PEAR_OBFUSCATE=1, obfuscates) the packaged copy in place;
+// the repo copy a dev runs against is untouched.
 async function hardenPackagedCore(buildPath) {
   const { hardenCore } = require('./scripts/harden-core.cjs')
   const coreDir = path.join(buildPath, 'node_modules', '@pear-notes', 'core')
