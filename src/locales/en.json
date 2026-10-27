@@ -805,6 +805,8 @@
     "empty": {
       "noMatchesTitle": "No matches found",
       "noMatchesSubtitle": "Try a different search term",
+      "lockedEmptyTitle": "No locked notes",
+      "lockedEmptySubtitle": "Notes you lock show up here.",
       "noNotesTitle": "No notes",
       "noNotesSubtitle": "Tap the compose button to create one",
       "trashEmptyTitle": "No deleted notes",
@@ -2664,7 +2666,8 @@
     "upcoming": "Upcoming",
     "attachments": "Attachments",
     "duplicates": "Duplicates",
-    "recap": "Recap"
+    "recap": "Recap",
+    "locked": "Locked"
   },
   "attachmentsView": {
     "summary_one": "{{count}} item · {{size}}",

@@ -8,6 +8,7 @@ import {
   Copy,
   FolderPlus,
   History,
+  Lock,
   Paperclip,
   Settings,
   Sparkles
@@ -18,7 +19,8 @@ import {
   DEFAULT_FOLDER_NAME,
   FOLDER_ERROR,
   FOLDER_ICONS,
-  FOLDER_NAME_MAX_LENGTH
+  FOLDER_NAME_MAX_LENGTH,
+  LOCKED_NOTES_KEY
 } from '@pear-notes/core/constant.js'
 import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
 import { LOCAL_AI_ENABLED } from '@pear-notes/core/store/services/localAiCatalog.js'
@@ -97,6 +99,8 @@ export default function FoldersSidebar({
   const inputRef = useRef(null)
   const iconPickerRef = useRef(null)
   const noteCounts = useSelector(getNoteCountsPerFolder)
+  const lockedCount = noteCounts[LOCKED_NOTES_KEY] || 0
+  const lockedSelected = selectedFolder === LOCKED_NOTES_KEY
   const hasMultipleVaults = useSelector(getHasMultipleVaults)
   const currentVault = useSelector(getCurrentVault)
   const otherVaults = useSelector(getOtherVaults)
@@ -362,12 +366,18 @@ export default function FoldersSidebar({
     )
   }
 
-  const renderToolItem = (view, Icon, label, count) => {
-    const isSelected = toolView === view
+  const renderToolItem = (
+    view,
+    Icon,
+    label,
+    count,
+    isSelected = toolView === view,
+    onSelect = () => onSelectTool(view)
+  ) => {
     return (
       <button
         key={view}
-        onClick={() => onSelectTool(view)}
+        onClick={onSelect}
         aria-pressed={isSelected}
         className={`flex items-center relative mb-2 w-full px-4 py-3 gap-4 rounded-xl transition-colors duration-0
           ${
@@ -448,6 +458,15 @@ export default function FoldersSidebar({
                       Paperclip,
                       t('tools.attachments'),
                       attachmentCount
+                    )}
+                  {(lockedCount > 0 || lockedSelected) &&
+                    renderToolItem(
+                      'locked',
+                      Lock,
+                      t('tools.locked'),
+                      lockedCount,
+                      lockedSelected,
+                      () => onSelectFolder(LOCKED_NOTES_KEY)
                     )}
                   {showDuplicates &&
                     renderToolItem('duplicates', Copy, t('tools.duplicates'), duplicateCount)}
