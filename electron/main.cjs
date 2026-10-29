@@ -134,6 +134,12 @@ let crash = null
 let workerStderr = ''
 let rendererCrashes = 0
 const RENDERER_CRASH_RELOADS = 1
+// The website's contact form posts here too; FormSubmit forwards it by email.
+// It only accepts requests from a page, so the send names the contact page.
+const CRASH_REPORT_ENDPOINT = 'https://formsubmit.co/ajax/56678a3e75e24bb3c6476594b14f7113'
+const CRASH_REPORT_REFERRER = 'https://amreshvs.github.io/pear-notes/contact/'
+const CRASH_REPORT_MAX_CHARS = 20000
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 let savesFlushed = false
 const SAVE_FLUSH_TIMEOUT_MS = 3000
 
@@ -570,6 +576,36 @@ function setupIPC() {
   // Pulled once the renderer's listener is live: a crash can land before the
   // window has loaded, or be the reason it was reloaded.
   ipcMain.handle('app:crash:take', () => crash)
+
+  ipcMain.handle('crash:send-report', async (_event, { report, email } = {}) => {
+    if (typeof report !== 'string' || !report.trim()) return false
+    const replyTo =
+      typeof email === 'string' && EMAIL_PATTERN.test(email.trim()) ? email.trim() : ''
+    try {
+      // Node's fetch, not net.fetch: Chromium will not let a request set Origin or Referer.
+      const response = await fetch(CRASH_REPORT_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Origin: new URL(CRASH_REPORT_REFERRER).origin,
+          Referer: CRASH_REPORT_REFERRER
+        },
+        body: JSON.stringify({
+          _subject: `Pear Notes: crash report (${crash?.source || 'app'})`,
+          _template: 'table',
+          topic: 'Crash report',
+          ...(replyTo ? { email: replyTo } : {}),
+          message: report.slice(0, CRASH_REPORT_MAX_CHARS)
+        })
+      })
+      const result = await response.json().catch(() => null)
+      return response.ok && String(result?.success) === 'true'
+    } catch (e) {
+      console.warn('[crash] could not send the report', e?.message || e)
+      return false
+    }
+  })
 
   ipcMain.on('app:relaunch', () => {
     isQuitting = true

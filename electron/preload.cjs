@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   },
   takeCrash: () => ipcRenderer.invoke('app:crash:take'),
   relaunch: () => ipcRenderer.send('app:relaunch'),
+  sendCrashReport: (payload) => ipcRenderer.invoke('crash:send-report', payload),
   // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
   askLegacyVault: (texts) => ipcRenderer.invoke('app:legacy-vault', texts),
 

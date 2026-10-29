@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import i18next from 'i18next'
-import { AlertTriangle, Check, Copy, RotateCcw } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Loader2, RotateCcw, Send } from 'lucide-react'
 
 import { copyToClipboard } from '../../lib/clipboard'
 import { crashDetails, formatCrashReport } from '../../lib/crashReport'
@@ -11,7 +11,10 @@ const COPIED_RESET_MS = 2000
 // after the React tree that provides translations has failed.
 export default function CrashScreen({ crash, title, message, actionLabel, onAction }) {
   const [copied, setCopied] = useState(false)
+  const [email, setEmail] = useState('')
+  const [sendState, setSendState] = useState('idle')
   const details = crashDetails(crash)
+  const report = () => formatCrashReport(crash, { title, message })
 
   useEffect(() => {
     if (!copied) return
@@ -20,7 +23,16 @@ export default function CrashScreen({ crash, title, message, actionLabel, onActi
   }, [copied])
 
   const copy = async () => {
-    if (await copyToClipboard(formatCrashReport(crash, { title, message }))) setCopied(true)
+    if (await copyToClipboard(report())) setCopied(true)
+  }
+
+  const send = async (event) => {
+    event.preventDefault()
+    setSendState('sending')
+    const sent = await window.electronBridge
+      .sendCrashReport({ report: report(), email })
+      .catch(() => false)
+    setSendState(sent ? 'sent' : 'failed')
   }
 
   return (
@@ -54,6 +66,50 @@ export default function CrashScreen({ crash, title, message, actionLabel, onActi
               </pre>
             </div>
           )}
+
+          <form onSubmit={send} className='w-full text-left space-y-2'>
+            <p className='text-xs font-semibold uppercase tracking-wide text-text-tertiary'>
+              {i18next.t('crash.sendTitle')}
+            </p>
+            {sendState === 'sent' ? (
+              <p className='flex items-center gap-2 text-sm text-text-secondary' role='status'>
+                <Check className='w-4 h-4 text-accent-primary' strokeWidth={2.5} />
+                {i18next.t('crash.sent')}
+              </p>
+            ) : (
+              <>
+                <div className='flex flex-col sm:flex-row gap-3'>
+                  <input
+                    type='email'
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder={i18next.t('crash.emailPlaceholder')}
+                    aria-label={i18next.t('crash.emailPlaceholder')}
+                    autoComplete='email'
+                    className='flex-1 px-4 py-3 rounded-xl border border-border-primary bg-bg-primary text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-accent-primary'
+                  />
+                  <button
+                    type='submit'
+                    disabled={sendState === 'sending'}
+                    className='px-6 py-3 flex items-center justify-center gap-2 border border-border-primary text-text-primary rounded-xl font-bold text-sm hover:bg-bg-primary transition-all active:scale-95 disabled:opacity-60'
+                  >
+                    {sendState === 'sending' ? (
+                      <Loader2 className='w-4 h-4 animate-spin' />
+                    ) : (
+                      <Send className='w-4 h-4' />
+                    )}
+                    {i18next.t(sendState === 'sending' ? 'crash.sending' : 'crash.send')}
+                  </button>
+                </div>
+                <p
+                  className={`text-xs ${sendState === 'failed' ? 'text-accent-danger' : 'text-text-tertiary'}`}
+                  role={sendState === 'failed' ? 'alert' : undefined}
+                >
+                  {i18next.t(sendState === 'failed' ? 'crash.sendFailed' : 'crash.sendHint')}
+                </p>
+              </>
+            )}
+          </form>
 
           <div className='w-full flex flex-col sm:flex-row gap-3'>
             <button
