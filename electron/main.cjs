@@ -26,6 +26,7 @@ const { createLockRoot } = require('./lockRoot.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 const deviceStorage = require('./deviceStorage.cjs')
+const { appendStderr, backendCrashLog } = require('./crashLog.cjs')
 
 const pkg = require('../package.json')
 const { storeBuild } = require('./storeBuild.cjs')
@@ -129,14 +130,17 @@ let tray = null
 let closeToTray = true
 let isQuitting = false
 let powerSaveBlockerId = null
-let workerFailureReported = false
+let crash = null
+let workerStderr = ''
+let rendererCrashes = 0
+const RENDERER_CRASH_RELOADS = 1
 let savesFlushed = false
 const SAVE_FLUSH_TIMEOUT_MS = 3000
 
 function flushRendererSaves() {
   savesFlushed = true
   return new Promise((resolve) => {
-    if (!mainWindow || mainWindow.isDestroyed() || !worker || workerFailureReported) {
+    if (!mainWindow || mainWindow.isDestroyed() || !worker || crash) {
       resolve()
       return
     }
@@ -191,24 +195,53 @@ function ensureStorageDir() {
   return storagePath
 }
 
+function crashEnvironment() {
+  return {
+    appVersion: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    electron: process.versions.electron
+  }
+}
+
+// The first crash is the cause; anything after it is fallout. The window shows
+// it in place of the app, where it can be read and copied, rather than in a
+// native dialog that does neither.
+function reportCrash(report) {
+  if (crash) return
+  crash = { ...report, at: Date.now(), env: crashEnvironment() }
+  console.error('[crash]', crash.source, crash.error, crash.log || '')
+  if (!app.isReady()) return
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow()
+    return
+  }
+  showMainWindow()
+  mainWindow.webContents.send('app:crash', crash)
+}
+
 function reportWorkerFailure(err) {
   console.error('[worker] failed to start', err)
   worker = null
-  if (workerFailureReported) return
-  workerFailureReported = true
-  dialog.showErrorBox(
-    `${appName} could not start its backend`,
-    `The Bare sidecar process could not be launched.\n\n${err.message}\n\nReinstalling dependencies (npm install) usually restores it.`
-  )
+  reportCrash({
+    source: 'launch',
+    // String(err) is "Error: ..." - the same line the stack opens with.
+    error: String(err),
+    log: err?.stack || ''
+  })
 }
 
-function reportWorkerExit(code) {
-  if (isQuitting || workerFailureReported) return
-  workerFailureReported = true
-  dialog.showErrorBox(
-    `${appName} could not start its backend`,
-    `The Bare sidecar process stopped unexpectedly (exit code ${code}).\n\nAnother copy of ${appName} may still be running and holding your local database. Quit it, or log out and back in, then reopen ${appName}.`
-  )
+function reportWorkerExit(code, signal) {
+  if (isQuitting) return
+  const { error, log } = backendCrashLog(workerStderr)
+  reportCrash({
+    source: 'backend',
+    error,
+    log,
+    exitCode: code,
+    signal: signal || null
+  })
 }
 
 function startWorker() {
@@ -238,16 +271,21 @@ function startWorker() {
     })
   }
 
+  workerStderr = ''
+  worker.stderr.on('data', (data) => {
+    workerStderr = appendStderr(workerStderr, data.toString())
+  })
+
   worker.on('data', (chunk) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('worker-data', Buffer.from(chunk))
     }
   })
 
-  worker.on('exit', (code) => {
-    console.log('[worker] exited with code', code)
+  worker.on('exit', (code, signal) => {
+    console.log('[worker] exited with code', code, 'signal', signal)
     worker = null
-    if (code !== 0) reportWorkerExit(code)
+    if (code !== 0) reportWorkerExit(code, signal)
   })
 }
 
@@ -400,6 +438,26 @@ function createWindow() {
     })
   })
 
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (isQuitting || details.reason === 'clean-exit') return
+    console.error('[window] renderer gone', details)
+    reportCrash({
+      source: 'renderer',
+      error: `The window process ended: ${details.reason}`,
+      exitCode: details.exitCode
+    })
+    // The crash screen lives in the renderer, so bring one back to show it. A
+    // renderer that dies again on load would loop; past that, a dialog it is.
+    if (rendererCrashes++ < RENDERER_CRASH_RELOADS) {
+      mainWindow.reload()
+      return
+    }
+    dialog.showErrorBox(
+      `${appName} crashed`,
+      `${crash.error}${crash.exitCode != null ? ` (exit code ${crash.exitCode})` : ''}`
+    )
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -509,11 +567,14 @@ function setupIPC() {
     event.returnValue = getAppDir()
   })
 
-  // Sync, like the other boot-time reads next to it: the renderer needs the
-  // vault key and its entropy before it can start the backend at all.
-  ipcMain.on('app:fatal-error', (event, { title, message } = {}) => {
-    if (!title || !message) return
-    dialog.showErrorBox(title, message)
+  // Pulled once the renderer's listener is live: a crash can land before the
+  // window has loaded, or be the reason it was reloaded.
+  ipcMain.handle('app:crash:take', () => crash)
+
+  ipcMain.on('app:relaunch', () => {
+    isQuitting = true
+    app.relaunch()
+    app.quit()
   })
 
   // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
@@ -540,6 +601,8 @@ function setupIPC() {
 
   const vaultKeys = createVaultKeys({ getStoragePath, getAppDir, isDev })
 
+  // Sync, like the other boot-time reads next to it: the renderer needs the
+  // vault key and its entropy before it can start the backend at all.
   ipcMain.on('vault-key:get', (event) => {
     event.returnValue = vaultKeys.getDbEncryptionKey()
   })
