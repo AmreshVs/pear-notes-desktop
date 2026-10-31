@@ -1,5 +1,4 @@
-// Bare prints an uncaught error and its stack to stderr right before it aborts,
-// so the tail of stderr is the only place a backend crash explains itself.
+// Bare prints an uncaught error and its stack to stderr before it aborts.
 const STDERR_TAIL_CHARS = 64 * 1024
 const CRASH_LOG_LINES = 40
 
@@ -11,7 +10,6 @@ function stripAnsi(text) {
   return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
 }
 
-// The uncaught error block when Bare printed one, else the last lines it wrote.
 function backendCrashLog(stderr) {
   const text = stripAnsi(stderr || '').trimEnd()
   if (!text) return { error: '', log: '' }

@@ -7,8 +7,6 @@ import { crashDetails, formatCrashReport } from '../../lib/crashReport'
 
 const COPIED_RESET_MS = 2000
 
-// i18next directly, not the hook: this also renders from the error boundary,
-// after the React tree that provides translations has failed.
 export default function CrashScreen({ crash, title, message, actionLabel, onAction }) {
   const [copied, setCopied] = useState(false)
   const [email, setEmail] = useState('')

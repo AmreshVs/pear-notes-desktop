@@ -134,8 +134,7 @@ let crash = null
 let workerStderr = ''
 let rendererCrashes = 0
 const RENDERER_CRASH_RELOADS = 1
-// The website's contact form posts here too; FormSubmit forwards it by email.
-// It only accepts requests from a page, so the send names the contact page.
+// FormSubmit rejects requests that do not name a page as their origin.
 const CRASH_REPORT_ENDPOINT = 'https://formsubmit.co/ajax/56678a3e75e24bb3c6476594b14f7113'
 const CRASH_REPORT_REFERRER = 'https://amreshvs.github.io/pear-notes/contact/'
 const CRASH_REPORT_MAX_CHARS = 20000
@@ -211,9 +210,6 @@ function crashEnvironment() {
   }
 }
 
-// The first crash is the cause; anything after it is fallout. The window shows
-// it in place of the app, where it can be read and copied, rather than in a
-// native dialog that does neither.
 function reportCrash(report) {
   if (crash) return
   crash = { ...report, at: Date.now(), env: crashEnvironment() }
@@ -232,7 +228,6 @@ function reportWorkerFailure(err) {
   worker = null
   reportCrash({
     source: 'launch',
-    // String(err) is "Error: ..." - the same line the stack opens with.
     error: String(err),
     log: err?.stack || ''
   })
@@ -452,8 +447,7 @@ function createWindow() {
       error: `The window process ended: ${details.reason}`,
       exitCode: details.exitCode
     })
-    // The crash screen lives in the renderer, so bring one back to show it. A
-    // renderer that dies again on load would loop; past that, a dialog it is.
+    // Reload once to show the crash screen; a renderer that keeps dying gets a dialog.
     if (rendererCrashes++ < RENDERER_CRASH_RELOADS) {
       mainWindow.reload()
       return
@@ -573,8 +567,6 @@ function setupIPC() {
     event.returnValue = getAppDir()
   })
 
-  // Pulled once the renderer's listener is live: a crash can land before the
-  // window has loaded, or be the reason it was reloaded.
   ipcMain.handle('app:crash:take', () => crash)
 
   ipcMain.handle('crash:send-report', async (_event, { report, email } = {}) => {

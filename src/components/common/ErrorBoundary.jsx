@@ -28,7 +28,6 @@ export default class ErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children
 
     const { error, componentStack } = this.state
-    // String(error) is "TypeError: ..." - the same line the stack opens with.
     const message = String(error)
     const stack = [error?.stack, componentStack && `Component stack:${componentStack}`]
       .filter(Boolean)
