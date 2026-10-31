@@ -4,9 +4,10 @@ Private notes, encrypted on your devices and synced peer to peer. There's no acc
 
 ## Download
 
-- **macOS:** [Mac App Store](https://apps.apple.com/app/pear-notes-private-ai-sync/id6803519182), or the `.dmg` for Apple silicon from the [latest release](https://github.com/AmreshVs/pear-notes/releases/latest)
-- **Windows:** [Microsoft Store](https://apps.microsoft.com/detail/9plcvqthftqj)
-- **Linux** (`.deb`, `.rpm`): [latest release](https://github.com/AmreshVs/pear-notes/releases/latest)
+<a href="https://apps.apple.com/app/pear-notes-private-ai-sync/id6803519182"><img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-mac-app-store/black/en-us" alt="Download on the Mac App Store" height="40"></a>
+<a href="https://apps.microsoft.com/detail/9plcvqthftqj"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="40"></a>
+
+The [latest release](https://github.com/AmreshVs/pear-notes/releases/latest) also has a `.dmg` for Apple silicon, and `.deb` and `.rpm` packages for Linux.
 
 For iPhone, iPad and Android, see [pear-notes-mobile](https://github.com/AmreshVs/pear-notes-mobile). Website: https://amreshvs.github.io/pear-notes/
 
