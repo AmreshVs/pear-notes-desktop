@@ -920,6 +920,25 @@
     "legacyVaultStartFresh": "Start fresh and import a backup",
     "legacyVaultStartFreshFailed": "Pear Notes could not set up a new vault. Your old notes have not been changed. Restart Pear Notes and try again."
   },
+  "crash": {
+    "backendTitle": "Pear Notes stopped working",
+    "backendMessage": "The part of Pear Notes that stores and syncs your notes stopped unexpectedly. Notes saved before this are safe.\n\nRestart Pear Notes to continue. If this keeps happening, send the report below.",
+    "launchTitle": "Pear Notes could not start its backend",
+    "launchMessage": "The part of Pear Notes that stores and syncs your notes could not be launched. Reinstalling Pear Notes usually fixes this.\n\nIf it keeps happening, send the report below.",
+    "rendererTitle": "The Pear Notes window crashed",
+    "rendererMessage": "The window stopped unexpectedly and was reloaded. Restart Pear Notes to continue. If this keeps happening, send the report below.",
+    "details": "Error details",
+    "copy": "Copy error",
+    "copied": "Copied",
+    "restart": "Restart Pear Notes",
+    "sendTitle": "Send this report",
+    "emailPlaceholder": "Your email (optional, for a reply)",
+    "send": "Send report",
+    "sending": "Sending…",
+    "sent": "Thanks, the report was sent.",
+    "sendHint": "Sends the error details shown above, with your app and system versions, to the Pear Notes developer.",
+    "sendFailed": "The report couldn’t be sent. Check your connection and try again, or copy the error instead."
+  },
   "errorBoundary": {
     "title": "Something went wrong",
     "message": "The app hit an unexpected error. Reloading will recover your notes without data loss.",

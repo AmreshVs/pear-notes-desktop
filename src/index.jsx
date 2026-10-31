@@ -20,7 +20,9 @@ import { flushNoteSaves } from '@pear-notes/core/store/slices/notesSlice.js'
 import { getTheme } from '@pear-notes/core/store/slices/settingsSlice.js'
 import { store } from '@pear-notes/core/store/store.js'
 
+import CrashGate from './components/common/CrashGate.jsx'
 import ErrorBoundary from './components/common/ErrorBoundary.jsx'
+import { listenForCrashes } from './lib/crashReport.js'
 import { electronAdapter } from './lib/localAi/electronAdapter.js'
 import App from './App.jsx'
 
@@ -42,6 +44,8 @@ class WorkerIPCStream extends Duplex {
     callback(null)
   }
 }
+
+listenForCrashes()
 
 const workerStream = new WorkerIPCStream()
 const stream = new FramedStream(workerStream)
@@ -83,9 +87,11 @@ store.subscribe(() => {
 const container = document.getElementById('root')
 const root = createRoot(container)
 root.render(
-  <Provider store={store}>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </Provider>
+  <CrashGate>
+    <Provider store={store}>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </Provider>
+  </CrashGate>
 )

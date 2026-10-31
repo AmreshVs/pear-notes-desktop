@@ -11,7 +11,14 @@ contextBridge.exposeInMainWorld('electronBridge', {
 
   getStoragePath: () => ipcRenderer.sendSync('get-storage-path'),
 
-  showFatalError: (title, message) => ipcRenderer.send('app:fatal-error', { title, message }),
+  onCrash: (callback) => {
+    const handler = (_event, crash) => callback(crash)
+    ipcRenderer.on('app:crash', handler)
+    return () => ipcRenderer.removeListener('app:crash', handler)
+  },
+  takeCrash: () => ipcRenderer.invoke('app:crash:take'),
+  relaunch: () => ipcRenderer.send('app:relaunch'),
+  sendCrashReport: (payload) => ipcRenderer.invoke('crash:send-report', payload),
   // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
   askLegacyVault: (texts) => ipcRenderer.invoke('app:legacy-vault', texts),
 

@@ -26,6 +26,7 @@ const { createLockRoot } = require('./lockRoot.cjs')
 const { isMac, isLinux } = require('which-runtime')
 const { getLocalAiRoot, setupLocalAi, shutdownLocalAi } = require('./localAi.cjs')
 const deviceStorage = require('./deviceStorage.cjs')
+const { appendStderr, backendCrashLog } = require('./crashLog.cjs')
 
 const pkg = require('../package.json')
 const { storeBuild } = require('./storeBuild.cjs')
@@ -129,14 +130,22 @@ let tray = null
 let closeToTray = true
 let isQuitting = false
 let powerSaveBlockerId = null
-let workerFailureReported = false
+let crash = null
+let workerStderr = ''
+let rendererCrashes = 0
+const RENDERER_CRASH_RELOADS = 1
+// FormSubmit rejects requests that do not name a page as their origin.
+const CRASH_REPORT_ENDPOINT = 'https://formsubmit.co/ajax/56678a3e75e24bb3c6476594b14f7113'
+const CRASH_REPORT_REFERRER = 'https://amreshvs.github.io/pear-notes/contact/'
+const CRASH_REPORT_MAX_CHARS = 20000
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 let savesFlushed = false
 const SAVE_FLUSH_TIMEOUT_MS = 3000
 
 function flushRendererSaves() {
   savesFlushed = true
   return new Promise((resolve) => {
-    if (!mainWindow || mainWindow.isDestroyed() || !worker || workerFailureReported) {
+    if (!mainWindow || mainWindow.isDestroyed() || !worker || crash) {
       resolve()
       return
     }
@@ -191,24 +200,49 @@ function ensureStorageDir() {
   return storagePath
 }
 
+function crashEnvironment() {
+  return {
+    appVersion: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    osRelease: os.release(),
+    electron: process.versions.electron
+  }
+}
+
+function reportCrash(report) {
+  if (crash) return
+  crash = { ...report, at: Date.now(), env: crashEnvironment() }
+  console.error('[crash]', crash.source, crash.error, crash.log || '')
+  if (!app.isReady()) return
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow()
+    return
+  }
+  showMainWindow()
+  mainWindow.webContents.send('app:crash', crash)
+}
+
 function reportWorkerFailure(err) {
   console.error('[worker] failed to start', err)
   worker = null
-  if (workerFailureReported) return
-  workerFailureReported = true
-  dialog.showErrorBox(
-    `${appName} could not start its backend`,
-    `The Bare sidecar process could not be launched.\n\n${err.message}\n\nReinstalling dependencies (npm install) usually restores it.`
-  )
+  reportCrash({
+    source: 'launch',
+    error: String(err),
+    log: err?.stack || ''
+  })
 }
 
-function reportWorkerExit(code) {
-  if (isQuitting || workerFailureReported) return
-  workerFailureReported = true
-  dialog.showErrorBox(
-    `${appName} could not start its backend`,
-    `The Bare sidecar process stopped unexpectedly (exit code ${code}).\n\nAnother copy of ${appName} may still be running and holding your local database. Quit it, or log out and back in, then reopen ${appName}.`
-  )
+function reportWorkerExit(code, signal) {
+  if (isQuitting) return
+  const { error, log } = backendCrashLog(workerStderr)
+  reportCrash({
+    source: 'backend',
+    error,
+    log,
+    exitCode: code,
+    signal: signal || null
+  })
 }
 
 function startWorker() {
@@ -238,16 +272,21 @@ function startWorker() {
     })
   }
 
+  workerStderr = ''
+  worker.stderr.on('data', (data) => {
+    workerStderr = appendStderr(workerStderr, data.toString())
+  })
+
   worker.on('data', (chunk) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('worker-data', Buffer.from(chunk))
     }
   })
 
-  worker.on('exit', (code) => {
-    console.log('[worker] exited with code', code)
+  worker.on('exit', (code, signal) => {
+    console.log('[worker] exited with code', code, 'signal', signal)
     worker = null
-    if (code !== 0) reportWorkerExit(code)
+    if (code !== 0) reportWorkerExit(code, signal)
   })
 }
 
@@ -400,6 +439,25 @@ function createWindow() {
     })
   })
 
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (isQuitting || details.reason === 'clean-exit') return
+    console.error('[window] renderer gone', details)
+    reportCrash({
+      source: 'renderer',
+      error: `The window process ended: ${details.reason}`,
+      exitCode: details.exitCode
+    })
+    // Reload once to show the crash screen; a renderer that keeps dying gets a dialog.
+    if (rendererCrashes++ < RENDERER_CRASH_RELOADS) {
+      mainWindow.reload()
+      return
+    }
+    dialog.showErrorBox(
+      `${appName} crashed`,
+      `${crash.error}${crash.exitCode != null ? ` (exit code ${crash.exitCode})` : ''}`
+    )
+  })
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -509,11 +567,42 @@ function setupIPC() {
     event.returnValue = getAppDir()
   })
 
-  // Sync, like the other boot-time reads next to it: the renderer needs the
-  // vault key and its entropy before it can start the backend at all.
-  ipcMain.on('app:fatal-error', (event, { title, message } = {}) => {
-    if (!title || !message) return
-    dialog.showErrorBox(title, message)
+  ipcMain.handle('app:crash:take', () => crash)
+
+  ipcMain.handle('crash:send-report', async (_event, { report, email } = {}) => {
+    if (typeof report !== 'string' || !report.trim()) return false
+    const replyTo =
+      typeof email === 'string' && EMAIL_PATTERN.test(email.trim()) ? email.trim() : ''
+    try {
+      // Node's fetch, not net.fetch: Chromium will not let a request set Origin or Referer.
+      const response = await fetch(CRASH_REPORT_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Origin: new URL(CRASH_REPORT_REFERRER).origin,
+          Referer: CRASH_REPORT_REFERRER
+        },
+        body: JSON.stringify({
+          _subject: `Pear Notes: crash report (${crash?.source || 'app'})`,
+          _template: 'table',
+          topic: 'Crash report',
+          ...(replyTo ? { email: replyTo } : {}),
+          message: report.slice(0, CRASH_REPORT_MAX_CHARS)
+        })
+      })
+      const result = await response.json().catch(() => null)
+      return response.ok && String(result?.success) === 'true'
+    } catch (e) {
+      console.warn('[crash] could not send the report', e?.message || e)
+      return false
+    }
+  })
+
+  ipcMain.on('app:relaunch', () => {
+    isQuitting = true
+    app.relaunch()
+    app.quit()
   })
 
   // LEGACY(hyperdb-migration): see docs/HYPERDB-VIEW-MIGRATION-PLAN-2026-09-23.md section 8
@@ -540,6 +629,8 @@ function setupIPC() {
 
   const vaultKeys = createVaultKeys({ getStoragePath, getAppDir, isDev })
 
+  // Sync, like the other boot-time reads next to it: the renderer needs the
+  // vault key and its entropy before it can start the backend at all.
   ipcMain.on('vault-key:get', (event) => {
     event.returnValue = vaultKeys.getDbEncryptionKey()
   })

@@ -85,6 +85,7 @@ import {
   START_AT_LOGIN_KEY
 } from './lib/appBehavior'
 import { isUpdateBannerDismissed, useAppUpdateStatus } from './lib/appUpdateCheck'
+import { reportCrash } from './lib/crashReport'
 import { useAiJobConditions } from './lib/localAi/useAiJobConditions'
 import { useAiOffloadServer } from './lib/localAi/useAiOffloadServer'
 import { useLocalAiBridge } from './lib/localAi/useLocalAiBridge'
@@ -168,7 +169,13 @@ function App() {
       const key = getDbEncryptionKey()
       const storagePath = window.electronBridge.getStoragePath()
       if (!key) {
-        window.electronBridge.showFatalError(t('error.startFailedTitle'), t('error.startFailed'))
+        reportCrash({
+          source: 'startup',
+          env: { appVersion },
+          title: t('error.startFailedTitle'),
+          message: t('error.startFailed'),
+          error: 'No vault encryption key is available'
+        })
         return
       }
 
@@ -196,10 +203,13 @@ function App() {
         if (choice !== 'start-fresh') return
         const fresh = await backendApi.startFreshVault({ storage: storagePath })
         if (fresh?.done !== true) {
-          window.electronBridge.showFatalError(
-            t('error.startFailedTitle'),
-            t('error.legacyVaultStartFreshFailed')
-          )
+          reportCrash({
+            source: 'startup',
+            env: { appVersion },
+            title: t('error.startFailedTitle'),
+            message: t('error.legacyVaultStartFreshFailed'),
+            error: fresh?.reason || fresh?.error || ''
+          })
           return
         }
         result = await openVault()
@@ -208,10 +218,13 @@ function App() {
 
       if (result?.done !== true) {
         const sealed = result?.reason === 'VAULT_KEY_SEALED'
-        window.electronBridge.showFatalError(
-          t(sealed ? 'error.vaultSealedTitle' : 'error.startFailedTitle'),
-          t(sealed ? 'error.vaultSealed' : 'error.startFailed')
-        )
+        reportCrash({
+          source: 'startup',
+          env: { appVersion },
+          title: t(sealed ? 'error.vaultSealedTitle' : 'error.startFailedTitle'),
+          message: t(sealed ? 'error.vaultSealed' : 'error.startFailed'),
+          error: result?.reason || result?.error || ''
+        })
         return
       }
 
