@@ -2,7 +2,7 @@
   "name": "pear-notes-desktop",
   "productName": "Pear Notes",
   "version": "1.1.1",
-  "buildNumber": 21,
+  "buildNumber": 24,
   "description": "Private notes, encrypted on-device and synced peer-to-peer.",
   "author": "AmreshVs",
   "main": "electron/main.cjs",
@@ -34,7 +34,7 @@
     "test": "NODE_OPTIONS=\"--import ./test/helpers/extensionless.js\" brittle test/*.test.js"
   },
   "dependencies": {
-    "@pear-notes/core": "github:AmreshVs/pear-notes-core#558d3b7ff9479543d6d85a448d0ee39d332d1ee8",
+    "@pear-notes/core": "github:AmreshVs/pear-notes-core#aafd7b5e6f038888fa41a96b49b97a33faa6c5be",
     "pear-device-auth": "file:./native/pear-device-auth",
     "pear-runtime": "^1.1.4",
     "which-runtime": "^1.3.2"
