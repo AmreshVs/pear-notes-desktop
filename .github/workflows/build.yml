@@ -116,18 +116,10 @@ jobs:
       - name: Install packaging tools
         run: sudo apt-get update && sudo apt-get install -y fakeroot dpkg rpm
 
-      - name: Give git read access to pear-notes-core
-        env:
-          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
-        run: &core-access |
-          if [ -z "$CORE_REPO_TOKEN" ]; then
-            echo "::error::Add a CORE_REPO_TOKEN secret (fine-grained token, pear-notes-core, Contents: read-only)"
-            exit 1
-          fi
-          base="https://x-access-token:${CORE_REPO_TOKEN}@github.com/"
-          git config --global url."$base".insteadOf "https://github.com/"
-          git config --global --add url."$base".insteadOf "ssh://git@github.com/"
-          git config --global --add url."$base".insteadOf "git@github.com:"
+      - name: Fetch GitHub dependencies over HTTPS
+        run: &github-https |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
 
       - name: Install dependencies
         run: npm run setup
@@ -189,19 +181,11 @@ jobs:
           BUILD: ${{ needs.version.outputs.build }}
         run: *apply-version
 
-      - name: Give git read access to pear-notes-core
+      - name: Fetch GitHub dependencies over HTTPS
         shell: bash
-        env:
-          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
         run: |
-          if [ -z "$CORE_REPO_TOKEN" ]; then
-            echo "::error::Add a CORE_REPO_TOKEN secret (fine-grained token, pear-notes-core, Contents: read-only)"
-            exit 1
-          fi
-          base="https://x-access-token:${CORE_REPO_TOKEN}@github.com/"
-          git config --global url."$base".insteadOf "https://github.com/"
-          git config --global --add url."$base".insteadOf "ssh://git@github.com/"
-          git config --global --add url."$base".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
           git config --global core.longpaths true
 
       - name: Install dependencies
@@ -391,10 +375,8 @@ jobs:
             echo "MAS_PROVISIONING_PROFILE=$RUNNER_TEMP/pear-notes.provisionprofile" >> "$GITHUB_ENV"
           fi
 
-      - name: Give git read access to pear-notes-core
-        env:
-          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
-        run: *core-access
+      - name: Fetch GitHub dependencies over HTTPS
+        run: *github-https
 
       - name: Install dependencies
         run: npm run setup
