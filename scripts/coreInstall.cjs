@@ -1,127 +1,113 @@
-const { execSync } = require('child_process')
+const { spawnSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const CORE_SHIPPED_DIRS = ['backend', 'spec', 'store']
+const DEPENDENCY = '@pear-notes/core'
+const REGISTRY = 'https://registry.npmjs.org/'
+const EXACT_VERSION = /^\d+\.\d+\.\d+$/
+const LOCAL_CORE_MARKER = '.local-core'
 
-function git(command) {
+function readJson(file) {
   try {
-    return execSync(`git ${command}`, { stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 26 })
-      .toString()
-      .trim()
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
   } catch {
     return null
   }
 }
 
-function lockedCoreSha(root) {
-  const lockPath = path.join(root, 'package-lock.json')
-  if (!fs.existsSync(lockPath)) return null
-  return fs.readFileSync(lockPath, 'utf8').match(/pear-notes-core(?:\.git)?#([0-9a-f]{40})/)?.[1]
+function lockedCore(root) {
+  return (
+    readJson(path.join(root, 'package-lock.json'))?.packages?.[`node_modules/${DEPENDENCY}`] ?? null
+  )
+}
+
+function checkCorePinRef(root) {
+  const spec = readJson(path.join(root, 'package.json'))?.dependencies?.[DEPENDENCY] ?? ''
+  if (!EXACT_VERSION.test(spec)) {
+    return {
+      level: 'fail',
+      detail: `package.json asks for core "${spec}", not an exact npm version - run npm run core:bump`
+    }
+  }
+  const locked = lockedCore(root)
+  if (!locked)
+    return { level: 'fail', detail: 'package-lock.json has no core entry - run npm install' }
+  if (locked.version !== spec) {
+    return {
+      level: 'fail',
+      detail: `package.json asks for core ${spec} but the lock has ${locked.version} - run npm run core:bump ${spec}`
+    }
+  }
+  if (!locked.resolved?.startsWith(REGISTRY) || !locked.integrity) {
+    return {
+      level: 'fail',
+      detail: `the lock resolves core ${spec} from ${locked.resolved ?? 'nowhere'}, not the npm registry with an integrity hash`
+    }
+  }
+  return { level: 'pass', detail: `core ${spec} from npm` }
 }
 
 function compareInstalledCore(root) {
-  const lockedSha = lockedCoreSha(root)
-  const coreRoot = path.resolve(root, '..', 'pear-notes-core')
-  const installed = path.join(root, 'node_modules', '@pear-notes', 'core')
+  const locked = lockedCore(root)
+  const installed = path.join(root, 'node_modules', DEPENDENCY)
 
-  if (!lockedSha) return { level: 'warn', detail: 'package-lock.json pins no core commit' }
+  if (!locked?.integrity) return { level: 'warn', detail: 'package-lock.json pins no core release' }
   if (!fs.existsSync(installed)) {
-    return { level: 'fail', detail: 'node_modules/@pear-notes/core is missing - run npm install' }
+    return { level: 'fail', detail: 'node_modules/@pear-notes/core is missing - run npm run setup' }
   }
   if (fs.lstatSync(installed).isSymbolicLink()) {
-    return { level: 'warn', detail: 'node_modules/@pear-notes/core is a local link, not the pin' }
-  }
-  if (!fs.existsSync(path.join(coreRoot, '.git'))) {
-    return { level: 'warn', detail: '../pear-notes-core is not checked out, cannot compare' }
-  }
-
-  const short = lockedSha.slice(0, 12)
-  const tree = git(`-C "${coreRoot}" ls-tree -r ${lockedSha} -- ${CORE_SHIPPED_DIRS.join(' ')}`)
-  if (!tree) return { level: 'warn', detail: `could not read core ${short} (git fetch in core?)` }
-
-  const expected = new Map()
-  for (const line of tree.split('\n')) {
-    const [meta, file] = line.split('\t')
-    expected.set(file, meta.split(' ')[2])
-  }
-  const present = [...expected.keys()].filter((file) => fs.existsSync(path.join(installed, file)))
-  const hashes = git(
-    `hash-object ${present.map((file) => `"${path.join(installed, file)}"`).join(' ')}`
-  )
-  const actual = new Map(present.map((file, i) => [file, hashes?.split('\n')[i]]))
-  const stale = [...expected]
-    .filter(([file, hash]) => actual.get(file) !== hash)
-    .map(([file]) => file)
-
-  if (stale.length > 0) {
-    return {
-      level: 'fail',
-      detail:
-        `node_modules/@pear-notes/core does not match the pinned ${short} ` +
-        `(${stale.length} file(s) differ, e.g. ${stale[0]}) - run npm run setup`
-    }
-  }
-  return { level: 'pass', detail: `node_modules/@pear-notes/core matches ${short}` }
-}
-
-const COMMIT_REF = /^[0-9a-f]{7,40}$/
-
-// A tag pin is reproducible only while the tag still points at the commit the lock holds.
-function checkCorePinRef(root) {
-  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
-  const spec = pkg.dependencies?.['@pear-notes/core'] ?? ''
-  if (spec.startsWith('file:')) {
-    return { level: 'warn', detail: `core is the local checkout (${spec}), not a pinned release` }
-  }
-  const [source, ref] = spec.split('#')
-  if (!ref) return { level: 'warn', detail: `core is not pinned to a tag or commit (${spec})` }
-  const lockedSha = lockedCoreSha(root)
-  if (!lockedSha) return { level: 'fail', detail: 'package-lock.json pins no core commit' }
-  const short = lockedSha.slice(0, 12)
-
-  if (COMMIT_REF.test(ref)) {
-    return lockedSha.startsWith(ref)
-      ? { level: 'pass', detail: `core pinned to commit ${short}` }
-      : {
-          level: 'fail',
-          detail: `package.json pins ${ref.slice(0, 12)} but the lock has ${short} - run npm install`
-        }
-  }
-
-  const slug = source.replace(/^github:/, '')
-  const listing = git(`ls-remote --tags --heads https://github.com/${slug}.git`)
-  if (listing === null) {
     return {
       level: 'warn',
-      detail: `could not reach GitHub to check core "${ref}" (lock has ${short})`
+      detail: 'node_modules/@pear-notes/core is a local link, not the npm release'
     }
   }
-  const refs = new Map(listing.split('\n').map((line) => line.split('\t').reverse()))
-  const tagCommit = refs.get(`refs/tags/${ref}^{}`) ?? refs.get(`refs/tags/${ref}`)
-  const branchCommit = refs.get(`refs/heads/${ref}`)
-
-  if (tagCommit && branchCommit) {
+  if (fs.existsSync(path.join(installed, LOCAL_CORE_MARKER))) {
     return {
       level: 'fail',
-      detail: `core "${ref}" is both a tag and a branch, so npm may pick either - pin a tag with its own name`
+      detail: `node_modules/@pear-notes/core is a copy of ../pear-notes-core (copy-core) - run npm run setup to get core ${locked.version} back`
     }
   }
-  if (tagCommit) {
-    return tagCommit === lockedSha
-      ? { level: 'pass', detail: `core pinned to tag ${ref} (${short})` }
-      : {
-          level: 'fail',
-          detail: `core tag ${ref} now points at ${tagCommit.slice(0, 12)} but the lock has ${short} - the tag moved, pin again`
-        }
-  }
-  if (branchCommit) {
+  const version = readJson(path.join(installed, 'package.json'))?.version
+  if (version !== locked.version) {
     return {
-      level: 'warn',
-      detail: `core pins the branch "${ref}" - a new commit on it changes what a fresh install gets, pin a tag instead`
+      level: 'fail',
+      detail: `node_modules has core ${version} but the lock has ${locked.version} - run npm run setup`
     }
   }
-  return { level: 'fail', detail: `core "${ref}" is not a tag or branch on GitHub` }
+  const integrity = readJson(path.join(root, 'node_modules', '.package-lock.json'))?.packages?.[
+    `node_modules/${DEPENDENCY}`
+  ]?.integrity
+  if (integrity !== locked.integrity) {
+    return {
+      level: 'fail',
+      detail: `node_modules/@pear-notes/core was not installed from the locked ${locked.version} tarball - run npm run setup`
+    }
+  }
+  return { level: 'pass', detail: `node_modules/@pear-notes/core is the locked ${version}` }
 }
 
-module.exports = { checkCorePinRef, compareInstalledCore }
+function checkCorePublished(root) {
+  const locked = lockedCore(root)
+  if (!locked?.version) return { level: 'fail', detail: 'package-lock.json pins no core release' }
+  const view = spawnSync('npm', ['view', `${DEPENDENCY}@${locked.version}`, 'dist.integrity'], {
+    cwd: root,
+    encoding: 'utf8',
+    shell: process.platform === 'win32'
+  })
+  if (view.status !== 0) {
+    return /E404/.test(view.stderr)
+      ? { level: 'fail', detail: `core ${locked.version} is not on npm` }
+      : { level: 'warn', detail: `could not reach npm to check core ${locked.version}` }
+  }
+  const published = view.stdout.trim()
+  if (!published) return { level: 'fail', detail: `core ${locked.version} is not on npm` }
+  if (published !== locked.integrity) {
+    return {
+      level: 'fail',
+      detail: `the lock's integrity for core ${locked.version} does not match npm's - run npm run core:bump ${locked.version}`
+    }
+  }
+  return { level: 'pass', detail: `core ${locked.version} matches npm` }
+}
+
+module.exports = { LOCAL_CORE_MARKER, checkCorePinRef, checkCorePublished, compareInstalledCore }

@@ -560,7 +560,7 @@ function checkCorePin() {
   if (level === 'fail') {
     throw new ReleaseError(
       detail,
-      'Pin core again: node ../scripts/bump.js, then Mobile + desktop > Pin a core version'
+      'Set the core version: npm run core:bump <version>, or node ../scripts/bump.js > Mobile + desktop > Use a core version from npm'
     )
   }
   if (level === 'warn') warn(detail)
