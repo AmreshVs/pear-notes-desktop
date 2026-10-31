@@ -2,7 +2,13 @@
 
 Private notes, encrypted on your devices and synced peer to peer. There's no account and no server: your devices find each other and sync directly.
 
-Website and downloads: https://amreshvs.github.io/pear-notes/
+## Download
+
+- **macOS:** [Mac App Store](https://apps.apple.com/app/pear-notes-private-ai-sync/id6803519182), or the `.dmg` for Apple silicon from the [latest release](https://github.com/AmreshVs/pear-notes/releases/latest)
+- **Windows:** [Microsoft Store](https://apps.microsoft.com/detail/9plcvqthftqj)
+- **Linux** (`.deb`, `.rpm`): [latest release](https://github.com/AmreshVs/pear-notes/releases/latest)
+
+For iPhone, iPad and Android, see [pear-notes-mobile](https://github.com/AmreshVs/pear-notes-mobile). Website: https://amreshvs.github.io/pear-notes/
 
 ## What's in the app
 
