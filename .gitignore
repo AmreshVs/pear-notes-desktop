@@ -28,3 +28,13 @@ flatpak-repo/
 .mcp.json
 .vscode/mcp.json
 skills-lock.json
+
+# Never public: notes, agent config, local secrets
+docs/
+CLAUDE.md
+.agent/
+lint_report.txt
+.env.local
+.release.*.env
+credentials/
+.trail/
