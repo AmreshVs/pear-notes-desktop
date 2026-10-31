@@ -15,6 +15,10 @@ on:
         description: 'Core version from npm, e.g. 1.2.0 or latest (empty = keep current).'
         type: string
         required: false
+      release_branch:
+        description: 'Create the release branch vVERSION from the selected branch and make these changes there (needs a version)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -33,9 +37,9 @@ jobs:
       PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
     steps:
       - name: Check there is something to bump
-        if: inputs.version == '' && !inputs.bump && inputs.core == ''
+        if: (inputs.version == '' && !inputs.bump && inputs.core == '') || (inputs.release_branch && inputs.version == '')
         run: |
-          echo "::error::Fill in a version, tick bump or name a core version"
+          echo "::error::Fill in a version, tick bump or name a core version. A release branch needs a version."
           exit 1
 
       - uses: actions/checkout@v4
@@ -52,6 +56,22 @@ jobs:
           git config --global --add url."https://github.com/".insteadOf "git@github.com:"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create the release branch
+        if: inputs.release_branch
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::\"$VERSION\" is not MAJOR.MINOR.PATCH"
+            exit 1
+          fi
+          branch="v$VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "::error::$branch already exists"
+            exit 1
+          fi
+          git checkout -q -b "$branch"
+          echo "TARGET=$branch" >> "$GITHUB_ENV"
+          echo "Creating $branch from $GITHUB_REF_NAME"
 
       - name: Bump core
         if: inputs.core != ''
@@ -81,8 +101,9 @@ jobs:
             echo "Already at ${version} build ${build}"
             exit 0
           fi
-          git commit -qam "Bump build to ${version} (${build})"
+          if [ -n "$TARGET" ]; then message="Start release ${version} (${build})"; else message="Bump build to ${version} (${build})"; fi
+          git commit -qam "$message"
           echo "Set ${version} build ${build} (store build ${store})"
 
       - name: Push
-        run: git push "$PUSH_URL" "HEAD:${GITHUB_REF_NAME}"
+        run: git push "$PUSH_URL" "HEAD:refs/heads/${TARGET:-$GITHUB_REF_NAME}"
