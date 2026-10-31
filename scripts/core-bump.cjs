@@ -10,6 +10,7 @@ const SOCKET_FIREWALL = '/usr/local/bin/sfw'
 const EXACT_VERSION = /^\d+\.\d+\.\d+$/
 const args = process.argv.slice(2)
 const NO_COMMIT = args.includes('--no-commit')
+const LOCK_ONLY = args.includes('--lock-only')
 const REQUESTED = args.find((arg) => !arg.startsWith('--')) ?? 'latest'
 
 function abort(message) {
@@ -34,6 +35,7 @@ function run(command, commandArgs, { capture = false } = {}) {
 
 function install(spec) {
   const npmArgs = ['install', '--save-exact', '--ignore-scripts', '--no-audit', '--no-fund', spec]
+  if (LOCK_ONLY) npmArgs.push('--package-lock-only')
   const result = fs.existsSync(SOCKET_FIREWALL)
     ? run(SOCKET_FIREWALL, ['npm', ...npmArgs])
     : run('npm', npmArgs)
@@ -80,15 +82,16 @@ function main() {
   const previousDeps = coreDependencies()
 
   console.log(`\n  core:bump: ${previous} -> ${version}\n`)
-  fs.rmSync(path.join(ROOT, 'node_modules', DEPENDENCY), { recursive: true, force: true })
+  if (!LOCK_ONLY)
+    fs.rmSync(path.join(ROOT, 'node_modules', DEPENDENCY), { recursive: true, force: true })
   install(`${DEPENDENCY}@${version}`)
 
-  for (const check of [checkCorePinRef, compareInstalledCore]) {
+  for (const check of LOCK_ONLY ? [checkCorePinRef] : [checkCorePinRef, compareInstalledCore]) {
     const { level, detail } = check(ROOT)
     if (level !== 'pass') abort(detail)
   }
 
-  if (previousDeps !== coreDependencies()) {
+  if (!LOCK_ONLY && previousDeps !== coreDependencies()) {
     console.log(
       `\n  core ${version} changed its dependencies - run npm run setup to rebuild native modules before building`
     )

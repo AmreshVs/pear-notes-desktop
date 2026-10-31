@@ -1,0 +1,88 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Marketing version, e.g. 1.2.0 (empty = keep current). A new MAJOR.MINOR restarts the build number at 1.'
+        type: string
+        required: false
+      bump:
+        description: 'Bump the build number.'
+        type: boolean
+        default: false
+      core:
+        description: 'Core version from npm, e.g. 1.2.0 or latest (empty = keep current).'
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ inputs.version }}
+      BUMP: ${{ inputs.bump }}
+      CORE: ${{ inputs.core }}
+      PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+    steps:
+      - name: Check there is something to bump
+        if: inputs.version == '' && !inputs.bump && inputs.core == ''
+        run: |
+          echo "::error::Fill in a version, tick bump or name a core version"
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Configure git
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump core
+        if: inputs.core != ''
+        run: node scripts/core-bump.cjs "$CORE" --lock-only
+
+      - name: Set the version and build number
+        if: inputs.version != '' || inputs.bump
+        run: |
+          read -r version build store < <(node -e "
+            const { storeBuild } = require('./electron/storeBuild.cjs')
+            const pkg = require('./package.json')
+            const line = (v) => v.split('.').slice(0, 2).join('.')
+            const version = process.env.VERSION || pkg.version
+            let build = Number(pkg.buildNumber)
+            if (line(version) !== line(pkg.version)) build = 1
+            else if (process.env.BUMP === 'true') build += 1
+            console.log(version, build, storeBuild(version, build))
+          ")
+          VERSION="$version" BUILD="$build" node -e "
+            const fs = require('fs')
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+            pkg.version = process.env.VERSION
+            pkg.buildNumber = Number(process.env.BUILD)
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n')
+          "
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Already at ${version} build ${build}"
+            exit 0
+          fi
+          git commit -qam "Bump build to ${version} (${build})"
+          echo "Set ${version} build ${build} (store build ${store})"
+
+      - name: Push
+        run: git push "$PUSH_URL" "HEAD:${GITHUB_REF_NAME}"

@@ -64,27 +64,11 @@ jobs:
           CORE: ${{ inputs.core }}
           PUSH_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
         run: |
-          version=$(npm view "@pear-notes/core@$CORE" version 2>/dev/null | tail -n1)
-          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::@pear-notes/core@$CORE is not on npm"
-            exit 1
-          fi
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           git config --global --add url."https://github.com/".insteadOf "git@github.com:"
-          npm install --package-lock-only --save-exact --ignore-scripts --no-audit --no-fund "@pear-notes/core@$version"
-          node -e "
-            const { checkCorePinRef } = require('./scripts/coreInstall.cjs')
-            const { level, detail } = checkCorePinRef('.')
-            console.log(detail)
-            process.exit(level === 'pass' ? 0 : 1)
-          "
-          if git diff --quiet -- package.json package-lock.json; then
-            echo "Already on core $version"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "Bump core to $version" -- package.json package-lock.json
+          node scripts/core-bump.cjs "$CORE" --lock-only
           git push "$PUSH_URL" "HEAD:${GITHUB_REF_NAME}"
 
       - name: Choose the version and build number
