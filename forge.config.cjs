@@ -82,6 +82,7 @@ const IGNORED_TOP_LEVEL = new Set([
   '/.gitattributes',
   '/.DS_Store',
   '/out',
+  '/artifacts',
   '/storage',
   // `npm run harden-core` stages a preview copy here; it must never be packaged
   // (it can carry a read-only .git that makes osx-sign fail with Permission denied).
