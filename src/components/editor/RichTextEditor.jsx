@@ -54,6 +54,11 @@ import { FindInNote } from '../../lib/findInNote'
 import { insertUploadedNode } from '../../lib/insertUploadedNode'
 import { KeptSelection, keptSelectionRange } from '../../lib/keptSelection'
 import { UploadCancelledError, uploadFileWithProgress } from '../../lib/noteUploadManager'
+import {
+  inlineImageFiles,
+  takePendingInlineImages,
+  transformPastedInlineImages
+} from '../../lib/pastedImages'
 import { clearUploadQueue, enqueueUploads, nextUploadItemId } from '../../lib/uploadRegistry'
 import { getFontClass, getFontFamilyValue } from '../../utils/fonts'
 
@@ -78,6 +83,49 @@ const RichTextEditor = forwardRef(
 
     const editorFontFamily = getFontFamilyValue(fontFamily)
     const editorFontClass = getFontClass(fontFamily)
+
+    const uploadAndInsertFiles = (view, files) => {
+      if (files.length === 0) return
+      const queue = files.map((file) => ({
+        id: nextUploadItemId(),
+        fileName: file.name,
+        file
+      }))
+      enqueueUploads(queue)
+
+      void (async () => {
+        for (const { id: itemId, file } of queue) {
+          try {
+            const { link } = await uploadFileWithProgress({
+              noteKey: currentNoteKey,
+              file,
+              itemId
+            })
+            if (!link) continue
+
+            const { schema } = view.state
+
+            if (file.type.startsWith('image/')) {
+              insertUploadedNode(view, schema.nodes.image.create({ src: link }))
+            } else if (schema.nodes.fileAttachment) {
+              insertUploadedNode(
+                view,
+                schema.nodes.fileAttachment.create({
+                  fileName: file.name,
+                  fileSize: file.size,
+                  fileType: file.type,
+                  url: link
+                })
+              )
+            }
+          } catch (error) {
+            if (!(error instanceof UploadCancelledError))
+              console.error('Error uploading file:', error)
+          }
+        }
+        clearUploadQueue()
+      })()
+    }
 
     const editor = useEditor(
       {
@@ -161,106 +209,38 @@ const RichTextEditor = forwardRef(
         ],
         content: content || '',
         editorProps: {
+          transformPasted: transformPastedInlineImages,
           handlePaste: (view, event) => {
-            const items = Array.from(event.clipboardData?.items || [])
-
-            const pastedFiles = items
+            const pastedFiles = Array.from(event.clipboardData?.items || [])
               .filter((item) => item.kind === 'file')
               .map((item) => item.getAsFile())
               .filter(Boolean)
-            const pastedQueue = pastedFiles.map((file) => ({
-              id: nextUploadItemId(),
-              fileName: file.name,
-              file
-            }))
-            enqueueUploads(pastedQueue)
-
-            void (async () => {
-              for (const { id: itemId, file } of pastedQueue) {
-                try {
-                  const { link } = await uploadFileWithProgress({
-                    noteKey: currentNoteKey,
-                    file,
-                    itemId
-                  })
-                  if (!link) continue
-
-                  const { schema } = view.state
-
-                  if (file.type.startsWith('image/')) {
-                    const node = schema.nodes.image.create({ src: link })
-                    insertUploadedNode(view, node)
-                  } else {
-                    if (schema.nodes.fileAttachment) {
-                      const node = schema.nodes.fileAttachment.create({
-                        fileName: file.name,
-                        fileSize: file.size,
-                        fileType: file.type,
-                        url: link
-                      })
-                      insertUploadedNode(view, node)
-                    }
-                  }
-                } catch (error) {
-                  if (!(error instanceof UploadCancelledError))
-                    console.error('Error uploading file:', error)
-                }
-              }
-              clearUploadQueue()
-            })()
-
-            return pastedFiles.length > 0
+            const inlineSrcs = takePendingInlineImages()
+            if (pastedFiles.length > 0) {
+              uploadAndInsertFiles(view, pastedFiles)
+              return true
+            }
+            if (inlineSrcs.length > 0) {
+              inlineImageFiles(inlineSrcs).then((files) => uploadAndInsertFiles(view, files))
+            }
+            return false
           },
           handleDrop: (view, event, slice, moved) => {
             if (moved) return false
 
             const files = Array.from(event.dataTransfer?.files || [])
-            if (files.length === 0) return false
+            const inlineSrcs = takePendingInlineImages()
+            if (files.length === 0) {
+              if (inlineSrcs.length > 0) {
+                inlineImageFiles(inlineSrcs).then((inlineFiles) =>
+                  uploadAndInsertFiles(view, inlineFiles)
+                )
+              }
+              return false
+            }
 
             event.preventDefault()
-
-            const droppedQueue = files.map((file) => ({
-              id: nextUploadItemId(),
-              fileName: file.name,
-              file
-            }))
-            enqueueUploads(droppedQueue)
-
-            void (async () => {
-              for (const { id: itemId, file } of droppedQueue) {
-                try {
-                  const { link } = await uploadFileWithProgress({
-                    noteKey: currentNoteKey,
-                    file,
-                    itemId
-                  })
-
-                  if (!link) continue
-
-                  const { schema } = view.state
-
-                  if (file.type.startsWith('image/')) {
-                    const node = schema.nodes.image.create({ src: link })
-                    insertUploadedNode(view, node)
-                  } else {
-                    if (schema.nodes.fileAttachment) {
-                      const node = schema.nodes.fileAttachment.create({
-                        fileName: file.name,
-                        fileSize: file.size,
-                        fileType: file.type,
-                        url: link
-                      })
-                      insertUploadedNode(view, node)
-                    }
-                  }
-                } catch (error) {
-                  if (!(error instanceof UploadCancelledError))
-                    console.error('Error uploading dropped file:', error)
-                }
-              }
-              clearUploadQueue()
-            })()
-
+            uploadAndInsertFiles(view, files)
             return true
           },
           attributes: {
