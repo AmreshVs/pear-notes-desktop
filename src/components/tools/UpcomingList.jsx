@@ -17,8 +17,8 @@ import { useUpcoming } from '../../hooks/useUpcoming'
 import {
   birthdaysByMonth,
   formatWhenFromNow,
-  upcomingText,
-  yearlyLabel
+  recurrenceLabel,
+  upcomingText
 } from '../../utils/upcomingFormat'
 
 import ReminderSettingsModal from './ReminderSettingsModal'
@@ -36,6 +36,7 @@ const NEXT_GROUPS = [
 
 function NextCard({ task, onOpen }) {
   const { t, i18n } = useTranslation()
+  const recurrence = recurrenceLabel(task, t)
   return (
     <button
       type='button'
@@ -49,7 +50,7 @@ function NextCard({ task, onOpen }) {
         {upcomingText(task)}
       </span>
       <span className='text-xs text-text-tertiary truncate'>
-        {task.yearly ? `${yearlyLabel(task, t)} · ` : ''}
+        {recurrence ? `${recurrence} · ` : ''}
         {task.title || t('noteCard.untitled')}
       </span>
     </button>

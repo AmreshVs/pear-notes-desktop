@@ -24,6 +24,12 @@ export function yearlyLabel(task, t) {
   return age > 0 ? t('upcoming.turns', { age }) : t('upcoming.everyYear')
 }
 
+export function recurrenceLabel(task, t) {
+  if (task.yearly) return yearlyLabel(task, t)
+  if (!task.repeat?.unit) return ''
+  return t(`upcoming.repeat.${task.repeat.unit}`, { count: task.repeat.interval || 1 })
+}
+
 /** "in 25 min", "in 3 hours", "tomorrow", "Fri 16 Oct". */
 export function formatWhenFromNow(task, t, language, now = Date.now()) {
   const startOfToday = new Date(now).setHours(0, 0, 0, 0)

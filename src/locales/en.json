@@ -2568,6 +2568,16 @@
     "markNotDone": "Mark as not done",
     "turns": "Turns {{age}}",
     "everyYear": "Every year",
+    "repeat": {
+      "day_one": "Every day",
+      "day_other": "Every {{count}} days",
+      "week_one": "Every week",
+      "week_other": "Every {{count}} weeks",
+      "month_one": "Every month",
+      "month_other": "Every {{count}} months",
+      "year_one": "Every year",
+      "year_other": "Every {{count}} years"
+    },
     "reminderBody": "{{lead}} · {{title}}",
     "reminderLead": {
       "5": "In 5 minutes",

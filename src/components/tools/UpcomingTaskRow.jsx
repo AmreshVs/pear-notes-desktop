@@ -3,7 +3,7 @@ import { Bell, Cake, CalendarDays, Check, CheckSquare } from 'lucide-react'
 
 import { isAppointment } from '@pear-notes/core/store/services/noteTasks.js'
 
-import { formatWhenShort, upcomingText, yearlyLabel } from '../../utils/upcomingFormat'
+import { formatWhenShort, recurrenceLabel, upcomingText } from '../../utils/upcomingFormat'
 
 function DoneButton({ task, pending, onToggle }) {
   const { t } = useTranslation()
@@ -33,7 +33,7 @@ function DoneButton({ task, pending, onToggle }) {
 
 export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pending, remind }) {
   const { t, i18n } = useTranslation()
-  const yearly = task.yearly ? yearlyLabel(task, t) : ''
+  const recurrence = recurrenceLabel(task, t)
   const when = formatWhenShort(task, i18n.language)
   return (
     <div
@@ -60,7 +60,7 @@ export default function UpcomingTaskRow({ task, last, onOpen, onToggleDone, pend
             {upcomingText(task)}
           </p>
           <p className='mt-1 text-xs text-text-tertiary truncate'>
-            {yearly ? `${yearly} · ` : ''}
+            {recurrence ? `${recurrence} · ` : ''}
             {task.title || t('noteCard.untitled')}
           </p>
         </div>
