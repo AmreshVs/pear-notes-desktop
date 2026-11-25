@@ -555,6 +555,8 @@
         "waiting": "Waiting to index",
         "failed": "Indexing stopped. Rebuild the index to try again.",
         "partial": "{{indexed}} of {{total}} notes indexed · the rest wait for charging",
+        "leftOut_one": "{{count}} locked or deleted note isn't indexed",
+        "leftOut_other": "{{count}} locked or deleted notes aren't indexed",
         "done": "{{indexed}} of {{total}} notes indexed",
         "notYet": "Not indexed yet",
         "rebuild": "Rebuild index",
