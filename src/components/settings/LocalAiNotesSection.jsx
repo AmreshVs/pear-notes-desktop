@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 import { backendApi } from '@pear-notes/core/backend/api.js'
 import { AI_SUGGESTION } from '@pear-notes/core/store/services/aiSuggestionPrefs.js'
+import { isIndexable } from '@pear-notes/core/store/services/localAiIndex.js'
 import {
   getIndexProgress,
   loadIndexBytes,
@@ -17,6 +18,7 @@ import {
   selectIndexCoverage,
   setAiSuggestion
 } from '@pear-notes/core/store/slices/localAiSlice.js'
+import { getNoteKeys, getNotesData } from '@pear-notes/core/store/slices/notesSlice.js'
 import { formatBytes } from '@pear-notes/core/utils.js'
 
 import {
@@ -36,9 +38,15 @@ const SUGGESTION_ROWS = [
   AI_SUGGESTION.RELATED
 ]
 
+const selectIndexLeftOutCount = (state) => {
+  const data = getNotesData(state)
+  return (getNoteKeys(state) ?? []).filter((key) => data[key] && !isIndexable(data[key])).length
+}
+
 function useIndexView() {
   const index = useSelector(getLocalAiIndex)
   const coverage = useSelector(selectIndexCoverage)
+  const leftOut = useSelector(selectIndexLeftOutCount)
   const [sample, setSample] = useState(null)
   const [bytes, setBytes] = useState(null)
   const nextSample = nextIndexSample(sample, index)
@@ -56,14 +64,15 @@ function useIndexView() {
     }
   }, [index.enabled, index.changedAt])
 
-  return { index, coverage, progress, bytes }
+  return { index, coverage, progress, bytes, leftOut }
 }
 
 function IndexCard() {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const { index, coverage, progress, bytes } = useIndexView()
+  const { index, coverage, progress, bytes, leftOut } = useIndexView()
   const busy = index.status === 'running' || index.status === 'waiting'
+  const showLeftOut = !busy && !!coverage && leftOut > 0
   const status =
     index.status === 'running'
       ? t('settings.onDeviceAi.index.running', { done: index.done ?? 0, total: index.total ?? 0 })
@@ -96,6 +105,11 @@ function IndexCard() {
           <p className={DESC_CLASS} role='status'>
             {status}
           </p>
+          {showLeftOut && (
+            <p className={DESC_CLASS}>
+              {t('settings.onDeviceAi.index.leftOut', { count: leftOut })}
+            </p>
+          )}
         </div>
         <button
           onClick={() => dispatch(rebuildLocalAiIndex())}
