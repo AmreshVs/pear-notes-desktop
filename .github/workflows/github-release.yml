@@ -1,0 +1,196 @@
+name: GitHub release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Build run to release: the number at the end of its URL (…/actions/runs/<ID>). Empty = the latest successful Build run on this branch.'
+        type: string
+        required: false
+      title:
+        description: 'Release title (empty = v<version>)'
+        type: string
+        required: false
+      version:
+        description: 'Version, e.g. 1.2.0 (empty = read it from the build files)'
+        type: string
+        required: false
+      from:
+        description: 'Changelog starts after this tag or commit (empty = the previous v* tag)'
+        type: string
+        required: false
+      draft:
+        description: 'Save as a draft to check before publishing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: github-release
+  cancel-in-progress: false
+
+env:
+  BUILD_WORKFLOW: .github/workflows/build.yml
+  APP: desktop
+  ARTIFACT_PATTERN: '^PearNotes-.*-(macos-arm64|linux-x64)$'
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Pick the build run
+        id: run
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          workflow_file=$(basename "$BUILD_WORKFLOW")
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list -R "$REPO" --workflow "$workflow_file" --branch "$BRANCH" --status success -L 1 \
+              --json databaseId -q '.[0].databaseId')
+            if [ -z "$RUN_ID" ]; then
+              echo "::error::No successful $workflow_file run on $BRANCH. Pick a run ID instead."
+              exit 1
+            fi
+          fi
+          IFS=$'\t' read -r path conclusion sha branch url < <(gh api "repos/$REPO/actions/runs/$RUN_ID" \
+            -q '[.path, (.conclusion // "running"), .head_sha, .head_branch, .html_url] | @tsv')
+          if [ "$path" != "$BUILD_WORKFLOW" ]; then
+            echo "::error::Run $RUN_ID is from $path, not $BUILD_WORKFLOW"
+            exit 1
+          fi
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::Run $RUN_ID finished as $conclusion; release a successful run"
+            exit 1
+          fi
+          echo "Releasing run $RUN_ID on $branch at $sha"
+          echo "id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Download the builds
+        env:
+          RUN_ID: ${{ steps.run.outputs.id }}
+          RUN_URL: ${{ steps.run.outputs.url }}
+        run: |
+          artifacts=()
+          while IFS= read -r name; do artifacts+=("$name"); done < <(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" \
+            --paginate -q '.artifacts[] | select(.expired | not) | .name' | grep -E "$ARTIFACT_PATTERN" || true)
+          expired=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --paginate \
+            -q '.artifacts[] | select(.expired) | .name' | grep -E "$ARTIFACT_PATTERN" || true)
+          if [ -n "$expired" ]; then
+            echo "::warning::These builds have expired (artifacts are kept 2 days): $(echo $expired)"
+          fi
+          mkdir -p artifacts
+          if [ ${#artifacts[@]} -eq 0 ]; then
+            echo "::warning::$RUN_URL has no downloadable builds for this release; it will list store links only"
+            exit 0
+          fi
+          for name in "${artifacts[@]}"; do
+            echo "Downloading $name"
+            gh run download "$RUN_ID" -R "$REPO" -n "$name" -D "artifacts/$name"
+          done
+          find artifacts -type f -exec ls -lh {} +
+
+      - name: Read the version
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+          TITLE: ${{ inputs.title }}
+          SHA: ${{ steps.run.outputs.sha }}
+        run: |
+          git cat-file -e "$SHA^{commit}" 2>/dev/null || git fetch --quiet origin "$SHA"
+          flags=(--fallback-version "$(git show "$SHA:package.json" | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')")
+          [ -n "$VERSION" ] && flags+=(--version "$VERSION")
+          version=$(node scripts/github-release.mjs --app "$APP" --artifacts artifacts --print-version "${flags[@]}") || {
+            echo "::error::Could not tell the version from the builds. Set the version input."
+            exit 1
+          }
+          tag="v$version"
+          existing=$(git rev-parse -q --verify "refs/tags/$tag^{commit}" || true)
+          if [ -n "$existing" ] && [ "$existing" != "$SHA" ]; then
+            echo "::error::Tag $tag already points at $existing, not the build's commit $SHA"
+            exit 1
+          fi
+          state=$(gh release view "$tag" -R "$REPO" --json isDraft -q 'if .isDraft then "draft" else "published" end' 2>/dev/null || echo none)
+          if [ "$state" = "published" ]; then
+            echo "::error::Release $tag is already published. Delete it or edit it on GitHub."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "title=${TITLE:-$tag}" >> "$GITHUB_OUTPUT"
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+
+      - name: Write the changelog
+        env:
+          FROM: ${{ inputs.from }}
+          SHA: ${{ steps.run.outputs.sha }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          node scripts/changelog.mjs --repo "$REPO" --from "$FROM" --to "$SHA" --exclude "$TAG" --bare --out "$RUNNER_TEMP/changelog.md"
+          cat "$RUNNER_TEMP/changelog.md"
+
+      - name: Prepare the files and notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          notes="release-notes/$TAG.md"
+          flags=(--changelog "$RUNNER_TEMP/changelog.md")
+          if [ -f "$notes" ]; then
+            echo "What's new comes from $notes"
+            flags+=(--notes "$notes")
+          else
+            echo "::notice::No $notes on this branch, so What's new is the changelog. Add that file to write it yourself."
+          fi
+          node scripts/github-release.mjs --app "$APP" --artifacts artifacts --version "$VERSION" \
+            --out "$RUNNER_TEMP/upload" --body "$RUNNER_TEMP/release-notes.md" "${flags[@]}"
+          ls -lh "$RUNNER_TEMP/upload" 2>/dev/null || true
+
+      - name: Create the release
+        env:
+          SHA: ${{ steps.run.outputs.sha }}
+          TAG: ${{ steps.version.outputs.tag }}
+          TITLE: ${{ steps.version.outputs.title }}
+          STATE: ${{ steps.version.outputs.state }}
+          DRAFT: ${{ inputs.draft }}
+          RUN_URL: ${{ steps.run.outputs.url }}
+        run: |
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/upload/*)
+          if [ "$STATE" = "draft" ]; then
+            echo "Updating the existing draft $TAG"
+            gh release edit "$TAG" -R "$REPO" --title "$TITLE" --notes-file "$RUNNER_TEMP/release-notes.md" \
+              --target "$SHA" --draft="$DRAFT"
+            [ ${#files[@]} -gt 0 ] && gh release upload "$TAG" -R "$REPO" --clobber "${files[@]}"
+          else
+            gh release create "$TAG" -R "$REPO" --target "$SHA" --title "$TITLE" \
+              --notes-file "$RUNNER_TEMP/release-notes.md" --draft="$DRAFT" "${files[@]}"
+          fi
+          release_url=$(gh release view "$TAG" -R "$REPO" --json url -q .url)
+          {
+            echo "## $TITLE"
+            echo
+            echo "Release: $release_url ($([ "$DRAFT" = true ] && echo draft || echo published))"
+            echo "Built by: $RUN_URL"
+            echo
+            for file in "${files[@]}"; do echo "- \`$(basename "$file")\`"; done
+            echo
+            cat "$RUNNER_TEMP/release-notes.md"
+          } >> "$GITHUB_STEP_SUMMARY"

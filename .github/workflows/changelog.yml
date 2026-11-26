@@ -1,0 +1,54 @@
+name: Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Start after this tag or commit (empty = the previous v* tag)'
+        type: string
+        required: false
+      to:
+        description: 'End at this tag, branch or commit (empty = the branch you run this on)'
+        type: string
+        required: false
+      all:
+        description: 'Keep version bumps, CI, README and test commits'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Write the changelog
+        env:
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          ALL: ${{ inputs.all }}
+        run: |
+          flags=(--repo "$GITHUB_REPOSITORY" --from "$FROM" --to "${TO:-HEAD}" --out changelog.md)
+          [ "$ALL" = true ] && flags+=(--all)
+          node scripts/changelog.mjs "${flags[@]}"
+          cat changelog.md >> "$GITHUB_STEP_SUMMARY"
+          cat changelog.md
+
+      - name: Keep the changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: changelog.md
+          retention-days: 7
